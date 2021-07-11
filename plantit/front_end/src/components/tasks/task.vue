@@ -124,7 +124,6 @@
                                 >
                                     <b-spinner
                                         class="mb-1 mr-1"
-                                        style="position: relative; top: -10px; left: 12px"
                                         small
                                         v-if="!getTask.is_complete"
                                         variant="warning"
@@ -155,12 +154,12 @@
                                         :to="{
                                             name: 'agent',
                                             params: {
-                                                name: getTask.agent
+                                                name: getTask.agent.name
                                             }
                                         }"
                                         >{{
                                             getTask.agent
-                                                ? getTask.agent
+                                                ? getTask.agent.name
                                                 : '[agent removed]'
                                         }}</b-link
                                     >
@@ -383,6 +382,28 @@
                                                                 line + '\n'
                                                             }}</span
                                                         >
+                                                        <span
+                                                            v-if="
+                                                                !getTask.is_complete
+                                                            "
+                                                            ><b-skeleton-wrapper
+                                                                :loading="
+                                                                    !getTask.is_complete
+                                                                "
+                                                            >
+                                                                <template
+                                                                    #loading
+                                                                >
+                                                                    <b-skeleton
+                                                                        width="15%"
+                                                                    ></b-skeleton
+                                                                    ><b-skeleton
+                                                                        width="25%"
+                                                                    ></b-skeleton
+                                                                    ><b-skeleton
+                                                                        width="20%"
+                                                                    ></b-skeleton></template></b-skeleton-wrapper
+                                                        ></span>
                                                     </b-col>
                                                 </b-row>
                                             </div>
@@ -498,6 +519,50 @@
                                                             }}
                                                         </code></b
                                                     >
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="end"
+                                                    v-if="getWorkflow.config.output"
+                                                >
+                                                    <b-button
+                                                        title="Transfer results to CyVerse Data Store"
+                                                        :disabled="transferring || getTask.transferred"
+                                                        v-b-tooltip.hover
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        @click="
+                                                            showTransferToCyVerseModal
+                                                        "
+                                                        ><i
+                                                            v-if="!transferring"
+                                                            class="fas fa-upload fa-fw mr-1"
+                                                        ></i
+                                                        ><i
+                                                            v-else
+                                                            class="fas fa-spinner fa-fw mr-1"
+                                                        ></i>
+                                                        {{
+                                                            getTask.transferred
+                                                                ? 'Transferred'
+                                                                : transferring
+                                                                ? 'Transferring'
+                                                                : 'Transfer'
+                                                        }}
+                                                        to
+                                                        <b-img
+                                                            class="ml-2 mt-1"
+                                                            rounded
+                                                            style="max-height: 1.1rem;"
+                                                            right
+                                                            :src="
+                                                                require('../../assets/logos/cyverse_bright.png')
+                                                            "
+                                                        ></b-img
+                                                    ></b-button>
                                                 </b-col>
                                                 <b-col
                                                     md="auto"
@@ -1414,8 +1479,8 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.getTask.agent"
-            @ok="onStart"
+            :title="'Authenticate with ' + this.getTask.agent.name"
+            @ok="transferToCyVerse"
             ok-variant="success"
         >
             <b-form-input
@@ -1431,9 +1496,47 @@
                 required
             ></b-form-input>
         </b-modal>
+        <b-modal
+            size="lg"
+            id="transfer"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="`Transfer results to CyVerse`"
+            hide-footer
+        >
+            <div v-if="!transferring">
+                <p>
+                    Select a directory to transfer result files to.
+                </p>
+                <datatree
+                    select="directory"
+                    :create="true"
+                    :upload="false"
+                    :download="false"
+                    @selectNode="transferToCyVerse"
+                    :node="personalDatasets"
+                ></datatree>
+            </div>
+            <div v-else>
+                <b-spinner
+                    small
+                    :variant="profile.darkMode ? 'light' : 'dark'"
+                ></b-spinner>
+                Transferring results to {{ transferringPath }}...
+            </div>
+        </b-modal>
     </div>
 </template>
+
 <script>
+import datatree from '@/components/datasets/data-tree';
 import WorkflowBlurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
@@ -1443,11 +1546,13 @@ import router from '@/router';
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { guid } from '@/utils';
 
 export default {
     name: 'task',
     components: {
-        WorkflowBlurb
+        WorkflowBlurb,
+        datatree
     },
     data() {
         return {
@@ -1482,10 +1587,64 @@ export default {
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
             render: true,
             authenticationUsername: '',
-            authenticationPassword: ''
+            authenticationPassword: '',
+            transferringPath: '',
+            transferring: false
         };
     },
     methods: {
+        showTransferToCyVerseModal() {
+            this.$bvModal.show('transfer');
+        },
+        hideTransferToCyVerseModal() {
+            this.$bvModal.hide('transfer');
+        },
+        async transferToCyVerse(node) {
+            this.transferring = true;
+            this.transferringPath = node.path;
+            let data = {
+                path: node.path
+            };
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+            else
+                data['auth'] = {
+                    username: this.getTask.agent.user
+                };
+            await axios({
+                method: 'post',
+                data: data,
+                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/transfer/`
+            })
+                .then(async response => {
+                    this.hideTransferToCyVerseModal();
+                    this.transferred = true;
+                    this.transferring = false;
+                    await Promise.all([
+                        this.$store.dispatch('tasks/update', response.data),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Transferred results to ${node.path}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        })
+                    ]);
+                })
+                .catch(async error => {
+                    this.hideTransferToCyVerseModal();
+                    this.transferring = false;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to transfer results to ${node.path}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    throw error;
+                });
+        },
         copyGUID() {
             const el = document.createElement('textarea');
             el.value = this.getTask.guid;
@@ -1964,6 +2123,10 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
         ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
+        ...mapGetters('datasets', [
+            'personalDatasets',
+            'personalDatasetsLoading'
+        ]),
         filteredResults() {
             return this.getTask.output_files
                 .slice(
@@ -2015,7 +2178,19 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.name
-            }.${this.getTask.agent.toLowerCase()}.log`;
+            }.${this.getTask.agent.name.toLowerCase()}.log`;
+        },
+        mustAuthenticate() {
+            let ownsAgent =
+                this.getTask.agent.user !== undefined &&
+                this.getTask.agent.user === this.profile.djangoProfile.username;
+            let isGuest = this.getTask.agent.users_authorized.some(
+                user => user.username === this.profile.djangoProfile.username
+            );
+            return (
+                this.getTask.agent.authentication === 'password' ||
+                (!ownsAgent && !isGuest)
+            );
         }
     },
     watch: {
@@ -2031,22 +2206,21 @@ export default {
             // need to watch for route change to prompt reload
         },
         viewMode() {
-            if (
-                this.data !== null &&
-                this.getTask.output_files.some(f => f.name.endsWith('ply'))
-            ) {
-                this.unrenderPreview();
-                if (this.viewMode === 'Carousel')
-                    if (this.currentCarouselSlide === 0)
-                        this.renderPreview(this.getTask.output_files[0]);
-            }
-
-            if (
-                this.viewMode === 'Carousel' &&
-                this.textContent.length === 0 &&
-                this.getTask.output_files.length > 0
-            )
-                this.getTextFile(this.getTask.output_files[0]);
+            // if (
+            //     this.data !== null &&
+            //     this.getTask.output_files.some(f => f.name.endsWith('ply'))
+            // ) {
+            //     this.unrenderPreview();
+            //     if (this.viewMode === 'Carousel')
+            //         if (this.currentCarouselSlide === 0)
+            //             this.renderPreview(this.getTask.output_files[0]);
+            // }
+            // if (
+            //     this.viewMode === 'Carousel' &&
+            //     this.textContent.length === 0 &&
+            //     this.getTask.output_files.length > 0
+            // )
+            //     this.getTextFile(this.getTask.output_files[0]);
         }
     }
 };

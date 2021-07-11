@@ -844,9 +844,20 @@
                                                                     does not
                                                                     specify
                                                                     resource
-                                                                    requests. If submitted to an agent with a
-                                                                    <b>Jobqueue</b>
-                                                                    executor, defaults of 1 hour, 10 GB, 1 core & 1 process will be requested.</b-alert
+                                                                    requests. If
+                                                                    submitted to
+                                                                    an agent
+                                                                    with a
+                                                                    <b
+                                                                        >Jobqueue</b
+                                                                    >
+                                                                    executor,
+                                                                    defaults of
+                                                                    1 hour, 10
+                                                                    GB, 1 core &
+                                                                    1 process
+                                                                    will be
+                                                                    requested.</b-alert
                                                                 >
                                                             </b-col>
                                                             <b-col
@@ -1774,7 +1785,8 @@
                                                                                 <i
                                                                                     v-else
                                                                                     class="fas fa-folder fa-fw mr-1"
-                                                                                ></i>{{
+                                                                                ></i
+                                                                                >{{
                                                                                     selectedInput.path
                                                                                 }}
                                                                                 <i
@@ -2858,9 +2870,9 @@
                                                                 small
                                                                 v-if="submitted"
                                                                 label="Loading..."
-                                                                variant="dark"
+                                                                variant="success"
                                                                 class="ml-2 mb-1"
-                                                            ></b-spinner> </b-button></b-col
+                                                            ></b-spinner></b-button></b-col
                                                 ></b-row>
                                             </b-tab>
                                             <!--<b-tab
@@ -3725,7 +3737,7 @@ export default {
                     memory: '10GB',
                     processes: 1,
                     cores: 1,
-                    queue: agent.queue,
+                    queue: agent.queue
                 };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
@@ -3744,6 +3756,7 @@ export default {
                 config.output = this.output;
                 // if (!this.outputDataset) delete config.output['to'];
             }
+            config.output = this.getWorkflow.config.output;
 
             // save config
             this.$store.dispatch('workflows/setRecentlyRun', {

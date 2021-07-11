@@ -68,6 +68,7 @@ class Task(models.Model):
     updated = models.DateTimeField(default=timezone.now)
     completed = models.DateTimeField(null=True, blank=True)
     celery_task_id = models.CharField(max_length=50, null=True, blank=True)
+    transferred = models.BooleanField(default=False)
 
     status = models.CharField(
         max_length=8,
@@ -124,7 +125,7 @@ class JobQueueTask(Task):
 
     @property
     def is_cancelled(self):
-        return self.job_status == 'REVOKED' or self.job_status == 'CANCELLED'
+        return self.job_status == 'REVOKED' or self.job_status == 'CANCELLED' or self.job_status == 'CANCELED'
 
     @property
     def is_complete(self):

@@ -184,11 +184,7 @@
                                             class="mb-1 mr-1"
                                             style="width: 0.7rem; height: 0.7rem;"
                                             v-if="!task.is_complete"
-                                            :variant="
-                                                profile.darkMode
-                                                    ? 'light'
-                                                    : 'dark'
-                                            "
+                                            variant="warning"
                                         >
                                         </b-spinner>
                                         <b-badge variant="warning" v-if="!task.is_complete"
@@ -219,12 +215,12 @@
                                                 :to="{
                                                     name: 'agent',
                                                     params: {
-                                                        name: task.agent
+                                                        name: task.agent.name
                                                     }
                                                 }"
                                                 >{{
                                                     task.agent
-                                                        ? task.agent
+                                                        ? task.agent.name
                                                         : '[agent removed]'
                                                 }}</b-link
                                             >
@@ -435,12 +431,12 @@
                                                     :to="{
                                                         name: 'agent',
                                                         params: {
-                                                            name: task.agent
+                                                            name: task.agent.name
                                                         }
                                                     }"
                                                     >{{
                                                         task.agent
-                                                            ? task.agent
+                                                            ? task.agent.name
                                                             : '[agent removed]'
                                                     }}</b-link
                                                 >

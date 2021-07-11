@@ -4,11 +4,11 @@ import fileinput
 import json
 import logging
 import os
-import pprint
 import subprocess
 import sys
+import tempfile
 import uuid
-from pprint import pprint
+import pprint
 from collections import Counter
 from datetime import timedelta, datetime
 from math import ceil
@@ -563,10 +563,22 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
 
     # if we have outputs, make sure we don't push configuration or job scripts
     if 'output' in config:
-        config['output']['exclude']['names'] = [
-            f"{task.guid}.yaml",
-            "template_local_run.sh",
-            "template_slurm_run.sh"]
+        if 'exclude' in config['output']:
+            if 'names' in config['output']['exclude']:
+                config['output']['exclude']['names'].append(f"{task.guid}.yaml")
+                config['output']['exclude']['names'].append("template_local_run.sh")
+                config['output']['exclude']['names'].append("template_slurm_run.sh")
+            else:
+                config['output']['exclude']['names'] = [
+                    f"{task.guid}.yaml",
+                    "template_local_run.sh",
+                    "template_slurm_run.sh"
+                ]
+        output = config['output']
+    else:
+        output = None
+
+    pprint.pprint(output)
 
     # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
     # new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
@@ -670,26 +682,32 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if 'queue' in jobqueue:
             if not isinstance(jobqueue['queue'], str):
                 errors.append('Section \'jobqueue\'.\'queue\' must be a str')
-        else: jobqueue['queue'] = task.agent.queue
+        else:
+            jobqueue['queue'] = task.agent.queue
         if 'project' in jobqueue:
             if not isinstance(jobqueue['project'], str):
                 errors.append('Section \'jobqueue\'.\'project\' must be a str')
-        else: jobqueue['project'] = task.agent.project
+        else:
+            jobqueue['project'] = task.agent.project
         if 'walltime' in jobqueue:
             if not isinstance(jobqueue['walltime'], str):
                 errors.append('Section \'jobqueue\'.\'walltime\' must be a str')
-        else: jobqueue['walltime'] = task.agent.max_walltime
+        else:
+            jobqueue['walltime'] = task.agent.max_walltime
         if 'cores' in jobqueue:
             if not isinstance(jobqueue['cores'], int):
                 errors.append('Section \'jobqueue\'.\'cores\' must be a int')
-        else: jobqueue['cores'] = task.agent.max_cores
+        else:
+            jobqueue['cores'] = task.agent.max_cores
         if 'processes' in jobqueue:
             if not isinstance(jobqueue['processes'], int):
                 errors.append('Section \'jobqueue\'.\'processes\' must be a int')
-        else: jobqueue['processes'] = task.agent.max_processes
+        else:
+            jobqueue['processes'] = task.agent.max_processes
         if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
             errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
-        elif task.agent.header_skip is not None and task.agent.header_skip != '': jobqueue['header_skip'] = task.agent.header_skip
+        elif task.agent.header_skip is not None and task.agent.header_skip != '':
+            jobqueue['header_skip'] = task.agent.header_skip
         if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
             errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
 
@@ -699,6 +717,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         command=command)
 
     if input is not None: options['input'] = input
+    if output is not None: options['output'] = output
     if parameters is not None: options['parameters'] = parameters
     if bind_mounts is not None: options['bind_mounts'] = bind_mounts
     # if checksums is not None: options['checksums'] = checksums
@@ -710,7 +729,8 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     return errors, options
 
 
-def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None, study: str = None) -> Task:
+def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None,
+                study: str = None) -> Task:
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     agent = Agent.objects.get(name=agent_name)
@@ -806,7 +826,6 @@ def configure_jobqueue_task_environment(task: JobQueueTask, ssh: SSH):
     async_to_sync(push_task_event)(task)
 
     parse_errors, cli_options = parse_task_cli_options(task)
-
 
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
@@ -943,7 +962,7 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     output = options['output'] if 'output' in options else dict()
     # if output is None: return ''
 
-    command = f"plantit zip {output['from'] if 'from' in output != '' else '.'} -o . -n {task.guid}"
+    command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
     command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
 
@@ -952,6 +971,7 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
             command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
         if 'names' in output['include']:
             command = f"{command} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
+    if 'exclude' in output:
         if 'patterns' in output['exclude']:
             command = f"{command} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
         if 'names' in output['exclude']:
@@ -1354,6 +1374,8 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
                 seen.append(output['name'])
                 outputs.append(output)
 
+            logger.info(f"Looking for files by pattern(s): {(', ').join(included_by_pattern)}")
+
             for f in sftp.listdir(workdir):
                 if any(pattern in f for pattern in included_by_pattern):
                     if not any(s == f for s in seen):
@@ -1366,10 +1388,31 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
     return outputs
 
 
+def transfer_task_results_to_cyverse(task: Task, auth: dict, path: str):
+    ssh = get_task_ssh_client(task, auth)
+    workdir = join(task.agent.workdir, task.workdir)
+    redis = RedisClient.get()
+    # workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
+    # workflow = json.loads(workflow)
+    workflow = task.workflow
+
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            sftp.chdir(workdir)
+            files = get_task_result_files(task, workflow['config'], auth)
+            pprint.pprint(files)
+            for file in files:
+                logger.info(f"Transferring {file['name']} to {path}")
+                local_dir = tempfile.gettempdir()
+                local_path = join(local_dir, file['name'])
+                sftp.get(file['name'], local_path)
+                terrain.push_file(local_path, path, task.user.profile.cyverse_access_token)
+
+
 def list_task_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
     input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
     msg = f"Found {len(input_files)} input file(s)"
-    log_task_status(task, msg)
+    log_task_status(task, [msg])
     async_to_sync(push_task_event)(task)
     logger.info(msg)
 
@@ -1431,7 +1474,7 @@ def task_to_dict(task: Task) -> dict:
         } if task.study is not None else None,
         'work_dir': task.workdir,
         'task_logs': task_logs,
-        'agent': task.agent.name if task.agent is not None else None,
+        'agent': agent_to_dict(task.agent) if task.agent is not None else None,
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),
         'completed': task.completed.isoformat() if task.completed is not None else None,
@@ -1446,6 +1489,7 @@ def task_to_dict(task: Task) -> dict:
         'workflow_image_url': task.workflow_image_url,
         'result_previews_loaded': task.previews_loaded,
         'cleaned_up': task.cleaned_up,
+        'transferred': task.transferred,
         'output_files': json.loads(results) if results is not None else []
     }
 
@@ -1594,12 +1638,12 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'logo': agent.logo,
         'authentication': agent.authentication,
         'users_authorized': [{
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'github_profile': async_to_sync(get_user_github_profile)(user)
-            } for user in users_authorized if user is not None],
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'github_profile': async_to_sync(get_user_github_profile)(user)
+        } for user in users_authorized if user is not None],
         'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
         'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
     }

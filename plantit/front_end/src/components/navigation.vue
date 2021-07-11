@@ -156,9 +156,7 @@
                                         class="mr-1"
                                         small
                                         v-if="!task.is_complete"
-                                        :variant="
-                                            profile.darkMode ? 'light' : 'dark'
-                                        "
+                                        variant="warning"
                                     >
                                     </b-spinner>
                                     <b-badge
@@ -179,7 +177,7 @@
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ task.agent }}</b-badge
+                                        >{{ task.agent.name }}</b-badge
                                     ><small>
                                         {{ prettify(task.updated) }}</small
                                     >
@@ -324,7 +322,7 @@
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ task.agent }}</b-badge
+                                                >{{ task.agent.name }}</b-badge
                                             ><small>
                                                 {{
                                                     prettify(task.updated)
@@ -1027,7 +1025,7 @@
                 <b v-if="!taskToasted.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ taskToasted.job_status }}</b>
                 on
-                <b>{{ taskToasted.agent }}</b>
+                <b>{{ taskToasted.agent.name }}</b>
                 {{ prettifyShort(taskToasted.updated) }}
                 <br />
                 {{ taskToasted.task_logs[taskToasted.task_logs.length - 1] }}

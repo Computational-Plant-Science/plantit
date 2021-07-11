@@ -103,64 +103,74 @@
                             profile.darkMode ? 'outline-light' : 'outline-dark'
                         "
                         ><i class="fas fa-upload fa-fw"></i
-                    ></b-button>
-                    <b-button
-                        v-if="!isShared"
-                        class="ml-1 mr-1"
-                        size="sm"
-                        title="Create Subdirectory"
-                        @click="showCreateDirectoryModal"
-                        :variant="
-                            profile.darkMode ? 'outline-light' : 'outline-dark'
-                        "
-                        ><i class="fas fa-plus fa-fw"></i
-                    ></b-button>
-                    <b-modal
-                        v-if="!isShared"
-                        :title-class="
-                            profile.darkMode ? 'text-white' : 'text-dark'
-                        "
-                        title="Create Directory"
-                        :id="
-                            'createDirectoryModal' +
-                                (internalLoaded
-                                    ? internalNode.label
-                                    : node.label)
-                        "
-                        centered
-                        :header-text-variant="
-                            profile.darkMode ? 'white' : 'dark'
-                        "
-                        :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-border-variant="
-                            profile.darkMode ? 'dark' : 'white'
-                        "
-                        :footer-border-variant="
-                            profile.darkMode ? 'dark' : 'white'
-                        "
-                        close
-                        @close="hideCreateDirectoryModal"
-                        @ok="
-                            createDirectory(
-                                (internalLoaded
-                                    ? internalNode.path
-                                    : node.path) +
-                                    '/' +
-                                    newDirectoryName,
-                                profile.djangoProfile.cyverse_token
-                            )
-                        "
-                    >
-                        <b-form-group>
-                            <b-form-input
-                                size="sm"
-                                v-model="newDirectoryName"
-                                :placeholder="'Enter a directory name'"
-                            ></b-form-input>
-                        </b-form-group>
-                    </b-modal>-->
+                    ></b-button>-->
+                    <span v-if="create">
+                        <b-button
+                            v-if="!isShared"
+                            class="ml-1 mr-1"
+                            size="sm"
+                            title="Create Subdirectory"
+                            @click="showCreateDirectoryModal"
+                            :variant="
+                                profile.darkMode
+                                    ? 'outline-light'
+                                    : 'outline-dark'
+                            "
+                            ><i class="fas fa-plus fa-fw"></i
+                        ></b-button>
+                        <b-modal
+                            v-if="!isShared"
+                            :title-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            title="Create Directory"
+                            :id="
+                                'createDirectoryModal' +
+                                    (internalLoaded
+                                        ? internalNode.label
+                                        : node.label)
+                            "
+                            centered
+                            :header-text-variant="
+                                profile.darkMode ? 'white' : 'dark'
+                            "
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :body-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :header-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            close
+                            @close="hideCreateDirectoryModal"
+                            @ok="
+                                createDirectory(
+                                    (internalLoaded
+                                        ? internalNode.path
+                                        : node.path) +
+                                        '/' +
+                                        newDirectoryName,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                        >
+                            <b-form-group>
+                                <b-form-input
+                                    size="sm"
+                                    v-model="newDirectoryName"
+                                    :placeholder="'Enter a directory name'"
+                                ></b-form-input>
+                            </b-form-group>
+                        </b-modal>
+                    </span>
                     <b-button
                         v-if="internalLoaded && !internalLoading"
                         class="ml-1 mr-1"
@@ -237,7 +247,8 @@
                                 ><i class="fas fa-server fa-1x fa-fw"></i>
                                 Agents</b-link
                             >
-                            to request guest access to public servers, clusters, and supercomputers.</b-dropdown-text
+                            to request guest access to public servers, clusters,
+                            and supercomputers.</b-dropdown-text
                         >
                         <b-dropdown-item
                             @click="openDataset(agent)"
@@ -644,7 +655,7 @@
                     >
                 </b-col>
                 <b-col md="auto">
-                    <b-button
+                    <!--<b-button
                         id="popover-reactive-1"
                         :disabled="
                             !fileIsImage(child.label) &&
@@ -658,7 +669,7 @@
                         @click="viewFile(child)"
                     >
                         <i class="fas fa-eye fa-fw"></i>
-                    </b-button>
+                    </b-button-->
                     <b-button
                         v-if="!isShared"
                         class="m-1"
@@ -777,6 +788,10 @@ export default {
             required: false,
             type: String
         },
+        create: {
+            required: false,
+            type: Boolean
+        },
         upload: {
             required: false,
             type: Boolean
@@ -820,10 +835,7 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
-        ...mapGetters('datasets', [
-            'openedDataset',
-            'openedDatasetLoading'
-        ]),
+        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         sharedBy: function() {
             if (this.isShared) {
                 let path = this.internalLoaded

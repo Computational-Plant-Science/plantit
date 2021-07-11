@@ -1,7 +1,11 @@
 import json
 import logging
+import multiprocessing
 import pprint
-from os import environ
+from contextlib import closing
+from multiprocessing import Pool
+from os import environ, listdir
+from os.path import basename, join, isfile, isdir
 from typing import List
 
 import requests
@@ -10,6 +14,38 @@ from requests.auth import HTTPBasicAuth
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 logger = logging.getLogger(__name__)
+
+
+def list_files(path,
+               include_patterns=None,
+               include_names=None,
+               exclude_patterns=None,
+               exclude_names=None):
+    # gather all files
+    all_paths = [join(path, file) for file in listdir(path) if isfile(join(path, file))]
+
+    # add files matching included patterns
+    included_by_pattern = [pth for pth in all_paths if any(
+        pattern.lower() in pth.lower() for pattern in include_patterns)] if include_patterns is not None else all_paths
+
+    # add files included by name
+    included_by_name = ([pth for pth in all_paths if pth.rpartition('/')[2] in [name for name in include_names]] \
+                            if include_names is not None else included_by_pattern) + \
+                       [pth for pth in all_paths if pth in [name for name in include_names]] \
+        if include_names is not None else included_by_pattern
+
+    # gather only included files
+    included = set(included_by_pattern + included_by_name)
+
+    # remove files matched excluded patterns
+    excluded_by_pattern = [name for name in included if all(pattern.lower() not in name.lower() for pattern in
+                                                            exclude_patterns)] if exclude_patterns is not None else included
+
+    # remove files excluded by name
+    excluded_by_name = [pattern for pattern in excluded_by_pattern if pattern.split('/')[
+        -1] not in exclude_names] if exclude_names is not None else excluded_by_pattern
+
+    return excluded_by_name
 
 
 @retry(
@@ -139,3 +175,43 @@ def path_exists(path, token):
         else:
             return False
     return True, input_type
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+def push_file(from_path: str, to_prefix: str, token: str):
+    print(f"Uploading '{from_path}' to '{to_prefix}'")
+    with open(from_path, 'rb') as file:
+        with requests.post(f"https://de.cyverse.org/terrain/secured/fileio/upload?dest={to_prefix}",
+                           headers={'Authorization': f"Bearer {token}"},
+                           files={'file': (basename(from_path), file, 'application/octet-stream')}) as response:
+            if response.status_code == 500 and response.json()['error_code'] == 'ERR_EXISTS':
+                print(f"File '{join(to_prefix, basename(file.name))}' already exists, skipping upload")
+            else:
+                response.raise_for_status()
+
+
+def push_dir(from_path: str,
+             to_prefix: str,
+             include_patterns: List[str] = None,
+             include_names: List[str] = None,
+             exclude_patterns: List[str] = None,
+             exclude_names: List[str] = None):
+    is_file = isfile(from_path)
+    is_dir = isdir(from_path)
+
+    if not (is_dir or is_file):
+        raise FileNotFoundError(f"Local path '{from_path}' does not exist")
+    elif is_dir:
+        from_paths = list_files(from_path, include_patterns, include_names, exclude_patterns, exclude_names)
+        print(f"Uploading directory '{from_path}' with {len(from_paths)} file(s) to '{to_prefix}'")
+        with closing(Pool(processes=multiprocessing.cpu_count())) as pool:
+            pool.starmap(push_file, [(path, to_prefix) for path in [str(p) for p in from_paths]])
+    elif is_file:
+        push_file(from_path, to_prefix)
+    else:
+        raise ValueError(f"Remote path '{to_prefix}' is a file; specify a directory path instead")

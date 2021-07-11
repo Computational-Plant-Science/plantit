@@ -19,7 +19,7 @@ from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
     log_task_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse
 
 
 @login_required
@@ -135,6 +135,24 @@ def get_by_owner_and_name(request, owner, name):
 
 
 @login_required
+def transfer_to_cyverse(request, owner, name):
+    body = json.loads(request.body.decode('utf-8'))
+    auth = parse_task_auth_options(body['auth'])
+    path = body['path']
+
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except: return HttpResponseNotFound()
+    if not task.is_complete: return HttpResponseBadRequest('task incomplete')
+
+    transfer_task_results_to_cyverse(task, auth, path)
+    task.transferred = True;
+    task.save()
+    return JsonResponse(task_to_dict(task))
+
+
+@login_required
 def get_thumbnail(request, owner, name):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
@@ -179,52 +197,57 @@ def get_thumbnail(request, owner, name):
             return HttpResponse(thumbnail, content_type="image/png")
 
 
-@login_required
-def get_3d_model(request, guid):
-    path = request.GET.get('path')
-    file = path.rpartition('/')[2]
+# @login_required
+# def get_3d_model(request, guid):
+#     body = json.loads(request.body.decode('utf-8'))
+#     path = body['path']
+#     file = path.rpartition('/')[2]
+#     auth = parse_task_auth_options(body['auth'])
+#
+#     try:
+#         task = Task.objects.get(guid=guid)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     ssh = get_task_ssh_client(task, auth)
+#     workdir = join(task.agent.workdir, task.workdir)
+#
+#     with tempfile.NamedTemporaryFile() as temp_file:
+#         with ssh:
+#             with ssh.client.open_sftp() as sftp:
+#                 sftp.chdir(workdir)
+#                 sftp.get(file, temp_file.name)
+#         return HttpResponse(temp_file, content_type="applications/octet-stream")
 
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        return HttpResponseNotFound()
 
-    ssh = get_task_ssh_client(task)
-    workdir = join(task.agent.workdir, task.workdir)
-
-    with tempfile.NamedTemporaryFile() as temp_file:
-        with ssh:
-            with ssh.client.open_sftp() as sftp:
-                sftp.chdir(workdir)
-                sftp.get(file, temp_file.name)
-        return HttpResponse(temp_file, content_type="applications/octet-stream")
-
-
-@login_required
-def get_output_file(request, owner, name, file):
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-    ssh = get_task_ssh_client(task)
-    workdir = join(task.agent.workdir, task.workdir)
-
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            file_path = join(workdir, file)
-            print(f"Downloading {file_path}")
-
-            stdin, stdout, stderr = ssh.client.exec_command(
-                'test -e {0} && echo exists'.format(file_path))
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(workdir)
-                sftp.get(file, tf.name)
-                return FileResponse(open(tf.name, 'rb'))
+# @login_required
+# def get_output_file(request, owner, name, file):
+#     try:
+#         user = User.objects.get(username=owner)
+#         task = Task.objects.get(user=user, name=name)
+#     except Task.DoesNotExist:
+#         return HttpResponseNotFound()
+#
+#     body = json.loads(request.body.decode('utf-8'))
+#     auth = parse_task_auth_options(body['auth'])
+#
+#     ssh = get_task_ssh_client(task, auth)
+#     workdir = join(task.agent.workdir, task.workdir)
+#
+#     with ssh:
+#         with ssh.client.open_sftp() as sftp:
+#             file_path = join(workdir, file)
+#             print(f"Downloading {file_path}")
+#
+#             stdin, stdout, stderr = ssh.client.exec_command(
+#                 'test -e {0} && echo exists'.format(file_path))
+#             if not stdout.read().decode().strip() == 'exists':
+#                 return HttpResponseNotFound()
+#
+#             with tempfile.NamedTemporaryFile() as tf:
+#                 sftp.chdir(workdir)
+#                 sftp.get(file, tf.name)
+#                 return FileResponse(open(tf.name, 'rb'))
 
 
 @login_required
@@ -239,59 +262,65 @@ def get_task_logs(request, owner, name):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-@login_required
-def get_container_logs(request, owner, name):
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+# @login_required
+# def get_container_logs(request, owner, name):
+#     try:
+#         user = User.objects.get(username=owner)
+#         task = Task.objects.get(user=user, name=name)
+#     except Task.DoesNotExist:
+#         return HttpResponseNotFound()
+#
+#     body = json.loads(request.body.decode('utf-8'))
+#     auth = parse_task_auth_options(body['auth'])
+#
+#     ssh = get_task_ssh_client(task, auth)
+#     workdir = join(task.agent.workdir, task.workdir)
+#     log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
+#
+#     with ssh:
+#         with ssh.client.open_sftp() as sftp:
+#             stdin, stdout, stderr = ssh.client.exec_command(
+#                 'test -e {0} && echo exists'.format(join(workdir, log_file)))
+#             errs = stderr.read()
+#             if errs:
+#                 raise Exception(f"Failed to check existence of {log_file}: {errs}")
+#             if not stdout.read().decode().strip() == 'exists':
+#                 return HttpResponseNotFound()
+#
+#             with tempfile.NamedTemporaryFile() as tf:
+#                 sftp.chdir(workdir)
+#                 sftp.get(log_file, tf.name)
+#                 return FileResponse(open(tf.name, 'rb'))
 
-    ssh = get_task_ssh_client(task)
-    workdir = join(task.agent.workdir, task.workdir)
-    log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
 
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            stdin, stdout, stderr = ssh.client.exec_command(
-                'test -e {0} && echo exists'.format(join(workdir, log_file)))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {log_file}: {errs}")
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(workdir)
-                sftp.get(log_file, tf.name)
-                return FileResponse(open(tf.name, 'rb'))
-
-
-@login_required
-def get_file_text(request, owner, name):
-    file = request.GET.get('path')
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-    ssh = get_task_ssh_client(task)
-    workdir = join(task.agent.workdir, task.workdir)
-
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            path = join(workdir, file)
-            stdin, stdout, stderr = ssh.client.exec_command(
-                'test -e {0} && echo exists'.format(path))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {file}: {errs}")
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            stdin, stdout, stderr = ssh.client.exec_command(f"cat {path}")
-            return JsonResponse({'text': stdout.readlines()})
+# @login_required
+# def get_file_text(request, owner, name):
+#     file = request.GET.get('path')
+#     try:
+#         user = User.objects.get(username=owner)
+#         task = Task.objects.get(user=user, name=name)
+#     except Task.DoesNotExist:
+#         return HttpResponseNotFound()
+#
+#     body = json.loads(request.body.decode('utf-8'))
+#     auth = parse_task_auth_options(body['auth'])
+#
+#     ssh = get_task_ssh_client(task, auth)
+#     workdir = join(task.agent.workdir, task.workdir)
+#
+#     with ssh:
+#         with ssh.client.open_sftp() as sftp:
+#             path = join(workdir, file)
+#             stdin, stdout, stderr = ssh.client.exec_command(
+#                 'test -e {0} && echo exists'.format(path))
+#             errs = stderr.read()
+#             if errs:
+#                 raise Exception(f"Failed to check existence of {file}: {errs}")
+#             if not stdout.read().decode().strip() == 'exists':
+#                 return HttpResponseNotFound()
+#
+#             stdin, stdout, stderr = ssh.client.exec_command(f"cat {path}")
+#             return JsonResponse({'text': stdout.readlines()})
 
 
 @login_required
@@ -308,6 +337,7 @@ def cancel(request, owner, name):
     if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
+        # TODO figure out how to handle auth for password agents- should the user have to re-enter auth info to cancel tasks?
         # auth = parse_task_auth_options(json.loads(request.body.decode('utf-8'))['auth'])
         # cancel_task(task, auth)
         pass
