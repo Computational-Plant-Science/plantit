@@ -1068,7 +1068,7 @@ def compose_jobqueue_task_resource_requests(task: JobQueueTask, options: PlantIT
     if task.agent.queue is not None and task.agent.queue != '': commands.append(
         f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
-    if len(inputs) > 0:
+    if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array:
             commands.append(f"#SBATCH --array=1-{len(inputs)}")
         commands.append(f"#SBATCH -N {nodes}")
