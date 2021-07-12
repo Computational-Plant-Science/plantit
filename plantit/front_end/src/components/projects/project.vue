@@ -252,7 +252,7 @@
                         >
                     </div>
                     <br />
-                    <br/>
+                    <br />
                     <b-row>
                         <b-col
                             ><h5
@@ -332,6 +332,149 @@
                             </b-button></b-col
                         >
                     </b-row>
+                    <br />
+                    <br />
+                    <b-row>
+                        <b-col
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Tasks
+                            </h5></b-col
+                        >
+                    </b-row>
+                    <b-list-group class="text-left m-0 p-0 mt-1">
+                        <b-list-group-item
+                            style="box-shadow: -2px 2px 2px #adb5bd"
+                            v-for="task in projectTasks"
+                            v-bind:key="task.guid"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                    : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                            "
+                        >
+                            <b-img
+                                v-if="
+                                    task.workflow_image_url !== undefined &&
+                                        task.workflow_image_url !== null
+                                "
+                                rounded
+                                class="card-img-right"
+                                style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                right
+                                :src="task.workflow_image_url"
+                            ></b-img>
+                            <b-link
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                :to="{
+                                    name: 'task',
+                                    params: {
+                                        owner: task.owner,
+                                        name: task.name
+                                    }
+                                }"
+                                replace
+                                >{{ task.name }}</b-link
+                            >
+                            <br />
+                            <span v-if="task.project !== null">
+                                <b-badge class="mr-2" variant="info">{{
+                                    task.project.title
+                                }}</b-badge
+                                ><small v-if="task.study !== null"
+                                    ><b-badge class="mr-2" variant="info">{{
+                                        task.study.title
+                                    }}</b-badge></small
+                                ></span
+                            >
+                            <div
+                                v-if="
+                                    task.tags !== undefined &&
+                                        task.tags.length > 0
+                                "
+                            >
+                                <b-badge
+                                    v-for="tag in task.tags"
+                                    v-bind:key="tag"
+                                    class="mr-1"
+                                    variant="secondary"
+                                    >{{ tag }}
+                                </b-badge>
+                                <br />
+                            </div>
+                            <b-spinner
+                                class="mb-1 mr-1"
+                                style="width: 0.7rem; height: 0.7rem;"
+                                v-if="!task.is_complete"
+                                variant="warning"
+                            >
+                            </b-spinner>
+                            <b-badge variant="warning" v-if="!task.is_complete"
+                                >Running</b-badge
+                            >
+                            <b-badge
+                                :variant="
+                                    task.is_failure || task.is_timeout
+                                        ? 'danger'
+                                        : task.is_cancelled
+                                        ? 'secondary'
+                                        : 'success'
+                                "
+                                v-else
+                                >{{ task.status.toUpperCase() }}</b-badge
+                            >
+                            <small>
+                                on
+                                <b-link
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    :to="{
+                                        name: 'agent',
+                                        params: {
+                                            name: task.agent.name
+                                        }
+                                    }"
+                                    >{{
+                                        task.agent
+                                            ? task.agent.name
+                                            : '[agent removed]'
+                                    }}</b-link
+                                >
+                                {{ prettify(task.updated) }}</small
+                            >
+                            <br />
+                            <small
+                                v-if="task.workflow_name !== null"
+                                class="mr-1"
+                                ><a
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    :href="
+                                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
+                                    "
+                                    ><i class="fab fa-github fa-fw"></i>
+                                    {{ task.workflow_owner }}/{{
+                                        task.workflow_name
+                                    }}</a
+                                >
+                            </small>
+                        </b-list-group-item>
+                    </b-list-group>
                 </b-card-body>
             </b-card>
         </b-container>
@@ -876,6 +1019,17 @@ export default {
             'othersProjects',
             'projectsLoading'
         ]),
+        ...mapGetters('tasks', [
+            'tasks',
+            'tasksRunning',
+            'tasksCompleted',
+            'tasksLoading'
+        ]),
+        projectTasks() {
+            return this.tasks.filter(
+                t => t.project !== null && t.project.name === this.getProject.name
+            );
+        },
         ownsProject() {
             return (
                 this.getProject.owner === this.profile.djangoProfile.username

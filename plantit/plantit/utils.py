@@ -1115,9 +1115,9 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 command=options['command'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
-                bind_mounts=options['bind_mounts'],
-                no_cache=options['no_cache'],
-                gpu=options['gpu'],
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                no_cache=options['no_cache'] if 'no_cache' in options else False,
+                gpu=options['gpu'] if 'gpu' in options else False,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -1129,9 +1129,9 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 command=options['command'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], file_name))],
-                bind_mounts=options['bind_mounts'],
-                no_cache=options['no_cache'],
-                gpu=options['gpu'],
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                no_cache=options['no_cache'] if 'no_cache' in options else False,
+                gpu=options['gpu'] if 'gpu' in options else False,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)

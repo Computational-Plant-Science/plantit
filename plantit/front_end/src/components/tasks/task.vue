@@ -523,11 +523,17 @@
                                                 <b-col
                                                     md="auto"
                                                     align-self="end"
-                                                    v-if="getWorkflow.config.output"
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .output
+                                                    "
                                                 >
                                                     <b-button
                                                         title="Transfer results to CyVerse Data Store"
-                                                        :disabled="transferring || getTask.transferred"
+                                                        :disabled="
+                                                            transferring ||
+                                                                getTask.transferred
+                                                        "
                                                         v-b-tooltip.hover
                                                         :variant="
                                                             profile.darkMode
@@ -538,12 +544,22 @@
                                                             showTransferToCyVerseModal
                                                         "
                                                         ><i
-                                                            v-if="!transferring"
+                                                            v-if="
+                                                                !transferring &&
+                                                                    !getTask.transferred
+                                                            "
                                                             class="fas fa-upload fa-fw mr-1"
                                                         ></i
                                                         ><i
-                                                            v-else
+                                                            v-else-if="
+                                                                transferring &&
+                                                                    !getTask.transferred
+                                                            "
                                                             class="fas fa-spinner fa-fw mr-1"
+                                                        ></i>
+                                                        <i
+                                                            v-else
+                                                            class="fas fa-check fa-fw mr-1"
                                                         ></i>
                                                         {{
                                                             getTask.transferred
@@ -1520,7 +1536,7 @@
                     :create="true"
                     :upload="false"
                     :download="false"
-                    @selectNode="transferToCyVerse"
+                    @selectNode="preTransferToCyVerse"
                     :node="personalDatasets"
                 ></datatree>
             </div>
@@ -1599,11 +1615,18 @@ export default {
         hideTransferToCyVerseModal() {
             this.$bvModal.hide('transfer');
         },
-        async transferToCyVerse(node) {
-            this.transferring = true;
+        showAuthenticateModal() {
+            this.$bvModal.show('authenticate');
+        },
+        async preTransferToCyVerse(node) {
             this.transferringPath = node.path;
+            if (this.mustAuthenticate) this.showAuthenticateModal();
+            else await this.transferToCyVerse(node);
+        },
+        async transferToCyVerse() {
+            this.transferring = true;
             let data = {
-                path: node.path
+                path: this.transferringPath
             };
             if (this.mustAuthenticate)
                 data['auth'] = {
@@ -1627,7 +1650,7 @@ export default {
                         this.$store.dispatch('tasks/update', response.data),
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Transferred results to ${node.path}`,
+                            message: `Transferred results to ${this.transferringPath}`,
                             guid: guid().toString(),
                             time: moment().format()
                         })
@@ -1638,7 +1661,7 @@ export default {
                     this.transferring = false;
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
-                        message: `Failed to transfer results to ${node.path}`,
+                        message: `Failed to transfer results to ${this.transferringPath}`,
                         guid: guid().toString(),
                         time: moment().format()
                     });
