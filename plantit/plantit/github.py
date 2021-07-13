@@ -45,6 +45,13 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
     elif type(config['commands']) is not str:
         errors.append('Attribute \'commands\' must be a str')
 
+    # environment variables
+    if 'env' in config:
+        if type(config['env']) is not list:
+            errors.append('Attribute \'env\' must be a list')
+        elif config['env'] is None or len(config['env']) == 0:
+            errors.append('Attribute \'env\' must not be empty')
+
     # mount
     if 'mount' in config:
         if type(config['mount']) is not list:

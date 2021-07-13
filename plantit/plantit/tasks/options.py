@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, TypedDict
+from typing import List, TypedDict, Tuple
 
 from enum import Enum
 
@@ -10,6 +10,11 @@ class BindMount(TypedDict):
 
 
 class Parameter(TypedDict):
+    key: str
+    value: str
+
+
+class EnvironmentVariable(TypedDict):
     key: str
     value: str
 
@@ -38,6 +43,7 @@ class PlantITCLIOptions(TypedDict, total=False):
     input: Input
     output: dict
     parameters: List[Parameter]
+    env: List[EnvironmentVariable]
     bind_mounts: List[BindMount]
     checksums: List[FileChecksum]
     log_file: str

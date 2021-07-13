@@ -10,7 +10,7 @@ urlpatterns = [
     path(r'<owner>/<name>/status/', views.status),
     path(r'<owner>/<name>/cancel/', views.cancel),
     path(r'<owner>/<name>/delete/', views.delete),
-    # path(r'<owner>/<name>/output/<file>/', views.get_output_file),
+    path(r'<owner>/<name>/output/', views.get_output_file),
     # path(r'<owner>/<name>/file_text/', views.get_file_text),
     path(r'<owner>/<name>/thumbnail/', views.get_thumbnail),
     # path(r'<owner>/<name>/3d_model/', views.get_3d_model),

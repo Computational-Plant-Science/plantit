@@ -220,34 +220,35 @@ def get_thumbnail(request, owner, name):
 #         return HttpResponse(temp_file, content_type="applications/octet-stream")
 
 
-# @login_required
-# def get_output_file(request, owner, name, file):
-#     try:
-#         user = User.objects.get(username=owner)
-#         task = Task.objects.get(user=user, name=name)
-#     except Task.DoesNotExist:
-#         return HttpResponseNotFound()
-#
-#     body = json.loads(request.body.decode('utf-8'))
-#     auth = parse_task_auth_options(body['auth'])
-#
-#     ssh = get_task_ssh_client(task, auth)
-#     workdir = join(task.agent.workdir, task.workdir)
-#
-#     with ssh:
-#         with ssh.client.open_sftp() as sftp:
-#             file_path = join(workdir, file)
-#             print(f"Downloading {file_path}")
-#
-#             stdin, stdout, stderr = ssh.client.exec_command(
-#                 'test -e {0} && echo exists'.format(file_path))
-#             if not stdout.read().decode().strip() == 'exists':
-#                 return HttpResponseNotFound()
-#
-#             with tempfile.NamedTemporaryFile() as tf:
-#                 sftp.chdir(workdir)
-#                 sftp.get(file, tf.name)
-#                 return FileResponse(open(tf.name, 'rb'))
+@login_required
+def get_output_file(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    body = json.loads(request.body.decode('utf-8'))
+    path = body['path']
+    auth = parse_task_auth_options(body['auth'])
+
+    ssh = get_task_ssh_client(task, auth)
+    workdir = join(task.agent.workdir, task.workdir)
+
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            file_path = join(workdir, path)
+            print(f"Downloading {file_path}")
+
+            stdin, stdout, stderr = ssh.client.exec_command(
+                'test -e {0} && echo exists'.format(file_path))
+            if not stdout.read().decode().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(workdir)
+                sftp.get(path, tf.name)
+                return FileResponse(open(tf.name, 'rb'))
 
 
 @login_required

@@ -45,7 +45,7 @@ from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, JobQueueTask, TaskCounter
 from plantit.tasks.models import Task
-from plantit.tasks.options import BindMount
+from plantit.tasks.options import BindMount, EnvironmentVariable
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
@@ -614,6 +614,16 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     else:
         command = config['commands']
 
+    env = []
+    if 'env' in config:
+        if not all(var != '' for var in config['env']):
+            errors.append('Every environment variable must be non-empty')
+        else:
+            env = [EnvironmentVariable(
+                key=variable.rpartition('=')[0],
+                value=variable.rpartition('=')[2])
+            for variable in config['env']]
+
     parameters = None
     if 'parameters' in config:
         if not all(['name' in param and
@@ -719,6 +729,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     if input is not None: options['input'] = input
     if output is not None: options['output'] = output
     if parameters is not None: options['parameters'] = parameters
+    if env is not None: options['env'] = env
     if bind_mounts is not None: options['bind_mounts'] = bind_mounts
     # if checksums is not None: options['checksums'] = checksums
     if log_file is not None: options['log_file'] = log_file
@@ -730,7 +741,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
 
 
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None,
-                study: str = None) -> Task:
+                study: str = None):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     agent = Agent.objects.get(name=agent_name)
@@ -861,13 +872,21 @@ def compose_task_singularity_command(
         work_dir: str,
         image: str,
         command: str,
+        env: List[EnvironmentVariable] = None,
         bind_mounts: List[BindMount] = None,
         parameters: List[Parameter] = None,
         no_cache: bool = False,
         gpu: bool = False,
         docker_username: str = None,
         docker_password: str = None) -> str:
-    cmd = f"singularity exec --home {work_dir}"
+    cmd = ''
+
+    if env is not None:
+        if len(env) > 0:
+            cmd += ' '.join([f"SINGULARITYENV_{var['key']}={var['value']}" for var in env])
+        cmd += ' '
+
+    cmd += f"singularity exec --home {work_dir}"
 
     if bind_mounts is not None:
         if len(bind_mounts) > 0:
@@ -1100,6 +1119,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     work_dir=options['workdir'],
                     image=options['image'],
                     command=options['command'],
+                    env=options['env'],
                     parameters=(options['parameters'] if 'parameters' in options else []) + [
                         Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
                     bind_mounts=options['bind_mounts'],
@@ -1113,6 +1133,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 work_dir=options['workdir'],
                 image=options['image'],
                 command=options['command'],
+                env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
@@ -1127,6 +1148,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 work_dir=options['workdir'],
                 image=options['image'],
                 command=options['command'],
+                env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], file_name))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
@@ -1140,6 +1162,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             work_dir=options['workdir'],
             image=options['image'],
             command=options['command'],
+            env=options['env'],
             parameters=(options['parameters'] if 'parameters' in options else []),
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,

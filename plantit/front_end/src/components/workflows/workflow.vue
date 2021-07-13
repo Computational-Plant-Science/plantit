@@ -610,10 +610,30 @@
                                                                         }}
                                                                     </b-col>
                                                                 </b-row>
+                                                               <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Environment Variables</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        {{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .env
+                                                                                ? getWorkflow
+                                                                                      .config
+                                                                                      .env
+                                                                                : 'None'
+                                                                        }}
+                                                                    </b-col>
+                                                                </b-row>
                                                                 <b-row>
                                                                     <b-col>
                                                                         <small
-                                                                            >Mount</small
+                                                                            >Bind Mounts</small
                                                                         >
                                                                     </b-col>
                                                                     <b-col
@@ -2870,7 +2890,7 @@
                                                                 small
                                                                 v-if="submitted"
                                                                 label="Loading..."
-                                                                variant="success"
+                                                                variant="warning"
                                                                 class="ml-2 mb-1"
                                                             ></b-spinner></b-button></b-col
                                                 ></b-row>
@@ -3670,7 +3690,7 @@ export default {
         },
         inputSelected(node) {
             this.input.path = node.path;
-            this.input.kind = node.kind;
+            // this.input.kind = node.kind;
             this.loadSelectedInput(node.path);
         },
         outputSelected(node) {
@@ -3727,6 +3747,8 @@ export default {
             };
             if ('jobqueue' in this.getWorkflow.config)
                 config['jobqueue'] = this.getWorkflow.config.jobqueue;
+            if ('env' in this.getWorkflow.config)
+              config['env'] = this.getWorkflow.config.env;
             else if (
                 this.getWorkflow.config.jobqueue === undefined &&
                 this.selectedAgent.executor !== 'Local'
@@ -3744,7 +3766,7 @@ export default {
             if ('branch' in this.getWorkflow.config)
                 config['branch'] = this.getWorkflow.config.branch;
             if (this.getWorkflow.config.mount !== null)
-                config['mount'] = this.getWorkflow.config.mount;
+                config['bind_mounts'] = this.getWorkflow.config.mount;
             if (this.input !== undefined && this.input.path) {
                 config.input = this.input;
                 config.input.patterns =

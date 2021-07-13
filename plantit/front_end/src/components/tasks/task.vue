@@ -962,9 +962,7 @@
                                                                             file.name
                                                                     "
                                                                     @click="
-                                                                        downloadFile(
-                                                                            file.name
-                                                                        )
+                                                                      preDownloadFile(file.name)
                                                                     "
                                                                 >
                                                                     <i
@@ -1512,6 +1510,34 @@
                 required
             ></b-form-input>
         </b-modal>
+      <b-modal
+            id="authenticate-download"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="'Authenticate with ' + this.getTask.agent.name"
+            @ok="downloadFile"
+            ok-variant="success"
+        >
+            <b-form-input
+                v-model="authenticationUsername"
+                type="text"
+                placeholder="Your username"
+                required
+            ></b-form-input>
+            <b-form-input
+                v-model="authenticationPassword"
+                type="password"
+                placeholder="Your password"
+                required
+            ></b-form-input>
+        </b-modal>
         <b-modal
             size="lg"
             id="transfer"
@@ -2040,24 +2066,44 @@ export default {
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
         },
-        downloadFile(file) {
+        preDownloadFile(file) {
+          this.fileToDownload = file;
+          if (this.mustAuthenticate) this.$bvModal.show('authenticate-download');
+          else this.downloadFile();
+        },
+        async downloadFile() {
             this.downloading = true;
-            axios
-                .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
-                    { responseType: 'blob' }
-                )
+            let data = {
+                path: this.fileToDownload
+            };
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+            else
+                data['auth'] = {
+                    username: this.getTask.agent.user
+                };
+            await axios({
+                method: 'post',
+                data: data,
+                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/output/`,
+                config: { responseType: 'blob' }
+            })
                 .then(response => {
                     if (response && response.status === 404) {
                         return;
                     }
+
+                    this.$bvModal.hide('authenticate-download');
 
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
                     let link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', file);
+                    link.setAttribute('download', this.fileToDownload);
                     link.click();
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
@@ -2065,6 +2111,7 @@ export default {
                 .catch(error => {
                     Sentry.captureException(error);
                     this.downloading = false;
+                    this.$bvModal.hide('authenticate-download');
                     return error;
                 });
         },
