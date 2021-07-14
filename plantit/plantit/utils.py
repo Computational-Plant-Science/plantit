@@ -740,6 +740,16 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     return errors, options
 
 
+def parse_time_limit_seconds(time):
+    time_limit = time['limit']
+    time_units = time['units']
+    seconds = time_limit
+    if time_units == 'Days': seconds = seconds * 60 * 60 * 24
+    elif time_units == 'Hours': seconds = seconds * 60 * 60
+    elif time_units == 'Minutes': seconds = seconds * 60
+    return seconds
+
+
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None,
                 study: str = None):
     repo_owner = workflow['repo']['owner']['login']
@@ -748,6 +758,10 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     user = User.objects.get(username=username)
     if guid is None: guid = str(uuid.uuid4())  # if the browser client hasn't set a GUID, create one
     now = timezone.now()
+
+    time_limit = parse_time_limit_seconds(workflow['config']['time'])
+    print(f"Using task time limit {time_limit}s")
+    due_time = timezone.now() + timedelta(seconds=time_limit)
 
     task = JobQueueTask.objects.create(
         guid=guid,
@@ -760,6 +774,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
         status=TaskStatus.CREATED,
         created=now,
         updated=now,
+        due_time=due_time,
         token=binascii.hexlify(
             os.urandom(
                 20)).decode()) \
@@ -775,6 +790,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
             status=TaskStatus.CREATED,
             created=now,
             updated=now,
+            due_time=due_time,
             token=binascii.hexlify(os.urandom(20)).decode())
 
     # add MIAPPE info
@@ -1501,6 +1517,7 @@ def task_to_dict(task: Task) -> dict:
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),
         'completed': task.completed.isoformat() if task.completed is not None else None,
+        'due_time': None if task.due_time is None else task.due_time.isoformat(),
         'workflow_owner': task.workflow_owner,
         'workflow_name': task.workflow_name,
         'tags': [str(tag) for tag in task.tags.all()],

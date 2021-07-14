@@ -19,7 +19,7 @@ from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
     log_task_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds
 
 
 @login_required
@@ -47,15 +47,11 @@ def get_all_or_create(request):
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
 
-            time_limit = workflow['config']['time']['limit']
-            time_units = workflow['config']['time']['units']
-            seconds = time_limit
-            if time_units == 'days': seconds = seconds * 24 * 60
-            elif time_units == 'hours': seconds = seconds * 24
+            time_limit = parse_time_limit_seconds(workflow['config']['time'])
 
             # submit the task
             auth = parse_task_auth_options(workflow['auth'])
-            submit_task.apply_async(args=[task.guid, auth], time_limit=time_limit)  # TODO should we use soft time limits too?
+            submit_task.apply_async(args=[task.guid, auth], soft_time_limit=time_limit)  # TODO should we use soft time limits too?
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 

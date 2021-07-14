@@ -2904,7 +2904,7 @@
                                                         <b-input-group>
                                                             <template #prepend>
                                                                 <b-input-group-text
-                                                                    >Start
+                                                                    >Submit
                                                                     {{
                                                                         getWorkflow
                                                                             .config
@@ -3034,16 +3034,16 @@
                                                             variant="success"
                                                             block
                                                         >
-                                                            <i
-                                                                class="fas fa-chevron-right fa-fw"
-                                                            ></i>
-                                                            Start<b-spinner
+                                                            <b-spinner
                                                                 small
                                                                 v-if="submitted"
                                                                 label="Loading..."
-                                                                variant="warning"
-                                                                class="ml-2 mb-1"
-                                                            ></b-spinner></b-button></b-col
+                                                                variant="dark"
+                                                                class="mr-2 mb-1"
+                                                            ></b-spinner><i v-else
+                                                                class="fas fa-chevron-right fa-fw mr-1"
+                                                            ></i>
+                                                            Start</b-button></b-col
                                                 ></b-row>
                                             </b-tab>
                                             <!--<b-tab
@@ -3542,8 +3542,11 @@ export default {
             this.getWorkflow.config.jobqueue !== undefined &&
             this.getWorkflow.config.jobqueue.walltime !== undefined
         ) {
-            this.timeLimit = parseInt(
-                this.getWorkflow.config.jobqueue.walltime.split(':')[0]
+            this.timeLimit = Math.max(
+                1,
+                parseInt(
+                    this.getWorkflow.config.jobqueue.walltime.split(':')[0]
+                )
             );
             this.timeLimitUnits = 'Hours';
         }

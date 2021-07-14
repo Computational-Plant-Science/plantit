@@ -326,16 +326,31 @@
                                     </b-card-body>
                                 </b-card>
                                 <b-row class="m-0 p-0 mt-1">
-                                    <b-col class="m-0 p-0">
+                                    <b-col class="m-0 p-0 text-center">
                                         <small>
                                             Created
                                             {{ prettify(getTask.created) }}
                                         </small>
                                     </b-col>
-                                    <b-col class="m-0 p-0" md="auto">
+                                    <b-col
+                                        class="m-0 p-0 text-center"
+                                        v-if="!getTask.is_complete"
+                                    >
                                         <small>
                                             Last updated
                                             {{ prettify(getTask.updated) }}
+                                        </small>
+                                    </b-col>
+                                    <b-col class="m-0 p-0 text-center">
+                                        <small v-if="getTask.is_complete"
+                                            >Completed
+                                            {{
+                                                prettify(getTask.completed)
+                                            }}</small
+                                        >
+                                        <small v-else>
+                                            Due
+                                            {{ prettify(getTask.due_time) }}
                                         </small>
                                     </b-col>
                                 </b-row>
@@ -378,9 +393,10 @@
                                                                     line !==
                                                                         null
                                                             "
-                                                            ><span>{{
+                                                            >{{
                                                                 line + '\n'
-                                                            }}</span>
+                                                            }}</span
+                                                        >
                                                         <span
                                                             v-if="
                                                                 !getTask.is_complete
