@@ -353,6 +353,18 @@
                                             {{ prettify(getTask.due_time) }}
                                         </small>
                                     </b-col>
+                                    <b-col
+                                        v-if="
+                                            getTask.is_complete &&
+                                                getTask.cleanup_time !== null
+                                        "
+                                        ><small
+                                            >Cleaning up
+                                            {{
+                                                prettify(getTask.cleanup_time)
+                                            }}</small
+                                        ></b-col
+                                    >
                                 </b-row>
                                 <b-row class="m-0 p-0 mt-2">
                                     <b-col class="m-0 p-1">

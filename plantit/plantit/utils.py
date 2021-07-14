@@ -1518,6 +1518,7 @@ def task_to_dict(task: Task) -> dict:
         'updated': task.updated.isoformat(),
         'completed': task.completed.isoformat() if task.completed is not None else None,
         'due_time': None if task.due_time is None else task.due_time.isoformat(),
+        'cleanup_time': None if task.cleanup_time is None else task.cleanup_time.isoformat(),
         'workflow_owner': task.workflow_owner,
         'workflow_name': task.workflow_name,
         'tags': [str(tag) for tag in task.tags.all()],

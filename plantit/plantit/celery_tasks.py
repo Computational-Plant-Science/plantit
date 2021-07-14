@@ -2,6 +2,7 @@ import base64
 import json
 import tempfile
 import traceback
+from datetime import timedelta
 from os import environ
 from os.path import join
 
@@ -65,10 +66,13 @@ def submit_task(guid: str, auth: dict):
 
                 execute_local_task(task, ssh)
                 list_task_results.s(guid, auth).apply_async()
-                cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
-                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay * 60)
+                cleanup_delay_minutes = int(environ.get('RUNS_CLEANUP_MINUTES'))
+                cleanup_delay_seconds = cleanup_delay_minutes * 60
+                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay_seconds)
+                task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay_seconds)
+                task.save()
 
-                final_message = f"Completed, cleaning up in {cleanup_delay} minute(s)"
+                final_message = f"Completed, cleaning up in {cleanup_delay_minutes} minute(s)"
                 log_task_status(task, [final_message])
                 async_to_sync(push_task_event)(task)
 
@@ -117,6 +121,8 @@ def poll_job_status(guid: str, auth: dict):
         log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+        task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
+        task.save()
 
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -156,6 +162,8 @@ def poll_job_status(guid: str, auth: dict):
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+            task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
+            task.save()
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -178,6 +186,8 @@ def poll_job_status(guid: str, auth: dict):
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+            task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
+            task.save()
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -192,6 +202,8 @@ def poll_job_status(guid: str, auth: dict):
         log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+        task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
+        task.save()
 
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
