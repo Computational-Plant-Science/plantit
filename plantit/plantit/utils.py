@@ -1524,6 +1524,14 @@ def task_to_dict(task: Task) -> dict:
     return t
 
 
+def jobqueue_task_to_dict(task: JobQueueTask) -> dict:
+    d = task_to_dict(task)
+    d['job_id'] = task.job_id
+    d['job_status'] = task.job_status
+    d['job_walltime'] = task.job_elapsed_walltime
+    return d
+
+
 def delayed_task_to_dict(task: DelayedTask) -> dict:
     return {
         'agent': agent_to_dict(task.agent),

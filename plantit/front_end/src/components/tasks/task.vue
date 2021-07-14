@@ -378,10 +378,9 @@
                                                                     line !==
                                                                         null
                                                             "
-                                                            >{{
+                                                            ><span>{{
                                                                 line + '\n'
-                                                            }}</span
-                                                        >
+                                                            }}</span>
                                                         <span
                                                             v-if="
                                                                 !getTask.is_complete
@@ -962,7 +961,9 @@
                                                                             file.name
                                                                     "
                                                                     @click="
-                                                                      preDownloadFile(file.name)
+                                                                        preDownloadFile(
+                                                                            file.name
+                                                                        )
                                                                     "
                                                                 >
                                                                     <i
@@ -1510,7 +1511,7 @@
                 required
             ></b-form-input>
         </b-modal>
-      <b-modal
+        <b-modal
             id="authenticate-download"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -2067,9 +2068,10 @@ export default {
             this.$bvModal.show('thumbnail');
         },
         preDownloadFile(file) {
-          this.fileToDownload = file;
-          if (this.mustAuthenticate) this.$bvModal.show('authenticate-download');
-          else this.downloadFile();
+            this.fileToDownload = file;
+            if (this.mustAuthenticate)
+                this.$bvModal.show('authenticate-download');
+            else this.downloadFile();
         },
         async downloadFile() {
             this.downloading = true;
@@ -2227,7 +2229,7 @@ export default {
                 all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
             all.reverse();
             if (lastI === -1) return all;
-            if (lastI === all.length - 1) return all;
+            // if (lastI === all.length - 1) return all;
             else if (this.getTask.is_complete)
                 all.splice(firstI, lastI - firstI + 1);
             else all.splice(firstI, lastI - firstI + 1, all[lastI]);

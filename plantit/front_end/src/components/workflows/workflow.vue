@@ -610,10 +610,11 @@
                                                                         }}
                                                                     </b-col>
                                                                 </b-row>
-                                                               <b-row>
+                                                                <b-row>
                                                                     <b-col>
                                                                         <small
-                                                                            >Environment Variables</small
+                                                                            >Environment
+                                                                            Variables</small
                                                                         >
                                                                     </b-col>
                                                                     <b-col
@@ -633,7 +634,8 @@
                                                                 <b-row>
                                                                     <b-col>
                                                                         <small
-                                                                            >Bind Mounts</small
+                                                                            >Bind
+                                                                            Mounts</small
                                                                         >
                                                                     </b-col>
                                                                     <b-col
@@ -1401,6 +1403,155 @@
                                                                             "
                                                                         >
                                                                             <i
+                                                                                class="fas fa-stopwatch fa-fw"
+                                                                            ></i>
+                                                                            Time
+                                                                            Limit
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <span
+                                                                                v-if="
+                                                                                    timeLimit !==
+                                                                                        0
+                                                                                "
+                                                                                >{{
+                                                                                    timeLimit
+                                                                                }}
+                                                                                {{
+                                                                                    timeLimitUnits
+                                                                                }}</span
+                                                                            >
+                                                                            <span
+                                                                                v-if="
+                                                                                    timeLimit ===
+                                                                                        0
+                                                                                "
+                                                                                >None</span
+                                                                            ><span
+                                                                                v-else
+                                                                                ><i
+                                                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                                                ></i
+                                                                            ></span></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Set
+                                                                            a
+                                                                            time
+                                                                            limit
+                                                                            for
+                                                                            this
+                                                                            task.
+                                                                        </b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    class="mt-2"
+                                                                    ><b-col
+                                                                        md="auto"
+                                                                        ><b-form-spinbutton
+                                                                            v-model="
+                                                                                timeLimit
+                                                                            "
+                                                                            min="1"
+                                                                            :max="
+                                                                                timeLimitUnits ===
+                                                                                'Minutes'
+                                                                                    ? 60
+                                                                                    : timeLimitUnits ===
+                                                                                      'Hours'
+                                                                                    ? 24
+                                                                                    : 10
+                                                                            "
+                                                                        ></b-form-spinbutton></b-col
+                                                                    ><b-col
+                                                                        md="auto"
+                                                                        ><b-dropdown
+                                                                            dropright
+                                                                            ><template
+                                                                                #button-content
+                                                                                >{{
+                                                                                    timeLimitUnits
+                                                                                }}</template
+                                                                            ><b-dropdown-item
+                                                                                @click="
+                                                                                    setTimeLimitUnits(
+                                                                                        'Minutes'
+                                                                                    )
+                                                                                "
+                                                                                >Minutes</b-dropdown-item
+                                                                            ><b-dropdown-item
+                                                                                @click="
+                                                                                    setTimeLimitUnits(
+                                                                                        'Hours'
+                                                                                    )
+                                                                                "
+                                                                                >Hours</b-dropdown-item
+                                                                            ><b-dropdown-item
+                                                                                @click="
+                                                                                    setTimeLimitUnits(
+                                                                                        'Days'
+                                                                                    )
+                                                                                "
+                                                                                >Days</b-dropdown-item
+                                                                            ></b-dropdown
+                                                                        ></b-col
+                                                                    ></b-row
+                                                                >
+                                                            </b-card>
+                                                            <b-card
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 80rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
                                                                                 class="fas fa-tags fa-fw"
                                                                             ></i>
                                                                             Tags
@@ -1445,7 +1596,7 @@
                                                                     </b-col>
                                                                 </b-row>
                                                                 <b-row
-                                                                    class="mt-1"
+                                                                    class="mt-2"
                                                                 >
                                                                     <b-col>
                                                                         <multiselect
@@ -3324,6 +3475,8 @@ export default {
     },
     data: function() {
         return {
+            timeLimit: 1,
+            timeLimitUnits: 'Hours',
             selectedProject: null,
             selectedStudy: null,
             togglingPublic: false,
@@ -3385,6 +3538,16 @@ export default {
                 this.$store.dispatch('datasets/loadShared')
             ]);
 
+        if (
+            this.getWorkflow.config.jobqueue !== undefined &&
+            this.getWorkflow.config.jobqueue.walltime !== undefined
+        ) {
+            this.timeLimit = parseInt(
+                this.getWorkflow.config.jobqueue.walltime.split(':')[0]
+            );
+            this.timeLimitUnits = 'Hours';
+        }
+
         // if (this.workflowKey in this.recentlyRunWorkflows) {
         //     let config = this.recentlyRunWorkflows[this.workflowKey];
         //     if (config.input !== undefined && config.input.from !== undefined)
@@ -3396,6 +3559,12 @@ export default {
         // }
     },
     methods: {
+        setTimeLimitUnits(units) {
+            this.timeLimitUnits = units;
+        },
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
+        },
         async togglePublic() {
             if (!this.ownsWorkflow) return;
             this.togglingPublic = true;
@@ -3743,12 +3912,16 @@ export default {
                 parameters: this.params,
                 agent: agent,
                 commands: this.getWorkflow.config.commands,
-                tags: this.tags
+                tags: this.tags,
+                time: {
+                    limit: this.timeLimit,
+                    units: this.timeLimitUnits
+                }
             };
             if ('jobqueue' in this.getWorkflow.config)
                 config['jobqueue'] = this.getWorkflow.config.jobqueue;
             if ('env' in this.getWorkflow.config)
-              config['env'] = this.getWorkflow.config.env;
+                config['env'] = this.getWorkflow.config.env;
             else if (
                 this.getWorkflow.config.jobqueue === undefined &&
                 this.selectedAgent.executor !== 'Local'

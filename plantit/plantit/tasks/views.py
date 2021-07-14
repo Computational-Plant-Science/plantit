@@ -47,9 +47,15 @@ def get_all_or_create(request):
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
 
+            time_limit = workflow['config']['time']['limit']
+            time_units = workflow['config']['time']['units']
+            seconds = time_limit
+            if time_units == 'days': seconds = seconds * 24 * 60
+            elif time_units == 'hours': seconds = seconds * 24
+
             # submit the task
             auth = parse_task_auth_options(workflow['auth'])
-            submit_task.delay(task.guid, auth)
+            submit_task.apply_async(args=[task.guid, auth], time_limit=time_limit)  # TODO should we use soft time limits too?
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
