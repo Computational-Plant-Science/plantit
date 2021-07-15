@@ -6,14 +6,21 @@ export const tasks = {
     namespaced: true,
     state: () => ({
         tasks: [],
-        loading: true
+        loading: true,
+        nextPage: 2
     }),
     mutations: {
         setAll(state, tasks) {
             state.tasks = tasks;
         },
+        addAll(state, tasks) {
+            state.tasks = state.tasks.concat(tasks);
+        },
         setLoading(state, loading) {
             state.loading = loading;
+        },
+        setNextPage(state, nextPage) {
+            state.nextPage = nextPage;
         },
         update(state, task) {
             let i = state.tasks.findIndex(t => t.guid === task.guid);
@@ -30,7 +37,7 @@ export const tasks = {
             await Promise.all([
                 axios
                     .get(
-                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/`
+                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/?page=1`
                     )
                     .then(response => {
                         var guids = [];
@@ -49,6 +56,40 @@ export const tasks = {
                         });
 
                         commit('setAll', tasks);
+                        commit('setNextPage', response.data.next_page);
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        throw error;
+                    })
+            ]);
+            commit('setLoading', false);
+        },
+        async loadMore({ commit, rootState }, payload) {
+            commit('setLoading', true);
+            await Promise.all([
+                axios
+                    .get(
+                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/?page=${payload.page}`
+                    )
+                    .then(response => {
+                        var guids = [];
+                        var tasks = Array.prototype.slice.call(response.data.tasks);
+
+                        // filter unique?
+                        tasks = tasks.filter(function(t) {
+                            if (guids.indexOf(t.guid) >= 0) return false;
+                            guids.push(t.guid);
+                            return true;
+                        });
+
+                        // sort by last updated
+                        tasks.sort(function(a, b) {
+                            return new Date(b.updated) - new Date(a.updated);
+                        });
+
+                        commit('addAll', tasks);
+                        commit('setNextPage', response.data.next_page);
                     })
                     .catch(error => {
                         Sentry.captureException(error);
@@ -87,6 +128,7 @@ export const tasks = {
         tasksCompleted: state => state.tasks.filter(t => t.is_complete),
         tasksSucceeded: state => state.tasks.filter(t => t.is_success),
         tasksFailed: state => state.tasks.filter(t => t.is_failure),
-        tasksLoading: state => state.loading
+        tasksLoading: state => state.loading,
+        tasksNextPage: state => state.nextPage
     }
 };

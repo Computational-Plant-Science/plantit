@@ -1278,7 +1278,7 @@
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
-                                                                <b-row
+                                                                <b-row v-if="personalProjects.length > 0"
                                                                     class="mt-2"
                                                                     ><b-col
                                                                         cols="3"
@@ -1294,6 +1294,13 @@
                                                                         ><i
                                                                             >Study</i
                                                                         ></b-col
+                                                                    ></b-row
+                                                                >
+                                                              <b-row v-else
+                                                                    class="mt-2"
+                                                                    ><b-col
+                                                                        cols="3"
+                                                              ><i>You haven't started any projects.</i></b-col
                                                                     ></b-row
                                                                 >
                                                                 <b-row
@@ -2912,6 +2919,7 @@
                                                                     }}</b-input-group-text
                                                                 >
                                                             </template>
+
                                                             <template #append>
                                                                 <b-dropdown
                                                                     variant="secondary"
@@ -2953,6 +2961,7 @@
                                                                     >-->
                                                                 </b-dropdown>
                                                             </template>
+                                                            <!--<template #append><b-form-spinbutton min="1" max="20" value="1" v-model="iterations"></b-form-spinbutton>{{ iterations }} Time{{ iterations === 1 ? '' : 's' }}</template>-->
                                                         </b-input-group>
                                                     </b-col>
                                                     <b-col
@@ -3475,6 +3484,7 @@ export default {
     },
     data: function() {
         return {
+            iterations: 1,
             timeLimit: 1,
             timeLimitUnits: 'Hours',
             selectedProject: null,
@@ -3919,7 +3929,8 @@ export default {
                 time: {
                     limit: this.timeLimit,
                     units: this.timeLimitUnits
-                }
+                },
+                // iterations: this.iterations
             };
             if ('jobqueue' in this.getWorkflow.config)
                 config['jobqueue'] = this.getWorkflow.config.jobqueue;

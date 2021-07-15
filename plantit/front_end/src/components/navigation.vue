@@ -123,8 +123,17 @@
                                         }"
                                         replace
                                         >{{ task.name }}</b-link
-                                    >
-                                    <br />
+                                    ><span>
+                                        v-if=" task.tags !== undefined &&
+                                        task.tags.length > 0 " >
+                                        <b-badge
+                                            v-for="tag in task.tags"
+                                            v-bind:key="tag"
+                                            class="mr-1"
+                                            variant="secondary"
+                                            >{{ tag }}
+                                        </b-badge>
+                                    </span>
                                     <span v-if="task.project !== null">
                                         <b-badge class="mr-2" variant="info">{{
                                             task.project.title
@@ -137,21 +146,7 @@
                                             ></small
                                         ></span
                                     >
-                                    <div
-                                        v-if="
-                                            task.tags !== undefined &&
-                                                task.tags.length > 0
-                                        "
-                                    >
-                                        <b-badge
-                                            v-for="tag in task.tags"
-                                            v-bind:key="tag"
-                                            class="mr-1"
-                                            variant="secondary"
-                                            >{{ tag }}
-                                        </b-badge>
-                                        <br />
-                                    </div>
+                                    <br />
                                     <b-spinner
                                         class="mr-1"
                                         small
@@ -257,8 +252,8 @@
                                             <b-link
                                                 :class="
                                                     profile.darkMode
-                                                        ? 'text-light'
-                                                        : 'text-dark'
+                                                        ? 'text-light mr-1'
+                                                        : 'text-dark mr-1'
                                                 "
                                                 :to="{
                                                     name: 'task',
@@ -269,24 +264,7 @@
                                                 }"
                                                 replace
                                                 >{{ task.name }}</b-link
-                                            >
-                                        </b-col>
-                                    </b-row>
-                                    <span v-if="task.project !== null">
-                                        <b-badge class="mr-2" variant="info">{{
-                                            task.project.title
-                                        }}</b-badge
-                                        ><small v-if="task.study !== null"
-                                            ><b-badge
-                                                class="mr-2"
-                                                variant="info"
-                                                >{{ task.study.title }}</b-badge
-                                            ></small
-                                        ></span
-                                    >
-                                    <b-row
-                                        ><b-col>
-                                            <div
+                                            ><span
                                                 v-if="
                                                     task.tags !== undefined &&
                                                         task.tags.length > 0
@@ -295,14 +273,33 @@
                                                 <b-badge
                                                     v-for="tag in task.tags"
                                                     v-bind:key="tag"
-                                                    class="mr-1"
+                                                    class="mr-2"
                                                     variant="secondary"
                                                     >{{ tag }}
                                                 </b-badge>
-                                                <br
-                                                    v-if="task.tags.length > 0"
-                                                />
-                                            </div>
+                                            </span>
+                                            <span v-if="task.project !== null">
+                                                <b-badge
+                                                    class="mr-2"
+                                                    variant="info"
+                                                    >{{
+                                                        task.project.title
+                                                    }}</b-badge
+                                                ><small
+                                                    v-if="task.study !== null"
+                                                    ><b-badge
+                                                        class="mr-2"
+                                                        variant="info"
+                                                        >{{
+                                                            task.study.title
+                                                        }}</b-badge
+                                                    ></small
+                                                ></span
+                                            >
+                                        </b-col>
+                                    </b-row>
+                                    <b-row
+                                        ><b-col>
                                             <b-badge
                                                 :variant="
                                                     task.is_failure ||
@@ -351,7 +348,7 @@
                                                 >
                                             </small>
                                         </b-col>
-                                        <b-col md="auto">
+                                        <!--<b-col md="auto">
                                             <b-button
                                                 v-if="task.is_complete"
                                                 variant="outline-danger"
@@ -364,7 +361,7 @@
                                                 <i class="fas fa-trash"></i>
                                                 Delete
                                             </b-button>
-                                        </b-col></b-row
+                                        </b-col>--></b-row
                                     >
                                     <b-modal
                                         :id="'remove ' + task.name"
@@ -612,7 +609,7 @@
                                 "
                             >
                                 Your Tasks ({{ tasksRunning.length }}
-                                in progress)
+                                running, {{ profile.stats.total_tasks}} total)
                             </h2>
                         </b-breadcrumb-item>
                     </b-breadcrumb>

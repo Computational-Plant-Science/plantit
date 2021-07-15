@@ -35,7 +35,6 @@ def get_all_or_create(request):
         config = workflow['config']
         agent = Agent.objects.get(name=config['agent']['name'])
         if workflow['type'] == 'Now':
-            # create the task
             task_name = config.get('task_name', None)
             task_guid = config.get('task_guid', None)
             if task_guid is None: return HttpResponseBadRequest()
@@ -55,6 +54,7 @@ def get_all_or_create(request):
             submit_task.apply_async(args=[task.guid, auth], soft_time_limit=time_limit)  # TODO should we use soft time limits too?
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+
 
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':
@@ -106,8 +106,8 @@ def get_by_owner(request, owner):
     except: return HttpResponseNotFound()
 
     tasks = Task.objects.filter(user=user)
-    paginator = Paginator(tasks, 3)
-    page = paginator.get_page(int(request.GET.get('page', 0)))
+    paginator = Paginator(tasks, 20)
+    page = paginator.get_page(int(request.GET.get('page', 1)))
 
     data = {
         'previous_page': page.has_previous() and page.previous_page_number() or None,

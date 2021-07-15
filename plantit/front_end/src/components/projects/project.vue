@@ -347,7 +347,7 @@
                             </h5></b-col
                         >
                     </b-row>
-                    <b-list-group class="text-left m-0 p-0 mt-1">
+                    <b-list-group class="text-left m-0 p-0 mt-1" v-if="projectTasks.length > 0">
                         <b-list-group-item
                             style="box-shadow: -2px 2px 2px #adb5bd"
                             v-for="task in projectTasks"
@@ -475,6 +475,7 @@
                             </small>
                         </b-list-group-item>
                     </b-list-group>
+                <b-row v-else><b-col>You haven't run any tasks associated with this project.</b-col></b-row>
                 </b-card-body>
             </b-card>
         </b-container>

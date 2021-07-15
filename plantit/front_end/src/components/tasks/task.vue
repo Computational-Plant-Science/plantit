@@ -87,7 +87,7 @@
                                     <i class="fas fa-tasks fa-fw"></i>
                                     {{ getTask.name }}
                                 </h3></b-col
-                            ><b-col class="m-0 ml-1 p-0">
+                            ><b-col class="m-0 ml-2 p-0">
                                 <h5>
                                     <b-badge
                                         v-for="tag in getTask.tags"
@@ -95,11 +95,18 @@
                                         class="mr-2"
                                         variant="secondary"
                                         >{{ tag }}</b-badge
+                                    ><b-badge class="mr-2" variant="info">{{
+                                        getTask.project.title
+                                    }}</b-badge
+                                    ><small v-if="getTask.study !== null"
+                                        ><b-badge class="mr-2" variant="info">{{
+                                            getTask.study.title
+                                        }}</b-badge></small
                                     >
                                 </h5>
                             </b-col>
                         </b-row>
-                        <b-row v-if="getTask.project !== null"
+                        <!--<b-row v-if="getTask.project !== null"
                             ><b-col md="auto"
                                 ><h5>
                                     <b-badge class="mr-2" variant="info">{{
@@ -112,7 +119,7 @@
                                     >
                                 </h5></b-col
                             ></b-row
-                        >
+                        >-->
                         <b-row class="m-0 p-0">
                             <b-col align-self="end" class="m-0 p-0">
                                 <h5
@@ -281,7 +288,7 @@
                                     ></b-spinner>
                                 </b-button>
                             </b-col>
-                            <b-col
+                            <!--<b-col
                                 v-if="getTask.is_complete"
                                 md="auto"
                                 class="m-0 mb-2"
@@ -297,7 +304,7 @@
                                     <i class="fas fa-trash"></i>
                                     Delete
                                 </b-button>
-                            </b-col>
+                            </b-col>-->
                         </b-row>
                         <b-row>
                             <b-col>
