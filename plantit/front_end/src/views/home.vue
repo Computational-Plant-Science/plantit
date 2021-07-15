@@ -88,6 +88,30 @@
             <b-row>
                 <b-col class="text-left" md="auto"
                     ><b-button
+                        id="projects-button"
+                        block
+                        class="m-1 text-left"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        to="/home/projects/"
+                        ><b-img
+                            class="mb-1"
+                            style="max-width: 18px"
+                            :src="
+                                profile.darkMode
+                                    ? require('../assets/miappe_icon.png')
+                                    : require('../assets/miappe_icon_black.png')
+                            "
+                        ></b-img>
+                        Projects</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials && isRootPath"
+                        triggers="manual"
+                        placement="bottom"
+                        target="projects-button"
+                        title="Your MIAPPE projects"
+                        >Click here to see your MIAPPE projects and manage your
+                        metadata.</b-popover
+                    ><b-button
                         id="workflows-button"
                         block
                         class="m-1 text-left"
@@ -149,31 +173,6 @@
                         title="Your Tasks"
                         >Click here to see your workflow submissions and
                         results.</b-popover
-                    >
-                    <b-button
-                        id="projects-button"
-                        block
-                        class="m-1 text-left"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/projects/"
-                        ><b-img
-                            class="mb-1"
-                            style="max-width: 18px"
-                            :src="
-                                profile.darkMode
-                                    ? require('../assets/miappe_icon.png')
-                                    : require('../assets/miappe_icon_black.png')
-                            "
-                        ></b-img>
-                        Projects</b-button
-                    ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
-                        triggers="manual"
-                        placement="bottom"
-                        target="projects-button"
-                        title="Your MIAPPE projects"
-                        >Click here to see your MIAPPE projects and manage your
-                        metadata.</b-popover
                     >
                 </b-col>
                 <b-col

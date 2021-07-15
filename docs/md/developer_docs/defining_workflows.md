@@ -29,9 +29,14 @@ name: Hello Groot
 author: Groot
 public: True                  # should this workflow be visible to other users of PlantIT?
 clone: False                  # should this workflow's repository be cloned to the deployment target before running?
-image: docker://alpine        # the Docker or Singularity image your workflow's container(s) will be built from
-commands: echo "I am Groot!"  # the commands to run inside your container(s)
+image: docker://alpine        # the Docker image your workflow's container(s) will be built from
+commands: echo "I am Groot!"  # your code's entry point
 ```
+
+Certain environment variables will be configured in the Singularity container runtime, in case you need to reference them in your startup command. These are:
+
+- WORK_DIR: the current working directory
+- INPUT_INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
 
 ### Jobqueue deployment targets
 

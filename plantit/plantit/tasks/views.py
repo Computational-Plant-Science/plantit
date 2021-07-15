@@ -16,10 +16,11 @@ from plantit import settings
 from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
     log_task_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds, \
+    jobqueue_task_to_dict
 
 
 @login_required
@@ -130,10 +131,15 @@ def get_by_owner(request, owner):
 def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-        return JsonResponse(task_to_dict(task))
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = JobQueueTask.objects.get(user=user, name=name)
+        return JsonResponse(jobqueue_task_to_dict(task))
+    except JobQueueTask.DoesNotExist:
+        try:
+            user = User.objects.get(username=owner)
+            task = Task.objects.get(user=user, name=name)
+            return JsonResponse(task_to_dict(task))
+        except Task.DoesNotExist:
+            return HttpResponseNotFound()
 
 
 @login_required

@@ -106,6 +106,7 @@ def repopulate_user_cache(github_token: str):
 
     logger.info(f"Populating user cache")
     for user in mapped: redis.set(f"users/{user['username']}", json.dumps(user))
+    redis.set(f"users_updated", timezone.now().timestamp())
 
 
 @sync_to_async
@@ -622,7 +623,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
             env = [EnvironmentVariable(
                 key=variable.rpartition('=')[0],
                 value=variable.rpartition('=')[2])
-            for variable in config['env']]
+                for variable in config['env']]
 
     parameters = None
     if 'parameters' in config:
@@ -744,9 +745,12 @@ def parse_time_limit_seconds(time):
     time_limit = time['limit']
     time_units = time['units']
     seconds = time_limit
-    if time_units == 'Days': seconds = seconds * 60 * 60 * 24
-    elif time_units == 'Hours': seconds = seconds * 60 * 60
-    elif time_units == 'Minutes': seconds = seconds * 60
+    if time_units == 'Days':
+        seconds = seconds * 60 * 60 * 24
+    elif time_units == 'Hours':
+        seconds = seconds * 60 * 60
+    elif time_units == 'Minutes':
+        seconds = seconds * 60
     return seconds
 
 
