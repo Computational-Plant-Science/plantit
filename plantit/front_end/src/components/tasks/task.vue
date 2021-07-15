@@ -95,13 +95,19 @@
                                         class="mr-2"
                                         variant="secondary"
                                         >{{ tag }}</b-badge
-                                    ><b-badge class="mr-2" variant="info">{{
-                                        getTask.project.title
-                                    }}</b-badge
-                                    ><small v-if="getTask.study !== null"
+                                    ><span v-if="getTask.project !== null"
                                         ><b-badge class="mr-2" variant="info">{{
-                                            getTask.study.title
-                                        }}</b-badge></small
+                                            getTask.project.title
+                                        }}</b-badge
+                                        ><small v-if="getTask.study !== null"
+                                            ><b-badge
+                                                class="mr-2"
+                                                variant="info"
+                                                >{{
+                                                    getTask.study.title
+                                                }}</b-badge
+                                            ></small
+                                        ></span
                                     >
                                 </h5>
                             </b-col>

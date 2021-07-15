@@ -350,7 +350,7 @@
                                                 <template #title>
                                                     <b-button
                                                         id="about-workflow"
-                                                        :variant="
+                                                        :variant="activeTab === 0 ? 'info' :
                                                             profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
@@ -1011,7 +1011,7 @@
                                                         :disabled="
                                                             workflowLoading
                                                         "
-                                                        :variant="
+                                                        :variant="activeTab === 1 ? 'info' :
                                                             profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
