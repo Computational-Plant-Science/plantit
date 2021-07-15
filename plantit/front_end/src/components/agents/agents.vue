@@ -1085,7 +1085,7 @@ export default {
             authenticationUsername: '',
             authenticationPassword: '',
             // flags
-            publicContext: false,
+            publicContext: true,
             togglingContext: false,
             bindingAgent: false,
             checkingConnection: false,

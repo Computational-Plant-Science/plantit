@@ -630,7 +630,7 @@ export default {
             name: '',
             binding: null,
             bindingWorkflow: false,
-            contextPublic: false,
+            contextPublic: true,
             contextToggling: false
         };
     },

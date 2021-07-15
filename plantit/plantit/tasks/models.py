@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
-from plantit.agents.models import Agent
+from plantit.agents.models import Agent, AgentExecutor
 from plantit.miappe.models import Investigation, Study
 
 
@@ -61,6 +61,7 @@ class Task(models.Model):
     workflow_owner = models.CharField(max_length=280, null=False, blank=False)
     workflow_name = models.CharField(max_length=280, null=False, blank=False)
     workflow_image_url = models.URLField(null=True, blank=True)
+    status = models.CharField(max_length=8, choices=TaskStatus.choices, default=TaskStatus.CREATED)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
     previews_loaded = models.BooleanField(default=False)
     cleaned_up = models.BooleanField(default=False)
@@ -72,10 +73,25 @@ class Task(models.Model):
     due_time = models.DateTimeField(null=True, blank=True)
     cleanup_time = models.DateTimeField(null=True, blank=True)
 
-    status = models.CharField(
-        max_length=8,
-        choices=TaskStatus.choices,
-        default=TaskStatus.CREATED)
+    @property
+    def is_success(self):
+        return self.status == TaskStatus.SUCCESS or self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
+
+    @property
+    def is_failure(self):
+        return self.status == TaskStatus.FAILURE or self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL' or self.status == 'FAILURE'
+
+    @property
+    def is_timeout(self):
+        return self.status == TaskStatus.TIMEOUT or self.job_status == 'TIMEOUT'
+
+    @property
+    def is_cancelled(self):
+        return self.status == TaskStatus.CANCELED or self.job_status == 'REVOKED' or self.job_status == 'CANCELLED' or self.job_status == 'CANCELED'
+
+    @property
+    def is_complete(self):
+        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
 
     def __str__(self):
         opts = self._meta
@@ -86,56 +102,15 @@ class Task(models.Model):
             data[f.name] = [i.id for i in f.value_from_object(self)]
         return json.dumps(data)
 
-    @property
-    def is_success(self):
-        return self.status == TaskStatus.SUCCESS
-
-    @property
-    def is_failure(self):
-        return self.status == TaskStatus.FAILURE
-
-    @property
-    def is_timeout(self):
-        return self.status == TaskStatus.TIMEOUT
-
-    @property
-    def is_cancelled(self):
-        return self.status == TaskStatus.CANCELED
-
-    @property
-    def is_complete(self):
-        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
-
-
-class JobQueueTask(Task):
+    # jobqueue stuff
     job_id = models.CharField(max_length=50, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
-    job_elapsed_walltime = models.CharField(max_length=8, null=True, blank=True)
+    job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
     @property
-    def is_sandbox(self):
-        return self.agent.name is not None and self.agent.name == 'Sandbox'
-
-    @property
-    def is_success(self):
-        return self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
-
-    @property
-    def is_failure(self):
-        return self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL' or self.status == 'FAILURE'
-
-    @property
-    def is_cancelled(self):
-        return self.job_status == 'REVOKED' or self.job_status == 'CANCELLED' or self.job_status == 'CANCELED'
-
-    @property
-    def is_complete(self):
-        return self.is_success or self.is_failure or self.is_cancelled or self.is_timeout
-
-    @property
-    def is_timeout(self):
-        return self.job_status == 'TIMEOUT'
+    def is_jobqueue(self):
+        return self.agent.executor != AgentExecutor.LOCAL
 
 
 class DelayedTask(PeriodicTask):

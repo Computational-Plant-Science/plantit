@@ -1601,8 +1601,19 @@
                         max-rows="15"
                         class="p-1"
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    ></b-form-textarea> </b-col
-            ></b-row>
+                    ></b-form-textarea
+                    ><b-button
+                        block
+                        class="text-center"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Copy key to clipboard"
+                        @click="copyPublicKey"
+                        ><i class="fas fa-copy fa-fw"></i>Copy</b-button
+                    ></b-col
+                ></b-row
+            >
         </b-modal>
         <b-modal
             id="unbind"
@@ -1761,8 +1772,9 @@ export default {
             'publicAgentsLoading'
         ]),
         authorizedUsers() {
-            return this.getAgent.users_authorized
-                .filter(p => p.user !== this.profile.djangoProfile.username);
+            return this.getAgent.users_authorized.filter(
+                p => p.user !== this.profile.djangoProfile.username
+            );
         },
         otherUsers() {
             return this.allUsers.filter(
@@ -1852,6 +1864,19 @@ export default {
         }
     },
     methods: {
+        copyPublicKey() {
+            const el = document.createElement('textarea');
+            el.value = this.publicKey;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            this.$bvToast.toast(`Copied public key to clipboard`, {
+                autoHideDelay: 3000,
+                appendToast: false,
+                noCloseButton: true
+            });
+        },
         async refreshWorkflows() {
             await Promise.all([
                 this.$store.dispatch('workflows/refreshPublic'),
@@ -2156,11 +2181,11 @@ export default {
                     if (response.status === 200) {
                         this.publicKey = response.data.public_key;
                         this.showKeyModal();
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Retrieved public key`,
-                            guid: guid().toString()
-                        });
+                        // await this.$store.dispatch('alerts/add', {
+                        //     variant: 'success',
+                        //     message: `Retrieved public key`,
+                        //     guid: guid().toString()
+                        // });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',

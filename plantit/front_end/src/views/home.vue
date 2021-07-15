@@ -112,21 +112,6 @@
                         >Click here to see your MIAPPE projects and manage your
                         metadata.</b-popover
                     ><b-button
-                        id="workflows-button"
-                        block
-                        class="m-1 text-left"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/workflows/"
-                        ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
-                    ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
-                        triggers="manual"
-                        placement="bottom"
-                        target="workflows-button"
-                        title="Your Workflows"
-                        >Click here to see explore and run public workflows, or
-                        share your own.</b-popover
-                    ><b-button
                         id="datasets-button"
                         block
                         class="m-1 text-left"
@@ -142,6 +127,21 @@
                         title="Your Datasets"
                         >Click here to view your data in the CyVerse Data
                         Store.</b-popover
+                    ><b-button
+                        id="workflows-button"
+                        block
+                        class="m-1 text-left"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        to="/home/workflows/"
+                        ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials && isRootPath"
+                        triggers="manual"
+                        placement="bottom"
+                        target="workflows-button"
+                        title="Your Workflows"
+                        >Click here to see explore and run public workflows, or
+                        share your own.</b-popover
                     >
                     <b-button
                         id="agents-button"

@@ -43,7 +43,7 @@ from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, JobQueueTask, TaskCounter
+from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter
 from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount, EnvironmentVariable
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
@@ -767,9 +767,9 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     print(f"Using task time limit {time_limit}s")
     due_time = timezone.now() + timedelta(seconds=time_limit)
 
-    task = JobQueueTask.objects.create(
+    task = Task.objects.create(
         guid=guid,
-        name=name,
+        name=guid if name is None else name,
         user=user,
         workflow=workflow,
         workflow_owner=repo_owner,
@@ -779,23 +779,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
         created=now,
         updated=now,
         due_time=due_time,
-        token=binascii.hexlify(
-            os.urandom(
-                20)).decode()) \
-        if agent.executor != AgentExecutor.LOCAL else \
-        Task.objects.create(
-            guid=guid,
-            name=guid if name is None else name,
-            user=user,
-            workflow=workflow,
-            workflow_owner=repo_owner,
-            workflow_name=repo_name,
-            agent=agent,
-            status=TaskStatus.CREATED,
-            created=now,
-            updated=now,
-            due_time=due_time,
-            token=binascii.hexlify(os.urandom(20)).decode())
+        token=binascii.hexlify(os.urandom(20)).decode())
 
     # add MIAPPE info
     if investigation is not None: task.investigation = Investigation.objects.get(owner=user, title=investigation)
@@ -852,7 +836,7 @@ def configure_local_task_environment(task: Task, ssh: SSH):
         if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
 
-def configure_jobqueue_task_environment(task: JobQueueTask, ssh: SSH):
+def configure_jobqueue_task_environment(task: Task, ssh: SSH):
     log_task_status(task, [f"Verifying configuration"])
     async_to_sync(push_task_event)(task)
 
@@ -1072,7 +1056,7 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
     return template_header + resource_requests + [task.agent.pre_commands] + [pull_command] + run_commands + [zip_command] + [push_command]
 
 
-def compose_jobqueue_task_resource_requests(task: JobQueueTask, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
 
     if 'jobqueue' not in options: return []
@@ -1237,7 +1221,7 @@ def execute_local_task(task: Task, ssh: SSH):
     task.save()
 
 
-def submit_jobqueue_task(task: JobQueueTask, ssh: SSH) -> str:
+def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
     command = f"sbatch {task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
@@ -1278,7 +1262,7 @@ async def push_task_event(task: Task):
 def cancel_task(task: Task, auth):
     ssh = get_task_ssh_client(task, auth)
     with ssh:
-        if isinstance(task, JobQueueTask):
+        if task.agent.executor != AgentExecutor.LOCAL:
             lines = []
             for line in execute_command(
                     ssh=ssh,
@@ -1291,6 +1275,7 @@ def cancel_task(task: Task, auth):
             if task.job_id is None or not any([task.job_id in r for r in lines]):
                 return  # run doesn't exist, so no need to cancel
 
+            # TODO support PBS/other scheduler cancellation commands, not just SLURM
             execute_command(
                 ssh=ssh,
                 precommand=':',
@@ -1303,7 +1288,7 @@ def get_task_orchestration_log_file_path(task: Task):
 
 
 def get_task_container_log_file_name(task: Task):
-    if isinstance(task, JobQueueTask) and task.agent.launcher:
+    if isinstance(task, Task) and task.agent.launcher:
         return f"plantit.{task.job_id}.out"
     else:
         return f"{task.guid}.{task.agent.name.lower()}.log"
@@ -1351,7 +1336,7 @@ def remove_task_orchestration_logs(guid: str):
     os.remove(local_log_path)
 
 
-def get_jobqueue_task_job_walltime(task: JobQueueTask, auth: dict) -> (str, str):
+def get_jobqueue_task_job_walltime(task: Task, auth: dict) -> (str, str):
     ssh = get_task_ssh_client(task, auth)
     with ssh:
         lines = execute_command(
@@ -1370,7 +1355,7 @@ def get_jobqueue_task_job_walltime(task: JobQueueTask, auth: dict) -> (str, str)
             return None
 
 
-def get_jobqueue_task_job_status(task: JobQueueTask, auth: dict) -> str:
+def get_jobqueue_task_job_status(task: Task, auth: dict) -> str:
     ssh = get_task_ssh_client(task, auth)
     with ssh:
         lines = execute_command(
@@ -1393,7 +1378,7 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
     included_by_name.append(f"{task.guid}.zip")  # zip file
     if not task.agent.launcher:
         included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    if isinstance(task, JobQueueTask) and task.job_id is not None and task.job_id != '':
+    if task.agent.executor != AgentExecutor.LOCAL and task.job_id is not None and task.job_id != '':
         included_by_name.append(f"plantit.{task.job_id}.out")
         included_by_name.append(f"plantit.{task.job_id}.err")
     included_by_pattern = (
@@ -1535,23 +1520,13 @@ def task_to_dict(task: Task) -> dict:
         'result_previews_loaded': task.previews_loaded,
         'cleaned_up': task.cleaned_up,
         'transferred': task.transferred,
-        'output_files': json.loads(results) if results is not None else []
+        'output_files': json.loads(results) if results is not None else [],
+        'job_id': task.job_id,
+        'job_status': task.job_status,
+        'job_walltime': task.job_consumed_walltime
     }
 
-    if isinstance(task, JobQueueTask):
-        t['job_id'] = task.job_id
-        t['job_status'] = task.job_status
-        t['job_walltime'] = task.job_elapsed_walltime
-
     return t
-
-
-def jobqueue_task_to_dict(task: JobQueueTask) -> dict:
-    d = task_to_dict(task)
-    d['job_id'] = task.job_id
-    d['job_status'] = task.job_status
-    d['job_walltime'] = task.job_elapsed_walltime
-    return d
 
 
 def delayed_task_to_dict(task: DelayedTask) -> dict:

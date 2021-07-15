@@ -23,7 +23,7 @@ from plantit.github import get_repo
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
-from plantit.tasks.models import Task, TaskStatus, JobQueueTask
+from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
@@ -36,10 +36,7 @@ logger = get_task_logger(__name__)
 @app.task(track_started=True)
 def submit_task(guid: str, auth: dict):
     try:
-        try:
-            task = JobQueueTask.objects.get(guid=guid)
-        except:
-            task = Task.objects.get(guid=guid)
+        task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
@@ -105,7 +102,7 @@ def submit_task(guid: str, auth: dict):
 @app.task()
 def poll_job_status(guid: str, auth: dict):
     try:
-        task = JobQueueTask.objects.get(guid=guid)
+        task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
@@ -132,7 +129,7 @@ def poll_job_status(guid: str, auth: dict):
         job_status = get_jobqueue_task_job_status(task, auth)
         job_walltime = get_jobqueue_task_job_walltime(task, auth)
         task.job_status = job_status
-        task.job_elapsed_walltime = job_walltime
+        task.job_consumed_walltime = job_walltime
 
         now = timezone.now()
         task.updated = now

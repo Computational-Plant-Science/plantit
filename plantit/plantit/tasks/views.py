@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async, async_to_sync
 from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -16,11 +17,10 @@ from plantit import settings
 from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
     log_task_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds, \
-    jobqueue_task_to_dict
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds
 
 
 @login_required
@@ -102,12 +102,13 @@ def get_by_owner(request, owner):
     # params = request.query_params
     # page = params.get('page') if 'page' in params else -1
 
-    try:
-        user = User.objects.get(username=owner)
-    except:
-        return HttpResponseNotFound()
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
 
-    tasks = list(Task.objects.filter(user=user))
+    tasks = Task.objects.filter(user=user)
+    paginator = Paginator(tasks, 20)
+    page = paginator.get_page(int(request.GET.get('page', 0)))
+    print(page)
 
     # TODO we still eventually need paging
     # if 'running' in params and params.get('running') == 'True':
@@ -131,15 +132,10 @@ def get_by_owner(request, owner):
 def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        task = JobQueueTask.objects.get(user=user, name=name)
-        return JsonResponse(jobqueue_task_to_dict(task))
-    except JobQueueTask.DoesNotExist:
-        try:
-            user = User.objects.get(username=owner)
-            task = Task.objects.get(user=user, name=name)
-            return JsonResponse(task_to_dict(task))
-        except Task.DoesNotExist:
-            return HttpResponseNotFound()
+        task = Task.objects.get(user=user, name=name)
+        return JsonResponse(task_to_dict(task))
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
 
 
 @login_required
