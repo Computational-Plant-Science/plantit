@@ -106,9 +106,16 @@ def get_by_owner(request, owner):
     except: return HttpResponseNotFound()
 
     tasks = Task.objects.filter(user=user)
-    paginator = Paginator(tasks, 20)
+    paginator = Paginator(tasks, 3)
     page = paginator.get_page(int(request.GET.get('page', 0)))
-    print(page)
+
+    data = {
+        'previous_page': page.has_previous() and page.previous_page_number() or None,
+        'next_page': page.has_next() and page.next_page_number() or None,
+        'tasks': [task_to_dict(task) for task in list(page)]
+    }
+    return JsonResponse(data)
+    # JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
     # TODO we still eventually need paging
     # if 'running' in params and params.get('running') == 'True':
@@ -124,8 +131,6 @@ def get_by_owner(request, owner):
     #         start = int(page) * 20
     #         count = start + 20
     #         tasks = tasks[start:(start + count)]
-
-    return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
 
 @login_required
