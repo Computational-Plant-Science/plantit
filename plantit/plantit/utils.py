@@ -698,7 +698,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if 'project' in jobqueue:
             if not isinstance(jobqueue['project'], str):
                 errors.append('Section \'jobqueue\'.\'project\' must be a str')
-        else:
+        elif task.agent.project is not None and task.agent.project != '':
             jobqueue['project'] = task.agent.project
         if 'walltime' in jobqueue:
             if not isinstance(jobqueue['walltime'], str):

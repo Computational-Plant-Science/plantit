@@ -316,11 +316,11 @@
                                             </b-col>
                                             <b-col md="auto" class="mr-0 ml-0"
                                                 ><small
-                                                    >Stargazers:
-                                                    <b>{{
+                                                    ><i class="fas fa-star fa-fw"></i>
+                                                    {{
                                                         getWorkflow.repo
                                                             .stargazers_count
-                                                    }}</b></small
+                                                    }}</small
                                                 ></b-col
                                             >
                                             <!--<b-col md="auto" class="mr-0 ml-0"
@@ -350,8 +350,10 @@
                                                 <template #title>
                                                     <b-button
                                                         id="about-workflow"
-                                                        :variant="activeTab === 0 ? 'info' :
-                                                            profile.darkMode
+                                                        :variant="
+                                                            activeTab === 0
+                                                                ? 'info'
+                                                                : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
                                                         "
@@ -1011,8 +1013,10 @@
                                                         :disabled="
                                                             workflowLoading
                                                         "
-                                                        :variant="activeTab === 1 ? 'info' :
-                                                            profile.darkMode
+                                                        :variant="
+                                                            activeTab === 1
+                                                                ? 'info'
+                                                                : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
                                                         "
@@ -1278,7 +1282,11 @@
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
-                                                                <b-row v-if="personalProjects.length > 0"
+                                                                <b-row
+                                                                    v-if="
+                                                                        personalProjects.length >
+                                                                            0
+                                                                    "
                                                                     class="mt-2"
                                                                     ><b-col
                                                                         cols="3"
@@ -1296,11 +1304,18 @@
                                                                         ></b-col
                                                                     ></b-row
                                                                 >
-                                                              <b-row v-else
+                                                                <b-row
+                                                                    v-else
                                                                     class="mt-2"
                                                                     ><b-col
                                                                         cols="3"
-                                                              ><i>You haven't started any projects.</i></b-col
+                                                                        ><i
+                                                                            >You
+                                                                            haven't
+                                                                            started
+                                                                            any
+                                                                            projects.</i
+                                                                        ></b-col
                                                                     ></b-row
                                                                 >
                                                                 <b-row
@@ -3049,11 +3064,15 @@
                                                                 label="Loading..."
                                                                 variant="dark"
                                                                 class="mr-2 mb-1"
-                                                            ></b-spinner><i v-else
+                                                            ></b-spinner
+                                                            ><i
+                                                                v-else
                                                                 class="fas fa-chevron-right fa-fw mr-1"
                                                             ></i>
-                                                            Start</b-button></b-col
-                                                ></b-row>
+                                                            Start</b-button
+                                                        ></b-col
+                                                    ></b-row
+                                                >
                                             </b-tab>
                                             <!--<b-tab
                                                 title="Runs"
@@ -3929,7 +3948,7 @@ export default {
                 time: {
                     limit: this.timeLimit,
                     units: this.timeLimitUnits
-                },
+                }
                 // iterations: this.iterations
             };
             if ('jobqueue' in this.getWorkflow.config)

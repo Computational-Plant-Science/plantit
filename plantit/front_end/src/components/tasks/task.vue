@@ -1063,8 +1063,8 @@
                                                                         noPreview(
                                                                             file
                                                                         )
-                                                                            ? 'min-width: 20rem;'
-                                                                            : 'max-width: 4rem;'
+                                                                            ? 'min-width: 20rem;opacity:0.1'
+                                                                            : 'max-width: 4rem;opacity:0.1'
                                                                     "
                                                                     :src="
                                                                         thumbnailPath(
