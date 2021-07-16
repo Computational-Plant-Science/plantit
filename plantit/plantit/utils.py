@@ -352,12 +352,13 @@ async def workflow_to_dict(workflow: Workflow, token: str) -> dict:
         workflow.repo_owner,
         workflow.repo_name,
         token)
+
     return {
         'config': bundle['config'],
         'repo': bundle['repo'],
         'validation': bundle['validation'],
         'public': workflow.public,
-        'bound': True
+        'bound': True,
     }
 
 

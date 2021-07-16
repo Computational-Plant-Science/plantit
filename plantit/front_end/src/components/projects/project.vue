@@ -101,7 +101,7 @@
                                 ><i v-else class="fas fa-plus mr-1"></i
                                 >Add</b-button
                             ><b-popover
-                                :show.sync="profile.tutorials"
+                                :show.sync="profile.hints"
                                 triggers="manual"
                                 placement="bottomleft"
                                 target="add-study"
@@ -289,7 +289,7 @@
                                 ><i v-else class="fas fa-plus mr-1"></i
                                 >Add</b-button
                             ><b-popover
-                                :show.sync="profile.tutorials"
+                                :show.sync="profile.hints"
                                 triggers="manual"
                                 placement="bottomleft"
                                 target="add-member"

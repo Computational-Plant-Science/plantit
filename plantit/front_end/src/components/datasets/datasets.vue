@@ -35,7 +35,7 @@
                                 ><i class="fas fa-users"></i> Public</span
                             ></b-button
                         ><b-popover
-                            :show.sync="profile.tutorials"
+                            :show.sync="profile.hints"
                             triggers="manual"
                             placement="left"
                             target="switch-dataset-context"
@@ -67,7 +67,7 @@
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
                         ><b-popover
-                            :show.sync="profile.tutorials"
+                            :show.sync="profile.hints"
                             triggers="manual"
                             placement="bottom"
                             target="refresh-datasets"

@@ -641,6 +641,25 @@
                                 ></small></h3
                         ></b-nav-item>
                         <b-nav-item
+                            to="/beta"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Beta Test"
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-vial fa-1x fa-fw text-success"></i
+                                >Beta Testing</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
                             title="About"
                             to="/about"
                             class="mt-2"
@@ -717,25 +736,6 @@
                                 Github</span
                             >
                         </b-nav-item>
-                        <b-nav-item
-                            to="/beta"
-                            class="mt-2"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="Beta Test"
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-hard-hat fa-1x fa-fw"></i
-                                >Beta</span
-                            ></b-nav-item
-                        >
                         <!--<b-nav-item
                             href="#"
                             class="mt-2"
@@ -814,8 +814,8 @@
                                     ></i
                                 ></span>
                                 <span
-                                    :title="'Showing Tutorials'"
-                                    v-if="profile.tutorials"
+                                    :title="'Showing Hints'"
+                                    v-if="profile.hints"
                                     class="fa-stack mr-2"
                                     ><i
                                         v-if="profile.darkMode"
@@ -922,17 +922,17 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            @click="toggleTutorials"
+                            @click="toggleHints"
                         >
                             <i class="fas fa-question-circle fa-fw"></i>
                             <b-spinner
                                 small
-                                v-if="togglingTutorials"
+                                v-if="togglingHints"
                                 label="Loading..."
-                                :variant="profile.tutorials ? 'light' : 'dark'"
+                                :variant="profile.hints ? 'light' : 'dark'"
                                 class="ml-2 mb-1"
                             ></b-spinner>
-                            <span v-else-if="profile.tutorials"> Hide</span
+                            <span v-else-if="profile.hints"> Hide</span
                             ><span v-else> Show</span>
                             Hints</b-dropdown-item
                         >
@@ -1138,7 +1138,7 @@ export default {
             tasksSidebarOpen: false,
             // flags
             togglingDarkMode: false,
-            togglingTutorials: false,
+            togglingHints: false,
             notFound: false,
             // version
             version: 0,
@@ -1310,10 +1310,10 @@ export default {
             await this.$store.dispatch('user/toggleDarkMode');
             this.togglingDarkMode = false;
         },
-        async toggleTutorials() {
-            this.togglingTutorials = true;
-            await this.$store.dispatch('user/toggleTutorials');
-            this.togglingTutorials = false;
+        async toggleHints() {
+            this.togglingHints = true;
+            await this.$store.dispatch('user/toggleHints');
+            this.togglingHints = false;
         },
         markAllNotificationsRead() {
             // TODO

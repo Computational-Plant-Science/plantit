@@ -47,7 +47,7 @@
                                 ><i class="fas fa-users"></i> Shared</span
                             ></b-button
                         ><b-popover
-                            :show.sync="profile.tutorials"
+                            :show.sync="profile.hints"
                             triggers="manual"
                             placement="left"
                             target="switch-projects-context"
@@ -69,7 +69,7 @@
                             v-b-tooltip:hover
                             ><i class="fas fa-plus"></i> Create</b-button
                         ><b-popover
-                            :show.sync="profile.tutorials"
+                            :show.sync="profile.hints"
                             triggers="manual"
                             placement="left"
                             target="create-project"
@@ -105,7 +105,7 @@
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
                         ><b-popover
-                            :show.sync="profile.tutorials"
+                            :show.sync="profile.hints"
                             triggers="manual"
                             placement="bottomright"
                             target="refresh-projects"
@@ -215,7 +215,7 @@
                                                 ></i
                                                 >Add</b-button
                                             ><b-popover
-                                                :show.sync="profile.tutorials"
+                                                :show.sync="profile.hints"
                                                 triggers="manual"
                                                 placement="bottomleft"
                                                 target="add-study"

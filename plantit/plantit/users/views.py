@@ -193,12 +193,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 return JsonResponse({'push_notifications': user.profile.push_notification_status})
 
     @action(detail=False, methods=['get'])
-    def toggle_tutorials(self, request):
+    def toggle_hints(self, request):
         user = request.user
-        user.profile.tutorials_shown = not user.profile.tutorials_shown
+        user.profile.hints = not user.profile.hints
         user.profile.save()
         user.save()
-        return JsonResponse({'tutorials': user.profile.tutorials_shown})
+        return JsonResponse({'hints': user.profile.hints})
 
     @action(detail=False, methods=['get'])
     def toggle_dark_mode(self, request):
@@ -235,7 +235,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'push_notifications': user.profile.push_notification_status,
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_access_token,
-                'tutorials': user.profile.tutorials_shown
+                'hints': user.profile.hints
             },
             'stats': stats
         }

@@ -33,7 +33,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >{{ tasksLoading ? 'Loading...' : 'Refresh' }}</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials"
+                        :show.sync="profile.hints"
                         triggers="manual"
                         placement="left"
                         target="refresh-tasks"
@@ -268,7 +268,7 @@
                                                 : 'Load More'
                                         }}</b-button
                                     ><b-popover
-                                        :show.sync="profile.tutorials"
+                                        :show.sync="profile.hints"
                                         triggers="manual"
                                         placement="left"
                                         target="load-more-completed-tasks"

@@ -13,7 +13,7 @@ export const user = {
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
-            tutorials: false,
+            hints: false,
             stats: null
         },
         profileLoading: true
@@ -37,8 +37,8 @@ export const user = {
         setGithubProfile(state, profile) {
             state.profile.githubProfile = profile;
         },
-        setTutorials(state, show) {
-            state.profile.tutorials = show;
+        setHints(state, show) {
+            state.profile.hints = show;
         },
         setStats(state, stats) {
             state.profile.stats = stats;
@@ -73,11 +73,11 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async toggleTutorials({ commit }) {
+        async toggleHints({ commit }) {
             await axios
-                .get('/apis/v1/users/toggle_tutorials/')
+                .get('/apis/v1/users/toggle_hints/')
                 .then(response => {
-                    commit('setTutorials', response.data['tutorials']);
+                    commit('setHints', response.data['hints']);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -107,8 +107,8 @@ export const user = {
 
                     // set tutorials
                     commit(
-                        'setTutorials',
-                        response.data.django_profile.tutorials
+                        'setHints',
+                        response.data.django_profile.hints
                     );
 
                     // set push notifications

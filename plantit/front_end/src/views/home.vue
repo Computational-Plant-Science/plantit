@@ -104,7 +104,7 @@
                         ></b-img>
                         Projects</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
+                        :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
                         target="projects-button"
@@ -120,7 +120,7 @@
                         ><i class="fas fa-database fa-fw"></i>
                         Datasets</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
+                        :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
                         target="datasets-button"
@@ -135,7 +135,7 @@
                         to="/home/workflows/"
                         ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
+                        :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
                         target="workflows-button"
@@ -151,7 +151,7 @@
                         to="/home/agents/"
                         ><i class="fas fa-server fa-fw"></i> Agents</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
+                        :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
                         target="agents-button"
@@ -166,7 +166,7 @@
                         to="/home/tasks/"
                         ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials && isRootPath"
+                        :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
                         target="tasks-button"

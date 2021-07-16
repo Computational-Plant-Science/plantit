@@ -234,11 +234,9 @@
                                                         class="ml-2 mb-1"
                                                     ></b-spinner> </b-button
                                                 ><b-popover
-                                                    :show.sync="
-                                                        profile.tutorials
-                                                    "
+                                                    :show.sync="profile.hints"
                                                     triggers="manual"
-                                                    placement="bottomright"
+                                                    placement="right"
                                                     target="refresh-workflow"
                                                     title="Refresh Workflow"
                                                     >Click here to refresh the
@@ -246,7 +244,7 @@
                                                     and rebind the associated
                                                     repository's
                                                     <code>plantit.yaml</code>
-                                                    file.</b-popover
+                                                    file from GitHub.</b-popover
                                                 ></b-col
                                             ><b-col
                                                 v-if="ownsWorkflow"
@@ -316,7 +314,9 @@
                                             </b-col>
                                             <b-col md="auto" class="mr-0 ml-0"
                                                 ><small
-                                                    ><i class="fas fa-star fa-fw"></i>
+                                                    ><i
+                                                        class="fas fa-star fa-fw"
+                                                    ></i>
                                                     {{
                                                         getWorkflow.repo
                                                             .stargazers_count
@@ -325,7 +325,12 @@
                                             >
                                             <!--<b-col md="auto" class="mr-0 ml-0"
                                                 ><small
-                                                    >Runs: <b>0</b></small
+                                                    ><i
+                                                        class="fas fa-terminal fa-fw"
+                                                    ></i
+                                                    >{{
+                                                        getWorkflow.stats.tasks
+                                                    }}</small
                                                 ></b-col
                                             >-->
                                         </b-row>
@@ -479,7 +484,6 @@
                                                                 .doi !== null
                                                     "
                                                     ><b-col>
-                                                        <br />
                                                         <h5
                                                             :class="
                                                                 profile.darkMode
@@ -1031,10 +1035,10 @@
                                                     </b-button>
                                                     <b-popover
                                                         :show.sync="
-                                                            profile.tutorials
+                                                            profile.hints
                                                         "
                                                         triggers="manual"
-                                                        placement="right"
+                                                        placement="bottomleft"
                                                         target="submit-workflow"
                                                         title="Submit Workflow"
                                                         >Click here to configure
@@ -1047,11 +1051,9 @@
                                                     ></template
                                                 ><b-row>
                                                     <b-col>
-                                                        <b-card-group
-                                                            deck
-                                                            columns
-                                                        >
+                                                        <b-card-group columns deck>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 :bg-variant="
                                                                     profile.darkMode
                                                                         ? 'dark'
@@ -1073,7 +1075,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                                 ><b-row
                                                                     ><b-col
@@ -1173,6 +1174,7 @@
                                                                 </b-row>
                                                             </b-card>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 :bg-variant="
                                                                     profile.darkMode
                                                                         ? 'dark'
@@ -1194,7 +1196,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1391,6 +1392,7 @@
                                                                 ></b-row>
                                                             </b-card>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 :bg-variant="
                                                                     profile.darkMode
                                                                         ? 'dark'
@@ -1412,7 +1414,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1428,7 +1429,6 @@
                                                                                 class="fas fa-stopwatch fa-fw"
                                                                             ></i>
                                                                             Time
-                                                                            Limit
                                                                         </h4>
                                                                     </b-col>
                                                                     <b-col
@@ -1540,6 +1540,7 @@
                                                                 >
                                                             </b-card>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 :bg-variant="
                                                                     profile.darkMode
                                                                         ? 'dark'
@@ -1561,7 +1562,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1664,6 +1664,7 @@
                                                                 </b-row>
                                                             </b-card>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 v-if="
                                                                     workflow !==
                                                                         null &&
@@ -1699,7 +1700,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1898,6 +1898,7 @@
                                                                 >
                                                             </b-card>
                                                             <b-card
+                                                                style="min-width: 60rem"
                                                                 v-if="
                                                                     workflow !==
                                                                         null &&
@@ -1931,7 +1932,6 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1947,12 +1947,12 @@
                                                                                 class="fas fa-download fa-fw"
                                                                             ></i>
                                                                             Input
-                                                                            {{
+                                                                            <!--{{
                                                                                 this.input.kind[0].toUpperCase() +
                                                                                     this.input.kind.substr(
                                                                                         1
                                                                                     )
-                                                                            }}
+                                                                            }}-->
                                                                         </h4>
                                                                     </b-col>
                                                                     <b-col
@@ -1992,7 +1992,6 @@
                                                                             ></i></h5
                                                                     ></b-col>
                                                                 </b-row>
-
                                                                 <div>
                                                                     <b
                                                                         :class="
@@ -2137,22 +2136,8 @@
                                                                                         :node="
                                                                                             sharedDatasets
                                                                                         "
-                                                                                    ></datatree>
-                                                                                    <!--<datatree
-                            v-for="node in sharedDatasets"
-                            v-bind:key="node.path"
-                            v-bind:node="node"
-                            :select="kind"
-                            @selectNode="inputSelected"
-                            :upload="true"
-                            :download="true"
-                            :class="
-                                profile.darkMode ? 'theme-dark' : 'theme-light'
-                            "
-                        ></datatree>--></b-col
-                                                                                ></b-row
-                                                                            ></b-tab
-                                                                        >
+                                                                                    ></datatree> </b-col></b-row
+                                                                        ></b-tab>
                                                                         <b-tab
                                                                             title="Public"
                                                                             :title-link-class="
@@ -2283,80 +2268,21 @@
                                                                 </b-alert>
                                                             </b-card>
                                                             <!--<b-card
-                                    v-if="
-                                        getWorkflow !== null &&
-                                            getWorkflow.config !== undefined &&
-                                            getWorkflow.config.input !==
-                                                undefined &&
-                                            getWorkflow.config.output !== undefined
-                                    "
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    style="min-width: 50rem"
-                                    class="mb-4"
-                                >
-                                    <b-row align-v="center">
-                                        <b-col>
-                                            <h4
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                <i
-                                                    v-if="outputDataset"
-                                                    class="fas fa-upload fa-fw text-success"
-                                                ></i>
-                                                <i
-                                                    v-else-if="
-                                                        !outputDataset &&
-                                                            profile.darkMode
-                                                    "
-                                                    class="fas fa-upload fa-fw text-white"
-                                                ></i>
-                                                <i
-                                                    v-else-if="
-                                                        !outputDataset &&
-                                                            !profile.darkMode
-                                                    "
-                                                    class="fas fa-upload fa-fw text-dark"
-                                                ></i>
-                                                Output Sync
-                                                {{
-                                                    outputDataset
-                                                        ? ''
-                                                        : ' (off)'
-                                                }}
-                                            </h4>
-                                        </b-col>
-                                        <b-col md="auto">
-                                            <b-form-checkbox
-                                                v-model="outputSync"
-                                                switch
-                                                size="md"
-                                            >
-                                            </b-form-checkbox>
-                                        </b-col>
-                                    </b-row>
-                                    <runoutput
-                                        v-if="outputDataset"
-                                        :user="user"
-                                        v-on:outputSelected="outputSelected"
-                                    ></runoutput>
-                                </b-card>-->
-                                                            <b-card
+                                                                style="min-width: 60rem"
+                                                                v-if="
+                                                                    getWorkflow !==
+                                                                        null &&
+                                                                        getWorkflow.config !==
+                                                                            undefined &&
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .input !==
+                                                                            undefined &&
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .output !==
+                                                                            undefined
+                                                                "
                                                                 :bg-variant="
                                                                     profile.darkMode
                                                                         ? 'dark'
@@ -2378,7 +2304,119 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 40rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row
+                                                                    align-v="center"
+                                                                >
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    profile.darkMode
+                                                                                "
+                                                                                class="fas fa-upload fa-fw text-white"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-upload fa-fw text-dark"
+                                                                            ></i>
+                                                                            Output
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <span
+                                                                                v-if="
+                                                                                    selectedOutput !==
+                                                                                        null &&
+                                                                                        outputValid
+                                                                                "
+                                                                            >
+                                                                                <i
+                                                                                    class="fas fa-folder fa-fw mr-1"
+                                                                                ></i
+                                                                                >{{
+                                                                                    selectedOutput.path
+                                                                                }}
+                                                                                <i
+                                                                                    class="fas fa-check text-success fa-fw"
+                                                                                ></i>
+                                                                            </span>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b>
+                                                                            Select
+                                                                            a
+                                                                            directory
+                                                                            to
+                                                                            transfer
+                                                                            result
+                                                                            files
+                                                                            to.
+                                                                        </b>
+                                                                        <datatree
+                                                                            select="directory"
+                                                                            :create="
+                                                                                true
+                                                                            "
+                                                                            :upload="
+                                                                                false
+                                                                            "
+                                                                            :download="
+                                                                                false
+                                                                            "
+                                                                            @selectNode="
+                                                                                outputSelected
+                                                                            "
+                                                                            :node="
+                                                                                personalDatasets
+                                                                            "
+                                                                        ></datatree></b-col
+                                                                ></b-row>
+                                                            </b-card>-->
+                                                            <b-card
+                                                                style="min-width: 60rem"
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -2524,6 +2562,7 @@
                                                                                     >
                                                                                     <b-col
                                                                                         align-self="end"
+                                                                                        class="mb-2"
                                                                                     >
                                                                                         <small
                                                                                             >{{
@@ -3535,7 +3574,7 @@ export default {
                 filetypes: []
             },
             inputSelectedPatterns: [],
-            outputDataset: false,
+            selectedOutput: null,
             outputSync: false,
             outputSpecified: false,
             output: {
@@ -3696,6 +3735,42 @@ export default {
                         guid: guid().toString()
                     });
                     this.selectedInputLoading = false;
+                    throw error;
+                });
+        },
+        async loadSelectedOutput(path) {
+            this.selectedOutputLoading = true;
+
+            await axios({
+                method: 'post',
+                url: `https://de.cyverse.org/terrain/secured/filesystem/stat`,
+                data: {
+                    paths: [path]
+                },
+                headers: {
+                    Authorization: `Bearer ${this.profile.djangoProfile.cyverse_token}`
+                }
+            })
+                .then(async response => {
+                    if (response.data.paths !== undefined) {
+                        this.selectedOutput = response.data.paths[path];
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `The selected output path ${path} does not exist`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.selectedOutputLoading = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to load the selected output path ${path}`,
+                        guid: guid().toString()
+                    });
+                    this.selectedOutputLoading = false;
                     throw error;
                 });
         },
@@ -3891,11 +3966,11 @@ export default {
         },
         inputSelected(node) {
             this.input.path = node.path;
-            // this.input.kind = node.kind;
             this.loadSelectedInput(node.path);
         },
         outputSelected(node) {
-            this.output.to = node.path;
+            this.output.path = node.path;
+            this.loadSelectedOutput(node.path);
         },
         agentSelected(agent) {
             this.selectedAgent = agent;
@@ -4266,13 +4341,13 @@ export default {
         },
         outputValid: function() {
             if (
-                this.outputDataset &&
+                this.selectedOutput !== null &&
                 this.getWorkflow &&
                 this.getWorkflow.config &&
                 this.getWorkflow.config.input !== undefined &&
                 this.getWorkflow.config.output.path !== undefined
             )
-                return this.output.to !== '';
+                return this.output.path !== '';
             return true;
         },
         canSubmit: function() {

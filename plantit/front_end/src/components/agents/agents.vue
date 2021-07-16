@@ -28,7 +28,7 @@
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
                     ><b-popover
-                        :show.sync="profile.tutorials"
+                        :show.sync="profile.hints"
                         triggers="manual"
                         placement="left"
                         target="switch-agent-context"
@@ -61,7 +61,7 @@
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials"
+                        :show.sync="profile.hints"
                         triggers="manual"
                         placement="bottom"
                         target="bind-agent"
@@ -91,7 +91,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
                     ><b-popover
-                        :show.sync="profile.tutorials"
+                        :show.sync="profile.hints"
                         triggers="manual"
                         placement="topright"
                         target="refresh-agents"

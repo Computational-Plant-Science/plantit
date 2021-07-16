@@ -27,8 +27,7 @@
             <b-row
                 ><b-col class="text-center"
                     ><b>Thanks for your interest in PlantIT!</b><br />Feedback
-                    is critical as we expand and stabilize the platform. We
-                    appreciate the help. Here are a couple ways you can get
+                    is crucial and much appreciated. Here are a couple ways to get
                     started. <br /><br />
                     <h5>1</h5>
                     If you'd prefer to read about the platform first, you can
@@ -84,7 +83,7 @@
                     workflow, then click the
                     <b-link
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        @click="toggleTutorials"
+                        @click="toggleHints"
                         ><span
                             :class="
                                 profile.darkMode
@@ -154,14 +153,14 @@ export default {
     data: function() {
         return {
             downloading: false,
-            togglingTutorials: false
+            togglingHints: false
         };
     },
     methods: {
-        async toggleTutorials() {
-            this.togglingTutorials = true;
-            await this.$store.dispatch('user/toggleTutorials');
-            this.togglingTutorials = false;
+        async toggleHints() {
+            this.togglingHints = true;
+            await this.$store.dispatch('user/toggleHints');
+            this.togglingHints = false;
         },
         showFeedbackModal() {
             this.$bvModal.show('feedback');
