@@ -1253,6 +1253,7 @@ export default {
             node['kind'] = kind;
 
             // 15 layers should be deep enough for any conceivable use case, right?
+            // ..right?
             if (this.$parent !== undefined) {
                 this.$parent.$emit('selectNode', node);
                 if (this.$parent.$parent !== undefined) {
@@ -1403,6 +1404,8 @@ export default {
                 }
             }
             this.$emit('selectNode', node);
+
+            this.$parent.toggle();
         }
     }
 };
