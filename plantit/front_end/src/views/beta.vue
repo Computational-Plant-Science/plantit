@@ -26,8 +26,12 @@
             <br />
             <b-row
                 ><b-col class="text-center"
-                    ><b>Thanks for your interest in PlantIT!</b><br /><br />If
-                    you'd prefer to read about the platform first, you can
+                    ><b>Thanks for your interest in PlantIT!</b><br />Feedback
+                    is critical as we expand and stabilize the platform. We
+                    appreciate the help. Here are a couple ways you can get
+                    started. <br /><br />
+                    <h5>1</h5>
+                    If you'd prefer to read about the platform first, you can
                     download the
                     <b-link
                         @click="downloadTutorials"
@@ -55,13 +59,15 @@
                             ><i class="fas fa-book fa-1x fa-fw"></i> Developer
                             Docs</span
                         ></b-link
-                    >.<br />To jump straight in, go to the
+                    >.<br /><br />
+                    <h5>2</h5>
+                    To jump straight in, go to the
                     <b-link
                         :to="{
                             name: 'workflow',
                             params: {
                                 owner: 'Computational-Plant-Science',
-                                name: 'plantit-examples-hello-world'
+                                name: 'plantit-example-hello-world'
                             }
                         }"
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
@@ -89,8 +95,9 @@
                             Hints</span
                         ></b-link
                     >
-                    button in the top-right dropdown menu.<br />If you're ready
-                    to give feedback, feel free to use the built-in
+                    button in the top-right dropdown menu.<br /><br />
+                    <h5>3</h5>
+                    Ready to share your thoughts? Feel free to use the built-in
                     <b-link
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
                         @click="showFeedbackModal"
@@ -103,8 +110,7 @@
                             ><i class="fas fa-comment-alt fa-1x fa-fw"></i>
                             Feedback System</span
                         ></b-link
-                    >
-                    or download the
+                    >, download the
                     <b-link
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
                         @click="downloadFeedbackForm"
@@ -117,7 +123,21 @@
                             ><i class="fas fa-file fa-1x fa-fw"></i> Feedback
                             Form</span
                         ></b-link
-                    >.</b-col
+                    >, or
+                    <b-link
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        href="mailto:wbonelli@uga.edu"
+                        ><span
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-envelope fa-1x fa-fw"></i>
+                            Contact</span
+                        ></b-link
+                    >
+                    us directly.</b-col
                 ></b-row
             >
         </b-container>
@@ -134,7 +154,7 @@ export default {
     data: function() {
         return {
             downloading: false,
-            togglingTutorials: false,
+            togglingTutorials: false
         };
     },
     methods: {
