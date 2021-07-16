@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import splash from './views/splash.vue';
 import about from './views/about.vue';
 import usage from './views/usage.vue';
+import beta from './views/beta.vue';
 import home from './views/home.vue';
 import users from './components/users/users.vue';
 import user from './components/users/user.vue';
@@ -50,6 +51,16 @@ let router = new Router({
             component: usage,
             meta: {
                 title: 'PlantIT Usage',
+                crumb: [],
+                requiresAuth: false
+            }
+        },
+        {
+            path: '/beta',
+            name: 'beta',
+            component: beta,
+            meta: {
+                title: 'PlantIT Beta',
                 crumb: [],
                 requiresAuth: false
             }

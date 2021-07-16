@@ -154,4 +154,6 @@ AWS_ACCESS_KEY=$aws_access_key
 AWS_SECRET_KEY=$aws_secret_key
 AWS_REGION=$aws_region
 AWS_FEEDBACK_ARN=$aws_feedback_arn
+TUTORIALS_FILE=/code/tutorials.pdf
+FEEDBACK_FILE=/code/feedback.pdf
 EOT

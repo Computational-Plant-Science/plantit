@@ -608,8 +608,8 @@
                                         : 'crumb-light'
                                 "
                             >
-                                Your Tasks ({{ tasksRunning.length }}
-                                running, {{ profile.stats.total_tasks}} total)
+                                Your Tasks ({{ tasksRunning.length }} running,
+                                {{ profile.stats.total_tasks }} total)
                             </h2>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
@@ -717,6 +717,25 @@
                                 Github</span
                             >
                         </b-nav-item>
+                        <b-nav-item
+                            to="/beta"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Beta Test"
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-hard-hat fa-1x fa-fw"></i
+                                >Beta</span
+                            ></b-nav-item
+                        >
                         <!--<b-nav-item
                             href="#"
                             class="mt-2"
@@ -894,9 +913,7 @@
                             ></b-dropdown-item
                         >
                         <b-dropdown-item
-                            :title="
-                                profile.darkMode ? 'Light Mode' : 'Dark Mode'
-                            "
+                            title="Toggle Hints"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -917,7 +934,7 @@
                             ></b-spinner>
                             <span v-else-if="profile.tutorials"> Hide</span
                             ><span v-else> Show</span>
-                            Tutorials</b-dropdown-item
+                            Hints</b-dropdown-item
                         >
                         <b-dropdown-item
                             title="

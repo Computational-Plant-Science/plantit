@@ -2,7 +2,7 @@ import json
 import pprint
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 
 from plantit.feedback.models import Feedback
 from plantit.sns import SnsClient
@@ -15,3 +15,11 @@ def submit_feedback(request):
     SnsClient.get().publish_message(settings.AWS_FEEDBACK_ARN, "PlantIT feedback" + ('' if anon else f" from {request.user.username}"), pprint.pprint(feedback), {})
     # TODO send Slack messages to a feedback channel
     return HttpResponse()
+
+
+def download_tutorials(request):
+    return FileResponse(open(settings.TUTORIALS_FILE, 'rb'))
+
+
+def download_feedback_form(request):
+    return FileResponse(open(settings.FEEDBACK_FILE, 'rb'))
