@@ -115,7 +115,7 @@ class IDPViewSet(viewsets.ViewSet):
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
         return redirect(settings.GITHUB_AUTH_URI + '?' + urlencode({
-            'client_id': settings.GITHUB_KEY,
+            'client_id': settings.GITHUB_CLIENT_ID,
             'redirect_uri': settings.GITHUB_REDIRECT_URI,
             'state': get_csrf_token(request)}))
 
@@ -135,7 +135,7 @@ class IDPViewSet(viewsets.ViewSet):
             return HttpResponseBadRequest()
 
         response = requests.post('https://github.com/login/oauth/access_token', data={
-            'client_id': settings.GITHUB_KEY,
+            'client_id': settings.GITHUB_CLIENT_ID,
             'client_secret': settings.GITHUB_SECRET,
             'redirect_uri': settings.GITHUB_REDIRECT_URI,
             'code': code})

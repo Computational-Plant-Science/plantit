@@ -1183,8 +1183,8 @@ def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
         workdir = join(task.agent.workdir, task.workdir)
         sftp.chdir(workdir)
-        template_path = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
-            'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+        template_path = environ.get('TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
+            'TASKS_TEMPLATE_SCRIPT_SLURM')
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
             task_commands = compose_task_run_script(task, options, template_path)
             for line in task_commands:
@@ -1592,39 +1592,6 @@ def dataset_access_policy_to_dict(policy: DatasetAccessPolicy):
         'path': policy.path,
         'role': policy.role.value
     }
-
-
-# def map_dataset_session(session: DatasetSession):
-#     log_path = join(environ.get('SESSIONS_LOGS'), f"{session.guid}.session.log")
-#     if Path(log_path).exists():
-#         with open(log_path, 'r') as file:
-#             lines = file.readlines()
-#     else:
-#         lines = []
-#
-#     return {
-#         'guid': session.guid,
-#         'path': session.path,
-#         'workdir': session.workdir,
-#         'agent': session.agent.name,
-#         'modified': session.modified if session.modified is not None else [],
-#         'output': lines,
-#         'opening': session.opening
-#     }
-#
-#
-# def update_dataset_session(session: DatasetSession, output: List[str]):
-#     log_path = join(environ.get('SESSIONS_LOGS'), f"{session.guid}.session.log")
-#     with open(log_path, 'a') as log:
-#         for line in output:
-#             log.write(f"{line}\n")
-#
-#     if session.channel_name is not None:
-#         channel_layer = get_channel_layer()
-#         async_to_sync(channel_layer.send)(session.channel_name, {
-#             'type': 'update.session',
-#             'session': map_dataset_session(session),
-#         })
 
 
 # agents

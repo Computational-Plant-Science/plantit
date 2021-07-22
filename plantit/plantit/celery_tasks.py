@@ -63,7 +63,7 @@ def submit_task(guid: str, auth: dict):
 
                 execute_local_task(task, ssh)
                 list_task_results.s(guid, auth).apply_async()
-                cleanup_delay_minutes = int(environ.get('RUNS_CLEANUP_MINUTES'))
+                cleanup_delay_minutes = int(environ.get('TASKS_CLEANUP_MINUTES'))
                 cleanup_delay_seconds = cleanup_delay_minutes * 60
                 cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay_seconds)
                 task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay_seconds)
@@ -81,7 +81,7 @@ def submit_task(guid: str, auth: dict):
                 async_to_sync(push_task_event)(task)
 
                 job_id = submit_jobqueue_task(task, ssh)
-                refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
+                refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
                 poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay)
 
                 log_task_status(task, [f"Scheduled job (ID {job_id}), polling status in {refresh_delay} second(s)"])
@@ -107,8 +107,8 @@ def poll_job_status(guid: str, auth: dict):
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
 
-    refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-    cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
+    refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
+    cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
     logger.info(f"Checking {task.agent.name} scheduler status for run {guid} (SLURM job {task.job_id})")
 
     # if the job already failed, schedule cleanup
@@ -155,7 +155,7 @@ def poll_job_status(guid: str, auth: dict):
         if task.is_complete:
             list_task_results.s(guid, auth).apply_async()
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (
-                f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
+                f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
@@ -176,10 +176,10 @@ def poll_job_status(guid: str, auth: dict):
             task.completed = now
             task.save()
 
-            log_task_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"])
+            log_task_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"])
             async_to_sync(push_task_event)(task)
         else:
-            final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
+            final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
@@ -195,7 +195,7 @@ def poll_job_status(guid: str, auth: dict):
         task.completed = now
         task.save()
 
-        final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
+        final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)

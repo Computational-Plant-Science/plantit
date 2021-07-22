@@ -18,10 +18,9 @@ assert 'MORE_USERS' in os.environ, f"{missing_variable}: MORE_USERS"
 assert 'AGENT_KEYS' in os.environ, f"{missing_variable}: AGENT_KEYS"
 assert 'WORKFLOWS_CACHE' in os.environ, f"{missing_variable}: WORKFLOWS_CACHE"
 assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOWS_REFRESH_MINUTES"
-assert 'SESSIONS_LOGS' in os.environ, f"{missing_variable}: SESSION_LOGS"
-assert 'RUNS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: RUNS_TIMEOUT_MULTIPLIER"
-assert 'RUNS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: RUNS_REFRESH_SECONDS"
-assert 'RUNS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: RUNS_CLEANUP_MINUTES"
+assert 'TASKS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: TASKS_TIMEOUT_MULTIPLIER"
+assert 'TASKS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: TASKS_REFRESH_SECONDS"
+assert 'TASKS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: TASKS_CLEANUP_MINUTES"
 assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
@@ -30,7 +29,7 @@ assert 'CYVERSE_CLIENT_SECRET' in os.environ, f"{missing_variable}: CYVERSE_CLIE
 assert 'CYVERSE_TOKEN_REFRESH_MINUTES' in os.environ, f"{missing_variable}: CYVERSE_TOKEN_REFRESH_MINUTES"
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
-assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
+assert 'GITHUB_CLIENT_ID' in os.environ, f"{missing_variable}: GITHUB_CLIENT_ID"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 assert 'AWS_FEEDBACK_ARN' in os.environ, f"{missing_variable} AWS_FEEDBACK_ARN"
@@ -53,10 +52,9 @@ MORE_USERS = os.environ.get('MORE_USERS')
 AGENT_KEYS = os.environ.get('AGENT_KEYS')
 WORKFLOWS_CACHE = os.environ.get('WORKFLOWS_CACHE')
 WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')
-SESSIONS_LOGS = os.environ.get('SESSIONS_LOGS')
-RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
-RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
-RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
+TASKS_TIMEOUT_MULTIPLIER = os.environ.get('TASKS_TIMEOUT_MULTIPLIER')
+TASKS_REFRESH_SECONDS = os.environ.get('TASKS_REFRESH_SECONDS')
+TASKS_CLEANUP_MINUTES = os.environ.get('TASKS_CLEANUP_MINUTES')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")
@@ -70,7 +68,7 @@ if not DEBUG:
 
 GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
-GITHUB_KEY = os.environ.get('GITHUB_KEY')
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 
 # Celery timezone
