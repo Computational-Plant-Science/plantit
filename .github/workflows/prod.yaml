@@ -33,14 +33,15 @@ jobs:
           SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
       - name: Deploy production
         env:
-          SSH_HOST: ${{ secrets.PROD_HOST }}
-          SSH_PORT: ${{ secrets.PROD_PORT }}
-          SSH_USER: ${{ secrets.PROD_USER }}
-          SSH_DIRECTORY: ${{ secrets.PROD_DIRECTORY }}
-          EMAIL: ${{ secrets.EMAIL }}
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          HOST: ${{ secrets.PROD_HOST }}
+          PORT: ${{ secrets.PROD_PORT }}
+          USER: ${{ secrets.PROD_USER }}
+          DIRECTORY: ${{ secrets.PROD_DIRECTORY }}
+          EMAIL: ${{ secrets.PROD_EMAIL }}
         run: |
-          chmod +x scripts/deploy-prod.sh
-          chmod +x scripts/deploy-prod-ssh.sh
+          chmod +x scripts/deploy.sh
+          chmod +x scripts/deploy-ssh.sh
           bash scripts/deploy-prod-ssh.sh
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2

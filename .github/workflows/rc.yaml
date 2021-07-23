@@ -52,15 +52,16 @@ jobs:
           docker push computationalplantscience/plantit
       - name: Deploy release candidate
         env:
-          SSH_HOST: ${{ secrets.RC_HOST }}
-          SSH_PORT: ${{ secrets.RC_PORT }}
-          SSH_USER: ${{ secrets.RC_USER }}
-          SSH_DIRECTORY: ${{ secrets.RC_DIRECTORY }}
+          HOST: ${{ secrets.RC_HOST }}
+          SSH_HOST: ${{ secrets.RC_SSH_HOST }}
+          PORT: ${{ secrets.RC_PORT }}
+          USER: ${{ secrets.RC_USER }}
+          DIRECTORY: ${{ secrets.RC_DIRECTORY }}
           EMAIL: ${{ secrets.RC_EMAIL }}
         run: |
-          chmod +x scripts/deploy-rc.sh
-          chmod +x scripts/deploy-rc-ssh.sh
-          bash scripts/deploy-rc-ssh.sh
+          chmod +x scripts/deploy.sh
+          chmod +x scripts/deploy-ssh.sh
+          bash scripts/deploy-ssh.sh
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2
         env:
