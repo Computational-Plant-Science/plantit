@@ -53,9 +53,6 @@ def submit_task(guid: str, auth: dict):
         ssh = get_task_ssh_client(task, auth)
 
         with ssh:
-            log_task_status(task, [f"Configuring environment"])
-            async_to_sync(push_task_event)(task)
-
             if local:
                 configure_local_task_environment(task, ssh)
                 log_task_status(task, [f"Invoking script"])
@@ -261,6 +258,9 @@ def list_task_results(guid: str, auth: dict):
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(expected))
+
+    task.results_retrieved = True
+    task.save()
 
     log_task_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)

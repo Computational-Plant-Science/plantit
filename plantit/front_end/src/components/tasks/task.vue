@@ -422,29 +422,24 @@
                                                                 line + '\n'
                                                             }}</span
                                                         >
-                                                        <span
-                                                            v-if="
+                                                    </b-col>
+                                                    <b-col v-else
+                                                        ><b-skeleton-wrapper
+                                                            :loading="
                                                                 !getTask.is_complete
                                                             "
-                                                            ><b-skeleton-wrapper
-                                                                :loading="
-                                                                    !getTask.is_complete
-                                                                "
-                                                            >
-                                                                <template
-                                                                    #loading
-                                                                >
-                                                                    <b-skeleton
-                                                                        width="15%"
-                                                                    ></b-skeleton
-                                                                    ><b-skeleton
-                                                                        width="25%"
-                                                                    ></b-skeleton
-                                                                    ><b-skeleton
-                                                                        width="20%"
-                                                                    ></b-skeleton></template></b-skeleton-wrapper
-                                                        ></span>
-                                                    </b-col>
+                                                        >
+                                                            <template #loading>
+                                                                <b-skeleton
+                                                                    width="15%"
+                                                                ></b-skeleton
+                                                                ><b-skeleton
+                                                                    width="25%"
+                                                                ></b-skeleton
+                                                                ><b-skeleton
+                                                                    width="20%"
+                                                                ></b-skeleton></template></b-skeleton-wrapper
+                                                    ></b-col>
                                                 </b-row>
                                             </div>
                                         </div>
@@ -464,16 +459,14 @@
                                                 <b-col class="text-left">
                                                     <span
                                                         v-if="
-                                                            !loadingOutputFiles &&
-                                                                getTask.output_files !==
-                                                                    undefined
+                                                            task.results_retrieved
                                                         "
                                                         >{{
                                                             getTask.output_files
                                                                 .length
                                                         }}</span
-                                                    >
-                                                    result(s)
+                                                    ><span v-else><b-spinner small :variant="profile.darkMode ? 'light' : 'dark'"></b-spinner> Loading</span>
+                                                  result(s)
                                                     <br />
                                                     <b
                                                         v-if="
@@ -1027,7 +1020,8 @@
                                                                 file.name
                                                             "
                                                             style="min-width: 20rem;"
-                                                            class="overflow-hidden mb-4 mr-4 text-left"
+                                                            no-body
+                                                            class="overflow-hidden mb-4 mr-4 p-0 text-left border-0"
                                                             :bg-variant="
                                                                 profile.darkMode
                                                                     ? 'dark'
@@ -1038,7 +1032,6 @@
                                                                     ? 'dark'
                                                                     : 'white'
                                                             "
-                                                            border-variant="default"
                                                             :header-border-variant="
                                                                 profile.darkMode
                                                                     ? 'secondary'
@@ -1050,7 +1043,27 @@
                                                                     : 'dark'
                                                             "
                                                         >
-                                                            <template #header
+                                                            <b-card-img
+                                                                v-if="
+                                                                    viewMode ===
+                                                                        'Grid'
+                                                                "
+                                                                :style="
+                                                                    getTask.result_previews_loaded ||
+                                                                    noPreview(
+                                                                        file
+                                                                    )
+                                                                        ? 'min-width: 20rem'
+                                                                        : 'max-width: 4rem'
+                                                                "
+                                                                :src="
+                                                                    thumbnailPath(
+                                                                        file
+                                                                    )
+                                                                "
+                                                                top
+                                                            ></b-card-img>
+                                                            <!--<template #header
                                                                 ><b-img-lazy
                                                                     center
                                                                     v-if="
@@ -1072,41 +1085,43 @@
                                                                         )
                                                                     "
                                                                 ></b-img-lazy
-                                                            ></template>
-                                                            <p
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'text-light'
-                                                                        : 'text-dark'
-                                                                "
-                                                            >
-                                                                <b>{{
-                                                                    file.name
-                                                                }}</b>
-                                                                <br />
-                                                            </p>
-                                                            <hr />
-                                                            <b-button
-                                                                :title="
-                                                                    `Download ${file.name}`
-                                                                "
-                                                                v-b-tooltip.hover
-                                                                :variant="
-                                                                    profile.darkMode
-                                                                        ? 'outline-light'
-                                                                        : 'white'
-                                                                "
-                                                                class="text-left m-0"
-                                                                @click="
-                                                                    downloadFile(
+                                                            ></template>-->
+                                                            <b-card-body class="text-center">
+                                                                <p
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                >
+                                                                    <b>{{
                                                                         file.name
-                                                                    )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-download fa-fw"
-                                                                ></i>
-                                                            </b-button>
+                                                                    }}</b>
+                                                                    <br />
+                                                                </p>
+                                                                <b-button
+                                                                    block
+                                                                    :title="
+                                                                        `Download ${file.name}`
+                                                                    "
+                                                                    v-b-tooltip.hover
+                                                                    :variant="
+                                                                        profile.darkMode
+                                                                            ? 'outline-light'
+                                                                            : 'white'
+                                                                    "
+                                                                    class="text-center m-0"
+                                                                    @click="
+                                                                        downloadFile(
+                                                                            file.name
+                                                                        )
+                                                                    "
+                                                                >
+                                                                    <i
+                                                                        class="fas fa-download fa-fw"
+                                                                    ></i> Download
+                                                                </b-button>
+                                                            </b-card-body>
                                                         </b-card>
                                                     </b-card-group>
                                                     <b-carousel

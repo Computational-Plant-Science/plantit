@@ -63,6 +63,7 @@ class Task(models.Model):
     workflow_image_url = models.URLField(null=True, blank=True)
     status = models.CharField(max_length=8, choices=TaskStatus.choices, default=TaskStatus.CREATED)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
+    results_retrieved = models.BooleanField(default=False)
     previews_loaded = models.BooleanField(default=False)
     cleaned_up = models.BooleanField(default=False)
     created = models.DateTimeField(default=timezone.now)

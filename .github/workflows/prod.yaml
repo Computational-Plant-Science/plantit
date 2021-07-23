@@ -39,6 +39,7 @@ jobs:
           USER: ${{ secrets.PROD_USER }}
           DIRECTORY: ${{ secrets.PROD_DIRECTORY }}
           EMAIL: ${{ secrets.PROD_EMAIL }}
+          CONFIG: prod
         run: |
           chmod +x scripts/deploy.sh
           chmod +x scripts/deploy-ssh.sh

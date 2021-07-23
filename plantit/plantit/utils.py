@@ -1082,7 +1082,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         if len(hours) == 1: hours = f"0{hours}"
         adjusted_str = f"{hours}:00:00"
 
-        log_task_status(task, [f"Using adjusted walltime {adjusted_str}"])
+        logger.info(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
         async_to_sync(push_task_event)(task)
 
         task.job_requested_walltime = adjusted_str
@@ -1518,6 +1518,7 @@ def task_to_dict(task: Task) -> dict:
         'is_cancelled': task.is_cancelled,
         'is_timeout': task.is_timeout,
         'workflow_image_url': task.workflow_image_url,
+        'results_retrieved': task.results_retrieved,
         'result_previews_loaded': task.previews_loaded,
         'cleaned_up': task.cleaned_up,
         'transferred': task.transferred,

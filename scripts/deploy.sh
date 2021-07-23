@@ -1,9 +1,10 @@
 #!/bin/bash
 
-echo "Deploying ${PWD##*/}..."
-host="$1"
-email="$2"
-compose="docker-compose -f docker-compose.${PWD##*/}.yml"
+echo "Deploying $config..."
+config="$1"
+host="$2"
+email="$3"
+compose="docker-compose -f docker-compose.$config.yml"
 
 echo "Bringing containers down..."
 $compose down --remove-orphans
@@ -12,7 +13,7 @@ echo "Fetching latest source from git..."
 git fetch origin master
 git checkout origin/master plantit/
 git checkout origin/master scripts/
-git checkout origin/master docker-compose.${PWD##*/}.yml
+git checkout origin/master "docker-compose.$config.yml"
 
 echo "Pulling image definitions..."
 $compose pull

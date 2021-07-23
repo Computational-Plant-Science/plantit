@@ -58,6 +58,7 @@ jobs:
           USER: ${{ secrets.RC_USER }}
           DIRECTORY: ${{ secrets.RC_DIRECTORY }}
           EMAIL: ${{ secrets.RC_EMAIL }}
+          CONFIG: rc
         run: |
           chmod +x scripts/deploy.sh
           chmod +x scripts/deploy-ssh.sh
