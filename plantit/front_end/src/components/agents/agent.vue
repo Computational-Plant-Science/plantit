@@ -1769,7 +1769,9 @@ export default {
         ...mapGetters('agents', [
             'agent',
             'personalAgentsLoading',
-            'publicAgentsLoading'
+            'personalAgents',
+            'publicAgentsLoading',
+            'publicAgents'
         ]),
         authorizedUsers() {
             return this.getAgent.users_authorized.filter(
@@ -1856,7 +1858,7 @@ export default {
         workflowPolicyType() {
             // noop
         },
-        getAgent() {
+        personalAgents() {
             // noop
         },
         agent() {
