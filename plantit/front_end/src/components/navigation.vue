@@ -640,26 +640,7 @@
                                                 ></i></b-badge></small></small
                                 ></small></h3
                         ></b-nav-item>
-                        <b-nav-item
-                            to="/beta"
-                            class="mt-2"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="Beta Test"
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-vial fa-1x fa-fw text-success"></i
-                                >Beta Testing</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
+                      <b-nav-item
                             title="About"
                             to="/about"
                             class="mt-2"
@@ -676,6 +657,25 @@
                                 "
                                 ><i class="fas fa-seedling fa-1x fa-fw"></i
                                 >About</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            to="/beta"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Beta Test"
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-vial fa-1x fa-fw"></i
+                                >Beta Testing</span
                             ></b-nav-item
                         >
                         <b-nav-item
