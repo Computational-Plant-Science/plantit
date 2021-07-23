@@ -1,8 +1,7 @@
-name: CI
+name: PROD
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
 jobs:
   build:
     runs-on: ubuntu-16.04
@@ -14,7 +13,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'Build started'
+          SLACK_MESSAGE: 'Building PROD'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
       - name: Login to Docker Hub
@@ -32,41 +31,23 @@ jobs:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
           SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
-      - name: Bootstrap, build, & test
+      - name: Deploy production
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          CYVERSE_USERNAME: ${{ secrets.CYVERSE_USERNAME }}
-          CYVERSE_PASSWORD: ${{ secrets.CYVERSE_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
-          CYVERSE_CLIENT_ID: ${{ secrets.CYVERSE_CLIENT_ID }}
-          CYVERSE_CLIENT_SECRET: ${{ secrets.CYVERSE_CLIENT_SECRET }}
-          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          chmod +x scripts/bootstrap.sh
-          bash scripts/bootstrap.sh -n
-          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
-          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
-          docker push computationalplantscience/plantit
-      - name: Deploy
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_DIRECTORY: ${{ secrets.SSH_DIRECTORY }}
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_PORT: ${{ secrets.PROD_PORT }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_DIRECTORY: ${{ secrets.PROD_DIRECTORY }}
           EMAIL: ${{ secrets.EMAIL }}
         run: |
-          chmod +x scripts/deploy.sh
-          chmod +x scripts/deploy-ssh.sh
-          bash scripts/deploy-ssh.sh
+          chmod +x scripts/deploy-prod.sh
+          chmod +x scripts/deploy-prod-ssh.sh
+          bash scripts/deploy-prod-ssh.sh
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'Build succeeded'
+          SLACK_MESSAGE: 'PROD build succeeded'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit

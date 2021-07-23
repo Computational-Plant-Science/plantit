@@ -289,7 +289,7 @@
                                                     v-model="getAgent.public"
                                                     :disabled="
                                                         getAgent.authentication ===
-                                                            'key'
+                                                            'password'
                                                     "
                                                     button
                                                     class="mr-0"
@@ -297,9 +297,9 @@
                                                     v-b-tooltip.hover
                                                     :title="
                                                         getAgent.authentication ===
-                                                            'key' &&
+                                                            'password' &&
                                                         !getAgent.public
-                                                            ? `To make ${getAgent.name} public you must enable Password authentication`
+                                                            ? `To make ${getAgent.name} public you must enable key authentication`
                                                             : `Make ${
                                                                   getAgent.name
                                                               } ${

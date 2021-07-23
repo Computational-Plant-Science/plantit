@@ -765,7 +765,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     now = timezone.now()
 
     time_limit = parse_time_limit_seconds(workflow['config']['time'])
-    print(f"Using task time limit {time_limit}s")
+    logger.info(f"Using task time limit {time_limit}s")
     due_time = timezone.now() + timedelta(seconds=time_limit)
 
     task = Task.objects.create(
