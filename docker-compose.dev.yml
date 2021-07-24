@@ -61,6 +61,8 @@ services:
       - postgres
       - celery
       - sandbox
+    ports:
+      - 3000:3000
     healthcheck:
       test: curl -f http://localhost:3000/ping/
       interval: 20s
