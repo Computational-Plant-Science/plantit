@@ -116,19 +116,19 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Maximize your data's yield
+                                    Maximize data's yield
                                 </h4>
-                                Upload to <b-link
+                                Store in the <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
-                                >, annotate with <b-link
+                                > Data Store and annotate with <b-link
                                     class="text-white"
                                     href="https://www.miappe.org/"
                                     >MIAPPE</b-link
-                                >, and publish with a click
+                                >
                                 <br />
-                                Collaborate in the cloud with provenance, metadata, and versioning<!--, or plug in cloud stores like
+                                Provenance-tracking, metadata, and versioning in the cloud<!--, or plug in cloud stores like
                             <b-link
                                 class="text-white"
                                 href="https://aws.amazon.com/s3/"
@@ -196,7 +196,7 @@
                                 >
                                 and deploy anywhere
                                 <br />
-                                Plug into the F/OSS plant phenotyping ecosystem on
+                                Join the open source plant phenotyping ecosystem on
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"

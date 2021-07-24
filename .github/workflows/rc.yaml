@@ -25,13 +25,14 @@ jobs:
       - name: Create SSH key  # adapted from https://stackoverflow.com/a/60479844/6514033
         run: |
           mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          sudo chmod 600 ../private.key
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
           SSH_PRIVATE_KEY: ${{secrets.RC_SSH_PRIVATE_KEY}}
           SSH_KNOWN_HOSTS: ${{secrets.RC_SSH_KNOWN_HOSTS}}
-          SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
       - name: Bootstrap, build, & test
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
