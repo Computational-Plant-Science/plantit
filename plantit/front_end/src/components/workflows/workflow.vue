@@ -4060,6 +4060,8 @@ export default {
                 // if (!this.outputDataset) delete config.output['to'];
             }
             config.output = this.getWorkflow.config.output;
+            if (this.getWorkflow.config.logo !== null)
+              config.logo = this.getWorkflow.config.logo;
 
             // save config
             this.$store.dispatch('workflows/setRecentlyRun', {

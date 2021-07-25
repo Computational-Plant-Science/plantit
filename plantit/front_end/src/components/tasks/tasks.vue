@@ -6,12 +6,12 @@
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Your Tasks
                     </h2></b-col
-                ><b-col md="auto" align-self="center" class="mb-1"
+                ><!--<b-col md="auto" align-self="center" class="mb-1"
                     ><small
                         >{{ tasks.length }} shown,
                         {{ profile.stats.total_tasks }} total</small
                     ></b-col
-                >
+                >-->
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-tasks"
@@ -97,7 +97,13 @@
                                     ></b-form-input>
                                 </b-input-group>
                                 <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <b-card
+                                    <taskblurb
+                                        v-for="task in filtered"
+                                        v-bind:key="task.guid"
+                                        :task="task"
+                                        :project="true"
+                                    ></taskblurb>
+                                    <!--<b-card
                                         v-for="task in filtered"
                                         v-bind:key="task.guid"
                                         class="mt-2 pt-1"
@@ -271,7 +277,7 @@
                                                 ></b-row
                                             >
                                         </b-card-body>
-                                    </b-card>
+                                    </b-card>-->
                                     <!--<b-list-group-item
                                         style="box-shadow: -2px 2px 2px #adb5bd"
                                         v-for="task in filtered"
@@ -472,9 +478,13 @@ import axios from 'axios';
 import router from '@/router';
 import * as Sentry from '@sentry/browser';
 import { guid } from '@/utils';
+import taskblurb from '@/components/tasks/task-blurb.vue';
 
 export default {
     name: 'tasks',
+    components: {
+        taskblurb
+    },
     data: function() {
         return {
             searchText: ''

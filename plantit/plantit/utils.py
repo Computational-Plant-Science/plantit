@@ -789,8 +789,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     # add repo logo
     if 'logo' in workflow['config']:
         logo_path = workflow['config']['logo']
-        print(f"Using logo {logo_path}")
-        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{logo_path}"
+        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/master/{logo_path}"
 
     for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
     task.workdir = f"{task.guid}/"  # use GUID for working directory name

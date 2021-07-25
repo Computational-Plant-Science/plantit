@@ -55,6 +55,7 @@ jobs:
         env:
           HOST: ${{ secrets.RC_HOST }}
           SSH_HOST: ${{ secrets.RC_SSH_HOST }}
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
           PORT: ${{ secrets.RC_PORT }}
           USER: ${{ secrets.RC_USER }}
           DIRECTORY: ${{ secrets.RC_DIRECTORY }}
@@ -62,8 +63,19 @@ jobs:
           CONFIG: rc
         run: |
           chmod +x scripts/deploy.sh
-          chmod +x scripts/deploy-ssh.sh
-          bash scripts/deploy-ssh.sh
+          # chmod +x scripts/deploy-ssh.sh
+          # bash scripts/deploy-ssh.sh
+
+          eval "$(ssh-agent -s)" # Start ssh-agent cache
+          chmod 600 ~/.ssh/id_rsa # Allow read access to the private key
+          ssh-add ~/.ssh/id_rsa # Add the private key to SSH
+
+          echo "Deploying $CONFIG"
+          ssh -v -o StrictHostKeyChecking=no -p $PORT -i $SSH_KEY_PATH "$USER@$SSH_HOST" <<EOF
+            cd $DIRECTORY
+            chmod +x scripts/deploy.sh
+            scripts/deploy.sh $CONFIG $HOST $EMAIL
+          EOF
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2
         env:
@@ -73,4 +85,3 @@ jobs:
           SLACK_MESSAGE: 'RC build succeeded'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
-          SSH_KEY_PATH: ${{ github.workspace }}/../private.ke
