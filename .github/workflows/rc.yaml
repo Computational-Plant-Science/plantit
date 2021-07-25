@@ -25,8 +25,7 @@ jobs:
       - name: Create SSH key  # adapted from https://stackoverflow.com/a/60479844/6514033
         run: |
           mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ../private.key
-          sudo chmod 600 ../private.key
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
@@ -67,8 +66,8 @@ jobs:
           # bash scripts/deploy-ssh.sh
 
           eval "$(ssh-agent -s)" # Start ssh-agent cache
-          chmod 600 $SSH_KEY_PATH # Allow read access to the private key
-          ssh-add $SSH_KEY_PATH # Add the private key to SSH
+          chmod 600 ~/.ssh/id_rsa # Allow read access to the private key
+          ssh-add ~/.ssh/id_rsa # Add the private key to SSH
 
           echo "Deploying $CONFIG"
           ssh -v -o StrictHostKeyChecking=no -p $PORT "$USER@$SSH_HOST" <<EOF
