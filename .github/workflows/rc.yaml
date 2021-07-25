@@ -71,7 +71,7 @@ jobs:
           ssh-add $SSH_KEY_PATH # Add the private key to SSH
 
           echo "Deploying $CONFIG"
-          ssh -v -o StrictHostKeyChecking=no -p $PORT -i $SSH_KEY_PATH "$USER@$SSH_HOST" <<EOF
+          ssh -v -o StrictHostKeyChecking=no -p $PORT "$USER@$SSH_HOST" <<EOF
             cd $DIRECTORY
             chmod +x scripts/deploy.sh
             scripts/deploy.sh $CONFIG $HOST $EMAIL
