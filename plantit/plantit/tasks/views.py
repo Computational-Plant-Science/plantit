@@ -238,6 +238,7 @@ def get_output_file(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
+    print(body)
     path = body['path']
     auth = parse_task_auth_options(body['auth'])
 

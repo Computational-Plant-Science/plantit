@@ -11,4 +11,5 @@ urlpatterns = [
     path(r'<owner>/<title>/remove_team_member/', views.remove_team_member),
     path(r'<owner>/<title>/add_study/', views.add_study),
     path(r'<owner>/<title>/remove_study/', views.remove_study),
+    path(r'<owner>/<title>/edit_study/', views.edit_study)
 ]

@@ -789,6 +789,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     # add repo logo
     if 'logo' in workflow['config']:
         logo_path = workflow['config']['logo']
+        print(f"Using logo {logo_path}")
         task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{logo_path}"
 
     for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
@@ -1690,6 +1691,7 @@ def study_to_dict(study: Study) -> dict:
         'latitude': study.latitude,
         'longitude': study.longitude,
         'altitude': study.altitude,
+        'altitude_units': study.altitude_units,
         'experimental_design_description': study.experimental_design_description if study.experimental_design_description != '' else None,
         'experimental_design_type': study.experimental_design_type if study.experimental_design_type != '' else None,
         'experimental_design_map': study.experimental_design_map if study.experimental_design_map != '' else None,

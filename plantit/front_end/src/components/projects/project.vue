@@ -4,10 +4,18 @@
             <b-row v-if="projectsLoading"
                 ><b-col
                     ><b-spinner
-                        variant="secondary"
-                        type="grow"
-                    ></b-spinner></b-col
-            ></b-row>
+                        small
+                        v-if="projectsLoading"
+                        label="Loading..."
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading project...</span
+                    ></b-col
+                ></b-row
+            >
             <b-card
                 v-else
                 :sub-title="getProject.unique_id"
@@ -114,143 +122,202 @@
                     <span v-if="getProject.studies.length === 0"
                         >This project has no studies.</span
                     >
-                    <div
-                        class="mt-2 pt-1"
-                        style="border-top: 1px solid lightgray"
+                    <b-card
                         v-for="study in getProject.studies"
                         v-bind:key="study.title"
+                        class="mt-2 pt-1"
+                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        :header-text-variant="
+                            profile.darkMode ? 'white' : 'dark'
+                        "
+                        :text-variant="profile.darkMode ? 'white' : 'dark'"
+                        :body-text-variant="profile.darkMode ? 'white' : 'dark'"
+                        no-body
                     >
-                        <b-row
-                            ><b-col>
-                                <b>{{ study.title }}</b></b-col
-                            ><b-col class="ml-0" md="auto" align-self="center"
-                                ><b-button
+                        <b-card-body>
+                            <b-row
+                                ><b-col>
+                                    <b>{{ study.title }}</b></b-col
+                                ><b-col
                                     class="ml-0"
-                                    variant="outline-danger"
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    :title="
-                                        'Remove ' +
-                                            study.title +
-                                            ' from this project'
-                                    "
-                                    @click="showRemoveStudyModal(study)"
-                                >
-                                    <i class="fas fa-times-circle fa-fw"></i>
-                                    Remove
-                                </b-button></b-col
-                            ></b-row
-                        ><b-row
-                            ><b-col
-                                ><span
-                                    v-if="
-                                        study.description !== null &&
-                                            study.description !== ''
-                                    "
-                                    >{{ study.description }}<br />
-                                </span>
-                                <span v-else><i>No description</i><br /> </span>
-                                <span v-if="study.start_date !== null">
-                                    <small
-                                        >Start:
-                                        {{ prettify(study.start_date) }}</small
+                                    md="auto"
+                                    align-self="center"
+                                    ><b-button
+                                        class="ml-0"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        :title="
+                                            'Edit ' + study.title + ' details'
+                                        "
+                                        @click="showEditStudyModal(study)"
                                     >
-                                    <br />
-                                </span>
-                                <span v-if="study.end_date !== null">
-                                    <small
-                                        >End:
-                                        {{ prettify(study.end_date) }}</small
+                                        <i class="fas fa-edit fa-fw"></i>
+                                        Edit
+                                    </b-button></b-col
+                                ><b-col
+                                    class="ml-0"
+                                    md="auto"
+                                    align-self="center"
+                                    ><b-button
+                                        class="ml-0"
+                                        variant="outline-danger"
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        :title="
+                                            'Remove ' +
+                                                study.title +
+                                                ' from this project'
+                                        "
+                                        @click="showRemoveStudyModal(study)"
                                     >
-                                    <br />
-                                </span>
-                                <span v-if="study.contact_institution !== null">
-                                    <small
-                                        >Contact Institution:
-                                        {{ study.contact_institution }}</small
-                                    >
-                                    <br />
-                                </span>
-                                <span v-if="study.country !== null">
-                                    <small>Country: {{ study.country }}</small>
-                                    <br />
-                                </span>
-                                <span v-if="study.site_name !== null">
-                                    <small>Site: {{ study.site_name }}</small>
-                                    <br />
-                                </span>
-                                <span
-                                    v-if="
-                                        study.experimental_design_type !== null
-                                    "
-                                >
-                                    <small
-                                        >Experimental Design:
-                                        {{
-                                            study.experimental_design_type
-                                        }}</small
-                                    >
-                                    <small
+                                        <i
+                                            class="fas fa-times-circle fa-fw"
+                                        ></i>
+                                        Remove
+                                    </b-button></b-col
+                                ></b-row
+                            ><b-row
+                                ><b-col
+                                    ><span
                                         v-if="
-                                            study.experimental_design_description !==
+                                            study.description !== null &&
+                                                study.description !== ''
+                                        "
+                                        >{{ study.description }}<br />
+                                    </span>
+                                    <span v-else
+                                        ><i>No description</i><br />
+                                    </span>
+                                    <span v-if="study.start_date !== null">
+                                        <small
+                                            >Start:
+                                            {{
+                                                prettify(study.start_date)
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.end_date !== null">
+                                        <small
+                                            >End:
+                                            {{
+                                                prettify(study.end_date)
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span
+                                        v-if="
+                                            study.contact_institution !== null
+                                        "
+                                    >
+                                        <small
+                                            >Contact Institution:
+                                            {{
+                                                study.contact_institution
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.country !== null">
+                                        <small
+                                            >Country: {{ study.country }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.site_name !== null">
+                                        <small
+                                            >Site: {{ study.site_name }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span
+                                        v-if="
+                                            study.experimental_design_type !==
                                                 null
                                         "
-                                        >{{
-                                            study.experimental_design_description
-                                        }}</small
                                     >
-                                    <br />
-                                </span>
-                                <span
-                                    v-if="
-                                        study.observation_unit_level_hierarchy !==
-                                            null
-                                    "
-                                >
-                                    <small
-                                        >Observation Unit:
-                                        {{
-                                            study.observation_unit_level_hierarchy
-                                        }}</small
-                                    >
-                                    <small
+                                        <small
+                                            >Experimental Design:
+                                            {{
+                                                study.experimental_design_type
+                                            }}</small
+                                        >
+                                        <small
+                                            v-if="
+                                                study.experimental_design_description !==
+                                                    null
+                                            "
+                                            >{{
+                                                study.experimental_design_description
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span
                                         v-if="
-                                            study.observation_unit_description !==
+                                            study.observation_unit_level_hierarchy !==
                                                 null
                                         "
-                                        >{{
-                                            study.observation_unit_description
-                                        }}</small
                                     >
-                                    <br />
-                                </span>
-                                <span
-                                    v-if="study.growth_facility_type !== null"
-                                >
-                                    <small
-                                        >Growth Facility:
-                                        {{ study.growth_facility_type }}</small
-                                    >
-                                    <small
+                                        <small
+                                            >Observation Unit:
+                                            {{
+                                                study.observation_unit_level_hierarchy
+                                            }}</small
+                                        >
+                                        <small
+                                            v-if="
+                                                study.observation_unit_description !==
+                                                    null
+                                            "
+                                            >{{
+                                                study.observation_unit_description
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span
                                         v-if="
-                                            study.growth_facility_description !==
-                                                null
+                                            study.growth_facility_type !== null
                                         "
-                                        >{{
-                                            study.growth_facility_description
-                                        }}</small
                                     >
-                                    <br />
-                                </span>
-                                <span v-if="study.cultural_practices !== null">
-                                    <small
-                                        >Cultural Practices:
-                                        {{ study.cultural_practices }}</small
+                                        <small
+                                            >Growth Facility:
+                                            {{
+                                                study.growth_facility_type
+                                            }}</small
+                                        >
+                                        <small
+                                            v-if="
+                                                study.growth_facility_description !==
+                                                    null
+                                            "
+                                            >{{
+                                                study.growth_facility_description
+                                            }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span
+                                        v-if="study.cultural_practices !== null"
                                     >
-                                </span></b-col
-                            ></b-row
-                        >
-                    </div>
+                                        <small
+                                            >Cultural Practices:
+                                            {{
+                                                study.cultural_practices
+                                            }}</small
+                                        >
+                                    </span></b-col
+                                ></b-row
+                            >
+                        </b-card-body>
+                    </b-card>
                     <br />
                     <br />
                     <b-row>
@@ -347,135 +414,184 @@
                             </h5></b-col
                         >
                     </b-row>
-                    <b-list-group class="text-left m-0 p-0 mt-1" v-if="projectTasks.length > 0">
-                        <b-list-group-item
-                            style="box-shadow: -2px 2px 2px #adb5bd"
-                            v-for="task in projectTasks"
-                            v-bind:key="task.guid"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                    : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
-                            "
-                        >
-                            <b-img
-                                v-if="
-                                    task.workflow_image_url !== undefined &&
-                                        task.workflow_image_url !== null
+                    <b-row
+                        class="text-left m-0 p-0 mt-1"
+                        v-if="projectTasks.length > 0"
+                        ><b-col>
+                            <b-card
+                                v-for="task in projectTasks"
+                                v-bind:key="task.guid"
+                                class="mt-2 pt-1"
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
                                 "
-                                rounded
-                                class="card-img-right"
-                                style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
-                                right
-                                :src="task.workflow_image_url"
-                            ></b-img>
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
+                                :header-text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
                                 "
-                                :to="{
-                                    name: 'task',
-                                    params: {
-                                        owner: task.owner,
-                                        name: task.name
-                                    }
-                                }"
-                                replace
-                                >{{ task.name }}</b-link
-                            >
-                            <br />
-                            <span v-if="task.project !== null">
-                                <b-badge class="mr-2" variant="info">{{
-                                    task.project.title
-                                }}</b-badge
-                                ><small v-if="task.study !== null"
-                                    ><b-badge class="mr-2" variant="info">{{
-                                        task.study.title
-                                    }}</b-badge></small
-                                ></span
-                            >
-                            <div
-                                v-if="
-                                    task.tags !== undefined &&
-                                        task.tags.length > 0
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
                                 "
-                            >
-                                <b-badge
-                                    v-for="tag in task.tags"
-                                    v-bind:key="tag"
-                                    class="mr-1"
-                                    variant="secondary"
-                                    >{{ tag }}
-                                </b-badge>
-                                <br />
-                            </div>
-                            <b-spinner
-                                class="mb-1 mr-1"
-                                style="width: 0.7rem; height: 0.7rem;"
-                                v-if="!task.is_complete"
-                                variant="warning"
-                            >
-                            </b-spinner>
-                            <b-badge variant="warning" v-if="!task.is_complete"
-                                >Running</b-badge
-                            >
-                            <b-badge
-                                :variant="
+                                :body-text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
+                                no-body
+                                :style="
                                     task.is_failure || task.is_timeout
-                                        ? 'danger'
+                                        ? 'border-bottom: 5px solid red'
                                         : task.is_cancelled
-                                        ? 'secondary'
-                                        : 'success'
+                                        ? 'border-bottom: 5px solid lightgray'
+                                        : task.is_complete
+                                        ? 'border-bottom: 5px solid #d6df5D'
+                                        : 'border-bottom: 5px solid #e2e3b0'
                                 "
-                                v-else
-                                >{{ task.status.toUpperCase() }}</b-badge
                             >
-                            <small>
-                                on
-                                <b-link
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    :to="{
-                                        name: 'agent',
-                                        params: {
-                                            name: task.agent.name
-                                        }
-                                    }"
-                                    >{{
-                                        task.agent
-                                            ? task.agent.name
-                                            : '[agent removed]'
-                                    }}</b-link
-                                >
-                                {{ prettify(task.updated) }}</small
-                            >
-                            <br />
-                            <small
-                                v-if="task.workflow_name !== null"
-                                class="mr-1"
-                                ><a
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    :href="
-                                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
-                                    "
-                                    ><i class="fab fa-github fa-fw"></i>
-                                    {{ task.workflow_owner }}/{{
-                                        task.workflow_name
-                                    }}</a
-                                >
-                            </small>
-                        </b-list-group-item>
-                    </b-list-group>
-                <b-row v-else><b-col>You haven't run any tasks associated with this project.</b-col></b-row>
+                                <b-card-body>
+                                    <b-img
+                                        v-if="
+                                            task.workflow_image_url !==
+                                                undefined &&
+                                                task.workflow_image_url !== null
+                                        "
+                                        rounded
+                                        style="max-width: 3rem;"
+                                        :src="task.workflow_image_url"
+                                    ></b-img>
+                                    <b-link
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        :to="{
+                                            name: 'task',
+                                            params: {
+                                                owner: task.owner,
+                                                name: task.name
+                                            }
+                                        }"
+                                        replace
+                                        >{{ task.name }}</b-link
+                                    >
+                                    <span
+                                        v-if="
+                                            task.tags !== undefined &&
+                                                task.tags.length > 0
+                                        "
+                                    >
+                                        <b-badge
+                                            v-for="tag in task.tags"
+                                            v-bind:key="tag"
+                                            class="ml-2 mb-2"
+                                            variant="secondary"
+                                            >{{ tag }}
+                                        </b-badge>
+                                    </span>
+                                    <br />
+                                    <span v-if="!task.is_complete"
+                                        ><b-spinner
+                                            class="mb-1 mr-1"
+                                            style="width: 0.7rem; height: 0.7rem;"
+                                            variant="warning"
+                                        >
+                                        </b-spinner>
+                                        <small>Running on </small></span
+                                    >
+                                    <small v-else>Ran on </small>
+                                    <small>
+                                        <b-link
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :to="{
+                                                name: 'agent',
+                                                params: {
+                                                    name: task.agent.name
+                                                }
+                                            }"
+                                            ><b-img
+                                                v-if="task.agent.logo"
+                                                rounded
+                                                class="overflow-hidden"
+                                                style="max-height: 1rem;"
+                                                :src="task.agent.logo"
+                                            ></b-img
+                                            ><i
+                                                v-else
+                                                class="fas fa-server fa-fw"
+                                            ></i>
+                                            {{
+                                                task.agent
+                                                    ? task.agent.name
+                                                    : '[agent removed]'
+                                            }}</b-link
+                                        >
+
+                                        {{ prettify(task.updated) }}</small
+                                    >
+                                    <br />
+                                    <b-img
+                                        v-if="
+                                            task.workflow_image_url !==
+                                                undefined &&
+                                                task.workflow_image_url !== null
+                                        "
+                                        rounded
+                                        class="card-img-right"
+                                        style="max-width: 3rem;position: absolute;right: -15px;top: -25px;z-index:1;"
+                                        right
+                                        :src="
+                                            `https://raw.githubusercontent.com/${task.workflow_owner}/${task.workflow_name}/master/${task.workflow_image_url}`
+                                        "
+                                    ></b-img>
+                                    <small
+                                        v-if="task.workflow_name !== null"
+                                        class="mr-1"
+                                        ><a
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://github.com/${task.workflow_owner}/${task.workflow_name}`
+                                            "
+                                            ><i class="fab fa-github fa-fw"></i>
+                                            {{ task.workflow_owner }}/{{
+                                                task.workflow_name
+                                            }}</a
+                                        >
+                                    </small>
+                                    <b-row class="mt-0"
+                                        ><b-col
+                                            style="top: 27px;position: relative; font-size: 15pt"
+                                            align-self="end"
+                                            :class="
+                                                task.is_failure ||
+                                                task.is_timeout
+                                                    ? 'text-danger'
+                                                    : task.is_cancelled
+                                                    ? 'text-secondary'
+                                                    : task.is_complete
+                                                    ? 'text-success'
+                                                    : 'text-warning'
+                                            "
+                                            ><b>{{
+                                                task.status.toUpperCase()
+                                            }}</b></b-col
+                                        ></b-row
+                                    >
+                                </b-card-body>
+                            </b-card>
+                        </b-col>
+                    </b-row>
+                    <b-row v-else
+                        ><b-col
+                            >You haven't run any tasks associated with this
+                            project.</b-col
+                        ></b-row
+                    >
                 </b-card-body>
             </b-card>
         </b-container>
@@ -680,6 +796,238 @@
             </p>
         </b-modal>
         <b-modal
+            id="editStudy"
+            v-if="studyToEdit !== null"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            size="xl"
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="
+                `Edit ${
+                    this.studyToEdit !== null ? this.studyToEdit.title : 'study'
+                }`
+            "
+            @ok="editStudy"
+            ok-variant="success"
+        >
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A brief description of this study.</span
+                    ></template
+                >
+                <b-form-textarea
+                    v-model="studyDescription"
+                    :placeholder="
+                        studyToEdit.description !== ''
+                            ? studyToEdit.description
+                            : 'Enter a description'
+                    "
+                    required
+                ></b-form-textarea>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study's start date.</span
+                    ></template
+                >
+                <b-form-datepicker
+                    v-model="studyStartDate"
+                    :max="today"
+                    :placeholder="
+                        studyToEdit.start_date !== ''
+                            ? studyToEdit.start_date
+                            : 'Select a start date'
+                    "
+                    required
+                ></b-form-datepicker>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study's end date.</span
+                    ></template
+                >
+                <b-form-datepicker
+                    v-model="studyEndDate"
+                    :min="today"
+                    placeholder="Select an end date"
+                    required
+                ></b-form-datepicker>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study's contact institution.</span
+                    ></template
+                >
+                <b-form-input
+                    v-model="studyContactInstitution"
+                    placeholder="Enter an institution"
+                    required
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's country.</span
+                    ></template
+                >
+                <b-form-input
+                    v-model="studyCountry"
+                    placeholder="Enter a country"
+                    required
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's name.</span
+                    ></template
+                >
+                <b-form-input
+                    v-model="studySiteName"
+                    placeholder="Enter a site name"
+                    required
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's latitude.</span
+                    ></template
+                >
+                <b-form-spinbutton
+                    v-model="studyLatitude"
+                    placeholder="Select a latitude"
+                    required
+                ></b-form-spinbutton>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's longitude.</span
+                    ></template
+                >
+                <b-form-spinbutton
+                    v-model="studyLongitude"
+                    placeholder="Select a longitude"
+                    required
+                ></b-form-spinbutton>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's altitude.</span
+                    ></template
+                >
+                <b-form-spinbutton
+                    v-model="studyAltitude"
+                    placeholder="Select an altitude"
+                    required
+                ></b-form-spinbutton>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study site's altitude units.</span
+                    ></template
+                >
+                <b-form-select
+                    v-model="studyAltitudeUnits"
+                    :options="studyAltitudeUnitsOptions"
+                    placeholder="Select altitude units"
+                    required
+                ></b-form-select>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A brief description of this study's experimental
+                        design.</span
+                    ></template
+                >
+                <b-form-textarea
+                    v-model="studyExperimentalDesignDescription"
+                    placeholder="Enter an experimental design description"
+                    required
+                ></b-form-textarea>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A brief description of this study's experimental
+                        type.</span
+                    ></template
+                >
+                <b-form-input
+                    v-model="studyExperimentalDesignType"
+                    placeholder="Enter an experimental design type"
+                    required
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A brief description of this study's observation
+                        unit.</span
+                    ></template
+                >
+                <b-form-textarea
+                    v-model="studyObservationUnitDescription"
+                    placeholder="Enter an observation unit description"
+                    required
+                ></b-form-textarea>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A brief description of this study's growth
+                        facility.</span
+                    ></template
+                >
+                <b-form-textarea
+                    v-model="studyGrowthFacilityDescription"
+                    placeholder="Enter an growth facility description"
+                    required
+                ></b-form-textarea>
+            </b-form-group>
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This study's growth facility type.</span
+                    ></template
+                >
+                <b-form-input
+                    v-model="studyGrowthFacilityType"
+                    placeholder="Enter a growth facility type"
+                    required
+                ></b-form-input>
+            </b-form-group>
+        </b-modal>
+        <b-modal
             id="removeStudy"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -747,11 +1095,146 @@ export default {
             removingStudy: false,
             studyTitle: '',
             studyDescription: '',
+            studyStartDate: '',
+            studyEndDate: '',
+            studyContactInstitution: '',
+            studyCountry: '',
+            studySiteName: '',
+            studyLatitude: 0,
+            studyLongitude: 0,
+            studyAltitude: 0,
+            studyAltitudeUnits: 'ft',
+            studyAltitudeUnitsOptions: [
+                { value: 'ft', text: 'Feet' },
+                { value: 'm', text: 'Meters' }
+            ],
+            studyExperimentalDesignDescription: '',
+            studyExperimentalDesignType: '',
+            // studyExperimentalDesignMap: '',
+            // studyObservationUnitLevelHierarchy: '',
+            studyObservationUnitDescription: '',
+            studyGrowthFacilityDescription: '',
+            studyGrowthFacilityType: '',
+            studyCulturalPractices: '',
             studyToRemove: null,
+            studyToEdit: null,
             deleting: false
         };
     },
     methods: {
+        showEditStudyModal(study) {
+            this.studyToEdit = study;
+            this.$bvModal.show('editStudy');
+        },
+        hideEditStudyModal() {
+            this.studyToEdit = null;
+            this.$bvModal.hide('editStudy');
+        },
+        async editStudy() {
+            this.editingStudy = true;
+            let data = {
+                title: this.studyToEdit.title,
+                description:
+                    this.studyDescription !== ''
+                        ? this.studyDescription
+                        : this.studyToEdit.description,
+                start_date:
+                    this.studyStartDate !== ''
+                        ? this.studyStartDate
+                        : this.studyToEdit.start_date,
+                end_date:
+                    this.studyEndDate !== ''
+                        ? this.studyEndDate
+                        : this.studyToEdit.end_date,
+                contact_institution:
+                    this.studyContactInstitution !== ''
+                        ? this.studyContactInstitution
+                        : this.studyToEdit.contact_institution,
+                country:
+                    this.studyCountry !== ''
+                        ? this.studyCountry
+                        : this.studyToEdit.country,
+                site_name:
+                    this.studySiteName !== ''
+                        ? this.studySiteName
+                        : this.studyToEdit.site_name,
+                latitude:
+                    this.studyLatitude !== 0
+                        ? this.studyLatitude
+                        : this.studyToEdit.latitude,
+                longitude:
+                    this.studyLongitude !== 0
+                        ? this.studyLongitude
+                        : this.studyToEdit.longitude,
+                altitude:
+                    this.studyAltitude !== 0
+                        ? this.studyAltitude
+                        : this.studyToEdit.altitude,
+                experimental_design_description:
+                    this.studyExperimentalDesignDescription !== ''
+                        ? this.studyExperimentalDesignDescription
+                        : this.studyToEdit.experimental_design_description,
+                experimental_design_type:
+                    this.studyExperimentalDesignType !== ''
+                        ? this.studyExperimentalDesignType
+                        : this.studyToEdit.experimental_design_type,
+                // experimental_design_map: this.studyToEdit.experimental_design_map,
+                // observation_unit_level_hierarchy: this.studyToEdit.observation_unit_level_hierarchy,
+                observation_unit_description:
+                    this.studyObservationUnitDescription !== ''
+                        ? this.studyObservationUnitDescription
+                        : this.studyToEdit.observation_unit_description,
+                growth_facility_description:
+                    this.studyGrowthFacilityDescription !== ''
+                        ? this.studyGrowthFacilityDescription
+                        : this.studyToEdit.growth_facility_description,
+                growth_facility_type:
+                    this.studyGrowthFacilityType !== ''
+                        ? this.studyGrowthFacilityType
+                        : this.studyToEdit.growth_facility_type,
+                cultural_practices:
+                    this.studyCulturalPractices !== ''
+                        ? this.studyCulturalPractices
+                        : this.studyToEdit.cultural_practices
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/miappe/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}/edit_study/`,
+                headers: { 'Content-Type': 'application/json' },
+                data: data
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'projects/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Updated study ${this.studyToEdit.title}`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to update study ${this.studyToEdit.title}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.editingStudy = false;
+                    this.hideEditStudyModal();
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to update study ${this.studyToEdit.title}`,
+                        guid: guid().toString()
+                    });
+                    this.editingStudy = false;
+                    throw error;
+                });
+        },
         resetStudyInfo() {
             this.studyTitle = '';
             this.studyDescription = '';
@@ -1012,6 +1495,11 @@ export default {
             )})`;
         }
     },
+    watch: {
+        studyToEdit() {
+            // this.personalProjects.map(() => {});
+        }
+    },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
@@ -1026,9 +1514,15 @@ export default {
             'tasksCompleted',
             'tasksLoading'
         ]),
+        today() {
+            let now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        },
         projectTasks() {
             return this.tasks.filter(
-                t => t.project !== null && t.project.name === this.getProject.name
+                t =>
+                    t.project !== null &&
+                    t.project.name === this.getProject.name
             );
         },
         ownsProject() {
@@ -1056,8 +1550,70 @@ export default {
         studyDescriptionValid() {
             return this.studyDescription !== '';
         },
+        studyStartDateValid() {
+            return this.studyStartDate !== '';
+        },
+        studyEndDateValid() {
+            return true;
+            // return this.studyEndDate !== '';
+        },
+        studyContactInstitutionValid() {
+            return true;
+            // return this.studyContactInstitution !== '';
+        },
+        studyCountryValid() {
+            return true;
+            // return this.studyCountry !== '';
+        },
+        studySiteNameValid() {
+            return true;
+            // return this.studyCountry !== '';
+        },
+        studyLatitudeValid() {
+            return true;
+            // return this.studyLatitude !== 0;
+        },
+        studyLongitudeValid() {
+            return true;
+            // return this.studyLongitude !== 0;
+        },
+        studyAltitudeValid() {
+            return true;
+            // return this.studyAltitude !== 0;
+        },
+        studyAltitudeUnitsValid() {
+            return true;
+        },
+        studyExperimentalDesignDescriptionValid() {
+            return true;
+            // return this.studyExperimentalDesignDescription !== '';
+        },
+        studyExperimentalDesignTypeValid() {
+            return true;
+            // return this.studyExperimentalDesignType !== '';
+        },
+        studyObservationUnitDescriptionValid() {
+            return true;
+            // return this.studyObservationUnitDescription !== '';
+        },
+        studyGrowthFacilityDescriptionValid() {
+            return true;
+            // return this.studyGrowthFacilityDescription !== '';
+        },
+        studyGrowthFacilityTypeValid() {
+            return true;
+            // return this.studyGrowthFacilityType !== '';
+        },
+        studyCulturalPracticesValid() {
+            return true;
+            // return this.studyCulturalPractices !== '';
+        },
         studyInfoValid() {
-            return this.studyTitleValid && this.studyDescriptionValid;
+            return (
+                this.studyTitleValid &&
+                this.studyDescriptionValid &&
+                this.studyStartDateValid
+            );
         },
         otherUsers() {
             return this.allUsers.filter(

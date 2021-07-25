@@ -95,19 +95,6 @@
                                         class="mr-2"
                                         variant="secondary"
                                         >{{ tag }}</b-badge
-                                    ><span v-if="getTask.project !== null"
-                                        ><b-badge class="mr-2" variant="info">{{
-                                            getTask.project.title
-                                        }}</b-badge
-                                        ><small v-if="getTask.study !== null"
-                                            ><b-badge
-                                                class="mr-2"
-                                                variant="info"
-                                                >{{
-                                                    getTask.study.title
-                                                }}</b-badge
-                                            ></small
-                                        ></span
                                     >
                                 </h5>
                             </b-col>
@@ -142,7 +129,7 @@
                                         variant="warning"
                                     >
                                     </b-spinner>
-                                    <b-badge
+                                    <!--<b-badge
                                         :variant="
                                             getTask.is_failure ||
                                             getTask.is_timeout
@@ -157,12 +144,12 @@
                                             getTask.status.toUpperCase()
                                         }}</b-badge
                                     >
-                                    <small> on </small>
+                                    <small> on </small>-->
                                     <b-link
                                         :class="
                                             profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
+                                                ? 'text-light ml-2'
+                                                : 'text-dark ml-2'
                                         "
                                         :to="{
                                             name: 'agent',
@@ -170,11 +157,55 @@
                                                 name: getTask.agent.name
                                             }
                                         }"
-                                        >{{
+                                        ><b-img
+                                            v-if="getTask.agent.logo"
+                                            rounded
+                                            class="overflow-hidden"
+                                            style="max-height: 1rem"
+                                            :src="getTask.agent.logo"
+                                        ></b-img
+                                        ><i
+                                            v-else
+                                            class="fas fa-server fa-fw"
+                                        ></i>
+                                        {{
                                             getTask.agent
                                                 ? getTask.agent.name
                                                 : '[agent removed]'
                                         }}</b-link
+                                    >
+                                    <b-link
+                                        v-if="getTask.project !== null"
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light ml-3'
+                                                : 'text-dark ml-3'
+                                        "
+                                        :to="{
+                                            name: 'project',
+                                            params: {
+                                                owner: getTask.project.owner,
+                                                title: getTask.project.title
+                                            }
+                                        }"
+                                        ><b-img
+                                            class="mb-1 mr-1"
+                                            style="max-width: 18px"
+                                            :src="
+                                                profile.darkMode
+                                                    ? require('../../assets/miappe_icon.png')
+                                                    : require('../../assets/miappe_icon_black.png')
+                                            "
+                                        ></b-img>
+                                        <span v-if="getTask.project !== null"
+                                            >{{ getTask.project.title }}
+                                            <small
+                                                v-if="getTask.study !== null"
+                                                >{{
+                                                    getTask.study.title
+                                                }}</small
+                                            ></span
+                                        ></b-link
                                     >
                                 </h5>
                             </b-col>
@@ -328,6 +359,13 @@
                                     style="min-height: 5rem;"
                                     class="overflow-hidden mt-0"
                                     no-body
+                                    :style="
+                                        getTask.is_failure || getTask.is_timeout
+                                            ? 'border-bottom: 5px solid red'
+                                            : getTask.is_cancelled
+                                            ? 'border-bottom: 5px solid lightgray'
+                                            : getTask.is_complete ? 'border-bottom: 5px solid #d6df5D' : 'border-bottom: 5px solid #e2e3b0'
+                                    "
                                 >
                                     <b-card-body
                                         class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
@@ -336,6 +374,23 @@
                                             :linkable="true"
                                             :workflow="getWorkflow"
                                         ></WorkflowBlurb>
+                                        <b-row
+                                            ><b-col
+                                                style="top: 20px;position: relative; font-size: 15pt"
+                                                align-self="end"
+                                                :class="
+                                                    getTask.is_failure ||
+                                                    getTask.is_timeout
+                                                        ? 'text-danger'
+                                                        : getTask.is_cancelled
+                                                        ? 'text-secondary'
+                                                        : getTask.is_complete ? 'text-success' : 'text-warning'
+                                                "
+                                                ><b>{{
+                                                    getTask.status.toUpperCase()
+                                                }}</b></b-col
+                                            ></b-row
+                                        >
                                     </b-card-body>
                                 </b-card>
                                 <b-row class="m-0 p-0 mt-1">
@@ -459,14 +514,25 @@
                                                 <b-col class="text-left">
                                                     <span
                                                         v-if="
-                                                            task.results_retrieved
+                                                            getTask.results_retrieved
                                                         "
                                                         >{{
                                                             getTask.output_files
                                                                 .length
                                                         }}</span
-                                                    ><span v-else><b-spinner small :variant="profile.darkMode ? 'light' : 'dark'"></b-spinner> Loading</span>
-                                                  result(s)
+                                                    ><span v-else-if="!getTask.status === 'running'"
+                                                        ><b-spinner
+                                                            small
+                                                            :variant="
+                                                                profile.darkMode
+                                                                    ? 'light'
+                                                                    : 'dark'
+                                                            "
+                                                        ></b-spinner>
+                                                        Loading</span
+                                                    >
+                                                  <span v-else>No</span>
+                                                    result(s)
                                                     <br />
                                                     <b
                                                         v-if="
@@ -1086,7 +1152,9 @@
                                                                     "
                                                                 ></b-img-lazy
                                                             ></template>-->
-                                                            <b-card-body class="text-center">
+                                                            <b-card-body
+                                                                class="text-center"
+                                                            >
                                                                 <p
                                                                     :class="
                                                                         profile.darkMode
@@ -1112,14 +1180,15 @@
                                                                     "
                                                                     class="text-center m-0"
                                                                     @click="
-                                                                        downloadFile(
+                                                                        preDownloadFile(
                                                                             file.name
                                                                         )
                                                                     "
                                                                 >
                                                                     <i
                                                                         class="fas fa-download fa-fw"
-                                                                    ></i> Download
+                                                                    ></i>
+                                                                    Download
                                                                 </b-button>
                                                             </b-card-body>
                                                         </b-card>
@@ -1287,7 +1356,7 @@
                                                                             "
                                                                             class="text-right m-0"
                                                                             @click="
-                                                                                downloadFile(
+                                                                                preDownloadFile(
                                                                                     file.name
                                                                                 )
                                                                             "
