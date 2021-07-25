@@ -58,16 +58,18 @@
                     </h6>
                     <span v-if="getProject.submission_date !== null">
                         <small
-                            >Submission:
-                            {{ prettify(getProject.submission_date) }}</small
+                            >Submitted:
+                            {{
+                                prettifyDate(getProject.submission_date)
+                            }}</small
                         >
                         <br />
                     </span>
                     <span v-if="getProject.public_release_date !== null">
                         <small
-                            >Release:
+                            >Released:
                             {{
-                                prettify(getProject.public_release_date)
+                                prettifyDate(getProject.public_release_date)
                             }}</small
                         >
                         <br />
@@ -195,18 +197,18 @@
                                     </span>
                                     <span v-if="study.start_date !== null">
                                         <small
-                                            >Start:
+                                        ><b>Started</b>
                                             {{
-                                                prettify(study.start_date)
+                                                prettifyDate(study.start_date)
                                             }}</small
                                         >
                                         <br />
                                     </span>
                                     <span v-if="study.end_date !== null">
                                         <small
-                                            >End:
+                                        ><b>Ends</b>
                                             {{
-                                                prettify(study.end_date)
+                                                prettifyDate(study.end_date)
                                             }}</small
                                         >
                                         <br />
@@ -217,7 +219,7 @@
                                         "
                                     >
                                         <small
-                                            >Contact Institution:
+                                        ><b>Contact Institution:</b>
                                             {{
                                                 study.contact_institution
                                             }}</small
@@ -226,13 +228,13 @@
                                     </span>
                                     <span v-if="study.country !== null">
                                         <small
-                                            >Country: {{ study.country }}</small
+                                        ><b>Country:</b> {{ study.country }}</small
                                         >
                                         <br />
                                     </span>
                                     <span v-if="study.site_name !== null">
                                         <small
-                                            >Site: {{ study.site_name }}</small
+                                        ><b>Site:</b> {{ study.site_name }}</small
                                         >
                                         <br />
                                     </span>
@@ -243,11 +245,10 @@
                                         "
                                     >
                                         <small
-                                            >Experimental Design:
-                                            {{
+                                        ><b>Experimental Design:</b> [{{
                                                 study.experimental_design_type
-                                            }}</small
-                                        >
+                                            }}]
+                                        </small>
                                         <small
                                             v-if="
                                                 study.experimental_design_description !==
@@ -261,16 +262,18 @@
                                     </span>
                                     <span
                                         v-if="
-                                            study.observation_unit_level_hierarchy !==
+                                            study.observation_unit_description !==
                                                 null
                                         "
                                     >
                                         <small
-                                            >Observation Unit:
-                                            {{
+                                        ><b>Observation Unit:</b> <span v-if="
+                                                study.observation_unit_level_hierarchy !==
+                                                    null
+                                            ">[{{
                                                 study.observation_unit_level_hierarchy
-                                            }}</small
-                                        >
+                                          }}]</span>
+                                        </small>
                                         <small
                                             v-if="
                                                 study.observation_unit_description !==
@@ -288,11 +291,10 @@
                                         "
                                     >
                                         <small
-                                            >Growth Facility:
-                                            {{
+                                        ><b>Growth Facility:</b> [{{
                                                 study.growth_facility_type
-                                            }}</small
-                                        >
+                                            }}]
+                                        </small>
                                         <small
                                             v-if="
                                                 study.growth_facility_description !==
@@ -308,7 +310,7 @@
                                         v-if="study.cultural_practices !== null"
                                     >
                                         <small
-                                            >Cultural Practices:
+                                        ><b>Cultural Practices:</b>
                                             {{
                                                 study.cultural_practices
                                             }}</small
@@ -418,8 +420,12 @@
                         class="text-left m-0 p-0 mt-1"
                         v-if="projectTasks.length > 0"
                         ><b-col>
-                            <taskblurb v-for="task in projectTasks"
-                                v-bind:key="task.guid" :task="task" :project="false"></taskblurb>
+                            <taskblurb
+                                v-for="task in projectTasks"
+                                v-bind:key="task.guid"
+                                :task="task"
+                                :project="false"
+                            ></taskblurb>
                         </b-col>
                     </b-row>
                     <b-row v-else
@@ -633,7 +639,6 @@
         </b-modal>
         <b-modal
             id="editStudy"
-            v-if="studyToEdit !== null"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
             close
@@ -652,216 +657,319 @@
             @ok="editStudy"
             ok-variant="success"
         >
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >A brief description of this study.</span
-                    ></template
-                >
-                <b-form-textarea
-                    v-model="studyDescription"
-                    :placeholder="
-                        studyToEdit.description !== ''
-                            ? studyToEdit.description
-                            : 'Enter a description'
-                    "
-                    required
-                ></b-form-textarea>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study's start date.</span
-                    ></template
-                >
-                <b-form-datepicker
-                    v-model="studyStartDate"
-                    :max="today"
-                    :placeholder="
-                        studyToEdit.start_date !== ''
-                            ? studyToEdit.start_date
-                            : 'Select a start date'
-                    "
-                    required
-                ></b-form-datepicker>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study's end date.</span
-                    ></template
-                >
-                <b-form-datepicker
-                    v-model="studyEndDate"
-                    :min="today"
-                    placeholder="Select an end date"
-                    required
-                ></b-form-datepicker>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study's contact institution.</span
-                    ></template
-                >
-                <b-form-input
-                    v-model="studyContactInstitution"
-                    placeholder="Enter an institution"
-                    required
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's country.</span
-                    ></template
-                >
-                <b-form-input
-                    v-model="studyCountry"
-                    placeholder="Enter a country"
-                    required
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's name.</span
-                    ></template
-                >
-                <b-form-input
-                    v-model="studySiteName"
-                    placeholder="Enter a site name"
-                    required
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's latitude.</span
-                    ></template
-                >
-                <b-form-spinbutton
-                    v-model="studyLatitude"
-                    placeholder="Select a latitude"
-                    required
-                ></b-form-spinbutton>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's longitude.</span
-                    ></template
-                >
-                <b-form-spinbutton
-                    v-model="studyLongitude"
-                    placeholder="Select a longitude"
-                    required
-                ></b-form-spinbutton>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's altitude.</span
-                    ></template
-                >
-                <b-form-spinbutton
-                    v-model="studyAltitude"
-                    placeholder="Select an altitude"
-                    required
-                ></b-form-spinbutton>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study site's altitude units.</span
-                    ></template
-                >
-                <b-form-select
-                    v-model="studyAltitudeUnits"
-                    :options="studyAltitudeUnitsOptions"
-                    placeholder="Select altitude units"
-                    required
-                ></b-form-select>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >A brief description of this study's experimental
-                        design.</span
-                    ></template
-                >
-                <b-form-textarea
-                    v-model="studyExperimentalDesignDescription"
-                    placeholder="Enter an experimental design description"
-                    required
-                ></b-form-textarea>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >A brief description of this study's experimental
-                        type.</span
-                    ></template
-                >
-                <b-form-input
-                    v-model="studyExperimentalDesignType"
-                    placeholder="Enter an experimental design type"
-                    required
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >A brief description of this study's observation
-                        unit.</span
-                    ></template
-                >
-                <b-form-textarea
-                    v-model="studyObservationUnitDescription"
-                    placeholder="Enter an observation unit description"
-                    required
-                ></b-form-textarea>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >A brief description of this study's growth
-                        facility.</span
-                    ></template
-                >
-                <b-form-textarea
-                    v-model="studyGrowthFacilityDescription"
-                    placeholder="Enter an growth facility description"
-                    required
-                ></b-form-textarea>
-            </b-form-group>
-            <b-form-group>
-                <template #description
-                    ><span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >This study's growth facility type.</span
-                    ></template
-                >
-                <b-form-input
-                    v-model="studyGrowthFacilityType"
-                    placeholder="Enter a growth facility type"
-                    required
-                ></b-form-input>
-            </b-form-group>
+            <div v-if="studyToEdit !== null">
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >A brief description of this study.</span
+                        ></template
+                    >
+                    <b-form-textarea
+                        v-model="studyDescription"
+                        :placeholder="
+                            studyToEdit.description !== ''
+                                ? studyToEdit.description
+                                : 'Enter a description'
+                        "
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study's start date.</span
+                        ></template
+                    >
+                    <b-form-datepicker
+                        v-model="studyStartDate"
+                        :max="today"
+                        :placeholder="
+                            studyToEdit.start_date !== ''
+                                ? studyToEdit.start_date
+                                : 'Select a start date'
+                        "
+                        required
+                    ></b-form-datepicker>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study's end date.</span
+                        ></template
+                    >
+                    <b-form-datepicker
+                        v-model="studyEndDate"
+                        :min="today"
+                        :placeholder="
+                            studyToEdit.end_date !== ''
+                                ? studyToEdit.end_date
+                                : 'Select an end date'
+                        "
+                        required
+                    ></b-form-datepicker>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study's contact institution.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studyContactInstitution"
+                        :placeholder="
+                            studyToEdit.contact_institution !== ''
+                                ? studyToEdit.contact_institution
+                                : 'Enter an institution'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study site's country.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studyCountry"
+                        :placeholder="
+                            studyToEdit.country !== ''
+                                ? studyToEdit.country
+                                : 'Enter a country'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study site's name.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studySiteName"
+                        :placeholder="
+                            studyToEdit.site_name !== ''
+                                ? studyToEdit.site_name
+                                : 'Enter a site name'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study site's latitude.</span
+                        ></template
+                    >
+                    <b-form-spinbutton
+                        v-model="studyLatitude"
+                        :placeholder="
+                            studyToEdit.latitude !== 0
+                                ? studyToEdit.latitude
+                                : 'Select a latitude'
+                        "
+                        required
+                    ></b-form-spinbutton>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study site's longitude.</span
+                        ></template
+                    >
+                    <b-form-spinbutton
+                        v-model="studyLongitude"
+                        :placeholder="
+                            studyToEdit.longitude !== 0
+                                ? studyToEdit.longitude
+                                : 'Select a longitude'
+                        "
+                        required
+                    ></b-form-spinbutton>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study site's altitude.</span
+                        ></template
+                    >
+                    <b-form-spinbutton
+                        v-model="studyAltitude"
+                        :placeholder="
+                            studyToEdit.altitude !== 0
+                                ? studyToEdit.altitude
+                                : 'Select an altitude'
+                        "
+                        required
+                    ></b-form-spinbutton>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >Altitude units.</span
+                        ></template
+                    >
+                    <b-form-select
+                        v-model="studyAltitudeUnits"
+                        :options="studyAltitudeUnitsOptions"
+                        :placeholder="
+                            studyToEdit.altitude_units !== ''
+                                ? studyToEdit.altitude_units
+                                : 'Select altitude units'
+                        "
+                        required
+                    ></b-form-select>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >A brief description of this study's experimental
+                            design.</span
+                        ></template
+                    >
+                    <b-form-textarea
+                        v-model="studyExperimentalDesignDescription"
+                        :placeholder="
+                            studyToEdit.experimental_design_description !== ''
+                                ? studyToEdit.experimental_design_description
+                                : 'Enter an experimental design description'
+                        "
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >A brief description of this study's experimental
+                            type.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studyExperimentalDesignType"
+                        :placeholder="
+                            studyToEdit.experimental_design_type !== ''
+                                ? studyToEdit.experimental_design_type
+                                : 'Enter an experimental design type'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >A brief description of this study's observation
+                            unit.</span
+                        ></template
+                    >
+                    <b-form-textarea
+                        v-model="studyObservationUnitDescription"
+                        :placeholder="
+                            studyToEdit.observation_unit_description !== ''
+                                ? studyToEdit.observation_unit_description
+                                : 'Enter an observation unit description'
+                        "
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >A brief description of this study's growth
+                            facility.</span
+                        ></template
+                    >
+                    <b-form-textarea
+                        v-model="studyGrowthFacilityDescription"
+                        :placeholder="
+                            studyToEdit.growth_facility_description !== ''
+                                ? studyToEdit.growth_facility_description
+                                : 'Enter a growth facility description'
+                        "
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >This study's growth facility type.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studyGrowthFacilityType"
+                        :placeholder="
+                            studyToEdit.growth_facility_type !== ''
+                                ? studyToEdit.growth_facility_type
+                                : 'Enter a growth facility type'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <template #description
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >Any relevant cultural practices.</span
+                        ></template
+                    >
+                    <b-form-input
+                        v-model="studyCulturalPractices"
+                        :placeholder="
+                            studyToEdit.cultural_practices !== ''
+                                ? studyToEdit.cultural_practices
+                                : 'Enter cultural practices'
+                        "
+                        required
+                    ></b-form-input>
+                </b-form-group>
+            </div>
         </b-modal>
         <b-modal
             id="removeStudy"
@@ -1332,6 +1440,11 @@ export default {
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
+            )})`;
+        },
+        prettifyDate: function(date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY'
             )})`;
         }
     },
