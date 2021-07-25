@@ -73,3 +73,4 @@ jobs:
           SLACK_MESSAGE: 'RC build succeeded'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.ke

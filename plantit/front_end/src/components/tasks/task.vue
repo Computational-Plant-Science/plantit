@@ -364,7 +364,9 @@
                                             ? 'border-bottom: 5px solid red'
                                             : getTask.is_cancelled
                                             ? 'border-bottom: 5px solid lightgray'
-                                            : getTask.is_complete ? 'border-bottom: 5px solid #d6df5D' : 'border-bottom: 5px solid #e2e3b0'
+                                            : getTask.is_complete
+                                            ? 'border-bottom: 5px solid #d6df5D'
+                                            : 'border-bottom: 5px solid #e2e3b0'
                                     "
                                 >
                                     <b-card-body
@@ -384,7 +386,9 @@
                                                         ? 'text-danger'
                                                         : getTask.is_cancelled
                                                         ? 'text-secondary'
-                                                        : getTask.is_complete ? 'text-success' : 'text-warning'
+                                                        : getTask.is_complete
+                                                        ? 'text-success'
+                                                        : 'text-warning'
                                                 "
                                                 ><b>{{
                                                     getTask.status.toUpperCase()
@@ -520,7 +524,11 @@
                                                             getTask.output_files
                                                                 .length
                                                         }}</span
-                                                    ><span v-else-if="!getTask.status === 'running'"
+                                                    ><span
+                                                        v-else-if="
+                                                            !getTask.status ===
+                                                                'running'
+                                                        "
                                                         ><b-spinner
                                                             small
                                                             :variant="
@@ -531,7 +539,7 @@
                                                         ></b-spinner>
                                                         Loading</span
                                                     >
-                                                  <span v-else>No</span>
+                                                    <span v-else>No</span>
                                                     result(s)
                                                     <br />
                                                     <b
