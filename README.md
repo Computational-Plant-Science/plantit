@@ -4,7 +4,8 @@
 
 # PlantIT
 
-![Commit](https://github.com/Computational-Plant-Science/plantit/workflows/RC/badge.svg)
+![Commit](https://github.com/Computational-Plant-Science/plantit/workflows/Commit/badge.svg)
+![Release](https://github.com/Computational-Plant-Science/plantit/workflows/Release/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/plantit/badge/?version=latest)](https://plantit.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit)
 
