@@ -1,4 +1,4 @@
-name: RC
+name: Commit
 on:
   push:
     branches:
@@ -14,7 +14,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'Building RC'
+          SLACK_MESSAGE: 'Build triggered'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
       - name: Login to Docker Hub
@@ -22,16 +22,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Create SSH key  # adapted from https://stackoverflow.com/a/60479844/6514033
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        shell: bash
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.RC_SSH_PRIVATE_KEY}}
-          SSH_KNOWN_HOSTS: ${{secrets.RC_SSH_KNOWN_HOSTS}}
-          SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
+      # - name: Create SSH key  # adapted from https://stackoverflow.com/a/60479844/6514033
+      #   run: |
+      #     mkdir -p ~/.ssh/
+      #     echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+      #     echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      #   shell: bash
+      #   env:
+      #     SSH_PRIVATE_KEY: ${{secrets.RC_SSH_PRIVATE_KEY}}
+      #     SSH_KNOWN_HOSTS: ${{secrets.RC_SSH_KNOWN_HOSTS}}
+      #     SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
       - name: Bootstrap, build, & test
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
@@ -50,37 +50,37 @@ jobs:
           docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
           docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
           docker push computationalplantscience/plantit
-      - name: Deploy release candidate
-        env:
-          HOST: ${{ secrets.RC_HOST }}
-          SSH_HOST: ${{ secrets.RC_SSH_HOST }}
-          SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
-          PORT: ${{ secrets.RC_PORT }}
-          USER: ${{ secrets.RC_USER }}
-          DIRECTORY: ${{ secrets.RC_DIRECTORY }}
-          EMAIL: ${{ secrets.RC_EMAIL }}
-          CONFIG: rc
-        run: |
-          chmod +x scripts/deploy.sh
-          # chmod +x scripts/deploy-ssh.sh
-          # bash scripts/deploy-ssh.sh
+      # - name: Deploy release candidate
+      #   env:
+      #     HOST: ${{ secrets.RC_HOST }}
+      #     SSH_HOST: ${{ secrets.RC_SSH_HOST }}
+      #     SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
+      #     PORT: ${{ secrets.RC_PORT }}
+      #     USER: ${{ secrets.RC_USER }}
+      #     DIRECTORY: ${{ secrets.RC_DIRECTORY }}
+      #     EMAIL: ${{ secrets.RC_EMAIL }}
+      #     CONFIG: rc
+      #   run: |
+      #     chmod +x scripts/deploy.sh
+      #     # chmod +x scripts/deploy-ssh.sh
+      #     # bash scripts/deploy-ssh.sh
 
-          eval "$(ssh-agent -s)" # Start ssh-agent cache
-          chmod 600 $SSH_KEY_PATH # Allow read access to the private key
-          ssh-add $SSH_KEY_PATH # Add the private key to SSH
+      #     eval "$(ssh-agent -s)" # Start ssh-agent cache
+      #     chmod 600 $SSH_KEY_PATH # Allow read access to the private key
+      #     ssh-add $SSH_KEY_PATH # Add the private key to SSH
 
-          echo "Deploying $CONFIG"
-          ssh -v -o StrictHostKeyChecking=no -p $PORT "$USER@$SSH_HOST" <<EOF
-            cd $DIRECTORY
-            chmod +x scripts/deploy.sh
-            scripts/deploy.sh $CONFIG $HOST $EMAIL
-          EOF
+      #     echo "Deploying $CONFIG"
+      #     ssh -v -o StrictHostKeyChecking=no -p $PORT "$USER@$SSH_HOST" <<EOF
+      #       cd $DIRECTORY
+      #       chmod +x scripts/deploy.sh
+      #       scripts/deploy.sh $CONFIG $HOST $EMAIL
+      #     EOF
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'RC build succeeded'
+          SLACK_MESSAGE: 'Build succeeded'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit

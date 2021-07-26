@@ -1,4 +1,4 @@
-name: PROD
+name: Release
 on:
   release:
     types: [published]
@@ -13,7 +13,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'Building PROD'
+          SLACK_MESSAGE: 'Deploying release'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
       - name: Login to Docker Hub
@@ -31,7 +31,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
           SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
-      - name: Deploy production
+      - name: Deploy to server
         env:
           SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
           HOST: ${{ secrets.PROD_HOST }}
