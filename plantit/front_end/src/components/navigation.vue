@@ -78,8 +78,12 @@
                                 v-if="tasksRunning.length > 0"
                                 class="text-left m-0 p-0"
                             >
-                              <taskblurb v-for="task in filteredRunningTasks"
-                                    v-bind:key="task.name" :task="task" :project="true"></taskblurb>
+                                <taskblurb
+                                    v-for="task in filteredRunningTasks"
+                                    v-bind:key="task.name"
+                                    :task="task"
+                                    :project="true"
+                                ></taskblurb>
                                 <!--<b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
@@ -225,8 +229,12 @@
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-list-group class="text-left m-0 p-0">
-                              <taskblurb v-for="task in filteredCompletedTasks"
-                                    v-bind:key="task.name" :task="task" :project="true"></taskblurb>
+                                <taskblurb
+                                    v-for="task in filteredCompletedTasks"
+                                    v-bind:key="task.name"
+                                    :task="task"
+                                    :project="true"
+                                ></taskblurb>
                                 <!--<b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
@@ -631,7 +639,7 @@
                                                 ></i></b-badge></small></small
                                 ></small></h3
                         ></b-nav-item>
-                      <b-nav-item
+                        <b-nav-item
                             title="About"
                             to="/about"
                             class="mt-2"
@@ -665,8 +673,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-vial fa-1x fa-fw"></i
-                                >Beta Testing</span
+                                ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
+                                Testing</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -924,8 +932,7 @@
                                 class="ml-2 mb-1"
                             ></b-spinner>
                             <span v-else-if="profile.hints"> Hide</span
-                            ><span v-else> Show</span>
-                            Hints</b-dropdown-item
+                            ><span v-else> Show</span> Hints</b-dropdown-item
                         >
                         <b-dropdown-item
                             title="
@@ -1033,7 +1040,11 @@
                 <b>{{ taskToasted.agent.name }}</b>
                 {{ prettifyShort(taskToasted.updated) }}
                 <br />
-                {{ taskToasted.task_logs[taskToasted.task_logs.length - 1] }}
+                {{
+                    taskToasted.orchestrator_logs[
+                        taskToasted.orchestrator_logs.length - 1
+                    ]
+                }}
             </small>
         </b-toast>
         <b-modal
@@ -1109,7 +1120,7 @@ import taskblurb from '@/components/tasks/task-blurb.vue';
 export default {
     name: 'Navigation',
     components: {
-      taskblurb
+        taskblurb
     },
     data() {
         return {

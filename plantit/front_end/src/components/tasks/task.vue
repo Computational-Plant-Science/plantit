@@ -462,7 +462,7 @@
                                                 <b-row class="m-0">
                                                     <b-col
                                                         v-if="
-                                                            getTask.task_logs
+                                                            getTask.orchestrator_logs
                                                                 .length > 0
                                                         "
                                                         class="m-0 p-0 pl-3 pr-3 pt-1"
@@ -2352,7 +2352,7 @@ export default {
             return null;
         },
         taskLogs() {
-            let all = this.getTask.task_logs.slice();
+            let all = this.getTask.orchestrator_logs.slice();
             var firstI = all.findIndex(l => l.includes('PENDING'));
             if (firstI === -1)
                 firstI = all.findIndex(l => l.includes('RUNNING'));

@@ -18,8 +18,8 @@ from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
-    log_task_status, \
+from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
+    log_task_orchestrator_status, \
     push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds
 
 
@@ -269,7 +269,7 @@ def get_task_logs(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = get_task_orchestration_log_file_path(task)
+    log_path = get_task_orchestrator_log_file_path(task)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -360,7 +360,7 @@ def cancel(request, owner, name):
     task.save()
 
     msg = f"Cancelled user {owner}'s task {name}"
-    log_task_status(task, [msg])
+    log_task_orchestrator_status(task, [msg])
     push_task_event(task)
     return JsonResponse({'canceled': True})
 
@@ -411,7 +411,7 @@ async def status(request, owner, name):
 
             task.updated = timezone.now()
             await sync_to_async(task.save)()
-            log_task_status(task, line)
+            log_task_orchestrator_status(task, line)
             await push_task_event(task)
 
         task.updated = timezone.now()

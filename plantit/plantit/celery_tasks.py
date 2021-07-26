@@ -24,9 +24,9 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
+from plantit.utils import log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
-    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
+    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
     configure_jobqueue_task_environment
 
@@ -45,7 +45,7 @@ def submit_task(guid: str, auth: dict):
     task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
     task.save()
 
-    log_task_status(task, [f"Preparing to submit to {task.agent.name}"])
+    log_task_orchestrator_status(task, [f"Preparing to submit to {task.agent.name}"])
     async_to_sync(push_task_event)(task)
 
     try:
@@ -55,7 +55,7 @@ def submit_task(guid: str, auth: dict):
         with ssh:
             if local:
                 configure_local_task_environment(task, ssh)
-                log_task_status(task, [f"Invoking script"])
+                log_task_orchestrator_status(task, [f"Invoking script"])
                 async_to_sync(push_task_event)(task)
 
                 execute_local_task(task, ssh)
@@ -67,21 +67,21 @@ def submit_task(guid: str, auth: dict):
                 task.save()
 
                 final_message = f"Completed, cleaning up in {cleanup_delay_minutes} minute(s)"
-                log_task_status(task, [final_message])
+                log_task_orchestrator_status(task, [final_message])
                 async_to_sync(push_task_event)(task)
 
                 if task.user.profile.push_notification_status == 'enabled':
                     SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
             else:
                 configure_jobqueue_task_environment(task, ssh)
-                log_task_status(task, [f"Submitting script"])
+                log_task_orchestrator_status(task, [f"Submitting script"])
                 async_to_sync(push_task_event)(task)
 
                 job_id = submit_jobqueue_task(task, ssh)
                 refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
                 poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay)
 
-                log_task_status(task, [f"Scheduled job (ID {job_id}), polling status in {refresh_delay} second(s)"])
+                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id}), polling status in {refresh_delay} second(s)"])
                 async_to_sync(push_task_event)(task)
     except Exception:
         task.status = TaskStatus.FAILURE
@@ -91,7 +91,7 @@ def submit_task(guid: str, auth: dict):
         task.save()
 
         error = traceback.format_exc()
-        log_task_status(task, [f"Failed with error: {error}"])
+        log_task_orchestrator_status(task, [f"Failed with error: {error}"])
         logger.error(f"Failed to submit {task.user.username}'s task {task.name} to {task.agent.name}: {error}")
         async_to_sync(push_task_event)(task)
 
@@ -112,7 +112,7 @@ def poll_job_status(guid: str, auth: dict):
     if task.job_status == 'FAILURE':
         task.status = TaskStatus.FAILURE
         final_message = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
-        log_task_status(task, [final_message])
+        log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
@@ -133,7 +133,7 @@ def poll_job_status(guid: str, auth: dict):
         task.save()
 
         ssh = get_task_ssh_client(task, auth)
-        get_task_container_logs(task, ssh)
+        get_task_remote_logs(task, ssh)
 
         if job_status == 'COMPLETED':
             task.completed = now
@@ -153,7 +153,7 @@ def poll_job_status(guid: str, auth: dict):
             list_task_results.s(guid, auth).apply_async()
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
-            log_task_status(task, [final_message])
+            log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
             task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
@@ -162,7 +162,7 @@ def poll_job_status(guid: str, auth: dict):
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
         else:
-            log_task_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"])
+            log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"])
             async_to_sync(push_task_event)(task)
             poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay)
     except StopIteration:
@@ -173,11 +173,11 @@ def poll_job_status(guid: str, auth: dict):
             task.completed = now
             task.save()
 
-            log_task_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"])
+            log_task_orchestrator_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"])
             async_to_sync(push_task_event)(task)
         else:
             final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
-            log_task_status(task, [final_message])
+            log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
             task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
@@ -193,7 +193,7 @@ def poll_job_status(guid: str, auth: dict):
         task.save()
 
         final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
-        log_task_status(task, [final_message])
+        log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
@@ -212,7 +212,7 @@ def cleanup_task(guid: str, auth: dict):
         return
 
     logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
-    remove_task_orchestration_logs(task.guid)
+    remove_task_orchestration_logs(task)
 
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
     command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
@@ -224,7 +224,7 @@ def cleanup_task(guid: str, auth: dict):
     task.cleaned_up = True
     task.save()
 
-    log_task_status(task, [f"Cleaned up task {task.guid}"])
+    log_task_orchestrator_status(task, [f"Cleaned up task {task.guid}"])
     async_to_sync(push_task_event)(task)
 
 
@@ -246,12 +246,12 @@ def list_task_results(guid: str, auth: dict):
     else:
         workflow = json.loads(workflow)['config']
 
-    log_task_status(task, [f"Retrieving logs"])
+    log_task_orchestrator_status(task, [f"Retrieving logs"])
     async_to_sync(push_task_event)(task)
 
-    get_task_container_logs(task, ssh)
+    get_task_remote_logs(task, ssh)
 
-    log_task_status(task, [f"Retrieving results"])
+    log_task_orchestrator_status(task, [f"Retrieving results"])
     async_to_sync(push_task_event)(task)
 
     expected = get_task_result_files(task, workflow, auth)
@@ -262,7 +262,7 @@ def list_task_results(guid: str, auth: dict):
     task.results_retrieved = True
     task.save()
 
-    log_task_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
+    log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
     for result in expected:
@@ -271,110 +271,97 @@ def list_task_results(guid: str, auth: dict):
         exists = result['exists']
 
         if not exists: continue
-        if name.endswith('txt') or \
-                name.endswith('csv') or \
-                name.endswith('yml') or \
-                name.endswith('yaml') or \
-                name.endswith('tsv') or \
-                name.endswith('out') or \
-                name.endswith('err') or \
-                name.endswith('log'):
-            logger.info(f"Creating preview for text file: {name}")
-            with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh:
-                    with ssh.client.open_sftp() as sftp:
-                        sftp.chdir(workdir)
+        with ssh:
+            with ssh.client.open_sftp() as sftp:
+                sftp.chdir(workdir)
+                if name.endswith('txt') or \
+                        name.endswith('csv') or \
+                        name.endswith('yml') or \
+                        name.endswith('yaml') or \
+                        name.endswith('tsv') or \
+                        name.endswith('out') or \
+                        name.endswith('err') or \
+                        name.endswith('log'):
+                    logger.info(f"Creating preview for text file: {name}")
+                    with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(name, temp_file.name)
 
-                try:
-                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                except UnsupportedMimeType:
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                    logger.info(f"Saved empty file preview to cache: {name}")
-                    continue
+                        try:
+                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                        except UnsupportedMimeType:
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                            logger.info(f"Saved empty file preview to cache: {name}")
+                            continue
 
-                with open(preview, 'rb') as pf:
-                    content = pf.read()
-                    encoded = base64.b64encode(content)
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                    logger.info(f"Saved file preview to cache: {name}")
-        elif path.endswith('png'):
-            logger.info(f"Creating preview for PNG file: {name}")
-            with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh:
-                    with ssh.client.open_sftp() as sftp:
-                        sftp.chdir(workdir)
+                        with open(preview, 'rb') as pf:
+                            content = pf.read()
+                            encoded = base64.b64encode(content)
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                            logger.info(f"Saved file preview to cache: {name}")
+                elif path.endswith('png'):
+                    logger.info(f"Creating preview for PNG file: {name}")
+                    with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(result['name'], temp_file.name)
 
-                try:
-                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                except UnsupportedMimeType:
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                    logger.info(f"Saved empty preview for PNG file to cache: {name}")
-                    continue
+                        try:
+                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                        except UnsupportedMimeType:
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                           logger.info(f"Saved empty preview for PNG file to cache: {name}")
+                           continue
 
-                with open(preview, 'rb') as pf:
-                    content = pf.read()
-                    encoded = base64.b64encode(content)
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                    logger.info(f"Saved file preview to cache: {name}")
-        elif path.endswith('jpg') or path.endswith('jpeg'):
-            logger.info(f"Creating preview for JPG file: {name}")
-            with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh:
-                    with ssh.client.open_sftp() as sftp:
-                        sftp.chdir(workdir)
+                        with open(preview, 'rb') as pf:
+                           content = pf.read()
+                           encoded = base64.b64encode(content)
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                           logger.info(f"Saved file preview to cache: {name}")
+                elif path.endswith('jpg') or path.endswith('jpeg'):
+                    logger.info(f"Creating preview for JPG file: {name}")
+                    with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(result['name'], temp_file.name)
 
-                try:
-                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                except UnsupportedMimeType:
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                    logger.info(f"Saved empty preview for JPG file to cache: {name}")
-                    continue
+                        try:
+                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                        except UnsupportedMimeType:
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                            logger.info(f"Saved empty preview for JPG file to cache: {name}")
+                            continue
 
-                with open(preview, 'rb') as pf:
-                    content = pf.read()
-                    encoded = base64.b64encode(content)
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                    logger.info(f"Saved JPG file preview to cache: {name}")
-        elif path.endswith('czi'):
-            logger.info(f"Creating preview for CZI file: {name}")
-            with tempfile.NamedTemporaryFile() as temp_file:
-
-                with ssh:
-                    with ssh.client.open_sftp() as sftp:
-                        sftp.chdir(workdir)
+                        with open(preview, 'rb') as pf:
+                            content = pf.read()
+                            encoded = base64.b64encode(content)
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                            logger.info(f"Saved JPG file preview to cache: {name}")
+                elif path.endswith('czi'):
+                    logger.info(f"Creating preview for CZI file: {name}")
+                    with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(result['name'], temp_file.name)
 
-                image = czifile.imread(temp_file.name)
-                image.shape = (image.shape[2], image.shape[3], image.shape[4])
-                success, buffer = cv2.imencode(".jpg", image)
-                buffer.tofile(temp_file.name)
+                        image = czifile.imread(temp_file.name)
+                        image.shape = (image.shape[2], image.shape[3], image.shape[4])
+                        success, buffer = cv2.imencode(".jpg", image)
+                        buffer.tofile(temp_file.name)
 
-                try:
-                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                except UnsupportedMimeType:
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                    logger.info(f"Saved empty preview for CZI file to cache: {name}")
-                    continue
+                        try:
+                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                        except UnsupportedMimeType:
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                            logger.info(f"Saved empty preview for CZI file to cache: {name}")
+                            continue
 
-                with open(preview, 'rb') as pf:
-                    content = pf.read()
-                    encoded = base64.b64encode(content)
-                    redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                    logger.info(f"Saved file preview to cache: {name}")
-        elif path.endswith('ply'):
-            logger.info(f"Creating preview for PLY file: {name}")
-            with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh:
-                    with ssh.client.open_sftp() as sftp:
-                        sftp.chdir(workdir)
+                        with open(preview, 'rb') as pf:
+                            content = pf.read()
+                            encoded = base64.b64encode(content)
+                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                            logger.info(f"Saved file preview to cache: {name}")
+                elif path.endswith('ply'):
+                    logger.info(f"Creating preview for PLY file: {name}")
+                    with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(result['name'], temp_file.name)
 
     task.previews_loaded = True
     task.save()
-    log_task_status(task, [f"Created file previews"])
+    log_task_orchestrator_status(task, [f"Created file previews"])
     async_to_sync(push_task_event)(task)
 
 
