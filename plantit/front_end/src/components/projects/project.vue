@@ -197,7 +197,7 @@
                                     </span>
                                     <span v-if="study.start_date !== null">
                                         <small
-                                        ><b>Started</b>
+                                            ><b>Started</b>
                                             {{
                                                 prettifyDate(study.start_date)
                                             }}</small
@@ -206,7 +206,7 @@
                                     </span>
                                     <span v-if="study.end_date !== null">
                                         <small
-                                        ><b>Ends</b>
+                                            ><b>Ends</b>
                                             {{
                                                 prettifyDate(study.end_date)
                                             }}</small
@@ -219,7 +219,7 @@
                                         "
                                     >
                                         <small
-                                        ><b>Contact Institution:</b>
+                                            ><b>Contact Institution:</b>
                                             {{
                                                 study.contact_institution
                                             }}</small
@@ -228,13 +228,36 @@
                                     </span>
                                     <span v-if="study.country !== null">
                                         <small
-                                        ><b>Country:</b> {{ study.country }}</small
+                                            ><b>Country:</b>
+                                            {{ study.country }}</small
                                         >
                                         <br />
                                     </span>
                                     <span v-if="study.site_name !== null">
                                         <small
-                                        ><b>Site:</b> {{ study.site_name }}</small
+                                            ><b>Site:</b>
+                                            {{ study.site_name }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.latitude !== null">
+                                        <small
+                                            ><b>Latitude:</b>
+                                            {{ study.latitude }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.longitude !== null">
+                                        <small
+                                            ><b>Longitude:</b>
+                                            {{ study.longitude }}</small
+                                        >
+                                        <br />
+                                    </span>
+                                    <span v-if="study.altitude !== null">
+                                        <small
+                                            ><b>Altitude:</b>
+                                            {{ study.altitude }}</small
                                         >
                                         <br />
                                     </span>
@@ -245,7 +268,7 @@
                                         "
                                     >
                                         <small
-                                        ><b>Experimental Design:</b> [{{
+                                            ><b>Experimental Design:</b> [{{
                                                 study.experimental_design_type
                                             }}]
                                         </small>
@@ -267,12 +290,16 @@
                                         "
                                     >
                                         <small
-                                        ><b>Observation Unit:</b> <span v-if="
-                                                study.observation_unit_level_hierarchy !==
-                                                    null
-                                            ">[{{
-                                                study.observation_unit_level_hierarchy
-                                          }}]</span>
+                                            ><b>Observation Unit:</b>
+                                            <span
+                                                v-if="
+                                                    study.observation_unit_level_hierarchy !==
+                                                        null
+                                                "
+                                                > [{{
+                                                    study.observation_unit_level_hierarchy
+                                                }}]</span
+                                            >
                                         </small>
                                         <small
                                             v-if="
@@ -291,7 +318,7 @@
                                         "
                                     >
                                         <small
-                                        ><b>Growth Facility:</b> [{{
+                                            ><b>Growth Facility:</b> [{{
                                                 study.growth_facility_type
                                             }}]
                                         </small>
@@ -310,7 +337,7 @@
                                         v-if="study.cultural_practices !== null"
                                     >
                                         <small
-                                        ><b>Cultural Practices:</b>
+                                            ><b>Cultural Practices:</b>
                                             {{
                                                 study.cultural_practices
                                             }}</small

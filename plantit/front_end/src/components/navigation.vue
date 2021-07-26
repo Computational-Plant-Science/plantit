@@ -78,7 +78,9 @@
                                 v-if="tasksRunning.length > 0"
                                 class="text-left m-0 p-0"
                             >
-                                <b-list-group-item
+                              <taskblurb v-for="task in filteredRunningTasks"
+                                    v-bind:key="task.name" :task="task" :project="true"></taskblurb>
+                                <!--<b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="task in filteredRunningTasks"
@@ -195,7 +197,7 @@
                                             }}</a
                                         >
                                     </small>
-                                </b-list-group-item>
+                                </b-list-group-item>-->
                             </b-list-group>
                             <p
                                 :class="
@@ -223,7 +225,9 @@
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-list-group class="text-left m-0 p-0">
-                                <b-list-group-item
+                              <taskblurb v-for="task in filteredCompletedTasks"
+                                    v-bind:key="task.name" :task="task" :project="true"></taskblurb>
+                                <!--<b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="task in filteredCompletedTasks"
@@ -348,20 +352,7 @@
                                                 >
                                             </small>
                                         </b-col>
-                                        <!--<b-col md="auto">
-                                            <b-button
-                                                v-if="task.is_complete"
-                                                variant="outline-danger"
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                title="Delete Task"
-                                                class="text-right"
-                                                @click="showDeletePrompt(task)"
-                                            >
-                                                <i class="fas fa-trash"></i>
-                                                Delete
-                                            </b-button>
-                                        </b-col>--></b-row
+                                        </b-row
                                     >
                                     <b-modal
                                         :id="'remove ' + task.name"
@@ -404,7 +395,7 @@
                                             This cannot be undone.
                                         </p>
                                     </b-modal>
-                                </b-list-group-item>
+                                </b-list-group-item>-->
                             </b-list-group>
                         </b-col>
                         <b-col
@@ -1113,10 +1104,13 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
 import store from '@/store/store';
+import taskblurb from '@/components/tasks/task-blurb.vue';
 
 export default {
     name: 'Navigation',
-    components: {},
+    components: {
+      taskblurb
+    },
     data() {
         return {
             // user data

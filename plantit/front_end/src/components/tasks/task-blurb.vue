@@ -29,9 +29,10 @@
                 replace
                 >{{ task.name }}</b-link
             >
+            <span v-if="project && task.project !== null">
+            <br/>
             <b-link
-                v-if="project && task.project !== null"
-                :class="profile.darkMode ? 'text-light ml-3' : 'text-dark ml-3'"
+                :class="profile.darkMode ? 'text-light' : 'text-dark'"
                 :to="{
                     name: 'project',
                     params: {
@@ -55,6 +56,7 @@
                     }}</small></span
                 ></b-link
             >
+            </span>
             <span v-if="task.tags !== undefined && task.tags.length > 0">
                 <b-badge
                     v-for="tag in task.tags"
