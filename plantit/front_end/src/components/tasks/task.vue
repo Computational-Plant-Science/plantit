@@ -426,6 +426,7 @@
                                         </small>
                                     </b-col>
                                     <b-col
+                                        class="m-0 p-0 text-center"
                                         v-if="
                                             getTask.is_complete &&
                                                 getTask.cleanup_time !== null
@@ -459,10 +460,15 @@
                                                         variant="secondary"
                                                     ></b-spinner>
                                                 </b-row>
+                                                <!--<b-tabs align="center"
+                                                    ><b-tab active
+                                                        ><template #title
+                                                            >Orchestrator</template-->
                                                 <b-row class="m-0">
                                                     <b-col
                                                         v-if="
-                                                            getTask.orchestrator_logs
+                                                            getTask
+                                                                .orchestrator_logs
                                                                 .length > 0
                                                         "
                                                         class="m-0 p-0 pl-3 pr-3 pt-1"
@@ -498,9 +504,188 @@
                                                                 ><b-skeleton
                                                                     width="20%"
                                                                 ></b-skeleton></template></b-skeleton-wrapper
-                                                    ></b-col>
-                                                </b-row>
+                                                    ></b-col> </b-row
+                                                ><!--</b-tab
+                                                    ><b-tab
+                                                        ><template #title
+                                                            >CLI</template
+                                                        ><b-row class="m-0">
+                                                            <b-col
+                                                                v-if="
+                                                                    schedulerLogs
+                                                                        .length >
+                                                                        0
+                                                                "
+                                                                class="m-0 p-0 pl-3 pr-3 pt-1"
+                                                                style="white-space: pre-line;"
+                                                            >
+                                                                <span
+                                                                    v-for="line in schedulerLogs"
+                                                                    v-bind:key="
+                                                                        line
+                                                                    "
+                                                                    v-show="
+                                                                        line !==
+                                                                            undefined &&
+                                                                            line !==
+                                                                                null
+                                                                    "
+                                                                    >{{
+                                                                        line +
+                                                                            '\n'
+                                                                    }}</span
+                                                                >
+                                                            </b-col>
+                                                            <b-col v-else
+                                                                ><b-skeleton-wrapper
+                                                                    :loading="
+                                                                        !getTask.is_complete
+                                                                    "
+                                                                >
+                                                                    <template
+                                                                        #loading
+                                                                    >
+                                                                        <b-skeleton
+                                                                            width="15%"
+                                                                        ></b-skeleton
+                                                                        ><b-skeleton
+                                                                            width="25%"
+                                                                        ></b-skeleton
+                                                                        ><b-skeleton
+                                                                            width="20%"
+                                                                        ></b-skeleton></template></b-skeleton-wrapper
+                                                            ></b-col> </b-row></b-tab
+                                                ><b-tab
+                                                        ><template #title
+                                                            >Container</template
+                                                        ><b-row class="m-0">
+                                                            <b-col
+                                                                v-if="
+                                                                    agentLogs
+                                                                        .length >
+                                                                        0
+                                                                "
+                                                                class="m-0 p-0 pl-3 pr-3 pt-1"
+                                                                style="white-space: pre-line;"
+                                                            >
+                                                                <span
+                                                                    v-for="line in agentLogs"
+                                                                    v-bind:key="
+                                                                        line
+                                                                    "
+                                                                    v-show="
+                                                                        line !==
+                                                                            undefined &&
+                                                                            line !==
+                                                                                null
+                                                                    "
+                                                                    >{{
+                                                                        line +
+                                                                            '\n'
+                                                                    }}</span
+                                                                >
+                                                            </b-col>
+                                                            <b-col v-else
+                                                                ><b-skeleton-wrapper
+                                                                    :loading="
+                                                                        !getTask.is_complete
+                                                                    "
+                                                                >
+                                                                    <template
+                                                                        #loading
+                                                                    >
+                                                                        <b-skeleton
+                                                                            width="15%"
+                                                                        ></b-skeleton
+                                                                        ><b-skeleton
+                                                                            width="25%"
+                                                                        ></b-skeleton
+                                                                        ><b-skeleton
+                                                                            width="20%"
+                                                                        ></b-skeleton></template></b-skeleton-wrapper
+                                                            ></b-col> </b-row></b-tab
+                                                ></b-tabs>-->
                                             </div>
+                                        </div>
+                                        <div
+                                            v-if="
+                                                getTask.agent.executor !==
+                                                    'local' &&
+                                                    !getTask.agent.launcher &&
+                                                    getTask.inputs_detected !==
+                                                        0
+                                            "
+                                            class="m-3"
+                                        >
+                                            <b-row
+                                                ><b-col
+                                                    ><h4
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        Inputs
+                                                    </h4></b-col
+                                                ></b-row
+                                            >
+                                            <b-row
+                                                ><b-col
+                                                    >{{
+                                                        getTask.inputs_downloaded
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    loaded<b-progress
+                                                        :value="
+                                                            getTask.inputs_downloaded
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :animated="
+                                                            getTask.inputs_downloaded !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                                ><b-col
+                                                    >{{
+                                                        getTask.inputs_submitted
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    submitted<b-progress
+                                                        :value="
+                                                            getTask.inputs_submitted
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :animated="
+                                                            getTask.inputs_submitted !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                                ><b-col
+                                                    >{{
+                                                        getTask.inputs_completed
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    completed<b-progress
+                                                        :value="
+                                                            getTask.inputs_completed
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :animated="
+                                                            getTask.inputs_completed !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                            ></b-row>
                                         </div>
                                         <div
                                             class="m-3"
@@ -511,43 +696,31 @@
                                             "
                                         >
                                             <b-row
+                                                ><b-col
+                                                    ><h4
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        Results
+                                                    </h4></b-col
+                                                ></b-row
+                                            >
+                                            <b-row
                                                 align-h="center"
                                                 align-v="center"
                                                 class="mt-2"
                                             >
                                                 <b-col class="text-left">
-                                                    <span
-                                                        v-if="
-                                                            getTask.results_retrieved
-                                                        "
-                                                        >{{
-                                                            getTask.output_files
-                                                                .length
-                                                        }}</span
-                                                    ><span
-                                                        v-else-if="
-                                                            !getTask.status ===
-                                                                'running'
-                                                        "
-                                                        ><b-spinner
-                                                            small
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'light'
-                                                                    : 'dark'
-                                                            "
-                                                        ></b-spinner>
-                                                        Loading</span
-                                                    >
-                                                    <span v-else>No</span>
-                                                    result(s)
-                                                    <br />
                                                     <b
                                                         v-if="
                                                             getWorkflow.config
                                                                 .output
                                                         "
-                                                        ><code
+                                                        >Expecting:
+                                                        <code
                                                             :class="
                                                                 profile.darkMode
                                                                     ? 'theme-dark'
@@ -626,6 +799,33 @@
                                                             }}
                                                         </code></b
                                                     >
+                                                    <br />
+                                                    <span
+                                                        v-if="
+                                                            getTask.results_retrieved
+                                                        "
+                                                        >{{
+                                                            getTask.output_files
+                                                                .length
+                                                        }}</span
+                                                    ><span
+                                                        v-else-if="
+                                                            !getTask.status ===
+                                                                'running'
+                                                        "
+                                                        ><b-spinner
+                                                            small
+                                                            :variant="
+                                                                profile.darkMode
+                                                                    ? 'light'
+                                                                    : 'dark'
+                                                            "
+                                                        ></b-spinner>
+                                                        Loading</span
+                                                    >
+                                                    <span v-else>No</span>
+                                                    result(s) found
+                                                    <br />
                                                 </b-col>
                                                 <b-col
                                                     md="auto"
@@ -1765,7 +1965,10 @@ export default {
             authenticationUsername: '',
             authenticationPassword: '',
             transferringPath: '',
-            transferring: false
+            transferring: false,
+            // logs
+            schedulerLogs: [],
+            agentLogs: []
         };
     },
     methods: {
@@ -2250,10 +2453,58 @@ export default {
                     return error;
                 });
         },
+        async getSchedulerLogs() {
+            var data = {};
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+            else
+                data['auth'] = {
+                    username: this.getTask.agent.user
+                };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs_content/`,
+                data: data
+            })
+                .then(response => {
+                    this.schedulerLogs = response.data.lines;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        async getAgentLogs() {
+            var data = {};
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+            else
+                data['auth'] = {
+                    username: this.getTask.agent.user
+                };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs_content/`,
+                data: data
+            })
+                .then(response => {
+                    this.agentLogs = response.data.lines;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
         downloadTaskLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/task_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/orchestrator_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -2275,10 +2526,35 @@ export default {
                     return error;
                 });
         },
-        downloadContainerLogs() {
+        downloadSchedulerLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', this.containerLogFileName);
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    this.downloading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        downloadAgentLogs() {
+            axios
+                .get(
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -2323,6 +2599,7 @@ export default {
         //     owner: this.$router.currentRoute.params.owner,
         //     name: this.$router.currentRoute.params.name
         // });
+        // await Promise.all([this.getSchedulerLogs(), this.getAgentLogs()]);
     },
     computed: {
         ...mapGetters('user', ['profile']),

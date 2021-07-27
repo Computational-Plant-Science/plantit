@@ -125,7 +125,7 @@
             </small>
             <b-row class="mt-0"
                 ><b-col
-                    style="top: 27px;position: relative; font-size: 15pt"
+                    style="top: 27px;position: relative; font-size: 18pt"
                     align-self="end"
                     :class="
                         task.is_failure || task.is_timeout

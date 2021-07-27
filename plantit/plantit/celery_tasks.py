@@ -28,7 +28,7 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment
+    configure_jobqueue_task_environment, check_logs_for_progress
 
 logger = get_task_logger(__name__)
 
@@ -72,6 +72,8 @@ def submit_task(guid: str, auth: dict):
 
                 if task.user.profile.push_notification_status == 'enabled':
                     SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
+
+                check_logs_for_progress(task)
             else:
                 configure_jobqueue_task_environment(task, ssh)
                 log_task_orchestrator_status(task, [f"Submitting script"])
@@ -134,6 +136,8 @@ def poll_job_status(guid: str, auth: dict):
 
         ssh = get_task_ssh_client(task, auth)
         get_task_remote_logs(task, ssh)
+
+        check_logs_for_progress(task)
 
         if job_status == 'COMPLETED':
             task.completed = now

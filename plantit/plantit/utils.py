@@ -824,7 +824,16 @@ def configure_local_task_environment(task: Task, ssh: SSH):
         if 'input' in cli_options:
             kind = cli_options['input']['kind']
             path = cli_options['input']['path']
+
+            files = list_task_input_files(task, cli_options) if kind == 'files' else []
+            task.inputs_detected = len(files)
+            task.save()
+
             if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
+                log_task_orchestrator_status(task, [f"Checking for input files"])
+                async_to_sync(push_task_event)(task)
+
+                # !!!
                 cli_options['input']['path'] = 'input'
             else:
                 cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
@@ -1059,6 +1068,8 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
+    task.inputs_detected = len(inputs)
+    task.save()
 
     if 'jobqueue' not in options: return []
     gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
@@ -1116,8 +1127,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     lines = []
 
     if 'input' in options:
+        files = list_task_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []
+        task.inputs_detected = len(files)
+        task.save()
+
         if options['input']['kind'] == 'files':
-            files = list_task_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []
             for file in files:
                 file_name = file.rpartition('/')[2]
                 command = compose_task_singularity_command(
@@ -1127,9 +1141,9 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     env=options['env'],
                     parameters=(options['parameters'] if 'parameters' in options else []) + [
                         Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
-                    bind_mounts=options['bind_mounts'],
-                    no_cache=options['no_cache'],
-                    gpu=options['gpu'],
+                    # bind_mounts=options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
+                    no_cache=options['no_cache'] if 'no_cache' in options else False,
+                    gpu=options['gpu'] if 'gpu' in options else False,
                     docker_username=docker_username,
                     docker_password=docker_password)
                 lines.append(command)
@@ -1141,7 +1155,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                # bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpu=options['gpu'] if 'gpu' in options else False,
                 docker_username=docker_username,
@@ -1156,7 +1170,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], file_name))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                # bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpu=options['gpu'] if 'gpu' in options else False,
                 docker_username=docker_username,
@@ -1308,98 +1322,65 @@ def get_task_scheduler_log_file_path(task: Task):
     return join(os.environ.get('TASKS_LOGS'), get_task_scheduler_log_file_name(task))
 
 
-def get_task_remote_logs(task: Task, ssh: SSH):
+def get_remote_logs(log_file_name: str, log_file_path: str, task: Task, ssh: SSH, sftp):
     work_dir = join(task.agent.workdir, task.workdir)
+    cmd = 'test -e {0} && echo exists'.format(join(work_dir, log_file_name))
+    stdin, stdout, stderr = ssh.client.exec_command(cmd)
 
+    if not stdout.read().decode().strip() == 'exists':
+        logger.warning(f"Agent log file {log_file_name} does not exist")
+    else:
+        with open(log_file_path, 'a+') as log_file:
+            sftp.chdir(work_dir)
+            sftp.get(log_file_name, log_file.name)
+
+        # obfuscate Docker auth info before returning logs to the user
+        docker_username = environ.get('DOCKER_USERNAME', None)
+        docker_password = environ.get('DOCKER_PASSWORD', None)
+        lines = 0
+        for line in fileinput.input([log_file_path], inplace=True):
+            if docker_username in line.strip():
+                line = line.strip().replace(docker_username, '*' * 7, 1)
+            if docker_password in line.strip():
+                line = line.strip().replace(docker_password, '*' * 7)
+            lines += 1
+            sys.stdout.write(line)
+
+        logger.info(f"Retrieved {lines} line(s) from {log_file_name}")
+
+
+def get_task_remote_logs(task: Task, ssh: SSH):
     with ssh:
         with ssh.client.open_sftp() as sftp:
+            # orchestrator_log_file_name = get_task_orchestrator_log_file_name(task)
+            # orchestrator_log_file_path = get_task_orchestrator_log_file_path(task)
+            # get_remote_logs(orchestrator_log_file_name, orchestrator_log_file_path, task, ssh, sftp)
+
+            scheduler_log_file_name = get_task_scheduler_log_file_name(task)
+            scheduler_log_file_path = get_task_scheduler_log_file_path(task)
+            get_remote_logs(scheduler_log_file_name, scheduler_log_file_path, task, ssh, sftp)
 
             if not task.agent.launcher:
                 agent_log_file_name = get_task_agent_log_file_name(task)
                 agent_log_file_path = get_task_agent_log_file_path(task)
-
-                cmd = 'test -e {0} && echo exists'.format(join(work_dir, agent_log_file_name))
-                stdin, stdout, stderr = ssh.client.exec_command(cmd)
-
-                if not stdout.read().decode().strip() == 'exists':
-                    logger.warning(f"Agent log file {agent_log_file_name} does not exist")
-                else:
-                    with open(agent_log_file_path, 'a+') as log_file:
-                        sftp.chdir(work_dir)
-                        sftp.get(agent_log_file_name, log_file.name)
-
-                    # obfuscate Docker auth info before returning logs to the user
-                    docker_username = environ.get('DOCKER_USERNAME', None)
-                    docker_password = environ.get('DOCKER_PASSWORD', None)
-                    lines = 0
-                    for line in fileinput.input([agent_log_file_path], inplace=True):
-                        if docker_username in line.strip():
-                            line = line.strip().replace(docker_username, '*' * 7, 1)
-                        if docker_password in line.strip():
-                            line = line.strip().replace(docker_password, '*' * 7)
-                        lines += 1
-                        sys.stdout.write(line + '\n')
-
-                    logger.info(f"Retrieved {lines} line(s) from task {task.guid} agent logs")
-
-            # orchestrator_log_file_name = get_task_orchestrator_log_file_name(task)
-            # orchestrator_log_file_path = get_task_orchestrator_log_file_path(task)
-
-            # cmd = 'test -e {0} && echo exists'.format(join(work_dir, orchestrator_log_file_name))
-            # stdin, stdout, stderr = ssh.client.exec_command(cmd)
-
-            # if not stdout.read().decode().strip() == 'exists':
-            #     logger.warning(f"Orchestrator log file {orchestrator_log_file_name} does not exist")
-            # else:
-            #     with open(orchestrator_log_file_path, 'a+') as log_file:
-            #         sftp.chdir(work_dir)
-            #         sftp.get(orchestrator_log_file_name, log_file.name)
-
-            #     # obfuscate Docker auth info before returning logs to the user
-            #     docker_username = environ.get('DOCKER_USERNAME', None)
-            #     docker_password = environ.get('DOCKER_PASSWORD', None)
-            #     lines = 0
-            #     for line in fileinput.input([orchestrator_log_file_path], inplace=True):
-            #         if docker_username in line.strip():
-            #             line = line.strip().replace(docker_username, '*' * 7, 1)
-            #         if docker_password in line.strip():
-            #             line = line.strip().replace(docker_password, '*' * 7)
-            #         lines += 1
-            #         sys.stdout.write(line)
-
-            #     logger.info(f"Retrieved {lines} line(s) from task {task.guid} orchestrator logs")
-
-            scheduler_log_file_name = get_task_scheduler_log_file_name(task)
-            scheduler_log_file_path = get_task_scheduler_log_file_path(task)
-
-            cmd = 'test -e {0} && echo exists'.format(join(work_dir, scheduler_log_file_name))
-            stdin, stdout, stderr = ssh.client.exec_command(cmd)
-
-            if not stdout.read().decode().strip() == 'exists':
-                logger.warning(f"Scheduler log file {scheduler_log_file_name} does not exist")
-            else:
-                with open(scheduler_log_file_path, 'a+') as log_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(scheduler_log_file_name, log_file.name)
-
-                # obfuscate Docker auth info before returning logs to the user
-                docker_username = environ.get('DOCKER_USERNAME', None)
-                docker_password = environ.get('DOCKER_PASSWORD', None)
-                lines = 0
-                for line in fileinput.input([scheduler_log_file_path], inplace=True):
-                    if docker_username in line.strip():
-                        line = line.strip().replace(docker_username, '*' * 7, 1)
-                    if docker_password in line.strip():
-                        line = line.strip().replace(docker_password, '*' * 7)
-                    lines += 1
-                    sys.stdout.write(line)
-
-                logger.info(f"Retrieved {lines} line(s) from task {task.guid} scheduler logs")
+                get_remote_logs(agent_log_file_name, agent_log_file_path, task, ssh, sftp)
 
 
-def stat_task_orchestration_logs(task: Task):
-    log_path = get_task_orchestrator_log_file_path(task)
-    return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
+def check_logs_for_progress(task: Task):
+    scheduler_log_file_path = get_task_scheduler_log_file_path(task)
+    if not Path(scheduler_log_file_path).is_file():
+        logger.warning(f"Scheduler log file {get_task_scheduler_log_file_name(task)} does not exist yet")
+        return
+    with open(scheduler_log_file_path, 'r') as scheduler_log_file:
+        lines = scheduler_log_file.readlines()
+        all_lines = '\n'.join(lines)
+        task.inputs_downloaded = all_lines.count('Downloading file')
+        task.inputs_submitted = all_lines.count('Submitting container')
+        task.inputs_completed = all_lines.count('Container completed')
+        # task.inputs_downloaded = len([line for line in lines if 'Downloading file' in line])
+        # task.inputs_submitted = len([line for line in lines if 'Submitting container for file' in line])
+        # task.inputs_completed = len([line for line in lines if 'Container completed for file' in line])
+        task.save()
 
 
 def remove_task_orchestration_logs(task: Task):
@@ -1539,14 +1520,18 @@ def parse_task_auth_options(auth: dict) -> dict:
         return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(auth['username'])))
 
 
-def task_to_dict(task: Task) -> dict:
-    orchestrator_log_file_path = get_task_orchestrator_log_file_path(task)
-    if Path(orchestrator_log_file_path).is_file():
-        with open(orchestrator_log_file_path, 'r') as log:
-            orchestrator_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
+def get_agent_log_file_contents(task: Task) -> List[str]:
+    agent_log_file_path = get_task_agent_log_file_path(task)
+    if not task.agent.launcher and Path(agent_log_file_path).is_file():
+        with open(agent_log_file_path, 'r') as log:
+            agent_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
     else:
-        orchestrator_logs = []
+        agent_logs = []
 
+    return agent_logs
+
+
+def get_scheduler_log_file_contents(task: Task) -> List[str]:
     scheduler_log_file_path = get_task_scheduler_log_file_path(task)
     if Path(scheduler_log_file_path).is_file():
         with open(scheduler_log_file_path, 'r') as log:
@@ -1554,12 +1539,16 @@ def task_to_dict(task: Task) -> dict:
     else:
         scheduler_logs = []
 
-    agent_log_file_path = get_task_agent_log_file_path(task)
-    if not task.agent.launcher and Path(agent_log_file_path).is_file():
-        with open(agent_log_file_path, 'r') as log:
-            agent_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
+    return scheduler_logs
+
+
+def task_to_dict(task: Task) -> dict:
+    orchestrator_log_file_path = get_task_orchestrator_log_file_path(task)
+    if Path(orchestrator_log_file_path).is_file():
+        with open(orchestrator_log_file_path, 'r') as log:
+            orchestrator_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
     else:
-        agent_logs = []
+        orchestrator_logs = []
 
     try:
         AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
@@ -1586,8 +1575,10 @@ def task_to_dict(task: Task) -> dict:
         } if task.study is not None else None,
         'work_dir': task.workdir,
         'orchestrator_logs': orchestrator_logs,
-        'agent_logs': agent_logs,
-        'scheduler_logs': scheduler_logs,
+        'inputs_detected': task.inputs_detected,
+        'inputs_downloaded': task.inputs_downloaded,
+        'inputs_submitted': task.inputs_submitted,
+        'inputs_completed': task.inputs_completed,
         'agent': agent_to_dict(task.agent) if task.agent is not None else None,
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),

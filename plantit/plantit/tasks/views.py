@@ -20,7 +20,8 @@ from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
     log_task_orchestrator_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds, \
+    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, get_task_agent_log_file_name, get_task_agent_log_file_path
 
 
 @login_required
@@ -273,35 +274,158 @@ def get_task_logs(request, owner, name):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-# @login_required
-# def get_container_logs(request, owner, name):
-#     try:
-#         user = User.objects.get(username=owner)
-#         task = Task.objects.get(user=user, name=name)
-#     except Task.DoesNotExist:
-#         return HttpResponseNotFound()
-#
-#     body = json.loads(request.body.decode('utf-8'))
-#     auth = parse_task_auth_options(body['auth'])
-#
-#     ssh = get_task_ssh_client(task, auth)
-#     workdir = join(task.agent.workdir, task.workdir)
-#     log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
-#
-#     with ssh:
-#         with ssh.client.open_sftp() as sftp:
-#             stdin, stdout, stderr = ssh.client.exec_command(
-#                 'test -e {0} && echo exists'.format(join(workdir, log_file)))
-#             errs = stderr.read()
-#             if errs:
-#                 raise Exception(f"Failed to check existence of {log_file}: {errs}")
-#             if not stdout.read().decode().strip() == 'exists':
-#                 return HttpResponseNotFound()
-#
-#             with tempfile.NamedTemporaryFile() as tf:
-#                 sftp.chdir(workdir)
-#                 sftp.get(log_file, tf.name)
-#                 return FileResponse(open(tf.name, 'rb'))
+@login_required
+def get_task_logs_content(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    log_path = get_task_orchestrator_log_file_path(task)
+    if not Path(log_path).is_file():
+        return HttpResponseNotFound()
+
+    with open(log_path, 'r') as log_file:
+        return JsonResponse({'lines': log_file.readlines()})
+
+
+@login_required
+def get_scheduler_logs(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    body = json.loads(request.body.decode('utf-8'))
+    auth = parse_task_auth_options(body['auth'])
+
+    with open(get_task_scheduler_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
+
+    # ssh = get_task_ssh_client(task, auth)
+    # workdir = join(task.agent.workdir, task.workdir)
+    # log_file = get_task_scheduler_log_file_name(task)
+
+    # with ssh:
+    #     with ssh.client.open_sftp() as sftp:
+    #         stdin, stdout, stderr = ssh.client.exec_command(
+    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
+    #         errs = stderr.read()
+    #         if errs:
+    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
+    #         if not stdout.read().decode().strip() == 'exists':
+    #             return HttpResponseNotFound()
+
+    #         with tempfile.NamedTemporaryFile() as tf:
+    #             sftp.chdir(workdir)
+    #             sftp.get(log_file, tf.name)
+    #             return FileResponse(open(tf.name, 'rb'))
+
+
+@login_required
+def get_scheduler_logs_content(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    body = json.loads(request.body.decode('utf-8'))
+    auth = parse_task_auth_options(body['auth'])
+
+    with open(get_task_scheduler_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
+
+    # ssh = get_task_ssh_client(task, auth)
+    # workdir = join(task.agent.workdir, task.workdir)
+    # log_file = get_task_scheduler_log_file_name(task)
+
+    # with ssh:
+    #     with ssh.client.open_sftp() as sftp:
+    #         stdin, stdout, stderr = ssh.client.exec_command(
+    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
+    #         errs = stderr.read()
+    #         if errs:
+    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
+    #         if not stdout.read().decode().strip() == 'exists':
+    #             return HttpResponseNotFound()
+
+    #         with tempfile.NamedTemporaryFile() as tf:
+    #             sftp.chdir(workdir)
+    #             sftp.get(log_file, tf.name)
+    #             with open(tf.name, 'r') as log_file:
+    #                 return JsonResponse({'lines': log_file.readlines()})
+
+
+@login_required
+def get_agent_logs(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    body = json.loads(request.body.decode('utf-8'))
+    auth = parse_task_auth_options(body['auth'])
+
+    with open(get_task_agent_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
+
+    # ssh = get_task_ssh_client(task, auth)
+    # workdir = join(task.agent.workdir, task.workdir)
+    # log_file = get_task_agent_log_file_name(task)
+
+    # with ssh:
+    #     with ssh.client.open_sftp() as sftp:
+    #         stdin, stdout, stderr = ssh.client.exec_command(
+    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
+    #         errs = stderr.read()
+    #         if errs:
+    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
+    #         if not stdout.read().decode().strip() == 'exists':
+    #             return HttpResponseNotFound()
+
+    #         with tempfile.NamedTemporaryFile() as tf:
+    #             sftp.chdir(workdir)
+    #             sftp.get(log_file, tf.name)
+    #             return FileResponse(open(tf.name, 'rb'))
+
+
+@login_required
+def get_agent_logs_content(request, owner, name):
+    try:
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+
+    body = json.loads(request.body.decode('utf-8'))
+    auth = parse_task_auth_options(body['auth'])
+
+    with open(get_task_agent_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
+
+    # ssh = get_task_ssh_client(task, auth)
+    # workdir = join(task.agent.workdir, task.workdir)
+    # log_file = get_task_agent_log_file_name(task)
+
+    # with ssh:
+    #     with ssh.client.open_sftp() as sftp:
+    #         stdin, stdout, stderr = ssh.client.exec_command(
+    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
+    #         errs = stderr.read()
+    #         if errs:
+    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
+    #         if not stdout.read().decode().strip() == 'exists':
+    #             return HttpResponseNotFound()
+
+    #         with tempfile.NamedTemporaryFile() as tf:
+    #             sftp.chdir(workdir)
+    #             sftp.get(log_file, tf.name)
+    #             with open(tf.name, 'r') as log_file:
+    #                 return JsonResponse({'lines': log_file.readlines()})
 
 
 # @login_required

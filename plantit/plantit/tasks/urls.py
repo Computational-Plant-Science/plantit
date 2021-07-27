@@ -14,12 +14,17 @@ urlpatterns = [
     # path(r'<owner>/<name>/file_text/', views.get_file_text),
     path(r'<owner>/<name>/thumbnail/', views.get_thumbnail),
     # path(r'<owner>/<name>/3d_model/', views.get_3d_model),
-    path(r'<owner>/<name>/task_logs/', views.get_task_logs),
-    # path(r'<owner>/<name>/container_logs/', views.get_container_logs),
+    path(r'<owner>/<name>/orchestrator_logs/', views.get_task_logs),
+    path(r'<owner>/<name>/orchestrator_logs_content/', views.get_task_logs_content),
+    path(r'<owner>/<name>/scheduler_logs/', views.get_scheduler_logs),
+    path(r'<owner>/<name>/scheduler_logs_content/', views.get_scheduler_logs_content),
+    path(r'<owner>/<name>/agent_logs/', views.get_agent_logs),
+    path(r'<owner>/<name>/agent_logs_content/', views.get_agent_logs_content),
     path(r'<owner>/<name>/transfer/', views.transfer_to_cyverse),
     path(r'search/<owner>/<workflow_name>/<page>/', views.search),
 ]
 
 websocket_urlpatterns = [
-    path(r'ws/tasks/<username>/', consumers.TaskConsumer.as_asgi())
+    path(r'ws/tasks/<username>/', consumers.TaskConsumer.as_asgi()),
+    path(r'ws/tasks/<username>/<guid>/', consumers.TaskLogConsumer.as_asgi())
 ]
