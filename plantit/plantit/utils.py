@@ -892,7 +892,8 @@ def compose_task_singularity_command(
         no_cache: bool = False,
         gpu: bool = False,
         docker_username: str = None,
-        docker_password: str = None) -> str:
+        docker_password: str = None,
+        index: int = None) -> str:
     cmd = ''
 
     if env is not None:
@@ -908,13 +909,6 @@ def compose_task_singularity_command(
         else:
             raise ValueError(f"List expected for `bind_mounts`")
 
-    if parameters is None:
-        parameters = []
-    parameters.append(Parameter(key='WORKDIR', value=work_dir))
-    for parameter in parameters:
-        print(f"Replacing '{parameter['key'].upper()}' with '{parameter['value']}'")
-        command = command.replace(f"${parameter['key'].upper()}", str(parameter['value']))
-
     if no_cache:
         cmd += ' --disable-cache'
 
@@ -922,6 +916,16 @@ def compose_task_singularity_command(
         cmd += ' --nv'
 
     cmd += f" {image} {command}"
+
+    if parameters is None: parameters = []
+    if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
+    parameters.append(Parameter(key='WORKDIR', value=work_dir))
+    for parameter in parameters:
+        key = parameter['key'].upper().replace(' ', '_')
+        val = str(parameter['value'])
+        print(f"Replacing '{key}' with '{val}'")
+        cmd = cmd.replace(f"${key}", val)
+
     print(f"Using command: '{cmd}'")
 
     # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
@@ -1126,13 +1130,15 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     docker_password = environ.get('DOCKER_PASSWORD', None)
     lines = []
 
+    print(options['parameters'])
+
     if 'input' in options:
         files = list_task_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []
         task.inputs_detected = len(files)
         task.save()
 
         if options['input']['kind'] == 'files':
-            for file in files:
+            for i, file in enumerate(files):
                 file_name = file.rpartition('/')[2]
                 command = compose_task_singularity_command(
                     work_dir=options['workdir'],
@@ -1145,7 +1151,8 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
                     gpu=options['gpu'] if 'gpu' in options else False,
                     docker_username=docker_username,
-                    docker_password=docker_password)
+                    docker_password=docker_password,
+                    index=i)
                 lines.append(command)
         elif options['input']['kind'] == 'directory':
             command = compose_task_singularity_command(
@@ -1182,7 +1189,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             image=options['image'],
             command=options['command'],
             env=options['env'],
-            parameters=(options['parameters'] if 'parameters' in options else []),
+            parameters=options['parameters'] if 'parameters' in options else [],
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
             gpu=options['gpu'] if 'gpu' in options else False,
