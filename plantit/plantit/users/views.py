@@ -320,16 +320,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def check_connection(self, request):
         try:
             hostname = request.data['hostname']
+            port = int(request.data['port'])
             username = request.data['username']
         except:
             return HttpResponseBadRequest()
 
         if 'password' in request.data:
-            ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
+            ssh = SSH(hostname, port=port, username=username, password=request.data['password'])
         else:
             pkey = str(get_user_private_key_path(request.user.username))
             self.logger.info(pkey)
-            ssh = SSH(hostname, port=22, username=username, pkey=pkey)
+            ssh = SSH(hostname, port=port, username=username, pkey=pkey)
 
         with ssh:
             try:

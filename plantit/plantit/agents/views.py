@@ -57,7 +57,7 @@ def list_or_bind(request):
             description=config['description'],
             workdir=config['workdir'],
             username=auth['username'],
-            port=22,
+            port=auth['port'],
             hostname=config['hostname'],
             pre_commands=config['pre_commands'],
             max_time=timedelta(hours=int(config['max_time'])),

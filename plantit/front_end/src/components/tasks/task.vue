@@ -391,7 +391,7 @@
                                                         : 'text-warning'
                                                 "
                                                 ><b>{{
-                                                    getTask.status.toUpperCase()
+                                                    getTask.job_status === 'PENDING' ? 'PENDING' : getTask.status.toUpperCase()
                                                 }}</b></b-col
                                             ></b-row
                                         >
@@ -2648,9 +2648,9 @@ export default {
         },
         taskLogs() {
             let all = this.getTask.orchestrator_logs.slice();
-            var firstI = all.findIndex(l => l.includes('PENDING'));
-            if (firstI === -1)
-                firstI = all.findIndex(l => l.includes('RUNNING'));
+            var firstI = all.findIndex(l => l.includes('PENDING')) + 1;
+            if (firstI < 1)
+               firstI = all.findIndex(l => l.includes('RUNNING'));
             if (firstI === -1) return all;
             all.reverse();
             let lastI =

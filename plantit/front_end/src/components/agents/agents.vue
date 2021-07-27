@@ -346,8 +346,7 @@
                                                 : 'text-dark'
                                         "
                                     >
-                                        Your agent must be reachable by SSH on
-                                        port 22.
+                                        Your agent must be reachable by SSH.
                                     </p>
                                 </b-col></b-row
                             >
@@ -378,7 +377,25 @@
                                             required
                                             @input="onAgentHostChange"
                                         ></b-form-input>
-                                    </b-form-group> </b-col
+                                    </b-form-group>
+                                    <b-form-group>
+                                        <template #description
+                                            ><span
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                >This agent's SSH port.</span
+                                            ></template
+                                        >
+                                        <b-form-input
+                                            :state="agentPortValid"
+                                            v-model="agentPort"
+                                            type="number"
+                                            placeholder="Enter a port"
+                                            required
+                                        ></b-form-input> </b-form-group></b-col
                             ></b-row>
                             <b-row
                                 ><b-col>
@@ -1052,6 +1069,7 @@ export default {
             agentHostLoading: false,
             agentHostExists: false,
             agentHost: '',
+            agentPort: 22,
             agentUsername: '',
             agentDescription: '',
             agentWorkdir: '',
@@ -1134,6 +1152,9 @@ export default {
         agentHostValid() {
             return this.agentHost !== '';
         },
+        agentPortValid() {
+            return this.agentPort !== 0;
+        },
         agentUsernameValid() {
             return this.agentUsername !== '';
         },
@@ -1146,6 +1167,7 @@ export default {
                 this.agentName === '' ||
                 this.agentDescription === '' ||
                 this.agentHost === '' ||
+                this.agentPort === 0 ||
                 this.agentWorkdir === '' ||
                 this.agentPrecommands === '' ||
                 this.agentExecutor === '' ||
@@ -1295,11 +1317,13 @@ export default {
                 this.agentAuthentication === 'password'
                     ? {
                           hostname: this.agentHost,
+                          port: this.agentPort,
                           username: this.agentUsername,
                           password: this.authenticationPassword
                       }
                     : {
                           hostname: this.agentHost,
+                          port: this.agentPort,
                           username: this.agentUsername
                       };
             await axios({
@@ -1435,6 +1459,7 @@ export default {
                     workdir: this.agentWorkdir,
                     username: this.profile.djangoProfile.username,
                     hostname: this.agentHost,
+                    port: this.agentPort,
                     pre_commands: this.agentPrecommands,
                     max_time: this.agentMaxTime,
                     public: this.agentPublic,
