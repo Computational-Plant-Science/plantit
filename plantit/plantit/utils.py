@@ -1169,7 +1169,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 command=options['command'],
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
-                    Parameter(key='INPUT', value=join(options['workdir'], file_name))],
+                    Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
                 # bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpu=options['gpu'] if 'gpu' in options else False,
@@ -1371,15 +1371,23 @@ def check_logs_for_progress(task: Task):
     if not Path(scheduler_log_file_path).is_file():
         logger.warning(f"Scheduler log file {get_task_scheduler_log_file_name(task)} does not exist yet")
         return
+
     with open(scheduler_log_file_path, 'r') as scheduler_log_file:
         lines = scheduler_log_file.readlines()
         all_lines = '\n'.join(lines)
-        task.inputs_downloaded = all_lines.count('Downloading file')
-        task.inputs_submitted = all_lines.count('Submitting container')
-        task.inputs_completed = all_lines.count('Container completed')
-        # task.inputs_downloaded = len([line for line in lines if 'Downloading file' in line])
-        # task.inputs_submitted = len([line for line in lines if 'Submitting container for file' in line])
-        # task.inputs_completed = len([line for line in lines if 'Container completed for file' in line])
+
+        if task.agent.launcher:
+            task.inputs_downloaded = all_lines.count('Downloading file')
+            task.inputs_submitted = all_lines.count('running job')
+            task.inputs_completed = all_lines.count('done. Exiting')
+        else:
+            task.inputs_downloaded = all_lines.count('Downloading file')
+            task.inputs_submitted = all_lines.count('Submitting container')
+            task.inputs_completed = all_lines.count('Container completed')
+            # task.inputs_downloaded = len([line for line in lines if 'Downloading file' in line])
+            # task.inputs_submitted = len([line for line in lines if 'Submitting container for file' in line])
+            # task.inputs_completed = len([line for line in lines if 'Container completed for file' in line])
+
         task.save()
 
 

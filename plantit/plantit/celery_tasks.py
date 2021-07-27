@@ -261,7 +261,7 @@ def list_task_results(guid: str, auth: dict):
     expected = get_task_result_files(task, workflow, auth)
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
-    redis.set(f"results/{task.guid}", json.dumps(expected))
+    redis.set(f"results/{task.guid}", json.dumps(found))
 
     task.results_retrieved = True
     task.save()

@@ -644,6 +644,12 @@
                                                         :max="
                                                             getTask.inputs_detected
                                                         "
+                                                        :variant="
+                                                            getTask.inputs_downloaded !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
                                                         :animated="
                                                             getTask.inputs_downloaded !==
                                                                 getTask.inputs_detected
@@ -662,6 +668,12 @@
                                                         :max="
                                                             getTask.inputs_detected
                                                         "
+                                                        :variant="
+                                                            getTask.inputs_downloaded !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
                                                         :animated="
                                                             getTask.inputs_submitted !==
                                                                 getTask.inputs_detected
@@ -679,6 +691,12 @@
                                                         "
                                                         :max="
                                                             getTask.inputs_detected
+                                                        "
+                                                        :variant="
+                                                            getTask.inputs_downloaded !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
                                                         "
                                                         :animated="
                                                             getTask.inputs_completed !==
