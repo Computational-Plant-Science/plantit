@@ -1757,7 +1757,7 @@ def has_virtual_memory(agent: Agent) -> bool:
     return agent.header_skip == '--mem'
 
 
-def is_healthy(agent: Agent, auth: dict) -> bool:
+def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
     """
     Checks agent health
 
@@ -1767,6 +1767,7 @@ def is_healthy(agent: Agent, auth: dict) -> bool:
 
     Returns: True if the agent was successfully reached, otherwise false.
     """
+    output = []
     try:
         if agent.authentication == AgentAuthentication.PASSWORD:
             ssh = SSH(host=agent.hostname, port=int(auth['port']), username=auth['username'], password=auth['password'])
@@ -1775,12 +1776,16 @@ def is_healthy(agent: Agent, auth: dict) -> bool:
 
         with ssh:
             logger.info(f"Checking agent {agent.name}'s health")
-            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir): logger.info(line)
+            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
+                logger.info(line)
+                output.append(line)
             logger.info(f"Agent {agent.name} healthcheck succeeded")
-            return True
+            return True, output
     except:
-        logger.warning(f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}")
-        return False
+        msg = f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}"
+        logger.warning(msg)
+        output.append(msg)
+        return False, output
 
 
 # MIAPPE

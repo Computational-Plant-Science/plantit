@@ -540,7 +540,8 @@ def refresh_all_user_cyverse_tokens():
 def agents_healthchecks():
     agents = Agent.objects.filter(authentication=AgentAuthentication.KEY)
     for agent in agents:
-        agent.is_healthy = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
+        health, _ = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
+        agent.is_healthy = health
         agent.disabled = not agent.is_healthy
         agent.save()
 

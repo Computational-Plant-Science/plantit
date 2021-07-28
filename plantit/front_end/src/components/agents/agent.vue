@@ -110,7 +110,7 @@
                                     v-if="getAgent.logo"
                                     rounded
                                     class="card-img-right overflow-hidden"
-                                    style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                    style="max-height: 3rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                     right
                                     :src="getAgent.logo"
                                 ></b-img>
@@ -118,7 +118,7 @@
                                     <b-col>
                                         <b-row>
                                             <b-col md="auto">
-                                                <h2
+                                                <h1
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-white'
@@ -126,10 +126,42 @@
                                                     "
                                                 >
                                                     <i
+                                                        v-if="
+                                                            !getAgent.disabled
+                                                        "
                                                         class="fas fa-server fa-fw"
                                                     ></i>
+                                                    <span
+                                                        v-b-tooltip:hover
+                                                        title="Disabled"
+                                                        class="fa-stack fa-1x m-0 p-0"
+                                                        v-else
+                                                        ><i
+                                                            class="fas fa-server fa-stack-1x"
+                                                        ></i
+                                                        ><i
+                                                            class="fas fa-slash fa-stack-1x text-danger"
+                                                        ></i
+                                                        ><i
+                                                            class="far fa-circle fa-stack-2x text-danger"
+                                                        ></i
+                                                    ></span>
+                                                    <i
+                                                        v-if="
+                                                            getAgent.is_healthy
+                                                        "
+                                                        v-b-tooltip:hover
+                                                        title="Healthy"
+                                                        class="fas fa-heartbeat text-warning fa-fw"
+                                                    ></i
+                                                    ><i
+                                                        v-else
+                                                        v-b-tooltip:hover
+                                                        title="Unhealthy"
+                                                        class="fas fa-medkit text-danger fa-fw"
+                                                    ></i>
                                                     {{ getAgent.name }}
-                                                </h2>
+                                                </h1>
                                                 <b-badge
                                                     v-if="
                                                         getAgent.role ===
@@ -146,14 +178,48 @@
                                                     variant="warning"
                                                     >Owner</b-badge
                                                 >
-                                                <br />
-                                                <small>{{
-                                                    getAgent.description
-                                                }}</small>
                                             </b-col>
-                                          <b-col style="position: relative; left: -20px" md="auto" align-self="middle"><i v-if="getAgent.is_healthy" v-b-tooltip:hover title="Healthy" class="fas fa-heartbeat text-warning fa-fw"></i><i v-else v-b-tooltip:hover title="Unhealthy" class="far fa-heart text-danger fa-fw"></i></b-col>
                                         </b-row>
-                                        <hr />
+                                        <b-row
+                                            ><b-col
+                                                ><small>{{
+                                                    getAgent.description
+                                                }}</small></b-col
+                                            ></b-row
+                                        >
+
+                                        <div
+                                            v-if="
+                                                !getAgent.is_healthy &&
+                                                    healthcheckOutput.length > 0
+                                            "
+                                        >
+                                            <br />
+                                            <b-row
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-container-dark m-0 p-1'
+                                                        : 'theme-container-light m-0 p-1'
+                                                "
+                                            >
+                                                <b-col
+                                                    class="m-0 p-0 pl-3 pr-3 pt-1 text-danger"
+                                                    style="white-space: pre-line;"
+                                                >
+                                                    <span
+                                                        v-for="line in healthcheckOutput"
+                                                        v-bind:key="line"
+                                                        v-show="
+                                                            line !==
+                                                                undefined &&
+                                                                line !== null
+                                                        "
+                                                        >{{ line + '\n' }}</span
+                                                    >
+                                                </b-col></b-row
+                                            >
+                                        </div>
+                                        <br />
                                         <b-row
                                             ><b-col>
                                                 <h5
@@ -207,6 +273,9 @@
                                                     >
                                                 </b-row>
                                             </b-col>
+                                        </b-row>
+                                        <br />
+                                        <b-row>
                                             <b-col>
                                                 <h5
                                                     :class="
@@ -1754,7 +1823,8 @@ export default {
             searchWorkflows: false,
             authorizingWorkflow: false,
             blockingWorkflow: false,
-            authorizingUser: false
+            authorizingUser: false,
+            healthcheckOutput: []
         };
     },
     computed: {
@@ -2458,20 +2528,23 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
-                    if (response.status === 200 && response.data.healthy)
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Connection to ${this.getAgent.name} succeeded`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
-                    else
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to connect to ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
+                    if (response.status === 200) {
+                        if (response.data.healthy)
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Connection to ${this.getAgent.name} succeeded`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            });
+                        else
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'danger',
+                                message: `Failed to connect to ${this.getAgent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            });
+                    }
+                    this.healthcheckOutput = response.data.output;
                     this.checkingConnection = false;
                 })
                 .catch(async error => {

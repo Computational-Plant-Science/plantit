@@ -320,7 +320,8 @@ def healthcheck(request, name):
     except: return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    return JsonResponse({'healthy': is_healthy(agent, body['auth'])})
+    healthy, output = is_healthy(agent, body['auth'])
+    return JsonResponse({'healthy': healthy, 'output': output})
 
 
 @login_required
