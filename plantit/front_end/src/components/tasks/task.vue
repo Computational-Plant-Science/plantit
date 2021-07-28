@@ -391,7 +391,10 @@
                                                         : 'text-warning'
                                                 "
                                                 ><b>{{
-                                                    getTask.job_status === 'PENDING' ? 'PENDING' : getTask.status.toUpperCase()
+                                                    getTask.job_status ===
+                                                    'PENDING' && !getTask.is_complete
+                                                        ? 'PENDING'
+                                                        : getTask.status.toUpperCase()
                                                 }}</b></b-col
                                             ></b-row
                                         >
@@ -1873,8 +1876,40 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.getTask.agent.name"
+            :title="
+                'Authenticate with ' + this.getTask.agent.name + ' to download'
+            "
             @ok="downloadFile"
+            ok-variant="success"
+        >
+            <b-form-input
+                v-model="authenticationUsername"
+                type="text"
+                placeholder="Your username"
+                required
+            ></b-form-input>
+            <b-form-input
+                v-model="authenticationPassword"
+                type="password"
+                placeholder="Your password"
+                required
+            ></b-form-input>
+        </b-modal>
+        <b-modal
+            id="authenticate-cancel"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="
+                'Authenticate with ' + this.getTask.agent.name + ' to cancel'
+            "
+            @ok="cancel"
             ok-variant="success"
         >
             <b-form-input
@@ -2315,12 +2350,29 @@ export default {
                 name: this.$router.currentRoute.params.name
             });
         },
-        cancel() {
+        preCancel() {
+            if (this.mustAuthenticate)
+                this.$bvModal.show('authenticate-cancel');
+            else this.cancel();
+        },
+        async cancel() {
             this.canceled = true;
-            axios
-                .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
-                )
+            this.$bvModal.hide('authenticate-cancel');
+            var data = {};
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+            else
+                data['auth'] = {
+                    username: this.getTask.agent.user
+                };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`,
+                data: data
+            })
                 .then(response => {
                     this.canceled = false;
                     if (response.status === 200) {
@@ -2649,8 +2701,7 @@ export default {
         taskLogs() {
             let all = this.getTask.orchestrator_logs.slice();
             var firstI = all.findIndex(l => l.includes('PENDING')) + 1;
-            if (firstI < 1)
-               firstI = all.findIndex(l => l.includes('RUNNING'));
+            if (firstI < 1) firstI = all.findIndex(l => l.includes('RUNNING'));
             if (firstI === -1) return all;
             all.reverse();
             let lastI =

@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from plantit import settings
-from plantit.agents.models import Agent, AgentExecutor
+from plantit.agents.models import Agent, AgentExecutor, AgentAuthentication
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
@@ -472,10 +472,8 @@ def cancel(request, owner, name):
     if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
-        # TODO figure out how to handle auth for password agents- should the user have to re-enter auth info to cancel tasks?
-        # auth = parse_task_auth_options(json.loads(request.body.decode('utf-8'))['auth'])
-        # cancel_task(task, auth)
-        pass
+        auth = parse_task_auth_options(json.loads(request.body.decode('utf-8'))['auth'])
+        cancel_task(task, auth)
 
     now = timezone.now()
     task.status = TaskStatus.CANCELED

@@ -125,27 +125,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    <i
-                                                        v-if="
-                                                            !getAgent.disabled
-                                                        "
-                                                        class="fas fa-server fa-fw"
-                                                    ></i>
-                                                    <span
-                                                        v-b-tooltip:hover
-                                                        title="Disabled"
-                                                        class="fa-stack fa-1x m-0 p-0"
-                                                        v-else
-                                                        ><i
-                                                            class="fas fa-server fa-stack-1x"
-                                                        ></i
-                                                        ><i
-                                                            class="fas fa-slash fa-stack-1x text-danger"
-                                                        ></i
-                                                        ><i
-                                                            class="far fa-circle fa-stack-2x text-danger"
-                                                        ></i
-                                                    ></span>
+                                                    {{ getAgent.name }}
                                                     <i
                                                         v-if="
                                                             getAgent.is_healthy
@@ -159,8 +139,15 @@
                                                         v-b-tooltip:hover
                                                         title="Unhealthy"
                                                         class="fas fa-medkit text-danger fa-fw"
-                                                    ></i>
-                                                    {{ getAgent.name }}
+                                                    ></i><i
+                                                        v-if="
+                                                            getAgent.disabled
+                                                        "
+                                                        v-b-tooltip:hover
+                                                        title="Disabled"
+                                                        class="fas fa-times-circle text-danger fa-fw"
+                                                    ></i
+                                                    >
                                                 </h1>
                                                 <b-badge
                                                     v-if="

@@ -1051,7 +1051,10 @@
                                                     ></template
                                                 ><b-row>
                                                     <b-col>
-                                                        <b-card-group columns deck>
+                                                        <b-card-group
+                                                            columns
+                                                            deck
+                                                        >
                                                             <b-card
                                                                 style="min-width: 60rem"
                                                                 :bg-variant="
@@ -2558,8 +2561,30 @@
                                                                                             >{{
                                                                                                 agent.name
                                                                                             }}</b-button
-                                                                                        ></b-col
-                                                                                    >
+                                                                                        >
+                                                                                        <i
+                                                                                            v-if="
+                                                                                                agent.is_healthy
+                                                                                            "
+                                                                                            v-b-tooltip:hover
+                                                                                            title="Healthy"
+                                                                                            class="fas fa-heartbeat text-warning fa-fw"
+                                                                                        ></i
+                                                                                        ><i
+                                                                                            v-else
+                                                                                            v-b-tooltip:hover
+                                                                                            title="Unhealthy"
+                                                                                            class="fas fa-medkit text-danger fa-fw"
+                                                                                        ></i
+                                                                                    ><i
+                                                                                            v-if="
+                                                                                                agent.disabled
+                                                                                            "
+                                                                                            v-b-tooltip:hover
+                                                                                            title="Disabled"
+                                                                                            class="fas fa-times-circle text-danger fa-fw"
+                                                                                        ></i
+                                                                                        ></b-col>
                                                                                     <b-col
                                                                                         align-self="end"
                                                                                         class="mb-2"
@@ -4061,7 +4086,7 @@ export default {
             }
             config.output = this.getWorkflow.config.output;
             if (this.getWorkflow.config.logo !== null)
-              config.logo = this.getWorkflow.config.logo;
+                config.logo = this.getWorkflow.config.logo;
 
             // save config
             this.$store.dispatch('workflows/setRecentlyRun', {

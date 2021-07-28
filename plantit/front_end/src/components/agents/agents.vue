@@ -149,6 +149,25 @@
                                 >
                                     {{ agent.name }}
                                 </b-link>
+                                <small>
+                                    <i
+                                        v-if="agent.is_healthy"
+                                        v-b-tooltip:hover
+                                        title="Healthy"
+                                        class="fas fa-heartbeat text-warning fa-fw"
+                                    ></i
+                                    ><i
+                                        v-else
+                                        v-b-tooltip:hover
+                                        title="Unhealthy"
+                                        class="fas fa-medkit text-danger fa-fw"
+                                    ></i
+                                ><i
+                                        v-if="agent.disabled"
+                                        v-b-tooltip:hover
+                                        title="Disabled"
+                                        class="fas fa-times-circle text-danger fa-fw"
+                                    ></i></small>
                             </h2>
                             <b-badge
                                 v-if="!agent.public"
