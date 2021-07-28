@@ -43,13 +43,13 @@ jobs:
         run: |
           chmod +x scripts/deploy.sh
           chmod +x scripts/deploy-ssh.sh
-          bash scripts/deploy-prod-ssh.sh
+          bash scripts/deploy-ssh.sh
       - name: Slack success notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit-dev
           SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
-          SLACK_MESSAGE: 'PROD build succeeded'
+          SLACK_MESSAGE: 'Release succeeded'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit

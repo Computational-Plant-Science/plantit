@@ -117,7 +117,7 @@
                                 <b-row no-gutters>
                                     <b-col>
                                         <b-row>
-                                            <b-col>
+                                            <b-col md="auto">
                                                 <h2
                                                     :class="
                                                         profile.darkMode
@@ -151,6 +151,7 @@
                                                     getAgent.description
                                                 }}</small>
                                             </b-col>
+                                          <b-col style="position: relative; left: -20px" md="auto" align-self="middle"><i v-if="getAgent.is_healthy" v-b-tooltip:hover title="Healthy" class="fas fa-heartbeat text-warning fa-fw"></i><i v-else v-b-tooltip:hover title="Unhealthy" class="far fa-heart text-danger fa-fw"></i></b-col>
                                         </b-row>
                                         <hr />
                                         <b-row

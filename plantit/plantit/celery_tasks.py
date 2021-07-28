@@ -17,7 +17,7 @@ from preview_generator.exception import UnsupportedMimeType
 from preview_generator.manager import PreviewManager
 
 from plantit import settings
-from plantit.agents.models import AgentExecutor
+from plantit.agents.models import AgentExecutor, Agent, AgentAuthentication
 from plantit.celery import app
 from plantit.github import get_repo
 from plantit.redis import RedisClient
@@ -28,7 +28,7 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy
 
 logger = get_task_logger(__name__)
 
@@ -536,6 +536,15 @@ def refresh_all_user_cyverse_tokens():
     logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
 
 
+@app.task()
+def agents_healthchecks():
+    agents = Agent.objects.filter(authentication=AgentAuthentication.KEY)
+    for agent in agents:
+        agent.is_healthy = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
+        agent.disabled = not agent.is_healthy
+        agent.save()
+
+
 # see https://stackoverflow.com/a/41119054/6514033
 # `@app.on_after_finalize.connect` is necessary for some reason instead of `@app.on_after_configure.connect`
 @app.on_after_finalize.connect
@@ -550,3 +559,5 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # aggregate usage stats for each user
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')
+
+    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='agents healthchecks')

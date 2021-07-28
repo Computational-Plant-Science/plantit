@@ -14,7 +14,7 @@ from django.utils import timezone
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAuthentication
 from plantit.notifications.models import Notification
 from plantit.ssh import SSH, execute_command
-from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path
+from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path, is_healthy
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
@@ -320,25 +320,7 @@ def healthcheck(request, name):
     except: return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-
-    try:
-        if agent.authentication == AgentAuthentication.PASSWORD:
-            try:
-                username = body['auth']['username']
-                password = body['auth']['password']
-            except: return HttpResponseBadRequest()
-            ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
-        else:
-            ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_user_private_key_path(request.user.username)))
-
-        with ssh:
-            logger.info(f"Checking agent {agent.name}'s health")
-            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir): logger.info(line)
-            logger.info(f"Agent {agent.name} healthcheck succeeded")
-            return JsonResponse({'healthy': True})
-    except:
-        logger.warning(f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}")
-        return JsonResponse({'healthy': False})
+    return JsonResponse({'healthy': is_healthy(agent, body['auth'])})
 
 
 @login_required

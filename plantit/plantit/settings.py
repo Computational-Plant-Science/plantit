@@ -35,6 +35,7 @@ assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_TH
 assert 'AWS_FEEDBACK_ARN' in os.environ, f"{missing_variable} AWS_FEEDBACK_ARN"
 assert 'TUTORIALS_FILE' in os.environ, f"{missing_variable} TUTORIALS_FILE"
 assert 'FEEDBACK_FILE' in os.environ, f"{missing_variable} FEEDBACK_FILE"
+assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENT_HEALTHCHECKS_MINUTES"
 
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
@@ -60,6 +61,7 @@ LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")
 TUTORIALS_FILE = os.environ.get("TUTORIALS_FILE")
 FEEDBACK_FILE = os.environ.get("FEEDBACK_FILE")
+AGENTS_HEALTHCHECKS_MINUTES = os.environ.get("AGENTS_HEALTHCHECKS_MINUTES")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

@@ -57,6 +57,7 @@ services:
       - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
       - TUTORIALS_FILE=${TUTORIALS_FILE}
       - FEEDBACK_FILE=${FEEDBACK_FILE}
+      - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -125,6 +126,7 @@ services:
       - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
       - TUTORIALS_FILE=${TUTORIALS_FILE}
       - FEEDBACK_FILE=${FEEDBACK_FILE}
+      - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

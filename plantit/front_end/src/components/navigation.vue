@@ -658,7 +658,7 @@
                                 >About</span
                             ></b-nav-item
                         >
-                        <b-nav-item
+                        <!--<b-nav-item
                             to="/beta"
                             class="mt-2"
                             :link-class="
@@ -676,7 +676,7 @@
                                 ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
                                 Testing</span
                             ></b-nav-item
-                        >
+                        >-->
                         <b-nav-item
                             title="Usage"
                             to="/usage"

@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import traceback
 import uuid
 import pprint
 from collections import Counter
@@ -35,7 +36,7 @@ from django.utils import timezone
 import plantit.github as github
 import plantit.terrain as terrain
 from plantit import settings
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
 from plantit.miappe.models import Investigation, Study
@@ -1725,6 +1726,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'authentication': agent.authentication,
+        'is_healthy': agent.is_healthy,
         'users_authorized': [{
             'username': user.username,
             'email': user.email,
@@ -1753,6 +1755,32 @@ def agent_task_to_dict(task: AgentTask) -> dict:
 
 def has_virtual_memory(agent: Agent) -> bool:
     return agent.header_skip == '--mem'
+
+
+def is_healthy(agent: Agent, auth: dict) -> bool:
+    """
+    Checks agent health
+
+    Args:
+        agent: the agent
+        auth: authentication info (must always include 'username' and 'port' and also 'password' if password authentication is used for this agent)
+
+    Returns: True if the agent was successfully reached, otherwise false.
+    """
+    try:
+        if agent.authentication == AgentAuthentication.PASSWORD:
+            ssh = SSH(host=agent.hostname, port=int(auth['port']), username=auth['username'], password=auth['password'])
+        else:
+            ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_user_private_key_path(auth['username'])))
+
+        with ssh:
+            logger.info(f"Checking agent {agent.name}'s health")
+            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir): logger.info(line)
+            logger.info(f"Agent {agent.name} healthcheck succeeded")
+            return True
+    except:
+        logger.warning(f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}")
+        return False
 
 
 # MIAPPE

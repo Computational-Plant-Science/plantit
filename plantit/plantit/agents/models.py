@@ -52,6 +52,7 @@ class Agent(models.Model):
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
     executor = models.CharField(max_length=10, choices=AgentExecutor.choices, default=AgentExecutor.LOCAL)
     authentication = models.CharField(max_length=10, choices=AgentAuthentication.choices, default=AgentAuthentication.PASSWORD)
+    is_healthy = models.BooleanField(default=True, null=True, blank=True)
     workflows_authorized = models.ManyToManyField(Workflow, related_name='agents_authorized', null=True, blank=True)
     workflows_blocked = models.ManyToManyField(Workflow, related_name='agents_blocked', null=True, blank=True)
     users_authorized = models.ManyToManyField(User, related_name='agents_authorized', null=True, blank=True)
