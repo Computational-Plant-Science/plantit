@@ -66,7 +66,7 @@ def submit_task(guid: str, auth: dict):
                 task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay_seconds)
                 task.save()
 
-                final_message = f"Completed, cleaning up in {cleanup_delay_minutes} minute(s)"
+                final_message = f"Completed"
                 log_task_orchestrator_status(task, [final_message])
                 async_to_sync(push_task_event)(task)
 
@@ -113,7 +113,7 @@ def poll_job_status(guid: str, auth: dict):
     # if the job already failed, schedule cleanup
     if task.job_status == 'FAILURE':
         task.status = TaskStatus.FAILURE
-        final_message = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
+        final_message = f"Job {task.job_id} failed"
         log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
@@ -155,8 +155,7 @@ def poll_job_status(guid: str, auth: dict):
         task.save()
         if task.is_complete:
             list_task_results.s(guid, auth).apply_async()
-            final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (
-                f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
+            final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
@@ -166,7 +165,7 @@ def poll_job_status(guid: str, auth: dict):
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
         else:
-            log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"])
+            log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
             async_to_sync(push_task_event)(task)
             poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay)
     except StopIteration:
@@ -177,10 +176,10 @@ def poll_job_status(guid: str, auth: dict):
             task.completed = now
             task.save()
 
-            log_task_orchestrator_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"])
+            log_task_orchestrator_status(task, [f"Job {task.job_id} not found"])
             async_to_sync(push_task_event)(task)
         else:
-            final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m"
+            final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
@@ -196,7 +195,7 @@ def poll_job_status(guid: str, auth: dict):
         task.completed = now
         task.save()
 
-        final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('TASKS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
+        final_message = f"Job {task.job_id} encountered unexpected error"
         log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)

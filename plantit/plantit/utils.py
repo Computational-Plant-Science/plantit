@@ -942,6 +942,7 @@ def compose_task_singularity_command(
 
     cmd += f" {image} {command}"
 
+    print(parameters)
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))

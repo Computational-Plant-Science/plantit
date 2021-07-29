@@ -35,8 +35,8 @@ commands: echo "I am Groot!"  # your code's entry point
 
 Certain environment variables will be configured in the Singularity container runtime, in case you need to reference them in your startup command. These are:
 
-- WORK_DIR: the current working directory
-- INPUT_INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+- WORKDIR: the current working directory
+- INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
 
 ### Jobqueue deployment targets
 

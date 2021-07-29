@@ -392,7 +392,8 @@
                                                 "
                                                 ><b>{{
                                                     getTask.job_status ===
-                                                    'PENDING' && !getTask.is_complete
+                                                        'PENDING' &&
+                                                    !getTask.is_complete
                                                         ? 'PENDING'
                                                         : getTask.status.toUpperCase()
                                                 }}</b></b-col
@@ -403,6 +404,7 @@
                                 <b-row class="m-0 p-0 mt-1">
                                     <b-col class="m-0 p-0 text-center">
                                         <small>
+                                            <i class="fas fa-seedling fa-fw"></i>
                                             Created
                                             {{ prettify(getTask.created) }}
                                         </small>
@@ -412,18 +414,23 @@
                                         v-if="!getTask.is_complete"
                                     >
                                         <small>
+                                                                                      <i class="fas fa-satellite-dish fa-fw"></i>
+
                                             Last updated
                                             {{ prettify(getTask.updated) }}
                                         </small>
                                     </b-col>
                                     <b-col class="m-0 p-0 text-center">
                                         <small v-if="getTask.is_complete"
-                                            >Completed
+                                            >                                            <i class="fas fa-check fa-fw"></i>
+Completed
                                             {{
                                                 prettify(getTask.completed)
                                             }}</small
                                         >
                                         <small v-else>
+                                                                                      <i class="fas fa-flag-checkered fa-fw"></i>
+
                                             Due
                                             {{ prettify(getTask.due_time) }}
                                         </small>
@@ -434,8 +441,10 @@
                                             getTask.is_complete &&
                                                 getTask.cleanup_time !== null
                                         "
-                                        ><small
-                                            >Cleaning up
+                                        ><small>
+                                                                                    <i class="fas fa-broom fa-fw"></i>
+
+                                            Cleaning up
                                             {{
                                                 prettify(getTask.cleanup_time)
                                             }}</small
@@ -2700,18 +2709,29 @@ export default {
         },
         taskLogs() {
             let all = this.getTask.orchestrator_logs.slice();
-            var firstI = all.findIndex(l => l.includes('PENDING')) + 1;
-            if (firstI < 1) firstI = all.findIndex(l => l.includes('RUNNING'));
+            // var firstI = all.findIndex(l => l.includes('PENDING'));
+            // if (firstI < 1) firstI = all.findIndex(l => l.includes('RUNNING'));
+
+            var firstI = all.findIndex(l => l.includes('PENDING'));
             if (firstI === -1) return all;
             all.reverse();
-            let lastI =
-                all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
+            var lastI = all.length - all.findIndex(l => l.includes('PENDING')) - 1;
             all.reverse();
             if (lastI === -1) return all;
             // if (lastI === all.length - 1) return all;
-            else if (this.getTask.is_complete)
-                all.splice(firstI, lastI - firstI + 1);
+            else if (this.getTask.is_complete) all.splice(firstI, lastI - firstI);
             else all.splice(firstI, lastI - firstI + 1, all[lastI]);
+
+            firstI = all.findIndex(l => l.includes('RUNNING'));
+            if (firstI === -1) return all;
+            all.reverse();
+            lastI = all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
+            all.reverse();
+            if (lastI === -1) return all;
+            // if (lastI === all.length - 1) return all;
+            else if (this.getTask.is_complete) all.splice(firstI, lastI - firstI);
+            else all.splice(firstI, lastI - firstI + 1, all[lastI]);
+
             return all;
         },
         notFound() {
