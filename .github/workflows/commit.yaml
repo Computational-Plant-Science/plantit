@@ -1,4 +1,4 @@
-name: Commit
+name: commit
 on:
   push:
     branches:
@@ -32,7 +32,7 @@ jobs:
       #     SSH_PRIVATE_KEY: ${{secrets.RC_SSH_PRIVATE_KEY}}
       #     SSH_KNOWN_HOSTS: ${{secrets.RC_SSH_KNOWN_HOSTS}}
       #     SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
-      - name: Bootstrap, build, & test
+      - name: Bootstrap, build, test, & push to Docker Hub
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           CYVERSE_USERNAME: ${{ secrets.CYVERSE_USERNAME }}

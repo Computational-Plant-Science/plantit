@@ -604,6 +604,7 @@
                                                     class="mr-0"
                                                     size="sm"
                                                     v-b-tooltip.hover
+                                                    :disabled="!getAgent.is_healthy"
                                                     :title="
                                                         getAgent.disabled
                                                             ? 'Enable ' + getAgent.name

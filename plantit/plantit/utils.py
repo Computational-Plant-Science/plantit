@@ -1796,7 +1796,7 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
         if agent.authentication == AgentAuthentication.PASSWORD:
             ssh = SSH(host=agent.hostname, port=agent.port, username=auth['username'], password=auth['password'])
         else:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(auth['username'])))
+            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
 
         with ssh:
             logger.info(f"Checking agent {agent.name}'s health")
