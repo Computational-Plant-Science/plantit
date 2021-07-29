@@ -83,7 +83,7 @@ def submit_task(guid: str, auth: dict):
                 refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
                 poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay)
 
-                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id}), polling status in {refresh_delay} second(s)"])
+                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id})"])
                 async_to_sync(push_task_event)(task)
     except Exception:
         task.status = TaskStatus.FAILURE

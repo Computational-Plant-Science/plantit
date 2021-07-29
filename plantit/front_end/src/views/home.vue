@@ -331,12 +331,12 @@
                                                     profile.stats.total_tasks
                                                 }}</b>
                                                 total
-                                                <br />
+                                                <!--<br />
                                                 <b>{{
                                                     profile.stats
                                                         .total_task_results
                                                 }}</b>
-                                                results produced
+                                                results produced-->
                                                 <br />
                                                 <b>{{
                                                     prettifyDuration(
