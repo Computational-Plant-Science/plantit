@@ -42,6 +42,22 @@
                     </h5>
                 </b-col>
                 <b-col align-self="end" class="text-right mr-0"
+                    ><h1 v-if="onlineCount >= 0" class="text-success">
+                        {{ onlineCount }}
+                    </h1>
+                    <b-spinner
+                        v-else
+                        type="grow"
+                        label="Loading..."
+                        variant="secondary"
+                    ></b-spinner
+                ></b-col>
+                <b-col align-self="end" class="text-left ml-0 pl-0"
+                    ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        <i class="fas fa-signal fa-fw"></i> Online
+                    </h5>
+                </b-col>
+                <b-col align-self="end" class="text-right mr-0"
                     ><h1 v-if="workflowCount >= 0" class="text-success">
                         {{ workflowCount }}
                     </h1>
@@ -95,6 +111,7 @@ export default {
             mapMarkers: [],
             mapPopup: null,
             userCount: -1,
+            onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
             institutions: []
@@ -156,6 +173,7 @@ export default {
                 .get('/apis/v1/stats/counts/')
                 .then(response => {
                     this.userCount = response.data.users;
+                    this.onlineCount = response.data.online;
                     this.workflowCount = response.data.workflows;
                     this.taskCount = response.data.tasks;
                 })

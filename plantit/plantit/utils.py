@@ -23,6 +23,7 @@ from urllib.parse import quote_plus
 import numpy as np
 import requests
 import yaml
+import jwt
 from asgiref.sync import async_to_sync
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
@@ -171,6 +172,29 @@ def filter_agents(user: User = None, guest: User = None):
         return list(Agent.objects.filter(users_authorized__username=guest.username))
     else:
         raise ValueError(f"Expected either user or guest to be None")
+
+
+def filter_online(users: List[User]) -> List[User]:
+    online = []
+
+    for user in users:
+        decoded_token = jwt.decode(user.profile.cyverse_access_token, options={
+            'verify_signature': False,
+            'verify_aud': False,
+            'verify_iat': False,
+            'verify_exp': False,
+            'verify_iss': False
+        })
+        exp = datetime.fromtimestamp(decoded_token['exp'], timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+
+        if now > exp:
+            print(f"Session for {decoded_token['preferred_username']} expired at {exp.isoformat()}")
+        else:
+            print(f"Session for {decoded_token['preferred_username']} valid until {exp.isoformat()}")
+            online.append(user)
+
+    return online
 
 
 def get_user_statistics(user: User) -> dict:
