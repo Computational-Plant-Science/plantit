@@ -685,7 +685,7 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
-                                                ><b-col
+                                                ><b-col v-if="getWorkflow.config.input.kind !== 'directory'"
                                                     >{{
                                                         getTask.inputs_submitted
                                                     }}/{{
@@ -709,7 +709,7 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
-                                                ><b-col
+                                                ><b-col v-if="getWorkflow.config.input.kind !== 'directory'"
                                                     >{{
                                                         getTask.inputs_completed
                                                     }}/{{

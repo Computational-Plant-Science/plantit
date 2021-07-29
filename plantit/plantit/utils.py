@@ -951,6 +951,7 @@ def compose_task_singularity_command(
         val = str(parameter['value'])
         print(f"Replacing '{key}' with '{val}'")
         cmd = cmd.replace(f"${key}", val)
+        cmd = f"SINGULARITY_${key}={val} " + cmd
 
     print(f"Using command: '{cmd}'")
 
