@@ -138,16 +138,14 @@
                                                         v-else
                                                         v-b-tooltip:hover
                                                         title="Unhealthy"
-                                                        class="fas fa-medkit text-danger fa-fw"
-                                                    ></i><i
-                                                        v-if="
-                                                            getAgent.disabled
-                                                        "
+                                                        class="fas fa-heart-broken text-danger fa-fw"
+                                                    ></i
+                                                    ><i
+                                                        v-if="getAgent.disabled"
                                                         v-b-tooltip:hover
                                                         title="Disabled"
-                                                        class="fas fa-times-circle text-danger fa-fw"
-                                                    ></i
-                                                    >
+                                                        class="fas fa-exclamation-circle text-secondary fa-fw"
+                                                    ></i>
                                                 </h1>
                                                 <b-badge
                                                     v-if="
@@ -595,6 +593,35 @@
                                                     ></b-spinner> </b-button
                                             ></b-col>
                                             <b-col></b-col>
+                                            <b-col
+                                                v-if="getAgent.role === 'admin'"
+                                                class="m-0"
+                                                align-self="end"
+                                                md="auto"
+                                                ><b-form-checkbox
+                                                    v-model="getAgent.disabled"
+                                                    button
+                                                    class="mr-0"
+                                                    size="sm"
+                                                    v-b-tooltip.hover
+                                                    :title="
+                                                        getAgent.disabled
+                                                            ? 'Enable ' + getAgent.name
+                                                            : 'Disable ' + getAgent.name
+                                                    "
+                                                    :button-variant="
+                                                        getAgent.disabled
+                                                            ? 'secondary'
+                                                            : profile.darkMode ? 'outline-light' : 'white'
+                                                    "
+                                                    @change="toggleDisabled"
+                                                >
+                                                    <i
+                                                        class="fas fa-exclamation-circle fa-fw fa-1x"
+                                                    ></i>
+                                                    {{ getAgent.disabled ? 'Enable' : 'Disable' }}
+                                                </b-form-checkbox></b-col
+                                            >
                                             <b-col
                                                 v-if="getAgent.role === 'admin'"
                                                 class="m-0"
@@ -2343,6 +2370,59 @@ export default {
                         message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
                         guid: guid().toString()
                     });
+                    throw error;
+                });
+        },
+        async toggleDisabled() {
+            if (!this.ownsAgent) return;
+            this.togglingDisabled = true;
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/disable/`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'agents/addOrUpdate',
+                                response.data
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `${
+                                    response.data.disabled
+                                        ? 'Disabled'
+                                        : 'Enabled'
+                                } ${this.$router.currentRoute.params.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
+                        this.togglingDisabled = false;
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to ${
+                                !this.getAgent.disabled ? 'disable' : 'enable'
+                            } ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                        this.togglingDisabled = false;
+                    }
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to ${
+                            !this.getAgent.disabled ? 'disable' : 'enable'
+                        } ${this.$router.currentRoute.params.name}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.togglingDisabled = false;
                     throw error;
                 });
         },

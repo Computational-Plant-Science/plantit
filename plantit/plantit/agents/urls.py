@@ -8,6 +8,7 @@ urlpatterns = [
     path(r'<name>/exists/', views.exists),
     path(r'<host>/host_exists/', views.host_exists),
     path(r'<name>/public/', views.toggle_public),
+    path(r'<name>/disable/', views.toggle_disabled),
     path(r'<name>/health/', views.healthcheck),
     path(r'<name>/policies/', views.get_access_policies),
     path(r'<name>/auth/', views.set_authentication_strategy),

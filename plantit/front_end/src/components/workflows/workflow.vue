@@ -2574,17 +2574,17 @@
                                                                                             v-else
                                                                                             v-b-tooltip:hover
                                                                                             title="Unhealthy"
-                                                                                            class="fas fa-medkit text-danger fa-fw"
+                                                                                            class="fas fa-heart-broken text-danger fa-fw"
                                                                                         ></i
-                                                                                    ><i
+                                                                                        ><i
                                                                                             v-if="
                                                                                                 agent.disabled
                                                                                             "
                                                                                             v-b-tooltip:hover
                                                                                             title="Disabled"
-                                                                                            class="fas fa-times-circle text-danger fa-fw"
+                                                                                            class="fas fa-exclamation-circle text-secondary fa-fw"
                                                                                         ></i
-                                                                                        ></b-col>
+                                                                                    ></b-col>
                                                                                     <b-col
                                                                                         align-self="end"
                                                                                         class="mb-2"

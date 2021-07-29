@@ -311,7 +311,24 @@ def toggle_public(request, name):
     agent.save()
     logger.info(f"Agent {name} is now {'public' if agent.public else 'private'}")
 
-    return JsonResponse({'agents': [agent_to_dict(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
+    return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in list(Agent.objects.filter(user=request.user))]})
+
+
+@login_required
+def toggle_disabled(request, name):
+    try:
+        agent = Agent.objects.get(name=name)
+    except:
+        return HttpResponseNotFound()
+
+    if agent.user is not None and agent.user.username != request.user.username:
+        return HttpResponseForbidden()
+
+    agent.disabled = not agent.disabled
+    agent.save()
+    logger.info(f"{'Disabled' if agent.disabled else 'Enabled'} {agent.name}")
+
+    return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required
