@@ -391,10 +391,8 @@
                                                         : 'text-warning'
                                                 "
                                                 ><b>{{
-                                                    getTask.job_status ===
-                                                        'PENDING' &&
-                                                    !getTask.is_complete
-                                                        ? 'PENDING'
+                                                    !getTask.agent.is_local && !getTask.is_complete && getTask.job_status !== null
+                                                        ? getTask.job_status.toUpperCase()
                                                         : getTask.status.toUpperCase()
                                                 }}</b></b-col
                                             ></b-row

@@ -1035,7 +1035,9 @@
             >
             <small>
                 <b v-if="!taskToasted.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{ taskToasted.job_status }}</b>
+                <b class="ml-0 mr-0" v-else>{{ !taskToasted.agent.is_local && !taskToasted.is_complete && taskToasted.job_status !== null
+                                                        ? taskToasted.job_status.toUpperCase()
+                                                        : taskToasted.status.toUpperCase() }}</b>
                 on
                 <b>{{ taskToasted.agent.name }}</b>
                 {{ prettifyShort(taskToasted.updated) }}

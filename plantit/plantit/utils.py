@@ -1750,6 +1750,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'authentication': agent.authentication,
+        'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
         'users_authorized': [{
             'username': user.username,

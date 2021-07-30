@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def list_public(request):
     profile = await get_user_django_profile(request.user)
     invalidate = request.GET.get('invalidate', False)
-    bundles = await list_public_workflows(token=profile.github_token, invalidate=bool(invalidate))
+    bundles = await list_public_workflows(token=profile.github_token, invalidate=False) # invalidate=bool(invalidate))
     return JsonResponse({'workflows': bundles})
 
 

@@ -136,7 +136,9 @@
                             ? 'text-success'
                             : 'text-warning'
                     "
-                    ><b>{{ task.status.toUpperCase() }}</b></b-col
+                    ><b>{{ !task.agent.is_local && !task.is_complete && task.job_status !== null
+                                                        ? task.job_status.toUpperCase()
+                                                        : task.status.toUpperCase() }}</b></b-col
                 ></b-row
             >
         </b-card-body>

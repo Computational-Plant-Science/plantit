@@ -7,6 +7,7 @@ from os import environ
 from os.path import join
 
 import cv2
+import requests
 from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
@@ -268,15 +269,15 @@ def list_task_results(guid: str, auth: dict):
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
-    for result in expected:
-        name = result['name']
-        path = result['path']
-        exists = result['exists']
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            sftp.chdir(workdir)
+            for result in expected:
+                name = result['name']
+                path = result['path']
+                exists = result['exists']
 
-        if not exists: continue
-        with ssh:
-            with ssh.client.open_sftp() as sftp:
-                sftp.chdir(workdir)
+                if not exists: continue
                 if name.endswith('txt') or \
                         name.endswith('csv') or \
                         name.endswith('yml') or \
@@ -292,15 +293,15 @@ def list_task_results(guid: str, auth: dict):
                         try:
                             preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                         except UnsupportedMimeType:
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                            logger.info(f"Saved empty file preview to cache: {name}")
-                            continue
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                           logger.info(f"Saved empty file preview to cache: {name}")
+                           continue
 
                         with open(preview, 'rb') as pf:
-                            content = pf.read()
-                            encoded = base64.b64encode(content)
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                            logger.info(f"Saved file preview to cache: {name}")
+                           content = pf.read()
+                           encoded = base64.b64encode(content)
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                           logger.info(f"Saved file preview to cache: {name}")
                 elif path.endswith('png'):
                     logger.info(f"Creating preview for PNG file: {name}")
                     with tempfile.NamedTemporaryFile() as temp_file:
@@ -309,32 +310,32 @@ def list_task_results(guid: str, auth: dict):
                         try:
                             preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                         except UnsupportedMimeType:
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                           logger.info(f"Saved empty preview for PNG file to cache: {name}")
-                           continue
-
-                        with open(preview, 'rb') as pf:
-                           content = pf.read()
-                           encoded = base64.b64encode(content)
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                           logger.info(f"Saved file preview to cache: {name}")
-                elif path.endswith('jpg') or path.endswith('jpeg'):
-                    logger.info(f"Creating preview for JPG file: {name}")
-                    with tempfile.NamedTemporaryFile() as temp_file:
-                        sftp.get(result['name'], temp_file.name)
-
-                        try:
-                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                        except UnsupportedMimeType:
                             redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                            logger.info(f"Saved empty preview for JPG file to cache: {name}")
+                            logger.info(f"Saved empty preview for PNG file to cache: {name}")
                             continue
 
                         with open(preview, 'rb') as pf:
                             content = pf.read()
                             encoded = base64.b64encode(content)
                             redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                            logger.info(f"Saved JPG file preview to cache: {name}")
+                            logger.info(f"Saved file preview to cache: {name}")
+                elif path.endswith('jpg') or path.endswith('jpeg'):
+                   logger.info(f"Creating preview for JPG file: {name}")
+                   with tempfile.NamedTemporaryFile() as temp_file:
+                       sftp.get(result['name'], temp_file.name)
+
+                       try:
+                           preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                       except UnsupportedMimeType:
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                           logger.info(f"Saved empty preview for JPG file to cache: {name}")
+                           continue
+
+                       with open(preview, 'rb') as pf:
+                           content = pf.read()
+                           encoded = base64.b64encode(content)
+                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                           logger.info(f"Saved JPG file preview to cache: {name}")
                 elif path.endswith('czi'):
                     logger.info(f"Creating preview for CZI file: {name}")
                     with tempfile.NamedTemporaryFile() as temp_file:
@@ -345,18 +346,18 @@ def list_task_results(guid: str, auth: dict):
                         success, buffer = cv2.imencode(".jpg", image)
                         buffer.tofile(temp_file.name)
 
-                        try:
-                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                        except UnsupportedMimeType:
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                            logger.info(f"Saved empty preview for CZI file to cache: {name}")
-                            continue
+                    try:
+                        preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    except UnsupportedMimeType:
+                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+                        logger.info(f"Saved empty preview for CZI file to cache: {name}")
+                        continue
 
-                        with open(preview, 'rb') as pf:
-                            content = pf.read()
-                            encoded = base64.b64encode(content)
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                            logger.info(f"Saved file preview to cache: {name}")
+                    with open(preview, 'rb') as pf:
+                        content = pf.read()
+                        encoded = base64.b64encode(content)
+                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+                        logger.info(f"Saved file preview to cache: {name}")
                 elif path.endswith('ply'):
                     logger.info(f"Creating preview for PLY file: {name}")
                     with tempfile.NamedTemporaryFile() as temp_file:
@@ -545,6 +546,29 @@ def agents_healthchecks():
         agent.save()
 
 
+class TerrainToken:
+    __token = None
+
+    @staticmethod
+    def get():
+        if TerrainToken.__token is not None:
+            return TerrainToken.__token
+
+        cyverse_username = environ.get('CYVERSE_USERNAME', None)
+        cyverse_password = environ.get('CYVERSE_PASSWORD', None)
+
+        if cyverse_username is None: raise ValueError("Missing environment variable 'CYVERSE_USERNAME'")
+        if cyverse_password is None: raise ValueError("Missing environment variable 'CYVERSE_PASSWORD'")
+
+        print(f"Using CyVerse username '{cyverse_username}' and password '{cyverse_password}'")
+
+        response = requests.get('https://de.cyverse.org/terrain/token/cas', auth=(cyverse_username, cyverse_password)).json()
+        print(response)
+        TerrainToken.__token = response['access_token']
+
+        return TerrainToken.__token
+
+
 # see https://stackoverflow.com/a/41119054/6514033
 # `@app.on_after_finalize.connect` is necessary for some reason instead of `@app.on_after_configure.connect`
 @app.on_after_finalize.connect
@@ -560,4 +584,9 @@ def setup_periodic_tasks(sender, **kwargs):
     # aggregate usage stats for each user
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')
 
+    # agent healthchecks
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='agents healthchecks')
+
+    # refresh workflow cache
+    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='workflows cache refresh')
+
