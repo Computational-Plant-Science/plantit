@@ -923,7 +923,7 @@ def compose_task_singularity_command(
 
     if env is not None:
         if len(env) > 0:
-            cmd += ' '.join([f"SINGULARITYENV_{var['key']}={var['value']}" for var in env])
+            cmd += ' '.join([f"SINGULARITYENV_{var['key'].upper().replace(' ', '_')}={var['value']}" for var in env])
         cmd += ' '
 
     cmd += f"singularity exec --home {work_dir}"
@@ -947,7 +947,7 @@ def compose_task_singularity_command(
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
     for parameter in parameters:
-        key = parameter['key'].upper().replace(' ', '_')
+        key = parameter['key'].upper().replace(' ', '_').replace('$', '')
         val = str(parameter['value'])
         print(f"Replacing '{key}' with '{val}'")
         cmd = cmd.replace(f"${key}", val)
@@ -1155,6 +1155,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
 def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]:
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
+    gpu = options['gpu'] if 'gpu' in options else False
     lines = []
 
     print(options['parameters'])
@@ -1172,11 +1173,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     image=options['image'],
                     command=options['command'],
                     env=options['env'],
-                    parameters=(options['parameters'] if 'parameters' in options else []) + [
-                        Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)), Parameter(key='GPU_MODE', value=str(gpu))],
                     # bind_mounts=options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
-                    gpu=options['gpu'] if 'gpu' in options else False,
+                    gpu=gpu,
                     docker_username=docker_username,
                     docker_password=docker_password,
                     index=i)
@@ -1187,11 +1187,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 image=options['image'],
                 command=options['command'],
                 env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [
-                    Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input')), Parameter(key='GPU_MODE', value=str(gpu))],
                 # bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
-                gpu=options['gpu'] if 'gpu' in options else False,
+                gpu=gpu,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -1202,11 +1201,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 image=options['image'],
                 command=options['command'],
                 env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [
-                    Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)), Parameter(key='GPU_MODE', value=str(gpu))],
                 # bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
-                gpu=options['gpu'] if 'gpu' in options else False,
+                gpu=gpu,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -1216,10 +1214,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             image=options['image'],
             command=options['command'],
             env=options['env'],
-            parameters=options['parameters'] if 'parameters' in options else [],
+            parameters=options['parameters'] if 'parameters' in options else [] + [Parameter(key='GPU_MODE', value=str(gpu))],
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
-            gpu=options['gpu'] if 'gpu' in options else False,
+            gpu=gpu,
             docker_username=docker_username,
             docker_password=docker_password)
         lines.append(command)

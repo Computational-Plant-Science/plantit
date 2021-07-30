@@ -654,7 +654,7 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-seedling fa-1x fa-fw"></i
+                                ><i class="fas fa-question-circle fa-1x fa-fw"></i
                                 >About</span
                             ></b-nav-item
                         >
