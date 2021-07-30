@@ -4,12 +4,12 @@
 
 # PlantIT
 
+Plant phenotyping automation in the browser.
+
 ![commit](https://github.com/Computational-Plant-Science/plantit/workflows/commit/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/plantit/badge/?version=latest)](https://plantit.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit)
-
-Plant science workflow automation in the browser.
 
 **This project is in open beta and is not yet stable**.
 
