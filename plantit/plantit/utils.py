@@ -947,11 +947,11 @@ def compose_task_singularity_command(
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
     for parameter in parameters:
-        key = parameter['key'].upper().replace(' ', '_').replace('$', '')
+        key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
         print(f"Replacing '{key}' with '{val}'")
         cmd = cmd.replace(f"${key}", val)
-        cmd = f"SINGULARITY_${key}={val} " + cmd
+        cmd = f"SINGULARITYENV_{key}={val} " + cmd
 
     print(f"Using command: '{cmd}'")
 
