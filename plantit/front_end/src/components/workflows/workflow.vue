@@ -4305,7 +4305,10 @@ export default {
             );
             return (
                 this.selectedAgent.authentication === 'password' ||
-                (!ownsAgent && !isGuest)
+                (this.selectedAgent.authentication === 'key' &&
+                    !ownsAgent &&
+                    !isGuest &&
+                    !this.selectedAgent.public) // this last clause makes key-protected public agents effectively available to all users
             );
         },
         getWorkflow() {
