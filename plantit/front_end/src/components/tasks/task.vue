@@ -391,7 +391,9 @@
                                                         : 'text-warning'
                                                 "
                                                 ><b>{{
-                                                    !getTask.agent.is_local && !getTask.is_complete && getTask.job_status !== null
+                                                    !getTask.agent.is_local &&
+                                                    !getTask.is_complete &&
+                                                    getTask.job_status !== null
                                                         ? getTask.job_status.toUpperCase()
                                                         : getTask.status.toUpperCase()
                                                 }}</b></b-col
@@ -635,19 +637,6 @@
                                         >
                                             <b-row
                                                 ><b-col
-                                                    ><h4
-                                                        :class="
-                                                            profile.darkMode
-                                                                ? 'text-light'
-                                                                : 'text-dark'
-                                                        "
-                                                    >
-                                                        Inputs
-                                                    </h4></b-col
-                                                ></b-row
-                                            >
-                                            <b-row
-                                                ><b-col
                                                     >{{
                                                         Math.max(
                                                             getTask.inputs_downloaded,
@@ -656,7 +645,7 @@
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    loaded<b-progress
+                                                    files loaded<b-progress
                                                         :value="
                                                             Math.max(
                                                                 getTask.inputs_downloaded,
@@ -683,13 +672,18 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
-                                                ><b-col v-if="getWorkflow.config.input.kind !== 'directory'"
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config.input
+                                                            .kind !==
+                                                            'directory'
+                                                    "
                                                     >{{
                                                         getTask.inputs_submitted
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    submitted<b-progress
+                                                    containers submitted<b-progress
                                                         :value="
                                                             getTask.inputs_submitted
                                                         "
@@ -707,13 +701,18 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
-                                                ><b-col v-if="getWorkflow.config.input.kind !== 'directory'"
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config.input
+                                                            .kind !==
+                                                            'directory'
+                                                    "
                                                     >{{
                                                         getTask.inputs_completed
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    completed<b-progress
+                                                    containers completed<b-progress
                                                         :value="
                                                             getTask.inputs_completed
                                                         "
@@ -731,6 +730,41 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .output !== null
+
+                                                    "
+                                                    >{{
+                                                        getTask.results_transferred
+                                                    }}/{{
+                                                        getTask.output_files
+                                                                .length > 0 ? getTask.output_files
+                                                            .length : '?'
+                                                    }}
+                                                    results transferred<b-progress
+                                                        :value="
+                                                            getTask.results_transferred
+                                                        "
+                                                        :max="
+                                                            getTask.output_files
+                                                                .length
+                                                        "
+                                                        :variant="
+                                                            getTask.results_transferred !==
+                                                            getTask.output_files
+                                                                .length
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
+                                                        :animated="
+                                                            getTask.results_transferred !==
+                                                                getTask
+                                                                    .output_files
+                                                                    .length
+                                                        "
+                                                    ></b-progress></b-col
                                             ></b-row>
                                         </div>
                                         <div
@@ -742,19 +776,6 @@
                                             "
                                         >
                                             <b-row
-                                                ><b-col
-                                                    ><h4
-                                                        :class="
-                                                            profile.darkMode
-                                                                ? 'text-light'
-                                                                : 'text-dark'
-                                                        "
-                                                    >
-                                                        Results
-                                                    </h4></b-col
-                                                ></b-row
-                                            >
-                                            <b-row
                                                 align-h="center"
                                                 align-v="center"
                                                 class="mt-2"
@@ -765,7 +786,7 @@
                                                             getWorkflow.config
                                                                 .output
                                                         "
-                                                        >Expecting:
+                                                        >Expecting result(s):
                                                         <code
                                                             :class="
                                                                 profile.darkMode
@@ -2731,19 +2752,23 @@ export default {
             var firstI = all.findIndex(l => l.includes('PENDING'));
             if (firstI !== -1) {
                 all.reverse();
-                var lastI = all.length - all.findIndex(l => l.includes('PENDING')) - 1;
+                var lastI =
+                    all.length - all.findIndex(l => l.includes('PENDING')) - 1;
                 all.reverse();
-                if (this.getTask.is_complete) all.splice(firstI, lastI - firstI);
+                if (this.getTask.is_complete)
+                    all.splice(firstI, lastI - firstI);
                 else all.splice(firstI, lastI - firstI + 1, all[lastI]);
             }
 
             firstI = all.findIndex(l => l.includes('RUNNING'));
             if (firstI !== -1) {
                 all.reverse();
-                lastI = all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
+                lastI =
+                    all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
                 all.reverse();
                 // if (lastI === all.length - 1) return all;
-                if (this.getTask.is_complete) all.splice(firstI, lastI - firstI);
+                if (this.getTask.is_complete)
+                    all.splice(firstI, lastI - firstI);
                 else all.splice(firstI, lastI - firstI + 1, all[lastI]);
             }
 

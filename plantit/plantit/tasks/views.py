@@ -56,7 +56,6 @@ def get_all_or_create(request):
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
-
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':
         #     eta, seconds = parse_task_eta(workflow)
@@ -157,8 +156,9 @@ def transfer_to_cyverse(request, owner, name):
     if not task.is_complete: return HttpResponseBadRequest('task incomplete')
 
     transfer_task_results_to_cyverse(task, auth, path)
-    task.transferred = True;
+    task.transferred = True
     task.save()
+
     return JsonResponse(task_to_dict(task))
 
 

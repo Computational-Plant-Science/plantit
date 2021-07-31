@@ -9,7 +9,6 @@ import sys
 import tempfile
 import traceback
 import uuid
-import pprint
 from collections import Counter
 from datetime import timedelta, datetime
 from math import ceil
@@ -605,8 +604,6 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     else:
         output = None
 
-    pprint.pprint(output)
-
     # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
     # new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
     # launcher = task.agent.launcher  # whether to use TACC launcher
@@ -780,7 +777,12 @@ def parse_time_limit_seconds(time):
     return seconds
 
 
-def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None,
+def create_task(username: str,
+                agent_name: str,
+                workflow: dict,
+                name: str = None,
+                guid: str = None,
+                investigation: str = None,
                 study: str = None):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
@@ -1046,34 +1048,30 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
 
 
 def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
-    # TODO
+    command = ''
+    if 'output' not in options: return command
+    output = options['output']
+    if output is None: return command
 
     # add push command if we have a destination
-    # if 'to' in output and output['to'] is not None:
-    #     push_commands = f"plantit terrain push {output['to']}" \
-    #                     f" -p {join(run.work_dir, output['from'])}" \
-    #                     f" --plantit_url '{callback_url}'"
+    if 'to' in output and output['to'] is not None:
+        command = f"plantit terrain push {output['to']} -p {join(task.workdir, output['from'])} "
 
-    #     if 'include' in output:
-    #         if 'patterns' in output['include']:
-    #             push_commands = push_commands + ' '.join(
-    #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
-    #         if 'names' in output['include']:
-    #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
-    #         if 'patterns' in output['exclude']:
-    #             push_commands = push_commands + ' '.join(
-    #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-    #         if 'names' in output['exclude']:
-    #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+        if 'include' in output:
+            if 'patterns' in output['include']:
+                command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+            if 'names' in output['include']:
+                command = command + ' ' + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+        if 'exclude' in output:
+            if 'patterns' in output['exclude']:
+                command = command + ' ' + ' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+            if 'names' in output['exclude']:
+                command = command + ' ' + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
-    #     if run.resource.callbacks:
-    #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+        command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
-    #     push_commands += '\n'
-    #     script.write(push_commands)
-    #     logger.info(f"Using push command: {push_commands}")
-
-    return ''
+    logger.info(f"Using push command: {command}")
+    return command
 
 
 def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: str) -> List[str]:
@@ -1399,6 +1397,13 @@ def get_task_remote_logs(task: Task, ssh: SSH):
 
 
 def check_logs_for_progress(task: Task):
+    """
+    Parse scheduler log files for CLI output and update progress counters
+
+    Args:
+        task: The task
+    """
+
     scheduler_log_file_path = get_task_scheduler_log_file_path(task)
     if not Path(scheduler_log_file_path).is_file():
         logger.warning(f"Scheduler log file {get_task_scheduler_log_file_name(task)} does not exist yet")
@@ -1408,17 +1413,15 @@ def check_logs_for_progress(task: Task):
         lines = scheduler_log_file.readlines()
         all_lines = '\n'.join(lines)
 
+        task.inputs_downloaded = all_lines.count('Downloading file')
+        task.results_transferred = all_lines.count('Uploading file')
+
         if task.agent.launcher:
-            task.inputs_downloaded = all_lines.count('Downloading file')
             task.inputs_submitted = all_lines.count('running job')
             task.inputs_completed = all_lines.count('done. Exiting')
         else:
-            task.inputs_downloaded = all_lines.count('Downloading file')
             task.inputs_submitted = all_lines.count('Submitting container')
             task.inputs_completed = all_lines.count('Container completed')
-            # task.inputs_downloaded = len([line for line in lines if 'Downloading file' in line])
-            # task.inputs_submitted = len([line for line in lines if 'Submitting container for file' in line])
-            # task.inputs_completed = len([line for line in lines if 'Container completed for file' in line])
 
         task.save()
 
@@ -1465,6 +1468,18 @@ def get_jobqueue_task_job_status(task: Task, auth: dict) -> str:
 
 
 def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
+    """
+    Lists result files expected to be produced by the given task (assumes the task has completed). Returns a dict with form `{'name': <name>, 'path': <full path>, 'exists': <True or False>}`
+
+    Args:
+        task: The task
+        workflow: The task's workflow
+        auth: Authentication details for the task's agent
+
+    Returns: Files expected to be produced by the task
+
+    """
+
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{task.guid}.zip")  # zip file
@@ -1494,7 +1509,7 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
                 seen.append(output['name'])
                 outputs.append(output)
 
-            logger.info(f"Looking for files by pattern(s): {(', ').join(included_by_pattern)}")
+            logger.info(f"Looking for files by pattern(s): {', '.join(included_by_pattern)}")
 
             for f in sftp.listdir(workdir):
                 if any(pattern in f for pattern in included_by_pattern):
@@ -1509,6 +1524,16 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
 
 
 def transfer_task_results_to_cyverse(task: Task, auth: dict, path: str):
+    """
+    Transfers task results to the CyVerse Data Store via an intermediate hop on the plantit server.
+    Works, but superseded by `terrain push` CLI command which should be much faster.
+
+    Args:
+        task: The task
+        auth: Authentication details for the task's agent
+        path: The directory path in the Data Store
+    """
+
     ssh = get_task_ssh_client(task, auth)
     workdir = join(task.agent.workdir, task.workdir)
     redis = RedisClient.get()
@@ -1520,7 +1545,6 @@ def transfer_task_results_to_cyverse(task: Task, auth: dict, path: str):
         with ssh.client.open_sftp() as sftp:
             sftp.chdir(workdir)
             files = get_task_result_files(task, workflow['config'], auth)
-            pprint.pprint(files)
             for file in files:
                 logger.info(f"Transferring {file['name']} to {path}")
                 local_dir = tempfile.gettempdir()
@@ -1635,6 +1659,7 @@ def task_to_dict(task: Task) -> dict:
         'is_timeout': task.is_timeout,
         'workflow_image_url': task.workflow_image_url,
         'results_retrieved': task.results_retrieved,
+        'results_transferred': task.results_transferred,
         'result_previews_loaded': task.previews_loaded,
         'cleaned_up': task.cleaned_up,
         'transferred': task.transferred,

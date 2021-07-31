@@ -2270,7 +2270,7 @@
                                                                     ></i>
                                                                 </b-alert>
                                                             </b-card>
-                                                            <!--<b-card
+                                                            <b-card
                                                                 style="min-width: 60rem"
                                                                 v-if="
                                                                     getWorkflow !==
@@ -2359,10 +2359,9 @@
                                                                                     class="fas fa-check text-success fa-fw"
                                                                                 ></i>
                                                                             </span>
-                                                                            <i
+                                                                            <span
                                                                                 v-else
-                                                                                class="fas fa-exclamation text-danger fa-fw"
-                                                                            ></i></h5
+                                                                            >None Selected</span></h5
                                                                     ></b-col>
                                                                 </b-row>
                                                                 <b-row
@@ -2370,11 +2369,10 @@
                                                                         ><b>
                                                                             Select
                                                                             a
-                                                                            directory
+                                                                            directory in the CyVerse Data Store
                                                                             to
                                                                             transfer
-                                                                            result
-                                                                            files
+                                                                            results
                                                                             to.
                                                                         </b>
                                                                         <datatree
@@ -2396,7 +2394,7 @@
                                                                             "
                                                                         ></datatree></b-col
                                                                 ></b-row>
-                                                            </b-card>-->
+                                                            </b-card>
                                                             <b-card
                                                                 style="min-width: 60rem"
                                                                 :bg-variant="
@@ -4080,11 +4078,18 @@ export default {
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
             }
-            if (this.output !== undefined) {
+            if (this.output !== undefined && this.output.path) {
                 config.output = this.output;
+                config.output['to'] = config['output']['path'];
+                config.output['from'] = ''
+                delete config['output']['path'];
+                // config.output.patterns =
+                //     this.outputSelectedPatterns.length > 0
+                //         ? this.outputSelectedPatterns
+                //         : this.output.filetypes;
                 // if (!this.outputDataset) delete config.output['to'];
             }
-            config.output = this.getWorkflow.config.output;
+            // config.output = this.getWorkflow.config.output;
             if (this.getWorkflow.config.logo !== null)
                 config.logo = this.getWorkflow.config.logo;
 

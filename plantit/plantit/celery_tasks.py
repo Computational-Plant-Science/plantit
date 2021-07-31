@@ -29,7 +29,7 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, transfer_task_results_to_cyverse
 
 logger = get_task_logger(__name__)
 
@@ -269,6 +269,14 @@ def list_task_results(guid: str, auth: dict):
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
+    if 'output' in task.workflow['config'] and 'path' in task.workflow['config']['output']:
+        log_task_orchestrator_status(task, [f"Transferring result(s) to CyVerse Data Store directory {task.workflow['config']['output']['path']}"])
+        async_to_sync(push_task_event)(task)
+        transfer_results_to_cyverse.s(task.guid, auth).apply_async()
+
+    log_task_orchestrator_status(task, [f"Creating file previews"])
+    async_to_sync(push_task_event)(task)
+
     with ssh:
         with ssh.client.open_sftp() as sftp:
             sftp.chdir(workdir)
@@ -365,7 +373,22 @@ def list_task_results(guid: str, auth: dict):
 
     task.previews_loaded = True
     task.save()
-    log_task_orchestrator_status(task, [f"Created file previews"])
+
+
+@app.task()
+def transfer_results_to_cyverse(guid: str, auth: dict):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        return
+
+    path = task.workflow['config']['output']['path']
+    transfer_task_results_to_cyverse(task, auth, path)
+    task.transferred = True
+    task.save()
+
+    log_task_orchestrator_status(task, [f"Transferred result(s) to CyVerse Data Store path {path}"])
     async_to_sync(push_task_event)(task)
 
 
