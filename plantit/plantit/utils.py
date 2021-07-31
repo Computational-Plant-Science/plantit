@@ -1055,11 +1055,15 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
 
     # add push command if we have a destination
     if 'to' in output and output['to'] is not None:
-        command = f"plantit terrain push {output['to']} -p {join(task.workdir, output['from'])} "
+        command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
         if 'include' in output:
             if 'patterns' in output['include']:
-                command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+                patterns = output['include']['patterns']
+                patterns.append('.out')
+                patterns.append('.err')
+                patterns.append('.zip')
+                command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
             if 'names' in output['include']:
                 command = command + ' ' + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
         if 'exclude' in output:
