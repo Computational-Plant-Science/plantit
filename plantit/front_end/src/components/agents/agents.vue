@@ -372,11 +372,11 @@
                             >
                             <b-row
                                 ><b-col>
-                                    <b-alert
+                                    <!--<b-alert
                                         variant="danger"
                                         :show="agentHostExists"
                                         >This host is already in use.</b-alert
-                                    >
+                                    >-->
                                     <b-form-group>
                                         <template #description
                                             ><span
@@ -395,7 +395,6 @@
                                             type="text"
                                             placeholder="Enter a host or IP address"
                                             required
-                                            @input="onAgentHostChange"
                                         ></b-form-input>
                                     </b-form-group>
                                     <b-form-group>
@@ -1478,7 +1477,8 @@ export default {
             let data = {
                 auth: {
                     username: this.agentUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
+                    port: this.agentPort
                 },
                 config: {
                     name: this.agentName,
