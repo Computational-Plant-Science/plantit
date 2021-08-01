@@ -162,9 +162,6 @@ def poll_job_status(guid: str, auth: dict):
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
-            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
-            task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
-            task.save()
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -378,8 +375,12 @@ def list_task_results(guid: str, auth: dict):
                     with tempfile.NamedTemporaryFile() as temp_file:
                         sftp.get(result['name'], temp_file.name)
 
+    cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
+    cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+    task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
     task.previews_loaded = True
     task.save()
+    async_to_sync(push_task_event)(task)
 
 
 @app.task()

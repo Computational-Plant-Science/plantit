@@ -441,6 +441,19 @@
                                             {{ prettify(getTask.due_time) }}
                                         </small>
                                     </b-col>
+                                  <b-col
+                                        class="m-0 p-0 text-center"
+                                        v-if="getTask.is_complete"
+                                        ><small>
+                                            <i class="fas fa-clock fa-fw"></i>
+                                            Ran for
+                                            {{
+                                                prettifyDuration(
+                                                    duration(getTask)
+                                                )
+                                            }}</small
+                                        ></b-col
+                                    >
                                     <b-col
                                         class="m-0 p-0 text-center"
                                         v-if="
@@ -2172,6 +2185,14 @@ export default {
         },
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
+        },
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
+        },
+        duration(task) {
+            return moment.duration(
+                moment(task.created).diff(moment(task.completed))
+            );
         },
         fileIsImage(file) {
             return (
