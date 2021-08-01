@@ -35,10 +35,12 @@ def list_or_bind(request):
         if public is not None and bool(public): agents = agents.filter(public=bool(public))
         if agent_name is not None and type(agent_name) is str: agents = agents.filter(name=agent_name)
         if agent_owner is not None and type(agent_owner) is str:
-            try: agents = agents.filter(user=User.objects.get(username=agent_owner))
+            try:
+                agents = agents.filter(user=User.objects.get(username=agent_owner))
             except: return HttpResponseNotFound()
         elif agent_guest is not None and type(agent_guest) is str:
-            try: agents = agents.filter(users_authorized__username__exact=agent_guest)
+            try:
+                agents = agents.filter(users_authorized__username__exact=agent_guest)
             except: return HttpResponseNotFound()
 
         return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})

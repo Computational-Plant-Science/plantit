@@ -162,12 +162,13 @@
                                         title="Unhealthy"
                                         class="fas fa-heart-broken text-danger fa-fw"
                                     ></i
-                                ><i
+                                    ><i
                                         v-if="agent.disabled"
                                         v-b-tooltip:hover
                                         title="Disabled"
                                         class="fas fa-exclamation-circle text-secondary fa-fw"
-                                    ></i></small>
+                                    ></i
+                                ></small>
                             </h2>
                             <b-badge
                                 v-if="!agent.public"
@@ -1148,6 +1149,7 @@ export default {
         ...mapGetters('agents', [
             'personalAgents',
             'personalAgentsLoading',
+            'guestAgents',
             'publicAgents',
             'publicAgentsLoading'
         ]),
@@ -1155,7 +1157,9 @@ export default {
             return this.$route.name === 'agents';
         },
         getAgents() {
-            return this.publicContext ? this.publicAgents : this.personalAgents;
+            return this.publicContext
+                ? this.publicAgents
+                : this.personalAgents.concat(this.guestAgents);
         },
         agentsLoading() {
             return this.publicContext
@@ -1455,6 +1459,10 @@ export default {
                     'agents/loadPersonal',
                     this.profile.djangoProfile.username
                 );
+            this.$store.dispatch(
+                'agents/loadGuest',
+                this.profile.djangoProfile.username
+            );
         },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
