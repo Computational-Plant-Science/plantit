@@ -1610,6 +1610,10 @@ def get_scheduler_log_file_contents(task: Task) -> List[str]:
     return scheduler_logs
 
 
+def should_transfer_results(task: Task) -> bool:
+    return 'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']
+
+
 def task_to_dict(task: Task) -> dict:
     orchestrator_log_file_path = get_task_orchestrator_log_file_path(task)
     if Path(orchestrator_log_file_path).is_file():
@@ -1655,16 +1659,17 @@ def task_to_dict(task: Task) -> dict:
         'cleanup_time': None if task.cleanup_time is None else task.cleanup_time.isoformat(),
         'workflow_owner': task.workflow_owner,
         'workflow_name': task.workflow_name,
+        'workflow_image_url': task.workflow_image_url,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,
         'is_success': task.is_success,
         'is_failure': task.is_failure,
         'is_cancelled': task.is_cancelled,
         'is_timeout': task.is_timeout,
-        'workflow_image_url': task.workflow_image_url,
+        'result_previews_loaded': task.previews_loaded,
+        'result_transfer': should_transfer_results(task),
         'results_retrieved': task.results_retrieved,
         'results_transferred': task.results_transferred,
-        'result_previews_loaded': task.previews_loaded,
         'cleaned_up': task.cleaned_up,
         'transferred': task.transferred,
         'output_files': json.loads(results) if results is not None else [],

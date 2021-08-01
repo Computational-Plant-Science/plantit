@@ -645,7 +645,7 @@
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    files loaded<b-progress
+                                                    input(s) loaded<b-progress
                                                         :value="
                                                             Math.max(
                                                                 getTask.inputs_downloaded,
@@ -683,7 +683,8 @@
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    containers submitted<b-progress
+                                                    container(s)
+                                                    submitted<b-progress
                                                         :value="
                                                             getTask.inputs_submitted
                                                         "
@@ -712,7 +713,8 @@
                                                     }}/{{
                                                         getTask.inputs_detected
                                                     }}
-                                                    containers completed<b-progress
+                                                    container(s)
+                                                    completed<b-progress
                                                         :value="
                                                             getTask.inputs_completed
                                                         "
@@ -732,18 +734,20 @@
                                                     ></b-progress></b-col
                                                 ><b-col
                                                     v-if="
-                                                        getWorkflow.config
-                                                            .output !== null
-
+                                                        getTask.result_transfer
                                                     "
                                                     >{{
                                                         getTask.results_transferred
                                                     }}/{{
                                                         getTask.output_files
-                                                                .length > 0 ? getTask.output_files
-                                                            .length : '?'
+                                                            .length > 0
+                                                            ? getTask
+                                                                  .output_files
+                                                                  .length
+                                                            : '?'
                                                     }}
-                                                    results transferred<b-progress
+                                                    result(s)
+                                                    transferred<b-progress
                                                         :value="
                                                             getTask.results_transferred
                                                         "

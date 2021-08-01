@@ -7,6 +7,7 @@ from os import environ
 from os.path import join
 
 import cv2
+import pprint
 import requests
 from asgiref.sync import async_to_sync
 from celery import group
@@ -18,6 +19,7 @@ from preview_generator.exception import UnsupportedMimeType
 from preview_generator.manager import PreviewManager
 
 from plantit import settings
+import plantit.terrain as terrain
 from plantit.agents.models import AgentExecutor, Agent, AgentAuthentication
 from plantit.celery import app
 from plantit.github import get_repo
@@ -29,7 +31,8 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, transfer_task_results_to_cyverse
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, transfer_task_results_to_cyverse, should_transfer_results, \
+    refresh_user_cyverse_tokens
 
 logger = get_task_logger(__name__)
 
@@ -269,10 +272,14 @@ def list_task_results(guid: str, auth: dict):
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
-    if 'output' in task.workflow['config'] and 'path' in task.workflow['config']['output']:
-        log_task_orchestrator_status(task, [f"Transferring result(s) to CyVerse Data Store directory {task.workflow['config']['output']['path']}"])
-        async_to_sync(push_task_event)(task)
-        transfer_results_to_cyverse.s(task.guid, auth).apply_async()
+    if should_transfer_results(task):
+        # log_task_orchestrator_status(task, [f"Transferring result(s) to CyVerse Data Store directory {task.workflow['config']['output']['to']}"])
+        # async_to_sync(push_task_event)(task)
+        # transfer_results_to_cyverse.s(task.guid, auth).apply_async()
+
+        # log_task_orchestrator_status(task, [f"Verifying result(s) were transferred to CyVerse Data Store directory {task.workflow['config']['output']['to']}"])
+        # async_to_sync(push_task_event)(task)
+        check_cyverse_transfer_completion.s(guid).apply_async()
 
     log_task_orchestrator_status(task, [f"Creating file previews"])
     async_to_sync(push_task_event)(task)
@@ -383,13 +390,39 @@ def transfer_results_to_cyverse(guid: str, auth: dict):
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
 
-    path = task.workflow['config']['output']['path']
+    path = task.workflow['config']['output']['to']
     transfer_task_results_to_cyverse(task, auth, path)
     task.transferred = True
     task.save()
 
-    log_task_orchestrator_status(task, [f"Transferred result(s) to CyVerse Data Store path {path}"])
-    async_to_sync(push_task_event)(task)
+    check_cyverse_transfer_completion.s(guid).apply_async()
+
+
+@app.task()
+def check_cyverse_transfer_completion(guid: str, iteration: int = 0):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        return
+
+    path = task.workflow['config']['output']['to']
+    actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
+    expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}"))]
+
+    if not set(expected).issubset(set(actual)):
+        logger.warning(f"Expected {len(expected)} results but found {len(actual)}")
+        if iteration < 5:
+            logger.warning(f"Checking again in 30 seconds (iteration {iteration})")
+            check_cyverse_transfer_completion.s(guid, iteration + 1).apply_async(countdown=30)
+    else:
+        msg = f"Transfer to CyVerse directory {path} completed"
+        logger.info(msg)
+        task.results_transferred = len(expected)
+        task.save()
+
+        log_task_orchestrator_status(task, [msg])
+        async_to_sync(push_task_event)(task)
 
 
 # @app.task()
@@ -536,11 +569,11 @@ def refresh_user_institutions():
 
 
 @app.task()
-def refresh_user_cyverse_tokens(username: str):
+def refresh_cyverse_tokens(username: str):
     try:
         user = User.objects.get(username=username)
     except:
-        logger.warning(f"User {username} not found")
+        logger.warning(f"User {username} not found: {traceback.format_exc()}")
         return
 
     refresh_user_cyverse_tokens(user)
@@ -555,7 +588,7 @@ def refresh_all_user_cyverse_tokens():
         logger.info(f"No users with running tasks, not refreshing CyVerse tokens")
         return
 
-    group([refresh_user_cyverse_tokens.s(user.username) for user in users])()
+    group([refresh_cyverse_tokens.s(user.username) for user in users])()
     logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
 
 

@@ -205,15 +205,13 @@
                         class="ml-1 mr-1"
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
-                    <b-dropdown
+                    <!--<b-dropdown
                         class="mr-1 ml-1"
                         v-if="
                             internalLoaded &&
                                 !internalLoading &&
-                                !openedDatasetLoading &&
                                 internalNode.path.split('/').length > 4
                         "
-                        :disabled="openedDataset !== null"
                         title="Open Dataset"
                         size="sm"
                         dropleft
@@ -256,7 +254,7 @@
                             v-bind:key="agent.name"
                             >{{ agent.name }}</b-dropdown-item
                         >
-                    </b-dropdown>
+                    </b-dropdown>-->
                     <b-modal
                         v-if="!isShared"
                         :title-class="
@@ -835,7 +833,6 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
-        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         sharedBy: function() {
             if (this.isShared) {
                 let path = this.internalLoaded

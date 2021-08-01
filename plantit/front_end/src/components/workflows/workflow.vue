@@ -2279,7 +2279,7 @@
                                                                             undefined &&
                                                                         getWorkflow
                                                                             .config
-                                                                            .input !==
+                                                                            .output !==
                                                                             undefined &&
                                                                         getWorkflow
                                                                             .config
@@ -2361,15 +2361,23 @@
                                                                             </span>
                                                                             <span
                                                                                 v-else
-                                                                            >None Selected</span></h5
-                                                                    ></b-col>
+                                                                                >None
+                                                                                Selected</span
+                                                                            >
+                                                                        </h5></b-col
+                                                                    >
                                                                 </b-row>
                                                                 <b-row
                                                                     ><b-col
                                                                         ><b>
                                                                             Select
                                                                             a
-                                                                            directory in the CyVerse Data Store
+                                                                            directory
+                                                                            in
+                                                                            the
+                                                                            CyVerse
+                                                                            Data
+                                                                            Store
                                                                             to
                                                                             transfer
                                                                             results
@@ -2394,6 +2402,138 @@
                                                                             "
                                                                         ></datatree></b-col
                                                                 ></b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .output
+                                                                            .include !==
+                                                                            undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                .patterns !==
+                                                                                undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                .patterns
+                                                                                .length >
+                                                                                0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Select
+                                                                            one
+                                                                            or
+                                                                            more
+                                                                            output
+                                                                            patterns.
+                                                                        </b>
+                                                                        <multiselect
+                                                                            :multiple="
+                                                                                true
+                                                                            "
+                                                                            :close-on-select="
+                                                                                false
+                                                                            "
+                                                                            :clear-on-select="
+                                                                                false
+                                                                            "
+                                                                            :preserve-search="
+                                                                                true
+                                                                            "
+                                                                            :preselect-first="
+                                                                                true
+                                                                            "
+                                                                            v-model="
+                                                                                outputSelectedPatterns
+                                                                            "
+                                                                            :options="
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .output
+                                                                                    .include
+                                                                                    .patterns
+                                                                            "
+                                                                        ></multiselect>
+                                                                    </b-col>
+                                                                </b-row>
+                                                              <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .output
+                                                                            .include !==
+                                                                            undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                .names !==
+                                                                                undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                .names
+                                                                                .length >
+                                                                                0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Select
+                                                                            one
+                                                                            or
+                                                                            more
+                                                                            output
+                                                                            files by name.
+                                                                        </b>
+                                                                        <multiselect
+                                                                            :multiple="
+                                                                                true
+                                                                            "
+                                                                            :close-on-select="
+                                                                                false
+                                                                            "
+                                                                            :clear-on-select="
+                                                                                false
+                                                                            "
+                                                                            :preserve-search="
+                                                                                true
+                                                                            "
+                                                                            :preselect-first="
+                                                                                true
+                                                                            "
+                                                                            v-model="
+                                                                                outputSelectedNames
+                                                                            "
+                                                                            :options="
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .output
+                                                                                    .include
+                                                                                    .names
+                                                                            "
+                                                                        ></multiselect>
+                                                                    </b-col>
+                                                                </b-row>
                                                             </b-card>
                                                             <b-card
                                                                 style="min-width: 60rem"
@@ -3597,6 +3737,8 @@ export default {
                 filetypes: []
             },
             inputSelectedPatterns: [],
+            outputSelectedPatterns: [],
+            outputSelectedNames: [],
             selectedOutput: null,
             outputSync: false,
             outputSpecified: false,
@@ -3974,9 +4116,12 @@ export default {
                     flowConfig.params !== undefined
                         ? flowConfig.params
                         : this.params;
-                this.input = flowConfig.input;
-                this.output = flowConfig.output;
-                this.selectedAgent = flowConfig.agent;
+                if (flowConfig.input !== undefined)
+                    this.input = flowConfig.input;
+                if (flowConfig.output !== undefined)
+                    this.output = flowConfig.output;
+                if (flowConfig.agent !== undefined)
+                    this.selectedAgent = flowConfig.agent;
             }
 
             if (
@@ -3992,7 +4137,7 @@ export default {
             this.loadSelectedInput(node.path);
         },
         outputSelected(node) {
-            this.output.path = node.path;
+            this.output.to = node.path;
             this.loadSelectedOutput(node.path);
         },
         agentSelected(agent) {
@@ -4078,11 +4223,12 @@ export default {
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
             }
-            if (this.output !== undefined && this.output.path) {
+            if (this.output !== undefined && this.output.to) {
                 config.output = this.output;
-                config.output['to'] = config['output']['path'];
-                config.output['from'] = ''
-                delete config['output']['path'];
+                // config.output['to'] = config['output']['path'];
+                config.output['from'] = '';
+                config.output.include.patterns = this.outputSelectedPatterns;
+                config.output.include.names = this.outputSelectedNames;
                 // config.output.patterns =
                 //     this.outputSelectedPatterns.length > 0
                 //         ? this.outputSelectedPatterns
@@ -4380,9 +4526,9 @@ export default {
                 this.getWorkflow &&
                 this.getWorkflow.config &&
                 this.getWorkflow.config.input !== undefined &&
-                this.getWorkflow.config.output.path !== undefined
+                this.getWorkflow.config.output.to !== undefined
             )
-                return this.output.path !== '';
+                return this.output.to !== '';
             return true;
         },
         canSubmit: function() {
