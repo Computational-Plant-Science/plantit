@@ -491,7 +491,15 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    <h5>Here is your public key.</h5>
+                                    <h5
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Here is your public key.
+                                    </h5>
                                     Copy it into the
                                     <code>~/.ssh/authorized_keys</code> file on
                                     your agent, then click
