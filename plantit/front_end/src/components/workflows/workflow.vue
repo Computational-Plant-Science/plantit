@@ -2468,7 +2468,7 @@
                                                                         ></multiselect>
                                                                     </b-col>
                                                                 </b-row>
-                                                              <b-row
+                                                                <b-row
                                                                     v-if="
                                                                         getWorkflow
                                                                             .config
@@ -2503,7 +2503,9 @@
                                                                             or
                                                                             more
                                                                             output
-                                                                            files by name.
+                                                                            files
+                                                                            by
+                                                                            name.
                                                                         </b>
                                                                         <multiselect
                                                                             :multiple="
@@ -3783,6 +3785,13 @@ export default {
             );
             this.timeLimitUnits = 'Hours';
         }
+
+        if (
+            this.getWorkflow.config.output !== undefined &&
+            this.getWorkflow.config.output.include !== undefined &&
+            this.getWorkflow.config.output.include.patterns !== undefined
+        )
+            this.outputSelectedPatterns = this.getWorkflow.config.output.include.patterns;
 
         // if (this.workflowKey in this.recentlyRunWorkflows) {
         //     let config = this.recentlyRunWorkflows[this.workflowKey];

@@ -20,6 +20,7 @@ from typing import List
 from urllib.parse import quote_plus
 
 import numpy as np
+import pprint
 import requests
 import yaml
 import jwt
@@ -1060,6 +1061,7 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
         if 'include' in output:
             if 'patterns' in output['include']:
                 patterns = output['include']['patterns']
+                pprint.pprint(patterns)
                 patterns.append('.out')
                 patterns.append('.err')
                 patterns.append('.zip')
