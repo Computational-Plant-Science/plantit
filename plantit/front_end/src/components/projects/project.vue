@@ -1591,8 +1591,7 @@ export default {
         studyInfoValid() {
             return (
                 this.studyTitleValid &&
-                this.studyDescriptionValid &&
-                this.studyStartDateValid
+                this.studyDescriptionValid
             );
         },
         otherUsers() {
