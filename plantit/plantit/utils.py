@@ -934,8 +934,6 @@ def compose_task_singularity_command(
     if bind_mounts is not None:
         if len(bind_mounts) > 0:
             cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-        else:
-            raise ValueError(f"List expected for `bind_mounts`")
 
     if no_cache:
         cmd += ' --disable-cache'
@@ -1232,6 +1230,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
         workdir = join(task.agent.workdir, task.workdir)
+        sftp.chdir(workdir)
         template_path = environ.get('TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM')
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
