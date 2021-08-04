@@ -117,6 +117,7 @@
                                     select="directory"
                                     :upload="true"
                                     :download="true"
+                                    :create="true"
                                     :class="
                                         profile.darkMode
                                             ? 'theme-dark'
@@ -192,6 +193,7 @@
                                     select="directory"
                                     :upload="true"
                                     :download="true"
+                                    :create="true"
                                     :class="
                                         profile.darkMode
                                             ? 'theme-dark'
@@ -259,6 +261,7 @@
                                     select="directory"
                                     :upload="true"
                                     :download="true"
+                                    :create="true"
                                     :class="
                                         profile.darkMode
                                             ? 'theme-dark'

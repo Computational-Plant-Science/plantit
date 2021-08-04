@@ -118,6 +118,21 @@
                             "
                             ><i class="fas fa-plus fa-fw"></i
                         ></b-button>
+                        <b-button
+                            v-if="!isShared && !isRoot"
+                            class="ml-1 mr-1"
+                            size="sm"
+                            title="Delete Subdirectory"
+                            @click="showDeleteDirectoryModal"
+                            :variant="
+                                profile.darkMode
+                                    ? 'outline-light'
+                                    : 'outline-dark'
+                            "
+                            ><i
+                                class="fas fa-trash text-danger fa-fw"
+                            ></i
+                        ></b-button>
                         <b-modal
                             v-if="!isShared"
                             :title-class="
@@ -170,6 +185,54 @@
                                 ></b-form-input>
                             </b-form-group>
                         </b-modal>
+                        <!--<b-modal
+                            v-if="!isShared"
+                            :title-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            :title="`Delete directory ${(internalLoaded
+                                        ? internalNode.label
+                                        : node.label)}?`"
+                            :id="
+                                'deleteDirectoryModal' +
+                                    (internalLoaded
+                                        ? internalNode.label
+                                        : node.label)
+                            "
+                            centered
+                            :header-text-variant="
+                                profile.darkMode ? 'white' : 'dark'
+                            "
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :body-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :header-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            close
+                            @close="hideDeleteDirectoryModal"
+                            ok-variant="danger"
+                            @ok="
+                                deletePath(
+                                    (internalLoaded
+                                        ? internalNode.path
+                                        : node.path) +
+                                        '/' +
+                                        newDirectoryName,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                        ><p :class="profile.darkMode ? 'text-light' : 'text-dark'">This directory and its contents will be permanently deleted.</p>
+                        </b-modal>-->
                     </span>
                     <b-button
                         v-if="internalLoaded && !internalLoading"
@@ -714,6 +777,7 @@
                 :select="select"
                 :upload="upload"
                 :download="download"
+                :create="create"
                 :agents="agents"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
@@ -814,6 +878,7 @@ export default {
             uploading: false,
             deleting: false,
             creatingDirectory: false,
+            deletingDirectory: false,
             newDirectoryName: '',
             uploadingIntervalId: '',
             creatingDirectoryIntervalId: '',
@@ -855,6 +920,13 @@ export default {
         },
         isDir: function() {
             return !('file-size' in this);
+        },
+        isRoot() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let isRootPath = (path === `/iplant/home/${this.profile.djangoProfile.username}` || path === `/iplant/home/${this.profile.djangoProfile.username}/`);
+            return isRootPath;
         },
         sharingUsers() {
             let username = this.profile.djangoProfile.username;
@@ -977,6 +1049,22 @@ export default {
         hideCreateDirectoryModal() {
             this.$bvModal.hide(
                 'createDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        showDeleteDirectoryModal() {
+            this.$bvModal.show(
+                'deleteDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        hideDeleteDirectoryModal() {
+            this.$bvModal.hide(
+                'deleteDirectoryModal' +
                     (this.internalLoaded
                         ? this.internalNode.label
                         : this.node.label)
@@ -1151,6 +1239,14 @@ export default {
             this.creatingDirectory = false;
             // this.checkDirectoryCreation(path, response);
         },
+        refreshAfterDirectoryDeletion() {
+            this.loadDirectory(
+                this.internalNode.path,
+                this.profile.djangoProfile.cyverse_token
+            );
+            this.creatingDirectory = false;
+            // this.checkDirectoryCreation(path, response);
+        },
         checkDirectoryCreation(path, response) {
             if (
                 this.internalNode.folders.some(
@@ -1184,6 +1280,31 @@ export default {
                     Sentry.captureException(error);
                     this.creatingDirectory = false;
                     alert(`Failed to create directory '${path}''`);
+                    throw error;
+                });
+        },
+        async deleteDirectory(path, token) {
+            this.deletingDirectory = true;
+            this.$bvModal.hide('deleteDirectoryModal');
+            await axios
+                .post(
+                    `https://de.cyverse.org/terrain/secured/filesystem/delete`,
+                    {
+                        paths: [path]
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        }
+                    }
+                )
+                .then(() =>
+                    setTimeout(this.refreshAfterDirectoryDeletion, 5000)
+                )
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.deletingDirectory = false;
+                    alert(`Failed to delete directory '${path}''`);
                     throw error;
                 });
         },
