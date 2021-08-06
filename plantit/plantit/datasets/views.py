@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 import uuid
 from typing import List
 
@@ -51,6 +52,7 @@ async def share(request):
         try:
             user = await sync_to_async(User.objects.get)(owner=guest['user'])
         except:
+            print(traceback.format_exc())
             return HttpResponseNotFound()
 
         path = guest['paths'][0]['path']

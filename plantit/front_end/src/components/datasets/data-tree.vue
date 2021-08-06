@@ -178,12 +178,151 @@
                             "
                         >
                             <b-form-group>
+                              <template #description
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                >The directory name</span
+                            ></template
+                        >
                                 <b-form-input
                                     size="sm"
                                     v-model="newDirectoryName"
                                     :placeholder="'Enter a directory name'"
                                 ></b-form-input>
                             </b-form-group>
+                           <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Select
+                                                                            the
+                                                                            MIAPPE
+                                                                            project
+                                                                            and
+                                                                            study
+                                                                            this
+                                                                            task
+                                                                            corresponds
+                                                                            to.
+                                                                        </b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        personalProjects.length >
+                                                                            0
+                                                                    "
+                                                                    class="mt-2"
+                                                                    ><b-col
+                                                                        cols="3"
+                                                                        ><i
+                                                                            >Project</i
+                                                                        ></b-col
+                                                                    ><b-col
+                                                                        cols="9"
+                                                                        v-if="
+                                                                            selectedProject !==
+                                                                                null
+                                                                        "
+                                                                        ><i
+                                                                            >Study</i
+                                                                        ></b-col
+                                                                    ></b-row
+                                                                >
+                                                                <b-row
+                                                                    v-else
+                                                                    class="mt-2"
+                                                                    ><b-col
+                                                                        cols="3"
+                                                                        ><i
+                                                                            >You
+                                                                            haven't
+                                                                            started
+                                                                            any
+                                                                            projects.</i
+                                                                        ></b-col
+                                                                    ></b-row
+                                                                >
+                                                                <b-row
+                                                                    class="mt-1"
+                                                                    v-for="project in personalProjects"
+                                                                    v-bind:key="
+                                                                        project.title
+                                                                    "
+                                                                    ><b-col
+                                                                        style="border-top: 2px solid lightgray; left: -5px;"
+                                                                        cols="3"
+                                                                    >
+                                                                        <b-button
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'outline-light'
+                                                                                    : 'white'
+                                                                            "
+                                                                            @click="
+                                                                                selectedProject = project
+                                                                            "
+                                                                            >{{
+                                                                                project.title
+                                                                            }}<i
+                                                                                v-if="
+                                                                                    selectedProject !==
+                                                                                        null &&
+                                                                                        selectedProject.title ===
+                                                                                            project.title
+                                                                                "
+                                                                                class="fas fa-check fa-fw text-success ml-1"
+                                                                            ></i
+                                                                        ></b-button> </b-col
+                                                                    ><b-col
+                                                                        style="border-top: 2px solid lightgray; left: -5px"
+                                                                        cols="9"
+                                                                        v-if="
+                                                                            selectedProject !==
+                                                                                null
+                                                                        "
+                                                                        ><b-row
+                                                                            v-for="study in project.studies"
+                                                                            v-bind:key="
+                                                                                study.title
+                                                                            "
+                                                                            ><b-col
+                                                                                ><b-button
+                                                                                    :disabled="
+                                                                                        project.title !==
+                                                                                            selectedProject.title
+                                                                                    "
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'outline-light'
+                                                                                            : 'white'
+                                                                                    "
+                                                                                    @click="
+                                                                                        selectedStudy = study
+                                                                                    "
+                                                                                    >{{
+                                                                                        study.title
+                                                                                    }}<i
+                                                                                        v-if="
+                                                                                            selectedStudy !==
+                                                                                                null &&
+                                                                                                selectedStudy.title ===
+                                                                                                    study.title &&
+                                                                                                selectedProject ===
+                                                                                                    project
+                                                                                        "
+                                                                                        class="fas fa-check fa-fw ml-1 text-success"
+                                                                                    ></i></b-button></b-col></b-row></b-col
+                                                                ></b-row>
                         </b-modal>
                         <!--<b-modal
                             v-if="!isShared"
@@ -892,7 +1031,9 @@ export default {
             thumbnailName: '',
             thumbnailUrl: '',
             thumbnailTitle: '',
-            thumbnailDoneLoading: false
+            thumbnailDoneLoading: false,
+            selectedProject: null,
+            selectedStudy: null,
         };
     },
     computed: {
