@@ -216,19 +216,17 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    Workflows
+                                                    Projects
                                                 </h5>
                                                 <b>{{
-                                                    profile.stats
-                                                        .owned_workflows.length
+                                                    personalProjects.length
                                                 }}</b>
-                                                maintained
+                                                owned
                                                 <br />
                                                 <b>{{
-                                                    profile.stats.workflow_usage
-                                                        .labels.length
+                                                    othersProjects.length
                                                 }}</b>
-                                                used
+                                                guest
                                             </b-col>
                                             <b-col md="auto" class="mt-3">
                                                 <h5
@@ -295,16 +293,38 @@
                                                     profile.stats.owned_agents
                                                         .length
                                                 }}</b>
-                                                administered
+                                                owned
                                                 <br />
                                                 <b>{{
                                                     profile.stats.guest_agents
                                                         .length
                                                 }}</b>
-                                                guest passes
+                                                guest
                                                 <br />
                                                 <b>{{
                                                     profile.stats.agent_usage
+                                                        .labels.length
+                                                }}</b>
+                                                used
+                                            </b-col>
+                                            <b-col md="auto" class="mt-3">
+                                                <h5
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    Workflows
+                                                </h5>
+                                                <b>{{
+                                                    profile.stats
+                                                        .owned_workflows.length
+                                                }}</b>
+                                                owned
+                                                <br />
+                                                <b>{{
+                                                    profile.stats.workflow_usage
                                                         .labels.length
                                                 }}</b>
                                                 used
@@ -323,11 +343,6 @@
                                                 running
                                                 <br />
                                                 <b>{{
-                                                    tasksCompleted.length
-                                                }}</b>
-                                                completed
-                                                <br />
-                                                <b>{{
                                                     profile.stats.total_tasks
                                                 }}</b>
                                                 total
@@ -344,27 +359,7 @@
                                                             .total_task_seconds
                                                     )
                                                 }}</b>
-                                                cumulative runtime
-                                            </b-col>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Projects
-                                                </h5>
-                                                <b>{{
-                                                    personalProjects.length
-                                                }}</b>
-                                                owned
-                                                <br />
-                                                <b>{{
-                                                    othersProjects.length
-                                                }}</b>
-                                                invited
+                                                total runtime
                                             </b-col>
                                         </b-row>
                                     </b-col>
@@ -586,7 +581,7 @@ export default {
         workflowPlotLayout() {
             return {
                 title: {
-                    text: 'Workflow Usage Distribution',
+                    text: 'Your Workflow Usage Distribution',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }
@@ -613,7 +608,7 @@ export default {
         agentPlotLayout() {
             return {
                 title: {
-                    text: 'Agent Usage Distribution',
+                    text: 'Your Agent Usage Distribution',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }
@@ -698,7 +693,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Task History',
+                    text: 'Your Recent Task History',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }

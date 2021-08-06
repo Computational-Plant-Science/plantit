@@ -341,6 +341,31 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 return JsonResponse({'success': False})
 
     @action(detail=False, methods=['post'])
+    def create_workdir(self, request):
+        try:
+            hostname = request.data['hostname']
+            port = int(request.data['port'])
+            username = request.data['username']
+            directory = request.data.get('directory', None)
+        except:
+            return HttpResponseBadRequest()
+
+        if 'password' in request.data:
+            ssh = SSH(hostname, port=port, username=username, password=request.data['password'])
+        else:
+            pkey = str(get_user_private_key_path(request.user.username))
+            self.logger.info(pkey)
+            ssh = SSH(hostname, port=port, username=username, pkey=pkey)
+
+        with ssh:
+            try:
+                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir .plantit && cd .plantit && pwd", directory=directory, allow_stderr=False):
+                    self.logger.info(line)
+                    return JsonResponse({'workdir': line.strip()})
+            except:
+                return JsonResponse({'workdir': False})
+
+    @action(detail=False, methods=['post'])
     def check_executor(self, request):
         try:
             hostname = request.data['hostname']

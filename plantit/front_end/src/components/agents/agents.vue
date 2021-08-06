@@ -612,14 +612,174 @@
                             <b-button
                                 block
                                 variant="success"
-                                @click="changeAgentBindingStage('executor')"
+                                @click="changeAgentBindingStage('workdir')"
                                 ><i class="fas fa-arrow-right fa-fw fa-1x"></i>
-                                Next: Executor</b-button
+                                Next: Working Directory</b-button
                             ></b-col
                         >
                     </b-row>
                 </b-col>
             </b-row>
+            <b-row v-if="agentBindingStage === 'workdir'"
+                ><b-col>
+                    <b-row class="mb-2"
+                        ><b-col
+                            ><h4
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Select a working directory for agent
+                                <b>{{ agentName }}</b>
+                            </h4></b-col
+                        >
+                    </b-row>
+                    <b-row v-if="agentWorkdirCreated !== true">
+                        <b-col>
+                            <b-row
+                                ><b-col>
+                                    <p
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        You must have write permissions in the
+                                        chosen directory. A `.plantit` hidden
+                                        directory will be created and used to
+                                        store your tasks.
+                                    </p>
+                                </b-col></b-row
+                            ></b-col
+                        ></b-row
+                    >
+                    <b-row v-if="agentWorkdirCreated !== true"
+                        ><b-col>
+                            <b-form-group>
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Enter a directory path.</span
+                                    ></template
+                                >
+                                <b-form-input
+                                    :state="agentWorkdirValid"
+                                    v-model="agentWorkdir"
+                                    type="text"
+                                    placeholder="$HOME/.plantit"
+                                    required
+                                ></b-form-input>
+                            </b-form-group> </b-col
+                    ></b-row>
+                    <b-row class="text-center mb-3 p-1"
+                        ><b-col v-if="agentWorkdirCreated === true"
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                <i
+                                    class="fas fa-check fa-fw mr-1 text-success"
+                                ></i
+                                >Created working directory!
+                            </h5>
+                            <b-button
+                                @click="resetAgentWorkdir"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                ><i class="fas fa-redo fa-fw fa-1x"></i> Select
+                                another working directory</b-button
+                            ></b-col
+                        ><b-col v-else-if="agentWorkdirCreated === false"
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                <i
+                                    class="fas fa-times-circle fa-fw mr-1 text-danger"
+                                ></i
+                                >Failed to create working directory
+                            </h5>
+                            <small
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                v-if="agentAuthentication === 'key'"
+                                ><span v-if="agentWorkdir !== ''"
+                                    >Are you sure the directory you've selected
+                                    exists? </span
+                                ><span v-else
+                                    >Do you have write permissions in your home
+                                    directory?</span
+                                ></small
+                            ><br /></b-col
+                    ></b-row>
+                    <b-row>
+                        <b-col>
+                            <b-button
+                                block
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                @click="changeAgentBindingStage('connection')"
+                                ><i class="fas fa-arrow-left fa-fw fa-1x"></i>
+                                Back: Connection</b-button
+                            ></b-col
+                        >
+                        <b-col v-if="!gettingKey && !agentWorkdirCreated">
+                            <b-button
+                                :disabled="
+                                    !(agentHostValid && agentUsernameValid) ||
+                                        creatingWorkdir
+                                "
+                                block
+                                variant="success"
+                                @click="preCreateAgentWorkdir"
+                                ><b-spinner
+                                    small
+                                    v-if="creatingWorkdir"
+                                    label="Creating working directory..."
+                                    variant="dark"
+                                    class="mr-1"
+                                ></b-spinner
+                                ><i
+                                    v-else
+                                    class="fas fa-folder fa-fw fa-1x"
+                                ></i>
+                                Use Directory
+                                <b>{{
+                                    this.agentWorkdirValid
+                                        ? this.agentWorkdir
+                                        : '$HOME/.plantit'
+                                }}</b></b-button
+                            ></b-col
+                        ><b-col v-if="agentWorkdirCreated">
+                            <b-button
+                                block
+                                variant="success"
+                                @click="changeAgentBindingStage('executor')"
+                                ><i class="fas fa-arrow-right fa-fw fa-1x"></i>
+                                Next: Executor</b-button
+                            ></b-col
+                        ></b-row
+                    ></b-col
+                ></b-row
+            >
             <b-row v-if="agentBindingStage === 'executor'"
                 ><b-col>
                     <b-row class="mb-2"
@@ -969,9 +1129,9 @@
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                @click="changeAgentBindingStage('connection')"
+                                @click="changeAgentBindingStage('workdir')"
                                 ><i class="fas fa-arrow-left fa-fw fa-1x"></i>
-                                Back: Connection</b-button
+                                Back: Working Directory</b-button
                             ></b-col
                         >
                         <b-col v-if="agentExecutorValid !== true">
@@ -1088,6 +1248,7 @@ export default {
             agentBindingStage: 'details',
             agentDetailsValid: null,
             agentConnectionValid: null,
+            agentWorkdirCreated: null,
             agentExecutorValid: null,
             // new agent properties
             agentNameLoading: false,
@@ -1134,6 +1295,7 @@ export default {
             togglingContext: false,
             bindingAgent: false,
             checkingConnection: false,
+            creatingWorkdir: false,
             checkingExecutor: false,
             // public key
             publicKey: '',
@@ -1229,6 +1391,9 @@ export default {
         },
         resetAgentExecutor() {
             this.agentExecutorValid = null;
+        },
+        resetAgentWorkdir() {
+            this.agentWorkdirCreated = null;
         },
         handleAuthenticationChange() {
             if (this.agentAuthentication === 'key') {
@@ -1331,6 +1496,11 @@ export default {
         changeAgentBindingStage(stage) {
             this.agentBindingStage = stage;
         },
+        preCreateAgentWorkdir() {
+          if (this.agentAuthentication === 'password')
+                this.$bvModal.show('authenticate');
+            else this.createAgentWorkdir();
+        },
         preCheckAgentConnection() {
             if (this.agentAuthentication === 'password')
                 this.$bvModal.show('authenticate');
@@ -1392,6 +1562,64 @@ export default {
                     });
                     this.agentConnectionValid = false;
                     this.checkingConnection = false;
+                    throw error;
+                });
+        },
+        async createAgentWorkdir() {
+            this.creatingWorkdir = true;
+            var data =
+                this.agentAuthentication === 'password'
+                    ? {
+                          hostname: this.agentHost,
+                          port: this.agentPort,
+                          username: this.agentUsername,
+                          password: this.authenticationPassword
+                      }
+                    : {
+                          hostname: this.agentHost,
+                          port: this.agentPort,
+                          username: this.agentUsername
+                      };
+            if (this.agentWorkdir !== '') {
+                data['directory'] = this.agentWorkdir;
+            }
+
+            await axios({
+                method: 'post',
+                url: `/apis/v1/users/create_workdir/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        this.agentWorkdirCreated = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Created working directory ${response.data.workdir} on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    } else {
+                        this.agentWorkdirCreated = false;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to create working directory ${this.agentWorkdir} on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    }
+                    this.creatingWorkdir = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to create working directory ${this.agentWorkdir} on ${this.agentName}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.agentWorkdirCreated = false;
+                    this.creatingWorkdir = false;
                     throw error;
                 });
         },

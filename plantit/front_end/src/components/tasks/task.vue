@@ -2129,7 +2129,7 @@ export default {
                         this.$store.dispatch('tasks/update', response.data),
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Transferred results to ${this.transferringPath}`,
+                            message: `Scheduled transfer to CyVerse Data Store (${this.transferringPath})`,
                             guid: guid().toString(),
                             time: moment().format()
                         })
@@ -2140,7 +2140,7 @@ export default {
                     this.transferring = false;
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
-                        message: `Failed to transfer results to ${this.transferringPath}`,
+                        message: `Failed to schedule transfer to CyVerse Data Store (${this.transferringPath})`,
                         guid: guid().toString(),
                         time: moment().format()
                     });
