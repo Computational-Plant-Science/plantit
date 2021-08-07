@@ -123,15 +123,20 @@
                             class="ml-1 mr-1"
                             size="sm"
                             title="Delete Subdirectory"
-                            @click="showDeleteDirectoryModal"
+                            @click="
+                                deletePath(
+                                    internalLoaded
+                                        ? internalNode.path
+                                        : node.path,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
                             :variant="
                                 profile.darkMode
                                     ? 'outline-light'
                                     : 'outline-dark'
                             "
-                            ><i
-                                class="fas fa-trash text-danger fa-fw"
-                            ></i
+                            ><i class="fas fa-trash text-danger fa-fw"></i
                         ></b-button>
                         <b-modal
                             v-if="!isShared"
@@ -178,200 +183,158 @@
                             "
                         >
                             <b-form-group>
-                              <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >The directory name</span
-                            ></template
-                        >
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >The directory name</span
+                                    ></template
+                                >
                                 <b-form-input
                                     size="sm"
                                     v-model="newDirectoryName"
                                     :placeholder="'Enter a directory name'"
                                 ></b-form-input>
                             </b-form-group>
-                           <b-row
-                                                                    ><b-col
-                                                                        ><b
-                                                                            :class="
-                                                                                profile.darkMode
-                                                                                    ? 'text-white'
-                                                                                    : 'text-dark'
-                                                                            "
-                                                                        >
-                                                                            Select
-                                                                            the
-                                                                            MIAPPE
-                                                                            project
-                                                                            and
-                                                                            study
-                                                                            this
-                                                                            task
-                                                                            corresponds
-                                                                            to.
-                                                                        </b>
-                                                                    </b-col>
-                                                                </b-row>
-                                                                <b-row
-                                                                    v-if="
-                                                                        personalProjects.length >
-                                                                            0
-                                                                    "
-                                                                    class="mt-2"
-                                                                    ><b-col
-                                                                        cols="3"
-                                                                        ><i
-                                                                            >Project</i
-                                                                        ></b-col
-                                                                    ><b-col
-                                                                        cols="9"
-                                                                        v-if="
-                                                                            selectedProject !==
-                                                                                null
-                                                                        "
-                                                                        ><i
-                                                                            >Study</i
-                                                                        ></b-col
-                                                                    ></b-row
-                                                                >
-                                                                <b-row
-                                                                    v-else
-                                                                    class="mt-2"
-                                                                    ><b-col
-                                                                        cols="3"
-                                                                        ><i
-                                                                            >You
-                                                                            haven't
-                                                                            started
-                                                                            any
-                                                                            projects.</i
-                                                                        ></b-col
-                                                                    ></b-row
-                                                                >
-                                                                <b-row
-                                                                    class="mt-1"
-                                                                    v-for="project in personalProjects"
-                                                                    v-bind:key="
-                                                                        project.title
-                                                                    "
-                                                                    ><b-col
-                                                                        style="border-top: 2px solid lightgray; left: -5px;"
-                                                                        cols="3"
-                                                                    >
-                                                                        <b-button
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'outline-light'
-                                                                                    : 'white'
-                                                                            "
-                                                                            @click="
-                                                                                selectedProject = project
-                                                                            "
-                                                                            >{{
-                                                                                project.title
-                                                                            }}<i
-                                                                                v-if="
-                                                                                    selectedProject !==
-                                                                                        null &&
-                                                                                        selectedProject.title ===
-                                                                                            project.title
-                                                                                "
-                                                                                class="fas fa-check fa-fw text-success ml-1"
-                                                                            ></i
-                                                                        ></b-button> </b-col
-                                                                    ><b-col
-                                                                        style="border-top: 2px solid lightgray; left: -5px"
-                                                                        cols="9"
-                                                                        v-if="
-                                                                            selectedProject !==
-                                                                                null
-                                                                        "
-                                                                        ><b-row
-                                                                            v-for="study in project.studies"
-                                                                            v-bind:key="
-                                                                                study.title
-                                                                            "
-                                                                            ><b-col
-                                                                                ><b-button
-                                                                                    :disabled="
-                                                                                        project.title !==
-                                                                                            selectedProject.title
-                                                                                    "
-                                                                                    :variant="
-                                                                                        profile.darkMode
-                                                                                            ? 'outline-light'
-                                                                                            : 'white'
-                                                                                    "
-                                                                                    @click="
-                                                                                        selectedStudy = study
-                                                                                    "
-                                                                                    >{{
-                                                                                        study.title
-                                                                                    }}<i
-                                                                                        v-if="
-                                                                                            selectedStudy !==
-                                                                                                null &&
-                                                                                                selectedStudy.title ===
-                                                                                                    study.title &&
-                                                                                                selectedProject ===
-                                                                                                    project
-                                                                                        "
-                                                                                        class="fas fa-check fa-fw ml-1 text-success"
-                                                                                    ></i></b-button></b-col></b-row></b-col
-                                                                ></b-row>
+                            <div v-if="showingProjectSelection">
+                                <b-row
+                                    class="mb-1"
+                                    ><b-col
+                                        ><b-button
+                                            @click="hideProjectSelection"
+                                            block
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            ><i
+                                                class="fas fa-times text-danger fa-fw"
+                                            ></i>
+                                            Hide Project Selection</b-button
+                                        ></b-col
+                                    ></b-row
+                                >
+                                <b-row
+                                    ><b-col
+                                        ><b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Select the MIAPPE project and study
+                                            this task corresponds to.
+                                        </b>
+                                    </b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="personalProjects.length > 0"
+                                    class="mt-2"
+                                    ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'" cols="3"><i>Project</i></b-col
+                                    ><b-col
+                                        cols="9"
+                                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                                        v-if="selectedProject !== null"
+                                        ><i>Study</i></b-col
+                                    ></b-row
+                                >
+                                <b-row v-else class="mt-2"
+                                    ><b-col cols="3"
+                                        ><i
+                                            >You haven't started any
+                                            projects.</i
+                                        ></b-col
+                                    ></b-row
+                                >
+                                <b-row
+                                    class="mt-1"
+                                    v-for="project in personalProjects"
+                                    v-bind:key="project.title"
+                                    ><b-col
+                                        style="border-top: 2px solid lightgray;"
+                                        cols="3"
+                                    >
+                                        <b-button
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            @click="selectedProject = project"
+                                            >{{ project.title
+                                            }}<i
+                                                v-if="
+                                                    selectedProject !== null &&
+                                                        selectedProject.title ===
+                                                            project.title
+                                                "
+                                                class="fas fa-check fa-fw text-success ml-1"
+                                            ></i
+                                        ></b-button> </b-col
+                                    ><b-col
+                                        style="border-top: 2px solid lightgray; left: -5px"
+                                        cols="9"
+                                        v-if="selectedProject !== null"
+                                        ><b-row
+                                            v-for="study in project.studies"
+                                            v-bind:key="study.title"
+                                            ><b-col
+                                                ><b-button
+                                                    :disabled="
+                                                        project.title !==
+                                                            selectedProject.title
+                                                    "
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'white'
+                                                    "
+                                                    @click="
+                                                        selectedStudy = study
+                                                    "
+                                                    >{{ study.title
+                                                    }}<i
+                                                        v-if="
+                                                            selectedStudy !==
+                                                                null &&
+                                                                selectedStudy.title ===
+                                                                    study.title &&
+                                                                selectedProject ===
+                                                                    project
+                                                        "
+                                                        class="fas fa-check fa-fw ml-1 text-success"
+                                                    ></i></b-button></b-col></b-row></b-col
+                                ></b-row>
+                            </div>
+                            <b-row v-else
+                                ><b-col
+                                    ><b-button
+                                        @click="showProjectSelection"
+                                        block
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        ><b-img
+                                            class="mb-1"
+                                            style="max-width: 18px"
+                                            :src="
+                                                profile.darkMode
+                                                    ? require('../../assets/miappe_icon.png')
+                                                    : require('../../assets/miappe_icon_black.png')
+                                            "
+                                        ></b-img>
+                                        Show Project Selection</b-button
+                                    ></b-col
+                                ></b-row
+                            >
                         </b-modal>
-                        <!--<b-modal
-                            v-if="!isShared"
-                            :title-class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            :title="`Delete directory ${(internalLoaded
-                                        ? internalNode.label
-                                        : node.label)}?`"
-                            :id="
-                                'deleteDirectoryModal' +
-                                    (internalLoaded
-                                        ? internalNode.label
-                                        : node.label)
-                            "
-                            centered
-                            :header-text-variant="
-                                profile.darkMode ? 'white' : 'dark'
-                            "
-                            :header-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            :body-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            :header-border-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            :footer-border-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            close
-                            @close="hideDeleteDirectoryModal"
-                            ok-variant="danger"
-                            @ok="
-                                deletePath(
-                                    (internalLoaded
-                                        ? internalNode.path
-                                        : node.path) +
-                                        '/' +
-                                        newDirectoryName,
-                                    profile.djangoProfile.cyverse_token
-                                )
-                            "
-                        ><p :class="profile.darkMode ? 'text-light' : 'text-dark'">This directory and its contents will be permanently deleted.</p>
-                        </b-modal>-->
                     </span>
                     <b-button
                         v-if="internalLoaded && !internalLoading"
@@ -904,9 +867,9 @@
             class="mt-2 mb-1 ml-2 mr-0 p-0"
             style="background-color: transparent;"
             v-for="(child, index) in internalLoaded
-                ? internalNode.folders
+                ? internalLoadedFolders
                 : node.folders"
-            v-bind:key="index"
+            v-bind:key="child.path"
             v-show="isOpen"
             :variant="profile.darkMode ? 'outline-light' : 'outline'"
         >
@@ -920,12 +883,7 @@
                 :agents="agents"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
-                @deleted="
-                    loadDirectory(
-                        node.path,
-                        this.profile.djangoProfile.cyverse_token
-                    )
-                "
+                @deleted="waitForDeletion(child.path)"
                 :key="index"
                 :node="child"
             ></data-tree>
@@ -1034,11 +992,16 @@ export default {
             thumbnailDoneLoading: false,
             selectedProject: null,
             selectedStudy: null,
+            showingProjectSelection: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
+        ...mapGetters('projects', ['personalProjects', 'projectsLoading']),
+        internalLoadedFolders() {
+          return this.internalNode.folders;
+        },
         sharedBy: function() {
             if (this.isShared) {
                 let path = this.internalLoaded
@@ -1066,7 +1029,10 @@ export default {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
-            let isRootPath = (path === `/iplant/home/${this.profile.djangoProfile.username}` || path === `/iplant/home/${this.profile.djangoProfile.username}/`);
+            let isRootPath =
+                path ===
+                    `/iplant/home/${this.profile.djangoProfile.username}` ||
+                path === `/iplant/home/${this.profile.djangoProfile.username}/`;
             return isRootPath;
         },
         sharingUsers() {
@@ -1104,7 +1070,18 @@ export default {
                 : 0;
         }
     },
+    watch: {
+        internalLoadedFolders() {
+            //
+        }
+    },
     methods: {
+        showProjectSelection() {
+            this.showingProjectSelection = true;
+        },
+        hideProjectSelection() {
+            this.showingProjectSelection = false;
+        },
         openDataset(agent) {
             this.$store.dispatch('datasets/open', {
                 agent: agent,
@@ -1195,22 +1172,6 @@ export default {
                         : this.node.label)
             );
         },
-        showDeleteDirectoryModal() {
-            this.$bvModal.show(
-                'deleteDirectoryModal' +
-                    (this.internalLoaded
-                        ? this.internalNode.label
-                        : this.node.label)
-            );
-        },
-        hideDeleteDirectoryModal() {
-            this.$bvModal.hide(
-                'deleteDirectoryModal' +
-                    (this.internalLoaded
-                        ? this.internalNode.label
-                        : this.node.label)
-            );
-        },
         async shareDataset() {
             let path = this.internalLoaded
                 ? this.internalNode.path
@@ -1284,8 +1245,30 @@ export default {
             if (this.internalLoaded) this.isOpen = !this.isOpen;
             else this.loadDirectory();
         },
-        refresh: function() {
-            this.loadDirectory(
+        waitForDeletion(path) {
+            this.waitFor(
+                () => {
+                    this.refresh();
+                    let x =
+                        this.internalNode.folders.filter(f => f.path === path)
+                            .length === 0;
+                    return x;
+                },
+                () => this.internalNode.folders.map(f => f)
+            );
+        },
+        waitFor(condition, callback) {
+            if (!condition()) {
+                window.setTimeout(
+                    this.waitFor.bind(null, condition, callback),
+                    5000
+                ); /* this checks the flag every 100 milliseconds*/
+            } else {
+                callback();
+            }
+        },
+        async refresh() {
+            await this.loadDirectory(
                 this.internalLoaded ? this.internalNode.path : this.node.path,
                 this.profile.djangoProfile.cyverse_token
             );
@@ -1320,7 +1303,8 @@ export default {
                 });
         },
         refreshAfterDeletion() {
-            this.$parent.$emit('deleted');
+            this.$parent.$emit('deleted', this.internalNode);
+            this.$emit('deleted', this.internalNode);
             // this.deleting = false;
             // this.checkDirectoryCreation(path, response);
         },
@@ -1372,6 +1356,14 @@ export default {
                     throw err;
                 });
         },
+        until(conditionFunction) {
+            const poll = resolve => {
+                if (conditionFunction()) resolve();
+                else setTimeout(() => poll(resolve), 5000);
+            };
+
+            return new Promise(poll);
+        },
         refreshAfterDirectoryCreation() {
             this.loadDirectory(
                 this.internalNode.path,
@@ -1414,38 +1406,22 @@ export default {
                         }
                     }
                 )
-                .then(() =>
-                    setTimeout(this.refreshAfterDirectoryCreation, 5000)
-                )
+                .then(async response => {
+                    if (
+                        response.status === 200 &&
+                        response.data.project !== undefined
+                    ) {
+                        await this.$store.dispatch(
+                            'projects/addOrUpdate',
+                            response.data.project
+                        );
+                    }
+                    setTimeout(this.refreshAfterDirectoryCreation, 5000);
+                })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.creatingDirectory = false;
                     alert(`Failed to create directory '${path}''`);
-                    throw error;
-                });
-        },
-        async deleteDirectory(path, token) {
-            this.deletingDirectory = true;
-            this.$bvModal.hide('deleteDirectoryModal');
-            await axios
-                .post(
-                    `https://de.cyverse.org/terrain/secured/filesystem/delete`,
-                    {
-                        paths: [path]
-                    },
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + token
-                        }
-                    }
-                )
-                .then(() =>
-                    setTimeout(this.refreshAfterDirectoryDeletion, 5000)
-                )
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.deletingDirectory = false;
-                    alert(`Failed to delete directory '${path}''`);
                     throw error;
                 });
         },
@@ -1487,9 +1463,9 @@ export default {
             this.filesToUpload = [];
             this.uploading = false;
         },
-        loadDirectory(path, token) {
+        async loadDirectory(path, token) {
             this.internalLoading = true;
-            axios
+            await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
                     { headers: { Authorization: 'Bearer ' + token } }

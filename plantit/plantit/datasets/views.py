@@ -14,8 +14,9 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
+from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
-from plantit.utils import dataset_access_policy_to_dict
+from plantit.utils import dataset_access_policy_to_dict, project_to_dict
 
 
 @login_required
@@ -144,3 +145,32 @@ async def unshare(request):
 
     await sync_to_async(policy.delete)()
     return JsonResponse({'unshared': True})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def create(request):
+    owner = request.user
+    body = json.loads(request.body.decode('utf-8'))
+    path = body['path']
+    project = body.get('project', None)
+    study = body.get('study', None)
+    headers = {
+        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.post("https://de.cyverse.org/terrain/secured/filesystem/directory/create", data=json.dumps({'path': path}))
+        response.raise_for_status()
+
+    if project is not None and study is not None:
+        try:
+            investigation = Investigation.objects.get(owner=owner, title=project)
+            study = Study.objects.get(investigation=investigation, title=study)
+            study.dataset_paths.append(path)
+            study.save()
+            return JsonResponse({'path': path, 'project': project_to_dict(investigation)})
+        except:
+            return HttpResponseNotFound()
+    else:
+        return JsonResponse({'path': path})
