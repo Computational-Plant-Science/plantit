@@ -475,8 +475,8 @@
                                         <div
                                             :class="
                                                 profile.darkMode
-                                                    ? 'theme-container-dark m-0 p-1'
-                                                    : 'theme-container-light m-0 p-1'
+                                                    ? 'theme-container-dark m-0 p-1 pt-2 pb-2'
+                                                    : 'theme-container-light m-0 p-1 pt-2 pb-2'
                                             "
                                         >
                                             <div>

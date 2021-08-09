@@ -200,8 +200,7 @@
                                 ></b-form-input>
                             </b-form-group>
                             <div v-if="showingProjectSelection">
-                                <b-row
-                                    class="mb-1"
+                                <b-row class="mb-1"
                                     ><b-col
                                         ><b-button
                                             @click="hideProjectSelection"
@@ -235,10 +234,21 @@
                                 <b-row
                                     v-if="personalProjects.length > 0"
                                     class="mt-2"
-                                    ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'" cols="3"><i>Project</i></b-col
+                                    ><b-col
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        cols="3"
+                                        ><i>Project</i></b-col
                                     ><b-col
                                         cols="9"
-                                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
                                         v-if="selectedProject !== null"
                                         ><i>Study</i></b-col
                                     ></b-row
@@ -817,6 +827,9 @@
                         {{ child.label }}</b-button
                     >
                 </b-col>
+                <b-col md="auto" align-self="center"
+                    ><small>{{ formatBytes(child['file-size']) }}</small></b-col
+                >
                 <b-col md="auto">
                     <!--<b-button
                         id="popover-reactive-1"
@@ -1000,7 +1013,7 @@ export default {
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('projects', ['personalProjects', 'projectsLoading']),
         internalLoadedFolders() {
-          return this.internalNode.folders;
+            return this.internalNode.folders;
         },
         sharedBy: function() {
             if (this.isShared) {
@@ -1076,6 +1089,25 @@ export default {
         }
     },
     methods: {
+        // https://stackoverflow.com/a/23625419
+        formatBytes(bytes) {
+            var marker = 1024; // Change to 1000 if required
+            var decimal = 3; // Change as required
+            var kiloBytes = marker; // One Kilobyte is 1024 bytes
+            var megaBytes = marker * marker; // One MB is 1024 KB
+            var gigaBytes = marker * marker * marker; // One GB is 1024 MB
+
+            // return bytes if less than a KB
+            if (bytes < kiloBytes) return bytes + ' Bytes';
+            // return KB if less than a MB
+            else if (bytes < megaBytes)
+                return (bytes / kiloBytes).toFixed(decimal) + ' KB';
+            // return MB if less than a GB
+            else if (bytes < gigaBytes)
+                return (bytes / megaBytes).toFixed(decimal) + ' MB';
+            // return GB if less than a TB
+            else return (bytes / gigaBytes).toFixed(decimal) + ' GB';
+        },
         showProjectSelection() {
             this.showingProjectSelection = true;
         },
