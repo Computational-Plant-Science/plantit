@@ -93,7 +93,7 @@
                             :header-bg-variant="
                                 profile.darkMode ? 'dark' : 'white'
                             "
-                            border-variant="default"
+                            border-variant="secondary"
                             :header-border-variant="
                                 profile.darkMode ? 'dark' : 'white'
                             "
@@ -604,23 +604,33 @@
                                                     class="mr-0"
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    :disabled="!getAgent.is_healthy"
+                                                    :disabled="
+                                                        !getAgent.is_healthy
+                                                    "
                                                     :title="
                                                         getAgent.disabled
-                                                            ? 'Enable ' + getAgent.name
-                                                            : 'Disable ' + getAgent.name
+                                                            ? 'Enable ' +
+                                                              getAgent.name
+                                                            : 'Disable ' +
+                                                              getAgent.name
                                                     "
                                                     :button-variant="
                                                         getAgent.disabled
                                                             ? 'secondary'
-                                                            : profile.darkMode ? 'outline-light' : 'white'
+                                                            : profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'white'
                                                     "
                                                     @change="toggleDisabled"
                                                 >
                                                     <i
                                                         class="fas fa-exclamation-circle fa-fw fa-1x"
                                                     ></i>
-                                                    {{ getAgent.disabled ? 'Enable' : 'Disable' }}
+                                                    {{
+                                                        getAgent.disabled
+                                                            ? 'Enable'
+                                                            : 'Disable'
+                                                    }}
                                                 </b-form-checkbox></b-col
                                             >
                                             <b-col

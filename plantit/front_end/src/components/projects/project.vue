@@ -20,6 +20,7 @@
                 v-else
                 :sub-title="getProject.unique_id"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                border-variant="secondary"
                 :header-text-variant="profile.darkMode ? 'white' : 'dark'"
                 :text-variant="profile.darkMode ? 'white' : 'dark'"
                 :body-text-variant="profile.darkMode ? 'white' : 'dark'"
@@ -132,6 +133,7 @@
                         :header-text-variant="
                             profile.darkMode ? 'white' : 'dark'
                         "
+                        border-variant="secondary"
                         :text-variant="profile.darkMode ? 'white' : 'dark'"
                         :body-text-variant="profile.darkMode ? 'white' : 'dark'"
                         no-body

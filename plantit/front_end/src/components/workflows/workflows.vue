@@ -326,7 +326,7 @@
                 <b-card
                     :bg-variant="profile.darkMode ? 'dark' : 'white'"
                     :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                    border-variant="default"
+                    border-variant="secondary"
                     :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                     :text-variant="profile.darkMode ? 'white' : 'dark'"
                     class="overflow-hidden"

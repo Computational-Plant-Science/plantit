@@ -654,7 +654,9 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-question-circle fa-1x fa-fw"></i
+                                ><i
+                                    class="fas fa-question-circle fa-1x fa-fw"
+                                ></i
                                 >About</span
                             ></b-nav-item
                         >
@@ -731,7 +733,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fab fa-github fa-1x fa-fw"></i>Github</span
+                                ><i class="fab fa-github fa-1x fa-fw"></i
+                                >Github</span
                             >
                         </b-nav-item>
                         <!--<b-nav-item
@@ -1002,15 +1005,19 @@
         <div v-if="alerts.length > 0">
             <b-alert
                 class="m-0"
-                show
-                v-for="alert in alerts"
-                v-bind:key="alert.guid"
-                :variant="alert.variant"
+                :show="dismissCountDown"
+                :variant="alerts[0].variant"
                 dismissible
-                @dismissed="removeAlert(alert)"
-                ><b>{{ alert.message }}</b>
-                {{ prettifyShort(alert.time) }}</b-alert
-            >
+                @dismissed="dismissCountDown=0"
+                @dismiss-count-down="countdownChanged"
+                ><b>{{ alerts[0].message }}</b> {{ prettifyShort(alerts[0].time)
+                }}<b-progress
+                    :variant="profile.darkMode ? 'light' : 'dark'"
+                    :max="dismissSecs"
+                    :value="dismissCountDown"
+                    height="4px"
+                ></b-progress
+            ></b-alert>
         </div>
         <b-toast
             auto-hide-delay="10000"
@@ -1034,9 +1041,13 @@
             >
             <small>
                 <b v-if="!taskToasted.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{ !taskToasted.agent.is_local && !taskToasted.is_complete && taskToasted.job_status !== null
-                                                        ? taskToasted.job_status.toUpperCase()
-                                                        : taskToasted.status.toUpperCase() }}</b>
+                <b class="ml-0 mr-0" v-else>{{
+                    !taskToasted.agent.is_local &&
+                    !taskToasted.is_complete &&
+                    taskToasted.job_status !== null
+                        ? taskToasted.job_status.toUpperCase()
+                        : taskToasted.status.toUpperCase()
+                }}</b>
                 on
                 <b>{{ taskToasted.agent.name }}</b>
                 {{ prettifyShort(taskToasted.updated) }}
@@ -1153,7 +1164,10 @@ export default {
             feedbackWanted: '',
             feedbackEase: '',
             feedbackFeatures: '',
-            feedbackAnonymous: true
+            feedbackAnonymous: true,
+            // alert countdown
+            dismissSecs: 10,
+            dismissCountDown: 0
         };
     },
     computed: {
@@ -1247,9 +1261,15 @@ export default {
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
+        },
+        alerts() {
+            this.dismissCountDown = this.dismissSecs;
         }
     },
     methods: {
+        countdownChanged(dismissCountDown) {
+            this.dismissCountDown = dismissCountDown;
+        },
         async submitFeedback() {
             if (!this.feedbackValid) return;
             let data = {

@@ -147,6 +147,7 @@
                         >
                         <b-card-group>
                             <b-card
+                                border-variant="secondary"
                                 v-for="project in othersProjects"
                                 v-bind:key="project.unique_id"
                                 :title="project.title"
