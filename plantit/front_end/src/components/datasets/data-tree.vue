@@ -45,11 +45,7 @@
                 </b-button>
             </b-col>
             <b-col class="mt-1" md="auto">
-                <small
-                    :variant="
-                        profile.darkMode ? 'outline-light' : 'outline-dark'
-                    "
-                >
+                <small>
                     {{
                         isDir
                             ? `${subDirCount} ${
@@ -63,6 +59,62 @@
                     }}</small
                 ><small v-if="isShared">, shared by {{ sharedBy }}</small>
             </b-col>
+            <b-col
+                :id="
+                    `associated-studies-${
+                        internalLoaded ? internalNode.label : node.label
+                    }`
+                "
+                class="mt-1 ml-1"
+                :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                md="auto"
+                v-if="associatedStudies.length > 0"
+                ><b-img
+                    class="mb-1 mr-1"
+                    style="max-width: 18px"
+                    :src="
+                        profile.darkMode
+                            ? require('../../assets/miappe_icon.png')
+                            : require('../../assets/miappe_icon_black.png')
+                    "
+                ></b-img
+                ><small
+                    >{{ associatedStudies.length }} associated
+                    {{
+                        associatedStudies.length === 1
+                            ? 'project/study'
+                            : 'projects/studies'
+                    }}</small
+                ></b-col
+            >
+            <b-popover
+                :target="
+                    `associated-studies-${
+                        internalLoaded ? internalNode.label : node.label
+                    }`
+                "
+                placement="bottom"
+                triggers="hover"
+            >
+                <b-row
+                    v-for="study in associatedStudies"
+                    v-bind:key="study.title"
+                    ><b-col
+                        ><b-link
+                            :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                            :to="{
+                                name: 'project',
+                                params: {
+                                    owner: study.project_owner,
+                                    title: study.project_title
+                                }
+                            }"
+                            ><b :class="profile.darkMode ? 'text-light' : 'text-dark'">{{ study.project_title }},
+                            {{ study.title }}</b></b-link
+                        ></b-col
+                    ></b-row
+                >
+            </b-popover>
             <b-col md="auto">
                 <b-input-group size="sm">
                     <!--<b-form-file
@@ -122,6 +174,7 @@
                             v-if="!isShared && !isRoot"
                             class="ml-1 mr-1"
                             size="sm"
+                            :disabled="deletingDirectory"
                             title="Delete Subdirectory"
                             @click="
                                 deletePath(
@@ -762,6 +815,7 @@
                     "
                     class="ml-1 mr-1"
                     size="sm"
+                    :disabled="deletingDirectory"
                     title="Delete Directory"
                     @click="
                         deletePath(
@@ -949,6 +1003,7 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
+import { guid } from '@/utils';
 export default {
     name: 'data-tree',
     props: {
@@ -1011,7 +1066,31 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
-        ...mapGetters('projects', ['personalProjects', 'projectsLoading']),
+        ...mapGetters('projects', [
+            'personalProjects',
+            'projectsLoading',
+            'othersProjects'
+        ]),
+        associatedStudies() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let projects = this.personalProjects
+                .concat(this.othersProjects)
+                .filter(p =>
+                    p.studies.some(s => s.dataset_paths.includes(path))
+                );
+            return projects
+                .flatMap(p => p.studies)
+                .filter(s => s.dataset_paths.includes(path))
+                .map(s => {
+                    return {
+                        title: s.title,
+                        project_title: s.project_title,
+                        project_owner: s.project_owner
+                    };
+                });
+        },
         internalLoadedFolders() {
             return this.internalNode.folders;
         },
@@ -1277,14 +1356,39 @@ export default {
             if (this.internalLoaded) this.isOpen = !this.isOpen;
             else this.loadDirectory();
         },
+        waitForCreation(path) {
+            this.waitFor(() => {
+                this.refresh();
+                let created =
+                    this.internalNode.folders.filter(f => f.path === path)
+                        .length !== 0;
+                if (created) {
+                    this.creatingDirectory = false;
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'success',
+                        message: `Created directory ${path}`,
+                        guid: guid().toString()
+                    });
+                }
+                return created;
+            });
+        },
         waitForDeletion(path) {
             this.waitFor(
                 () => {
                     this.refresh();
-                    let x =
+                    let deleted =
                         this.internalNode.folders.filter(f => f.path === path)
                             .length === 0;
-                    return x;
+                    if (deleted) {
+                        this.deletingDirectory = false;
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Deleted directory ${path}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    return deleted;
                 },
                 () => this.internalNode.folders.map(f => f)
             );
@@ -1330,32 +1434,32 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    alert(`Failed to download '${path}''`);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to download ${path}`,
+                        guid: guid().toString()
+                    });
                     throw error;
                 });
         },
         refreshAfterDeletion() {
             this.$parent.$emit('deleted', this.internalNode);
             this.$emit('deleted', this.internalNode);
-            // this.deleting = false;
-            // this.checkDirectoryCreation(path, response);
-        },
-        checkDeletion(path, response) {
-            if (
-                !this.internalNode.folders.some(folder => folder.path === path)
-            ) {
-                clearInterval(this.deletingIntervalId);
-                this.deleting = false;
-                alert(`Path '${response.data.paths}' deleted`);
-            }
         },
         async deletePath(path, token) {
             await this.$bvModal
                 .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
-                    title: `Delete ${path}?`,
                     size: 'sm',
+                    bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                    footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                    footerBorderVariant: this.profile.darkMode
+                        ? 'dark'
+                        : 'white',
+                    footerTextVariant: this.profile.darkMode ? 'white' : 'dark',
+                    bodyTextVariant: this.profile.darkMode ? 'white' : 'dark',
+                    bodyBorderVariant: this.profile.darkMode ? 'dark' : 'white',
                     okVariant: 'outline-danger',
-                    cancelVariant: 'white',
+                    cancelVariant: 'secondary',
                     okTitle: 'Yes',
                     cancelTitle: 'No',
                     centered: true
@@ -1379,7 +1483,11 @@ export default {
                             .catch(error => {
                                 Sentry.captureException(error);
                                 this.deleting = false;
-                                alert(`Failed to delete '${path}'`);
+                                this.$store.dispatch('alerts/add', {
+                                    variant: 'success',
+                                    message: `Failed to delete ${path}`,
+                                    guid: guid().toString()
+                                });
                                 throw error;
                             });
                     }
@@ -1396,48 +1504,57 @@ export default {
 
             return new Promise(poll);
         },
-        refreshAfterDirectoryCreation() {
-            this.loadDirectory(
-                this.internalNode.path,
-                this.profile.djangoProfile.cyverse_token
-            );
-            this.creatingDirectory = false;
-            // this.checkDirectoryCreation(path, response);
-        },
-        refreshAfterDirectoryDeletion() {
-            this.loadDirectory(
-                this.internalNode.path,
-                this.profile.djangoProfile.cyverse_token
-            );
-            this.creatingDirectory = false;
-            // this.checkDirectoryCreation(path, response);
-        },
-        checkDirectoryCreation(path, response) {
-            if (
-                this.internalNode.folders.some(
-                    folder => folder.path === response.data.path
-                )
-            ) {
-                clearInterval(this.creatingDirectoryIntervalId);
-                this.creatingDirectory = false;
-                alert(`Path '${response.data.path}' created`);
-            }
-        },
+        // old version, invokes Terrain API directly
+        // async createDirectory(path, token) {
+        //     this.creatingDirectory = true;
+        //     this.$bvModal.hide('createDirectoryModal');
+        //     await axios
+        //         .post(
+        //             `https://de.cyverse.org/terrain/secured/filesystem/directory/create`,
+        //             {
+        //                 path: path
+        //             },
+        //             {
+        //                 headers: {
+        //                     Authorization: 'Bearer ' + token
+        //                 }
+        //             }
+        //         )
+        //         .then(async response => {
+        //             if (
+        //                 response.status === 200 &&
+        //                 response.data.project !== undefined
+        //             ) {
+        //                 await this.$store.dispatch(
+        //                     'projects/addOrUpdate',
+        //                     response.data.project
+        //                 );
+        //             }
+        //             setTimeout(() => this.waitForCreation(path), 3000);
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             this.creatingDirectory = false;
+        //             alert(`Failed to create directory '${path}''`);
+        //             throw error;
+        //         });
+        // },
+        // new version proxies via PlantIT to link project/study info
         async createDirectory(path, token) {
             this.creatingDirectory = true;
             this.$bvModal.hide('createDirectoryModal');
+            var data = {
+                path: path
+            };
+            if (this.selectedProject !== null)
+                data['project'] = this.selectedProject;
+            if (this.selectedStudy !== null) data['study'] = this.selectedStudy;
             await axios
-                .post(
-                    `https://de.cyverse.org/terrain/secured/filesystem/directory/create`,
-                    {
-                        path: path
-                    },
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + token
-                        }
+                .post(`/apis/v1/datasets/create/`, data, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
                     }
-                )
+                })
                 .then(async response => {
                     if (
                         response.status === 200 &&
@@ -1448,12 +1565,16 @@ export default {
                             response.data.project
                         );
                     }
-                    setTimeout(this.refreshAfterDirectoryCreation, 5000);
+                    setTimeout(() => this.waitForCreation(path), 3000);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.creatingDirectory = false;
-                    alert(`Failed to create directory '${path}''`);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to create directory ${path}`,
+                        guid: guid().toString()
+                    });
                     throw error;
                 });
         },
@@ -1474,17 +1595,21 @@ export default {
                         }
                     )
                     .then(response => {
-                        alert(
-                            `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`
-                        );
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`,
+                            guid: guid().toString()
+                        });
                         this.uploading = false;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
                         this.uploading = false;
-                        alert(
-                            `Failed to upload '${file.name}' to '${to_path}'`
-                        );
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to upload '${file.name}' to '${to_path}'`,
+                            guid: guid().toString()
+                        });
                         throw error;
                     });
             }

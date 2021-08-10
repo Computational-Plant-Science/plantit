@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import traceback
 import uuid
 from typing import List
@@ -16,7 +17,9 @@ from django.utils import timezone
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
-from plantit.utils import dataset_access_policy_to_dict, project_to_dict
+from plantit.utils import dataset_access_policy_to_dict, project_to_dict, get_user_django_profile
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -156,8 +159,9 @@ async def create(request):
     path = body['path']
     project = body.get('project', None)
     study = body.get('study', None)
+    profile = await get_user_django_profile(request.user)
     headers = {
-        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+        "Authorization": f"Bearer {profile.cyverse_access_token}",
     }
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.post("https://de.cyverse.org/terrain/secured/filesystem/directory/create", data=json.dumps({'path': path}))
@@ -165,12 +169,16 @@ async def create(request):
 
     if project is not None and study is not None:
         try:
-            investigation = Investigation.objects.get(owner=owner, title=project)
-            study = Study.objects.get(investigation=investigation, title=study)
-            study.dataset_paths.append(path)
-            study.save()
-            return JsonResponse({'path': path, 'project': project_to_dict(investigation)})
+            investigation = await sync_to_async(Investigation.objects.get)(owner=owner, title=project['title'])
+            study = await sync_to_async(Study.objects.get)(investigation=investigation, title=study['title'])
         except:
+            logger.warning(traceback.format_exc())
             return HttpResponseNotFound()
+
+        if study.dataset_paths: study.dataset_paths.append(path)
+        else: study.dataset_paths = [path]
+        await sync_to_async(study.save)()
+        logger.info(f"Bound {path} to project {project}, study {study}")
+        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(investigation)})
     else:
         return JsonResponse({'path': path})

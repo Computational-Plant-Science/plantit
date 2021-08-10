@@ -1859,9 +1859,11 @@ def person_to_dict(user: User, role: str) -> dict:
     }
 
 
-def study_to_dict(study: Study) -> dict:
+def study_to_dict(study: Study, project: Investigation) -> dict:
     team = [person_to_dict(person, 'Researcher') for person in study.team.all()]
     return {
+        'project_title': project.title,
+        'project_owner': project.owner.username,
         'unique_id': study.unique_id,
         'title': study.title,
         'description': study.description,
@@ -1883,11 +1885,12 @@ def study_to_dict(study: Study) -> dict:
         'growth_facility_type': study.growth_facility_type if study.growth_facility_type != '' else None,
         'cultural_practices': study.cultural_practices if study.cultural_practices != '' else None,
         'team': team,
+        'dataset_paths': study.dataset_paths if study.dataset_paths is not None else []
     }
 
 
 def project_to_dict(project: Investigation) -> dict:
-    studies = [study_to_dict(study) for study in Study.objects.filter(investigation=project)]
+    studies = [study_to_dict(study, project) for study in Study.objects.filter(investigation=project)]
     team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
     return {
         'unique_id': project.unique_id,
@@ -1898,5 +1901,5 @@ def project_to_dict(project: Investigation) -> dict:
         'public_release_date': project.public_release_date,
         'associated_publication': project.associated_publication,
         'studies': studies,
-        'team': team
+        'team': team,
     }

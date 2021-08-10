@@ -14,7 +14,7 @@
                         </h2></b-col
                     >
                     <b-col md="auto" class="ml-0 mb-1" align-self="center">
-                      <b-button
+                        <b-button
                             id="switch-dataset-context"
                             :disabled="datasetsLoading"
                             :variant="
@@ -130,7 +130,7 @@
                     v-else
                     v-model="activeTab"
                     nav-class="bg-transparent"
-                    active-nav-item-class="bg-info text-dark"
+                    active-nav-item-class="bg-transparent text-dark"
                     pills
                 >
                     <b-tab
@@ -144,8 +144,24 @@
                         "
                     >
                         <template #title>
-                            <b>Personal</b>
-                        </template>
+                            <b-button
+                                :variant="
+                                    activeTab === 0
+                                        ? profile.darkMode
+                                            ? 'outline-success'
+                                            : 'success'
+                                        : profile.darkMode
+                                        ? 'outline-light'
+                                        : 'white'
+                                "
+                                v-b-tooltip.hover
+                                title="
+                                                           Personal
+                                                        "
+                            >
+                                Personal
+                            </b-button></template
+                        >
                         <!--<b-row class="mb-2"
                                             ><b-col>
                                                 <b-input-group size="sm">
@@ -212,8 +228,24 @@
                         "
                     >
                         <template #title>
-                            <b>Shared</b>
-                        </template>
+                            <b-button
+                                :variant="
+                                    activeTab === 1
+                                        ? profile.darkMode
+                                            ? 'outline-success'
+                                            : 'success'
+                                        : profile.darkMode
+                                        ? 'outline-light'
+                                        : 'white'
+                                "
+                                v-b-tooltip.hover
+                                title="
+                                                            Shared
+                                                        "
+                            >
+                                Shared
+                            </b-button></template
+                        >
                         <!--<b-row class="mb-2"
                                             ><b-col>
                                                 <b-input-group>
@@ -280,8 +312,24 @@
                         "
                     >
                         <template #title>
-                            <b>Sharing</b>
-                        </template>
+                            <b-button
+                                :variant="
+                                    activeTab === 2
+                                        ? profile.darkMode
+                                            ? 'outline-success'
+                                            : 'success'
+                                        : profile.darkMode
+                                        ? 'outline-light'
+                                        : 'white'
+                                "
+                                v-b-tooltip.hover
+                                title="
+                                                            Sharing
+                                                        "
+                            >
+                                Sharing
+                            </b-button></template
+                        >
                         <!--<b-row class="mb-2"
                                             ><b-col>
                                                 <b-input-group>

@@ -1012,7 +1012,7 @@
                 @dismiss-count-down="countdownChanged"
                 ><b>{{ alerts[0].message }}</b> {{ prettifyShort(alerts[0].time)
                 }}<b-progress
-                    :variant="profile.darkMode ? 'light' : 'dark'"
+                    variant="dark"
                     :max="dismissSecs"
                     :value="dismissCountDown"
                     height="4px"
