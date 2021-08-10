@@ -3142,7 +3142,8 @@
                                                                                     >Click
                                                                                     here
                                                                                     to
-                                                                                    browse public
+                                                                                    browse
+                                                                                    public
                                                                                     agents.</b-popover
                                                                                 ></template
                                                                             >
@@ -4396,19 +4397,25 @@ export default {
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
             }
+            config.output = this.getWorkflow.config.output;
             if (this.output !== undefined && this.output.to) {
-                config.output = this.output;
                 // config.output['to'] = config['output']['path'];
-                config.output['from'] = '';
+
+                // config.output['from'] = '';
+                if (config.output.include === undefined)
+                    config.output['include'] = {
+                        patterns: [],
+                        names: []
+                    };
                 config.output.include.patterns = this.outputSelectedPatterns;
                 config.output.include.names = this.outputSelectedNames;
+
                 // config.output.patterns =
                 //     this.outputSelectedPatterns.length > 0
                 //         ? this.outputSelectedPatterns
                 //         : this.output.filetypes;
                 // if (!this.outputDataset) delete config.output['to'];
             }
-            // config.output = this.getWorkflow.config.output;
             if (this.getWorkflow.config.logo !== null)
                 config.logo = this.getWorkflow.config.logo;
 

@@ -1023,9 +1023,30 @@ def compose_task_run_commands(task: Task, options: PlantITCLIOptions, inputs: Li
 
 
 def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
-    # if 'output' not in options: return ''
-    output = options['output'] if 'output' in options else dict()
-    # if output is None: return ''
+    if 'output' in options:
+        output = options['output']
+    else:
+        output = dict()
+        output['include'] = dict()
+        output['include']['names'] = dict()
+        output['include']['patterns'] = dict()
+        output['exclude'] = dict()
+        output['exclude']['names'] = dict()
+        output['exclude']['patterns'] = dict()
+
+    # merge output patterns and files from workflow config
+    config = task.workflow['config']
+    if 'output' in config:
+        if 'include' in config['output']:
+            if 'patterns' in config['output']['include']:
+                output['include']['patterns'] = output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']
+            if 'names' in config['output']['include']:
+                output['include']['names'] = output['include']['names'] + task.workflow['config']['output']['include']['names']
+        if 'exclude' in config['output']:
+            if 'patterns' in config['output']['exclude']:
+                output['exclude']['patterns'] = output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']
+            if 'names' in config['output']['exclude']:
+                output['exclude']['names'] = output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']
 
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
