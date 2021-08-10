@@ -3,6 +3,7 @@
         class="mt-2 pt-1 overflow-hidden"
         :bg-variant="profile.darkMode ? 'dark' : 'white'"
         :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+        border-variant="secondary"
         :text-variant="profile.darkMode ? 'white' : 'dark'"
         :body-text-variant="profile.darkMode ? 'white' : 'dark'"
         no-body

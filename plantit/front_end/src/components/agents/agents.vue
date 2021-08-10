@@ -121,7 +121,7 @@
                     v-bind:key="agent.name"
                     :bg-variant="profile.darkMode ? 'dark' : 'white'"
                     :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                    border-variant="default"
+                    border-variant="secondary"
                     :header-border-variant="
                         profile.darkMode ? 'secondary' : 'default'
                     "
