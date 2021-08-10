@@ -196,7 +196,7 @@ def poll_job_status(guid: str, auth: dict):
         task.completed = now
         task.save()
 
-        final_message = f"Job {task.job_id} encountered unexpected error"
+        final_message = f"Job {task.job_id} encountered unexpected error: {traceback.format_exc()}"
         log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
