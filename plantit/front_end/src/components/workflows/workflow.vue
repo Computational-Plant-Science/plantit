@@ -2799,13 +2799,14 @@
                                                                                                 agent.name
                                                                                             }}</b-button
                                                                                         >
+
                                                                                         <i
                                                                                             v-if="
                                                                                                 agent.is_healthy
                                                                                             "
                                                                                             v-b-tooltip:hover
                                                                                             title="Healthy"
-                                                                                            class="fas fa-heartbeat text-warning fa-fw"
+                                                                                            class="fas fa-heartbeat text-success fa-fw"
                                                                                         ></i
                                                                                         ><i
                                                                                             v-else

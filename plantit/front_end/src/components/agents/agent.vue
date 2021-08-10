@@ -126,13 +126,14 @@
                                                     "
                                                 >
                                                     {{ getAgent.name }}
+                                                    <small>
                                                     <i
                                                         v-if="
                                                             getAgent.is_healthy
                                                         "
                                                         v-b-tooltip:hover
                                                         title="Healthy"
-                                                        class="fas fa-heartbeat text-warning fa-fw"
+                                                        class="fas fa-heartbeat text-success fa-fw"
                                                     ></i
                                                     ><i
                                                         v-else
@@ -146,6 +147,7 @@
                                                         title="Disabled"
                                                         class="fas fa-exclamation-circle text-secondary fa-fw"
                                                     ></i>
+                                                      </small>
                                                 </h1>
                                                 <b-badge
                                                     v-if="
