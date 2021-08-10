@@ -731,8 +731,7 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fab fa-github fa-1x fa-fw"></i>
-                                Github</span
+                                ><i class="fab fa-github fa-1x fa-fw"></i>Github</span
                             >
                         </b-nav-item>
                         <!--<b-nav-item
