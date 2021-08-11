@@ -238,8 +238,8 @@ async def calculate_user_statistics(user: User) -> dict:
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
     used_workflows_counter = Counter(used_workflows)
     unique_used_workflows = list(np.unique(used_workflows))
-    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in await filter_agents(user=user)]
-    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in await filter_agents(guest=user)]
+    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
+    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
     used_agents = [(await sync_to_async(agent_to_dict)(await get_task_agent(task), user))['name'] for task in all_tasks]
     used_agents_counter = Counter(used_agents)
     unique_used_agents = list(np.unique(used_agents))

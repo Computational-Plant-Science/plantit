@@ -403,7 +403,17 @@
                                                 : 'outline-dark'
                                         "
                                         @click="unshareDataset(directory)"
-                                        ><i class="fas fa-user-lock fa-fw"></i>
+                                        ><b-spinner
+                                            small
+                                            v-if="unsharing"
+                                            label="Loading..."
+                                            variant="dark"
+                                            class="mr-2 mb-1"
+                                        ></b-spinner
+                                        ><i
+                                            v-else
+                                            class="fas fa-user-lock fa-fw"
+                                        ></i>
                                         Unshare</b-button
                                     ></b-col
                                 ></b-row
@@ -422,6 +432,7 @@ import datatree from '@/components/datasets/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
+import { guid } from '@/utils';
 
 export default {
     name: 'datasets',
@@ -435,7 +446,8 @@ export default {
             publicContext: false,
             yourDatasetsSearchText: '',
             sharedDatasetsSearchText: '',
-            sharingDatasetsSearchText: ''
+            sharingDatasetsSearchText: '',
+            unsharing: false
         };
     },
     async created() {
@@ -521,6 +533,7 @@ export default {
                 }
         },
         async unshareDataset(directory) {
+            this.unsharing = true;
             await axios({
                 method: 'post',
                 url: `/apis/v1/datasets/unshare/`,
@@ -531,21 +544,37 @@ export default {
                 },
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(() => {
-                    this.loadSharing();
-                    // this.alertMessage = `Unshared dataset ${
-                    //     this.internalLoaded
-                    //         ? this.internalNode.path
-                    //         : this.node.path
-                    // } with ${this.sharedUsers.length} user(s)`;
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.loadSharing();
+                        this.unsharing = false;
+                        await this.$store.dispatch(
+                            'datasets/setSharing',
+                            response.datasets
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unshared dataset ${
+                                this.internalLoaded
+                                    ? this.internalNode.path
+                                    : this.node.path
+                            } with ${this.sharedUsers.length} user(s)`,
+                            guid: guid().toString()
+                        });
+                    }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    // this.alertMessage = `Failed to unshare dataset ${
-                    //     this.internalLoaded
-                    //         ? this.internalNode.path
-                    //         : this.node.path
-                    // } with ${this.sharedUsers.length} user(s)`;
+                    this.unsharing = false;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'success',
+                        message: `Failed to unshare dataset ${
+                            this.internalLoaded
+                                ? this.internalNode.path
+                                : this.node.path
+                        } with ${this.sharedUsers.length} user(s)`,
+                        guid: guid().toString()
+                    });
                     throw error;
                 });
         }

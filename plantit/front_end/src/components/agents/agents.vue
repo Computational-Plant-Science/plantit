@@ -173,22 +173,32 @@
                             <b-badge
                                 v-if="!agent.public"
                                 class="mr-1"
-                                variant="info"
+                                variant="warning"
                                 ><i class="fas fa-lock fa-fw"></i>
                                 Private</b-badge
                             >
-                            <b-badge v-else variant="warning" class="mr-1"
+                            <b-badge v-else variant="success" class="mr-1"
                                 ><i class="fas fa-lock-open fa-fw"></i>
                                 Public</b-badge
                             >
-                            <b-badge variant="warning">{{
-                                agent.role === 'admin'
-                                    ? agent.user ===
-                                      profile.djangoProfile.username
-                                        ? 'Owner'
-                                        : 'Admin'
-                                    : 'Guest'
-                            }}</b-badge>
+                            <b-badge
+                                :variant="
+                                    agent.role === 'admin'
+                                        ? agent.user ===
+                                          profile.djangoProfile.username
+                                            ? 'success'
+                                            : 'success'
+                                        : 'warning'
+                                "
+                                >{{
+                                    agent.role === 'admin'
+                                        ? agent.user ===
+                                          profile.djangoProfile.username
+                                            ? 'Owner'
+                                            : 'Admin'
+                                        : 'Guest'
+                                }}</b-badge
+                            >
 
                             <br />
                             <small>
@@ -1497,7 +1507,7 @@ export default {
             this.agentBindingStage = stage;
         },
         preCreateAgentWorkdir() {
-          if (this.agentAuthentication === 'password')
+            if (this.agentAuthentication === 'password')
                 this.$bvModal.show('authenticate');
             else this.createAgentWorkdir();
         },

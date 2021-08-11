@@ -7,15 +7,6 @@
         :text-variant="profile.darkMode ? 'white' : 'dark'"
         :body-text-variant="profile.darkMode ? 'white' : 'dark'"
         no-body
-        :style="
-            task.is_failure || task.is_timeout
-                ? 'border-bottom: 5px solid red'
-                : task.is_cancelled
-                ? 'border-bottom: 5px solid lightgray'
-                : task.is_complete
-                ? 'border-bottom: 5px solid #d6df5D'
-                : 'border-bottom: 5px solid #e2e3b0'
-        "
     >
         <b-card-body>
             <b-link
@@ -31,32 +22,32 @@
                 >{{ task.name }}</b-link
             >
             <span v-if="project && task.project !== null">
-            <br/>
-            <b-link
-                :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                :to="{
-                    name: 'project',
-                    params: {
-                        owner: task.project.owner,
-                        title: task.project.title
-                    }
-                }"
-                ><b-img
-                    class="mb-1 mr-1"
-                    style="max-width: 18px"
-                    :src="
-                        profile.darkMode
-                            ? require('../../assets/miappe_icon.png')
-                            : require('../../assets/miappe_icon_black.png')
-                    "
-                ></b-img>
-                <span v-if="task.project !== null"
-                    >{{ task.project.title }}
-                    <small v-if="task.study !== null">{{
-                        task.study.title
-                    }}</small></span
-                ></b-link
-            >
+                <br />
+                <b-link
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    :to="{
+                        name: 'project',
+                        params: {
+                            owner: task.project.owner,
+                            title: task.project.title
+                        }
+                    }"
+                    ><b-img
+                        class="mb-1 mr-1"
+                        style="max-width: 18px"
+                        :src="
+                            profile.darkMode
+                                ? require('../../assets/miappe_icon.png')
+                                : require('../../assets/miappe_icon_black.png')
+                        "
+                    ></b-img>
+                    <span v-if="task.project !== null"
+                        >{{ task.project.title }}
+                        <small v-if="task.study !== null">{{
+                            task.study.title
+                        }}</small></span
+                    ></b-link
+                >
             </span>
             <span v-if="task.tags !== undefined && task.tags.length > 0">
                 <b-badge
@@ -114,7 +105,7 @@
                 right
                 :src="task.workflow_image_url"
             ></b-img>
-            <small v-if="task.workflow_name !== null" class="mr-1"
+            <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
                 ><a
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     :href="
@@ -126,20 +117,24 @@
             </small>
             <b-row class="mt-0"
                 ><b-col
-                    style="top: 27px;position: relative; font-size: 18pt"
+                    style="top: 27px;position: relative; font-size: 22pt"
                     align-self="end"
-                    :class="
-                        task.is_failure || task.is_timeout
+                    :class="mt-0"
+                    ><b :class="
+                        task.is_failure
                             ? 'text-danger'
-                            : task.is_cancelled
+                            : task.is_cancelled || task.is_timeout
                             ? 'text-secondary'
                             : task.is_complete
                             ? 'text-success'
                             : 'text-warning'
-                    "
-                    ><b>{{ !task.agent.is_local && !task.is_complete && task.job_status !== null
-                                                        ? task.job_status.toUpperCase()
-                                                        : task.status.toUpperCase() }}</b></b-col
+                    ">{{
+                        !task.agent.is_local &&
+                        !task.is_complete &&
+                        task.job_status !== null
+                            ? task.job_status.toUpperCase()
+                            : task.status.toUpperCase()
+                    }}</b></b-col
                 ></b-row
             >
         </b-card-body>

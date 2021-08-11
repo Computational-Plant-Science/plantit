@@ -154,7 +154,7 @@
                                                         getAgent.role ===
                                                             'guest'
                                                     "
-                                                    variant="info"
+                                                    variant="warning"
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
@@ -162,7 +162,7 @@
                                                         getAgent.role ===
                                                             'admin'
                                                     "
-                                                    variant="warning"
+                                                    variant="success"
                                                     >Owner</b-badge
                                                 >
                                             </b-col>
@@ -367,8 +367,8 @@
                                                     "
                                                     :button-variant="
                                                         getAgent.public
-                                                            ? 'warning'
-                                                            : 'info'
+                                                            ? 'success'
+                                                            : 'warning'
                                                     "
                                                     @change="togglePublic"
                                                 >

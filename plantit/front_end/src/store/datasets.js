@@ -140,6 +140,9 @@ export const datasets = {
                     commit('setSharingLoading', true);
                     throw error;
                 });
+        },
+        setSharing({ commit }, datasets) {
+            commit('setSharing', datasets);
         }
     },
     getters: {

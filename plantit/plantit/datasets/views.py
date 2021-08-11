@@ -54,7 +54,7 @@ async def share(request):
 
     for guest in guests:
         try:
-            user = await sync_to_async(User.objects.get)(owner=guest['user'])
+            user = await sync_to_async(User.objects.get)(username=guest['user'])
         except:
             print(traceback.format_exc())
             return HttpResponseNotFound()
@@ -64,7 +64,7 @@ async def share(request):
         policy, created = await sync_to_async(DatasetAccessPolicy.objects.get_or_create)(owner=owner, guest=user, role=role, path=path)
         policies.append({
             'created': created,
-            'policy': dataset_access_policy_to_dict(policy)
+            'policy': await sync_to_async(dataset_access_policy_to_dict)(policy)
         })
 
         notification = await sync_to_async(Notification.objects.create)(
@@ -81,12 +81,12 @@ async def share(request):
                 'created': notification.created.isoformat(),
                 'message': notification.message,
                 'read': notification.read,
-                'policy': dataset_access_policy_to_dict(notification.policy)
             }
         })
 
+    profile = await get_user_django_profile(request.user)
     headers = {
-        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+        "Authorization": f"Bearer {profile.cyverse_access_token}",
     }
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(body))
@@ -111,7 +111,7 @@ async def unshare(request):
         role = DatasetRole.read if role_str.lower() == 'read' else DatasetRole.write
 
     try:
-        guest = await sync_to_async(User.objects.get)(owner=guest_username)
+        guest = await sync_to_async(User.objects.get)(username=guest_username)
     except:
         return HttpResponseNotFound()
 
@@ -134,12 +134,12 @@ async def unshare(request):
             'created': notification.created.isoformat(),
             'message': notification.message,
             'read': notification.read,
-            'policy': dataset_access_policy_to_dict(notification.policy)
         }
     })
 
+    profile = await get_user_django_profile(request.user)
     headers = {
-        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+        "Authorization": f"Bearer {profile.cyverse_access_token}",
         "Content-Type": 'application/json;charset=utf-8'
     }
     async with httpx.AsyncClient(headers=headers) as client:
@@ -147,7 +147,8 @@ async def unshare(request):
         response.raise_for_status()
 
     await sync_to_async(policy.delete)()
-    return JsonResponse({'unshared': True})
+    policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
+    return JsonResponse({'datasets': [await sync_to_async(dataset_access_policy_to_dict)(policy) for policy in policies]})
 
 
 @sync_to_async
