@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import pprint
 import traceback
 import uuid
 from typing import List
@@ -51,6 +52,7 @@ async def share(request):
     body = json.loads(request.body.decode('utf-8'))
     guests = body['sharing']
     policies = []
+    pprint.pprint(body)
 
     for guest in guests:
         try:
@@ -87,13 +89,20 @@ async def share(request):
     profile = await get_user_django_profile(request.user)
     headers = {
         "Authorization": f"Bearer {profile.cyverse_access_token}",
+        "Content-Type": "application/json;charset=utf-8"
     }
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(body))
+        pprint.pprint(response.json())
         response.raise_for_status()
 
-    return JsonResponse({'policies': policies})
+    policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
+    datasets = []
+    for policy in (await sync_to_async(list)(policies)):
+        dataset = await sync_to_async(dataset_access_policy_to_dict)(policy)
+        datasets.append(dataset)
 
+    return JsonResponse({'datasets': datasets})
 
 @sync_to_async
 @login_required
@@ -148,7 +157,12 @@ async def unshare(request):
 
     await sync_to_async(policy.delete)()
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
-    return JsonResponse({'datasets': [await sync_to_async(dataset_access_policy_to_dict)(policy) for policy in policies]})
+    datasets = []
+    for policy in (await sync_to_async(list)(policies)):
+        dataset = await sync_to_async(dataset_access_policy_to_dict)(policy)
+        datasets.append(dataset)
+
+    return JsonResponse({'datasets': datasets})
 
 
 @sync_to_async

@@ -546,19 +546,14 @@ export default {
             })
                 .then(async response => {
                     if (response.status === 200) {
-                        await this.loadSharing();
                         this.unsharing = false;
                         await this.$store.dispatch(
                             'datasets/setSharing',
-                            response.datasets
+                            response.data.datasets
                         );
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Unshared dataset ${
-                                this.internalLoaded
-                                    ? this.internalNode.path
-                                    : this.node.path
-                            } with ${this.sharedUsers.length} user(s)`,
+                            message: `Stopped sharing dataset ${directory.path} with ${directory.guest}`,
                             guid: guid().toString()
                         });
                     }

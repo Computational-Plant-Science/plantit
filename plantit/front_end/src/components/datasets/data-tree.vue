@@ -101,7 +101,9 @@
                     v-bind:key="study.title"
                     ><b-col
                         ><b-link
-                            :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :to="{
                                 name: 'project',
                                 params: {
@@ -109,8 +111,14 @@
                                     title: study.project_title
                                 }
                             }"
-                            ><b :class="profile.darkMode ? 'text-light' : 'text-dark'">{{ study.project_title }},
-                            {{ study.title }}</b></b-link
+                            ><b
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                >{{ study.project_title }}, {{ study.title }}</b
+                            ></b-link
                         ></b-col
                     ></b-row
                 >
@@ -1306,13 +1314,20 @@ export default {
                 },
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(() => {
-                    this.sharedAlertMessage = `Shared directory ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.showSharedAlert = true;
+                .then(async response => {
+                    await this.$store.dispatch(
+                        'datasets/setSharing',
+                        response.data.datasets
+                    );
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'success',
+                        message: `Shared directory ${
+                            this.internalLoaded
+                                ? this.internalNode.path
+                                : this.node.path
+                        } with ${this.sharedUsers.length} user(s)`,
+                        guid: guid().toString()
+                    });
 
                     this.$parent.$parent.$parent.$parent.$parent.$emit(
                         'loadSharedDirectory'
@@ -1327,12 +1342,17 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.sharedAlertMessage = `Failed to share directory ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.showSharedAlert = true;
+
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to share directory ${
+                            this.internalLoaded
+                                ? this.internalNode.path
+                                : this.node.path
+                        } with ${this.sharedUsers.length} user(s)`,
+                        guid: guid().toString()
+                    });
+
                     throw error;
                 });
         },
