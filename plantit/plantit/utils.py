@@ -226,10 +226,9 @@ def get_user_statistics(user: User) -> dict:
 
 
 async def calculate_user_statistics(user: User) -> dict:
+    profile = await get_user_django_profile(user)
     all_tasks = await filter_tasks(user=user)
     completed_tasks = await filter_tasks(user=user, completed=True)
-    profile = await get_user_django_profile(user)
-
     total_tasks = len(all_tasks)
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
@@ -459,14 +458,15 @@ async def repopulate_public_workflow_cache(token: str):
 
 async def list_public_workflows(token: str, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
-    updated = redis.get('public_workflows_updated')
+    last_updated = redis.get('public_workflows_updated')
+    num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
 
     # repopulate if empty or invalidation requested
-    if updated is None or len(list(redis.scan_iter(match=f"workflows/*"))) == 0 or invalidate:
+    if last_updated is None or num_cached == 0 or invalidate:
         logger.info(f"Populating public workflow cache")
         await repopulate_public_workflow_cache(token)
     else:
-        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
         age_secs = age.total_seconds()
         max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
 
@@ -481,13 +481,14 @@ async def list_public_workflows(token: str, invalidate: bool = False) -> List[di
 
 async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
-    updated = redis.get(f"workflows_updated/{owner}")
+    last_updated = redis.get(f"workflows_updated/{owner}")
+    num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
 
     # repopulate if empty or invalidation requested
-    if updated is None or len(list(redis.scan_iter(match=f"workflows/{owner}/*"))) == 0 or invalidate:
+    if last_updated is None or num_cached == 0 or invalidate:
         await repopulate_personal_workflow_cache(owner)
     else:
-        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
         age_secs = age.total_seconds()
         max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
 
@@ -501,13 +502,13 @@ async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[
 
 async def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
     redis = RedisClient.get()
-    updated = redis.get(f"workflows_updated/{owner}")
+    last_updated = redis.get(f"workflows_updated/{owner}")
     workflow = redis.get(f"workflows/{owner}/{name}")
 
-    if updated is None or workflow is None or invalidate:
-        try:
-            workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
+    if last_updated is None or workflow is None or invalidate:
+        try: workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
         except:
+            logger.error(traceback.format_exc())
             raise ValueError(f"Workflow {owner}/{name} not found")
 
         workflow = await workflow_to_dict(workflow, token)
@@ -549,7 +550,7 @@ def parse_task_job_id(line: str) -> str:
     try:
         return str(int(line.replace('Submitted batch job', '').strip()))
     except:
-        raise Exception(f"Failed to parse job ID from: '{line}'")
+        raise Exception(f"Failed to parse job ID from '{line}'\n{traceback.format_exc()}")
 
 
 def parse_task_time(data: dict) -> datetime:
