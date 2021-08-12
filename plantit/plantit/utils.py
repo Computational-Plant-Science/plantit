@@ -240,7 +240,7 @@ async def calculate_user_statistics(user: User) -> dict:
     unique_used_workflows = list(np.unique(used_workflows))
     owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
     guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
-    used_agents = [(await sync_to_async(agent_to_dict)(await get_task_agent(task), user))['name'] for task in all_tasks]
+    used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
     used_agents_counter = Counter(used_agents)
     unique_used_agents = list(np.unique(used_agents))
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
