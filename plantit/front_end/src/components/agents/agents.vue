@@ -309,6 +309,7 @@
                             ></template
                         >
                         <b-form-input
+                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                             :state="agentNameValid"
                             v-model="agentName"
                             type="text"
@@ -329,6 +330,7 @@
                             ></template
                         >
                         <b-form-textarea
+                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                             :state="agentDescriptionValid"
                             v-model="agentDescription"
                             placeholder="Enter a description"
@@ -400,6 +402,7 @@
                                             ></template
                                         >
                                         <b-form-input
+                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                             :state="agentHostValid"
                                             v-model="agentHost"
                                             type="text"
@@ -419,6 +422,7 @@
                                             ></template
                                         >
                                         <b-form-input
+                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                             :state="agentPortValid"
                                             v-model="agentPort"
                                             type="number"
@@ -441,6 +445,7 @@
                                             ></template
                                         >
                                         <b-form-input
+                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                             :state="agentUsernameValid"
                                             v-model="agentUsername"
                                             type="text"
@@ -526,15 +531,11 @@
                                     to make sure your agent is reachable.
                                 </span>
                                 <b-form-textarea
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     plaintext
                                     :value="publicKey"
                                     max-rows="15"
                                     class="p-1"
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
                                 ></b-form-textarea></div></b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
@@ -680,6 +681,7 @@
                                     ></template
                                 >
                                 <b-form-input
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     :state="agentWorkdirValid"
                                     v-model="agentWorkdir"
                                     type="text"
@@ -820,6 +822,7 @@
                                     ></template
                                 >
                                 <b-form-input
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     :state="agentWorkdir !== ''"
                                     v-model="agentWorkdir"
                                     type="text"
@@ -842,6 +845,7 @@
                                     ></template
                                 >
                                 <b-form-textarea
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     v-model="agentPrecommands"
                                     type="text"
                                     rows="3"
@@ -946,6 +950,7 @@
                                     ></template
                                 >
                                 <b-form-input
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     v-model="agentQueue"
                                     :state="agentQueue !== ''"
                                     type="text"
@@ -967,6 +972,7 @@
                                     ></template
                                 >
                                 <b-form-input
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     v-model="agentProject"
                                     type="text"
                                     placeholder="Enter a project name"
@@ -1234,6 +1240,7 @@
                 required
             ></b-form-input>-->
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationPassword"
                 type="password"
                 placeholder="Your password"

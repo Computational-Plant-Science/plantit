@@ -479,6 +479,7 @@
                     ></template
                 >
                 <b-form-textarea
+                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                     :state="projectDescriptionValid"
                     v-model="projectDescription"
                     placeholder="Enter a description"

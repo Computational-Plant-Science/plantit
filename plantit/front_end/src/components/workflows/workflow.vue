@@ -1191,7 +1191,7 @@
                                                                     class="mt-1"
                                                                 >
                                                                     <b-col>
-                                                                        <b-form-input
+                                                                        <b-form-input :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                                                             v-model="
                                                                                 taskName
                                                                             "
@@ -1443,6 +1443,7 @@
                                                                 >
                                                                     <b-col>
                                                                         <multiselect
+                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                                                             style="z-index: 100"
                                                                             v-model="
                                                                                 tags
@@ -1805,6 +1806,7 @@
                                                                             filetypes.
                                                                         </b>
                                                                         <multiselect
+                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                                                             :multiple="
                                                                                 true
                                                                             "
@@ -2032,6 +2034,7 @@
                                                                             patterns.
                                                                         </b>
                                                                         <multiselect
+                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                                                             :multiple="
                                                                                 true
                                                                             "
@@ -2100,6 +2103,7 @@
                                                                             name.
                                                                         </b>
                                                                         <multiselect
+                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                                                             :multiple="
                                                                                 true
                                                                             "

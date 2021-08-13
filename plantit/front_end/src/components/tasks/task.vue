@@ -1916,12 +1916,14 @@
             ok-variant="success"
         >
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationUsername"
                 type="text"
                 placeholder="Your username"
                 required
             ></b-form-input>
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationPassword"
                 type="password"
                 placeholder="Your password"
@@ -1946,12 +1948,14 @@
             ok-variant="success"
         >
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationUsername"
                 type="text"
                 placeholder="Your username"
                 required
             ></b-form-input>
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationPassword"
                 type="password"
                 placeholder="Your password"
@@ -1976,12 +1980,14 @@
             ok-variant="success"
         >
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationUsername"
                 type="text"
                 placeholder="Your username"
                 required
             ></b-form-input>
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationPassword"
                 type="password"
                 placeholder="Your password"

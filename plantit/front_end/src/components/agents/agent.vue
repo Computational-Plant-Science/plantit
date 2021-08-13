@@ -1743,6 +1743,7 @@
                 <b-form-group id="input-group-1" label-for="input-1">
                     <b-input-group size="md" prepend="Name">
                         <b-form-input
+                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                             id="input-1"
                             v-model="createTaskForm.name"
                             required
@@ -1757,6 +1758,7 @@
                 <b-form-group id="input-group-3" label-for="input-3">
                     <b-input-group size="md" prepend="Command">
                         <b-form-input
+                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
                             id="input-3"
                             v-model="createTaskForm.command"
                             required
@@ -1794,12 +1796,14 @@
             @ok="submitAuthentication"
         >
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationUsername"
                 type="text"
                 placeholder="Your username"
                 required
             ></b-form-input>
             <b-form-input
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="authenticationPassword"
                 type="password"
                 placeholder="Your password"

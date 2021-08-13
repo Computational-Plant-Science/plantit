@@ -593,6 +593,7 @@
                     ></template
                 >
                 <b-form-input
+                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                     :state="studyTitleValid"
                     v-model="studyTitle"
                     type="text"
@@ -608,6 +609,7 @@
                     ></template
                 >
                 <b-form-textarea
+                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                     :state="studyDescriptionValid"
                     v-model="studyDescription"
                     placeholder="Enter a description"
@@ -697,6 +699,7 @@
                         ></template
                     >
                     <b-form-textarea
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyDescription"
                         :placeholder="
                             studyToEdit.description !== ''
@@ -756,6 +759,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyContactInstitution"
                         :placeholder="
                             studyToEdit.contact_institution !== ''
@@ -775,6 +779,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyCountry"
                         :placeholder="
                             studyToEdit.country !== ''
@@ -794,6 +799,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studySiteName"
                         :placeholder="
                             studyToEdit.site_name !== ''
@@ -891,6 +897,7 @@
                         ></template
                     >
                     <b-form-textarea
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyExperimentalDesignDescription"
                         :placeholder="
                             studyToEdit.experimental_design_description !== ''
@@ -911,6 +918,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyExperimentalDesignType"
                         :placeholder="
                             studyToEdit.experimental_design_type !== ''
@@ -931,6 +939,7 @@
                         ></template
                     >
                     <b-form-textarea
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyObservationUnitDescription"
                         :placeholder="
                             studyToEdit.observation_unit_description !== ''
@@ -951,6 +960,7 @@
                         ></template
                     >
                     <b-form-textarea
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyGrowthFacilityDescription"
                         :placeholder="
                             studyToEdit.growth_facility_description !== ''
@@ -970,6 +980,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyGrowthFacilityType"
                         :placeholder="
                             studyToEdit.growth_facility_type !== ''
@@ -989,6 +1000,7 @@
                         ></template
                     >
                     <b-form-input
+                        :class="profile.darkMode ? 'input-dark' : 'input-light'"
                         v-model="studyCulturalPractices"
                         :placeholder="
                             studyToEdit.cultural_practices !== ''

@@ -60,6 +60,16 @@
                 ><small v-if="isShared">, shared by {{ sharedBy }}</small>
             </b-col>
             <b-col
+                class="mt-1"
+                md="auto"
+                v-if="
+                    matchingSharingDatasets !== undefined &&
+                        matchingSharingDatasets !== null && matchingSharingDatasets.length > 0
+                "
+            >
+                <small>Shared with {{ matchingSharingDatasets.length }} user(s)</small>
+            </b-col>
+            <b-col
                 :id="
                     `associated-studies-${
                         internalLoaded ? internalNode.label : node.label
@@ -255,6 +265,7 @@
                                     ></template
                                 >
                                 <b-form-input
+                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
                                     size="sm"
                                     v-model="newDirectoryName"
                                     :placeholder="'Enter a directory name'"
@@ -1079,6 +1090,17 @@ export default {
             'projectsLoading',
             'othersProjects'
         ]),
+        ...mapGetters('datasets', [
+            'sharingDatasets',
+            'sharingDatasetsLoading'
+        ]),
+        matchingSharingDatasets() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let matches = this.sharingDatasets.filter(d => d.path === path);
+            return matches;
+        },
         associatedStudies() {
             let path = this.internalLoaded
                 ? this.internalNode.path

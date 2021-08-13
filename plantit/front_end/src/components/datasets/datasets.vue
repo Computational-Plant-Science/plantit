@@ -198,7 +198,7 @@
                                             ? 'text-white'
                                             : 'text-dark'
                                     "
-                                    >Loading personal datasets...</span
+                                    >Loading your personal datasets...</span
                                 ></b-col
                             ></b-row
                         >
@@ -366,58 +366,78 @@
                                 </b-alert>
                             </b-col>
                         </b-row>-->
-                        <b-row
-                            v-if="
-                                sharingDatasets === null ||
-                                    sharingDatasets.length === 0
-                            "
-                            ><b-col
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                            >
-                                You haven't shared any datasets with anyone.
-                            </b-col></b-row
-                        >
-                        <div v-else>
+                        <div v-if="datasetsLoading">
                             <b-row
-                                v-for="directory in sharingDatasets"
-                                v-bind:key="directory.path"
-                            >
-                                <b-col
-                                    ><small>{{ directory.path }}</small></b-col
-                                ><b-col md="auto" class="mt-1">
-                                    <small
-                                        >Shared with
-                                        {{ directory.guest }}</small
-                                    ></b-col
-                                ><b-col md="auto">
-                                    <b-button
-                                        class="mb-2"
-                                        size="sm"
+                                ><b-col
+                                    ><b-spinner
+                                        small
+                                        v-if="datasetsLoading"
+                                        label="Loading..."
                                         :variant="
-                                            profile.darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
+                                            profile.darkMode ? 'light' : 'dark'
                                         "
-                                        @click="unshareDataset(directory)"
-                                        ><b-spinner
-                                            small
-                                            v-if="unsharing"
-                                            label="Loading..."
-                                            variant="dark"
-                                            class="mr-2 mb-1"
-                                        ></b-spinner
-                                        ><i
-                                            v-else
-                                            class="fas fa-user-lock fa-fw"
-                                        ></i>
-                                        Unshare</b-button
-                                    ></b-col
+                                        class="mr-1"
+                                    ></b-spinner>
+                                    Loading datasets you're sharing...</b-col
                                 ></b-row
                             >
+                        </div>
+                        <div v-else>
+                            <b-row
+                                v-if="
+                                    sharingDatasets === null ||
+                                        sharingDatasets.length === 0
+                                "
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    You haven't shared any datasets with anyone.
+                                </b-col></b-row
+                            >
+                            <div v-else>
+                                <b-row
+                                    v-for="directory in sharingDatasets"
+                                    v-bind:key="directory.path"
+                                >
+                                    <b-col
+                                        ><small>{{
+                                            directory.path
+                                        }}</small></b-col
+                                    ><b-col md="auto" class="mt-1">
+                                        <small
+                                            >Shared with
+                                            {{ directory.guest }}</small
+                                        ></b-col
+                                    ><b-col md="auto">
+                                        <b-button
+                                            class="mb-2"
+                                            size="sm"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'outline-dark'
+                                            "
+                                            @click="unshareDataset(directory)"
+                                            ><b-spinner
+                                                small
+                                                v-if="unsharing"
+                                                label="Loading..."
+                                                variant="dark"
+                                                class="mr-2 mb-1"
+                                            ></b-spinner
+                                            ><i
+                                                v-else
+                                                class="fas fa-user-lock fa-fw"
+                                            ></i>
+                                            Unshare</b-button
+                                        ></b-col
+                                    ></b-row
+                                >
+                            </div>
                         </div>
                     </b-tab>
                 </b-tabs></b-col

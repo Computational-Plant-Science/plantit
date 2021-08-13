@@ -119,22 +119,25 @@
                 ><b-col
                     style="top: 27px;position: relative; font-size: 22pt"
                     align-self="end"
-                    :class="mt-0"
-                    ><b :class="
-                        task.is_failure
-                            ? 'text-danger'
-                            : task.is_cancelled || task.is_timeout
-                            ? 'text-secondary'
-                            : task.is_complete
-                            ? 'text-success'
-                            : 'text-warning'
-                    ">{{
-                        !task.agent.is_local &&
-                        !task.is_complete &&
-                        task.job_status !== null
-                            ? task.job_status.toUpperCase()
-                            : task.status.toUpperCase()
-                    }}</b></b-col
+                    :class="mt - 0"
+                    ><b
+                        :class="
+                            task.is_failure
+                                ? 'text-danger'
+                                : task.is_cancelled || task.is_timeout
+                                ? 'text-secondary'
+                                : task.is_complete
+                                ? 'text-success'
+                                : 'text-warning'
+                        "
+                        >{{
+                            !task.agent.is_local &&
+                            !task.is_complete &&
+                            task.job_status !== null
+                                ? task.job_status.toUpperCase()
+                                : task.status.toUpperCase()
+                        }}</b
+                    ></b-col
                 ></b-row
             >
         </b-card-body>

@@ -1088,29 +1088,33 @@
             <br />
             <b>Has PlantIT helped you?</b>
             <b-form-textarea
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="feedbackUsed"
                 placeholder="How have you used PlantIT? Do you have any success stories?"
             ></b-form-textarea>
             <br />
             <b>How could PlantIT be better?</b>
             <b-form-textarea
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="feedbackWanted"
                 placeholder="How could PlantIT better serve your use case? Have you found anything frustrating?"
             ></b-form-textarea>
             <br />
             <b>Could PlantIT be more accessible?</b>
             <b-form-textarea
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="feedbackEase"
                 placeholder="Can you think of anything that might make PlantIT easier to use?"
             ></b-form-textarea>
             <br />
             <b>Do you have feature requests?</b>
             <b-form-textarea
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
                 v-model="feedbackFeatures"
                 placeholder="Are there any particular features you'd like to see in PlantIT?"
             ></b-form-textarea>
             <br />
-            <b-form-checkbox v-model="feedbackAnonymous"
+            <b-form-checkbox :class="profile.darkMode ? 'input-dark' : 'input-light'" v-model="feedbackAnonymous"
                 ><b>Anonymize?</b> By default all feedback is anonymous. Uncheck
                 this box if you'd like us to be able to see who you are. We
                 might get in touch to ask if we can display your comments on the
