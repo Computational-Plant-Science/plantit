@@ -64,10 +64,14 @@
                 md="auto"
                 v-if="
                     matchingSharingDatasets !== undefined &&
-                        matchingSharingDatasets !== null && matchingSharingDatasets.length > 0
+                        matchingSharingDatasets !== null &&
+                        matchingSharingDatasets.length > 0
                 "
             >
-                <small>Shared with {{ matchingSharingDatasets.length }} user(s)</small>
+                <small
+                    >Shared with
+                    {{ matchingSharingDatasets.length }} user(s)</small
+                >
             </b-col>
             <b-col
                 :id="
@@ -78,61 +82,86 @@
                 class="mt-1 ml-1"
                 :class="profile.darkMode ? 'text-light' : 'text-dark'"
                 md="auto"
-                v-if="associatedStudies.length > 0"
-                ><b-img
-                    class="mb-1 mr-1"
-                    style="max-width: 18px"
-                    :src="
-                        profile.darkMode
-                            ? require('../../assets/miappe_icon.png')
-                            : require('../../assets/miappe_icon_black.png')
-                    "
-                ></b-img
-                ><small
-                    >{{ associatedStudies.length }} associated
-                    {{
-                        associatedStudies.length === 1
-                            ? 'project/study'
-                            : 'projects/studies'
-                    }}</small
+                v-if="!isRoot"
+                ><span v-if="associatedStudies.length > 0"
+                    ><b-img
+                        class="mb-1 mr-1"
+                        style="max-width: 18px"
+                        :src="
+                            profile.darkMode
+                                ? require('../../assets/miappe_icon.png')
+                                : require('../../assets/miappe_icon_black.png')
+                        "
+                    ></b-img
+                    ><small
+                        >{{ associatedStudies.length }} associated
+                        {{
+                            associatedStudies.length === 1
+                                ? 'project/study'
+                                : 'projects/studies'
+                        }}</small
+                    ><b-popover
+                        :target="
+                            `associated-studies-${
+                                internalLoaded ? internalNode.label : node.label
+                            }`
+                        "
+                        placement="bottom"
+                        triggers="hover"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                    >
+                        <b-row
+                            v-for="study in associatedStudies"
+                            v-bind:key="study.title"
+                            ><b-col align-self="center"
+                                ><b-link
+                                    class="text-dark"
+                                    :to="{
+                                        name: 'project',
+                                        params: {
+                                            owner: study.project_owner,
+                                            title: study.project_title
+                                        }
+                                    }"
+                                    ><b class="text-dark"
+                                        >{{ study.project_title }},
+                                        {{ study.title }}</b
+                                    ></b-link
+                                ></b-col
+                            ><b-col md="auto" align-self="center"
+                                ><b-button
+                                    title="Unbind project/study"
+                                    size="sm"
+                                    v-b-tooltip.hover
+                                    variant="outline-danger"
+                                    @click="
+                                        preUnbindProject(
+                                            projectFor(study),
+                                            study
+                                        )
+                                    "
+                                    ><i
+                                        class="fas fa-minus fa-fw"
+                                    ></i></b-button></b-col
+                        ></b-row> </b-popover></span
+                ><b-button
+                    title="Bind project/study"
+                    size="sm"
+                    :variant="profile.darkMode ? 'outline-light' : 'white'"
+                    v-else
+                    @click="preBindProject"
+                    ><b-img
+                        class="mb-1 mr-1"
+                        style="max-width: 18px"
+                        :src="
+                            profile.darkMode
+                                ? require('../../assets/miappe_icon.png')
+                                : require('../../assets/miappe_icon_black.png')
+                        "
+                    ></b-img
+                    >Bind project/study</b-button
                 ></b-col
             >
-            <b-popover
-                :target="
-                    `associated-studies-${
-                        internalLoaded ? internalNode.label : node.label
-                    }`
-                "
-                placement="bottom"
-                triggers="hover"
-            >
-                <b-row
-                    v-for="study in associatedStudies"
-                    v-bind:key="study.title"
-                    ><b-col
-                        ><b-link
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :to="{
-                                name: 'project',
-                                params: {
-                                    owner: study.project_owner,
-                                    title: study.project_title
-                                }
-                            }"
-                            ><b
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >{{ study.project_title }}, {{ study.title }}</b
-                            ></b-link
-                        ></b-col
-                    ></b-row
-                >
-            </b-popover>
             <b-col md="auto">
                 <b-input-group size="sm">
                     <!--<b-form-file
@@ -210,6 +239,146 @@
                             ><i class="fas fa-trash text-danger fa-fw"></i
                         ></b-button>
                         <b-modal
+                            :title-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            title="Bind Project"
+                            :id="
+                                'bindProject' +
+                                    (internalLoaded
+                                        ? internalNode.label
+                                        : node.label)
+                            "
+                            centered
+                            :header-text-variant="
+                                profile.darkMode ? 'white' : 'dark'
+                            "
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :body-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :header-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            close
+                            :ok-disabled="selectedProject === null"
+                            @ok="
+                                bindProject(
+                                    internalLoaded
+                                        ? internalNode.path
+                                        : node.path
+                                )
+                            "
+                        >
+                            <b-row
+                                ><b-col
+                                    ><b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Select the MIAPPE project and study this
+                                        task corresponds to.
+                                    </b>
+                                </b-col>
+                            </b-row>
+                            <b-row
+                                v-if="personalProjects.length > 0"
+                                class="mt-2"
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    cols="3"
+                                    ><i>Project</i></b-col
+                                ><b-col
+                                    cols="9"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    v-if="selectedProject !== null"
+                                    ><i>Study</i></b-col
+                                ></b-row
+                            >
+                            <b-row v-else class="mt-2"
+                                ><b-col cols="3"
+                                    ><i
+                                        >You haven't started any projects.</i
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-row
+                                class="mt-1"
+                                v-for="project in personalProjects"
+                                v-bind:key="project.title"
+                                ><b-col
+                                    style="border-top: 2px solid lightgray;"
+                                    cols="3"
+                                >
+                                    <b-button
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        @click="selectedProject = project"
+                                        >{{ project.title
+                                        }}<i
+                                            v-if="
+                                                selectedProject !== null &&
+                                                    selectedProject.title ===
+                                                        project.title
+                                            "
+                                            class="fas fa-check fa-fw text-success ml-1"
+                                        ></i
+                                    ></b-button> </b-col
+                                ><b-col
+                                    style="border-top: 2px solid lightgray; left: -5px"
+                                    cols="9"
+                                    v-if="selectedProject !== null"
+                                    ><b-row
+                                        v-for="study in project.studies"
+                                        v-bind:key="study.title"
+                                        ><b-col
+                                            ><b-button
+                                                :disabled="
+                                                    project.title !==
+                                                        selectedProject.title
+                                                "
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'outline-light'
+                                                        : 'white'
+                                                "
+                                                @click="selectedStudy = study"
+                                                >{{ study.title
+                                                }}<i
+                                                    v-if="
+                                                        selectedStudy !==
+                                                            null &&
+                                                            selectedStudy.title ===
+                                                                study.title &&
+                                                            selectedProject ===
+                                                                project
+                                                    "
+                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                ></i></b-button></b-col></b-row></b-col></b-row
+                        ></b-modal>
+                        <b-modal
                             v-if="!isShared"
                             :title-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -265,7 +434,11 @@
                                     ></template
                                 >
                                 <b-form-input
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     size="sm"
                                     v-model="newDirectoryName"
                                     :placeholder="'Enter a directory name'"
@@ -416,6 +589,62 @@
                                     ></b-col
                                 ></b-row
                             >
+                        </b-modal>
+                        <b-modal
+                            :title-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            title="Unbind Project"
+                            :id="
+                                'unbindProject' +
+                                    (internalLoaded
+                                        ? internalNode.label
+                                        : node.label)
+                            "
+                            centered
+                            :header-text-variant="
+                                profile.darkMode ? 'white' : 'dark'
+                            "
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :body-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :header-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            :footer-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            close
+                            @ok="unbindProject()"
+                            ok-variant="danger"
+                        >
+                            <p
+                                v-if="
+                                    projectToUnbind !== null &&
+                                        studyToUnbind !== null
+                                "
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Project <b>{{ projectToUnbind.title }}</b> study
+                                <b>{{ studyToUnbind.title }}</b> will no longer
+                                be bound to directory
+                                <b>{{
+                                    internalLoaded
+                                        ? internalNode.path
+                                        : node.path
+                                }}</b
+                                >.
+                            </p>
                         </b-modal>
                     </span>
                     <b-button
@@ -1079,7 +1308,11 @@ export default {
             thumbnailDoneLoading: false,
             selectedProject: null,
             selectedStudy: null,
-            showingProjectSelection: false
+            showingProjectSelection: false,
+            bindingProject: false,
+            unbindingProject: false,
+            projectToUnbind: null,
+            studyToUnbind: null
         };
     },
     computed: {
@@ -1105,21 +1338,22 @@ export default {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
+            if (this.projectsLoading) return [];
             let projects = this.personalProjects
                 .concat(this.othersProjects)
                 .filter(p =>
                     p.studies.some(s => s.dataset_paths.includes(path))
                 );
             return projects
-                .flatMap(p => p.studies)
-                .filter(s => s.dataset_paths.includes(path))
-                .map(s => {
-                    return {
-                        title: s.title,
-                        project_title: s.project_title,
-                        project_owner: s.project_owner
-                    };
-                });
+                    .flatMap(p => p.studies)
+                    .filter(s => s.dataset_paths.includes(path))
+                    .map(s => {
+                        return {
+                            title: s.title,
+                            project_title: s.project_title,
+                            project_owner: s.project_owner
+                        };
+                    });
         },
         internalLoadedFolders() {
             return this.internalNode.folders;
@@ -1198,6 +1432,134 @@ export default {
         }
     },
     methods: {
+        projectFor(study) {
+            return this.personalProjects.find(
+                p =>
+                    p.owner === study.project_owner &&
+                    p.title === study.project_title
+            );
+        },
+        async unbindProject() {
+            this.unbindingProject = true;
+            this.hideUnbindProjectModal();
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            var data = {
+                path: path
+            };
+            if (this.projectToUnbind !== null)
+                data['project'] = this.projectToUnbind;
+            if (this.studyToUnbind !== null) data['study'] = this.studyToUnbind;
+            await axios
+                .post(`/apis/v1/datasets/unbind/`, data)
+                .then(async response => {
+                    if (
+                        response.status === 200 &&
+                        response.data.project !== undefined
+                    ) {
+                        await this.$store.dispatch(
+                            'projects/addOrUpdate',
+                            response.data.project
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unbound project ${this.projectToUnbind.title} study ${this.studyToUnbind.title} from path ${path}`,
+                            guid: guid().toString()
+                        });
+                        this.projectToUnbind = null;
+                        this.studyToUnbind = null;
+                    }
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    this.unbindingProject = false;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unbind project ${this.projectToUnbind.title} study ${this.studyToUnbind.title} from path ${path}`,
+                        guid: guid().toString()
+                    });
+                    throw error;
+                });
+        },
+        showUnbindProjectModal() {
+            this.$bvModal.show(
+                'unbindProject' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        hideUnbindProjectModal() {
+            this.$bvModal.hide(
+                'unbindProject' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        preUnbindProject(project, study) {
+            this.projectToUnbind = project;
+            this.studyToUnbind = study;
+            this.showUnbindProjectModal();
+        },
+        async bindProject(path) {
+            this.bindingProject = true;
+            this.hideBindProjectModal();
+            var data = {
+                path: path
+            };
+            if (this.selectedProject !== null)
+                data['project'] = this.selectedProject;
+            if (this.selectedStudy !== null) data['study'] = this.selectedStudy;
+            await axios
+                .post(`/apis/v1/datasets/bind/`, data)
+                .then(async response => {
+                    if (
+                        response.status === 200 &&
+                        response.data.project !== undefined
+                    ) {
+                        await this.$store.dispatch(
+                            'projects/addOrUpdate',
+                            response.data.project
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Bound project ${this.selectedProject.title} study ${this.selectedStudy.title} to path ${path}`,
+                            guid: guid().toString()
+                        });
+                    }
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    this.bindingProject = false;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to bind project ${this.selectedProject.title} study ${this.selectedStudy.title} to path ${path}`,
+                        guid: guid().toString()
+                    });
+                    throw error;
+                });
+        },
+        showBindProjectModal() {
+            this.$bvModal.show(
+                'bindProject' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        hideBindProjectModal() {
+            this.$bvModal.hide(
+                'bindProject' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        preBindProject() {
+            this.showBindProjectModal();
+        },
         // https://stackoverflow.com/a/23625419
         formatBytes(bytes) {
             var marker = 1024; // Change to 1000 if required

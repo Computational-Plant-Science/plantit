@@ -24,9 +24,9 @@ export const projects = {
             if (i === -1) state.personal.unshift(project);
             else Vue.set(state.personal, i, project);
 
-            let j = state.others.findIndex(inv => inv.unique_id === project.unique_id);
-            if (j === -1) state.others.unshift(project);
-            else Vue.set(state.others, j, project);
+            // let j = state.others.findIndex(inv => inv.unique_id === project.unique_id);
+            // if (j === -1) state.others.unshift(project);
+            // else Vue.set(state.others, j, project);
         },
     },
     actions: {
