@@ -102,7 +102,8 @@ class IDPViewSet(viewsets.ViewSet):
         user.email = decoded_access_token['email']
         user.save()
 
-        profile, _ = Profile.objects.get_or_create(user=user)
+        profile, created = Profile.objects.get_or_create(user=user)
+        if created: profile.created = timezone.now()
         profile.cyverse_access_token = access_token
         profile.cyverse_refresh_token = refresh_token
         profile.save()

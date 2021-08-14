@@ -1,12 +1,7 @@
 from django.contrib.auth.models import User
-from django.db.models import Count
 from django.http import JsonResponse
 
-import jwt
-from datetime import datetime, timezone
-
 from plantit.tasks.models import Task, TaskCounter
-from plantit.users.models import Profile
 from plantit.utils import list_institutions, filter_online
 from plantit.workflows.models import Workflow
 
@@ -26,3 +21,30 @@ def counts(request):
 
 def institutions(request):
     return JsonResponse({'institutions': list_institutions()})
+
+
+def timeseries(request):
+    users_x = []
+    users_y = []
+    for i, user in enumerate(User.objects.all().order_by('profile__created')):
+        users_x.append(user.profile.created)
+        users_y.append(i + 1)
+
+    tasks_x = []
+    tasks_y = []
+    for i, task in enumerate(Task.objects.all().order_by('created')):
+        tasks_x.append(task.created)
+        tasks_y.append(i + 1)
+
+    return JsonResponse({
+        'users': {
+            'x': users_x,
+            'y': users_y,
+            'type': 'scatter'
+        },
+        'tasks': {
+            'x': tasks_x,
+            'y': tasks_y,
+            'type': 'scatter'
+        }
+    })
