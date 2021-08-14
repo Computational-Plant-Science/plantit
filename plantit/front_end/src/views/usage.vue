@@ -137,7 +137,9 @@
                                     ><i class="fas fa-stream fa-fw"></i>
                                     Workflows</b-button
                                 ></template
-                            ><b-card-group deck columns
+                            >
+                            <h5 class="text-left">Public Workflows</h5>
+                            <b-card-group deck columns
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -160,8 +162,36 @@
                                     ><blurb
                                         :workflow="workflow"
                                         :linkable="false"
-                                    ></blurb></b-card></b-card-group
-                        ></b-tab>
+                                    ></blurb></b-card
+                            ></b-card-group>
+                            <br/>
+                            <h5 class="text-left">Workflow Developers</h5>
+                            <b-card-group
+                                ><b-card
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    :header-bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    border-variant="default"
+                                    :header-border-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
+                                    class="overflow-hidden text-left p-2"
+                                    v-for="user in new Set(
+                                        publicWorkflows.map(
+                                            wf => wf.repo.owner.login
+                                        )
+                                    )"
+                                    v-bind:key="user"
+                                    ><b-row><b-col><b-link :class="profile.darkMode ? 'text-light' : 'text-dark'" :href="`https://github.com/${user}`"><i class="fab fa-github fa-fw"></i> {{ user }}</b-link></b-col><b-col md="auto">{{ publicWorkflows.filter(wf => wf.repo.owner.login === user).length }} workflow(s)</b-col></b-row></b-card
+                                ></b-card-group
+                            ></b-tab
+                        >
                         <b-tab
                             title="Tasks"
                             :title-link-class="
