@@ -1506,6 +1506,7 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
 
     """
 
+    # TODO factor out into method
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{task.guid}.zip")  # zip file
@@ -1547,36 +1548,6 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
                         })
 
     return outputs
-
-
-def transfer_task_results_to_cyverse(task: Task, auth: dict, path: str):
-    """
-    Transfers task results to the CyVerse Data Store via an intermediate hop on the plantit server.
-    Works, but superseded by `terrain push` CLI command which should be much faster.
-
-    Args:
-        task: The task
-        auth: Authentication details for the task's agent
-        path: The directory path in the Data Store
-    """
-
-    ssh = get_task_ssh_client(task, auth)
-    workdir = join(task.agent.workdir, task.workdir)
-    redis = RedisClient.get()
-    # workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
-    # workflow = json.loads(workflow)
-    workflow = task.workflow
-
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            sftp.chdir(workdir)
-            files = get_task_result_files(task, workflow['config'], auth)
-            for file in files:
-                logger.info(f"Transferring {file['name']} to {path}")
-                local_dir = tempfile.gettempdir()
-                local_path = join(local_dir, file['name'])
-                sftp.get(file['name'], local_path)
-                terrain.push_file(local_path, path, task.user.profile.cyverse_access_token)
 
 
 def list_task_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
@@ -1743,17 +1714,6 @@ def notification_to_dict(notification: Notification) -> dict:
         'message': notification.message,
         'read': notification.read,
     }
-
-
-# def map_directory_policy_notification(notification: DirectoryPolicyNotification):
-#     return {
-#         'id': notification.guid,
-#         'username': notification.user.username,
-#         'created': notification.created.isoformat(),
-#         'message': notification.message,
-#         'read': notification.read,
-#         'policy': dataset_access_policy_to_dict(notification.policy)
-#     }
 
 
 # datasets

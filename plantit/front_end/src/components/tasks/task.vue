@@ -475,8 +475,8 @@
                                         <div
                                             :class="
                                                 profile.darkMode
-                                                    ? 'theme-container-dark m-0 p-1 pt-2 pb-2'
-                                                    : 'theme-container-light m-0 p-1 pt-2 pb-2'
+                                                    ? 'theme-container-dark m-0 p-1 pt-3 pb-3'
+                                                    : 'theme-container-light m-0 p-1 pt-3 pb-3'
                                             "
                                         >
                                             <div>
@@ -502,7 +502,7 @@
                                                                 .orchestrator_logs
                                                                 .length > 0
                                                         "
-                                                        class="m-0 p-0 pl-3 pr-3 pt-1"
+                                                        class="m-0 p-0 pl-3 pr-3"
                                                         style="white-space: pre-line;"
                                                     >
                                                         <span

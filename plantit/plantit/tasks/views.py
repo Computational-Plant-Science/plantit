@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import tempfile
 from os.path import join
 from pathlib import Path
@@ -17,11 +18,15 @@ from plantit import settings
 from plantit.agents.models import Agent, AgentExecutor, AgentAuthentication
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
+from plantit.ssh import execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
     log_task_orchestrator_status, \
-    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, transfer_task_results_to_cyverse, parse_time_limit_seconds, \
-    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, get_task_agent_log_file_name, get_task_agent_log_file_path
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, parse_time_limit_seconds, \
+    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, get_task_agent_log_file_name, get_task_agent_log_file_path, \
+    compose_task_push_command, parse_task_cli_options
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -155,7 +160,31 @@ def transfer_to_cyverse(request, owner, name):
     except: return HttpResponseNotFound()
     if not task.is_complete: return HttpResponseBadRequest('task incomplete')
 
-    transfer_task_results_to_cyverse(task, auth, path)
+    ssh = get_task_ssh_client(task, auth)
+    options = parse_task_cli_options(task)
+
+    # compose command
+    command = f"plantit terrain push {path} -p {join(task.agent.workdir, task.workdir)} "
+
+    # TODO factor this out into its own method
+    included_by_name = ((task.workflow['output']['include']['names'] if 'names' in task.workflow['output']['include'] else [])) if 'output' in task.workflow else []  # [f"{run.task_id}.zip"]
+    included_by_name.append(f"{task.guid}.zip")  # zip file
+    if not task.agent.launcher: included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
+    if task.agent.executor != AgentExecutor.LOCAL and task.job_id is not None and task.job_id != '':
+        included_by_name.append(f"plantit.{task.job_id}.out")
+        included_by_name.append(f"plantit.{task.job_id}.err")
+    included_by_pattern = (task.workflow['output']['include']['patterns'] if 'patterns' in task.workflow['output']['include'] else []) if 'output' in task.workflow else []
+    included_by_pattern.append('.out')
+    included_by_pattern.append('.err')
+    included_by_pattern.append('.zip')
+
+    command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in included_by_pattern])
+    command = command + ' ' + ' '.join(['--include_name ' + name for name in included_by_name])
+    command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+
+    with ssh:
+        for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
+            logger.info(f"[{task.agent.name}] {line}")
     task.transferred = True
     task.save()
 

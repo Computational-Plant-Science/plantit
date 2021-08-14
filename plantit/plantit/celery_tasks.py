@@ -7,7 +7,6 @@ from os import environ
 from os.path import join
 
 import cv2
-import pprint
 import requests
 from asgiref.sync import async_to_sync
 from celery import group
@@ -31,7 +30,7 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, transfer_task_results_to_cyverse, should_transfer_results, \
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, should_transfer_results, \
     refresh_user_cyverse_tokens
 
 logger = get_task_logger(__name__)
@@ -384,22 +383,6 @@ def list_task_results(guid: str, auth: dict):
 
 
 @app.task()
-def transfer_results_to_cyverse(guid: str, auth: dict):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
-
-    path = task.workflow['config']['output']['to']
-    transfer_task_results_to_cyverse(task, auth, path)
-    task.transferred = True
-    task.save()
-
-    check_cyverse_transfer_completion.s(guid).apply_async()
-
-
-@app.task()
 def check_cyverse_transfer_completion(guid: str, iteration: int = 0):
     try:
         task = Task.objects.get(guid=guid)
@@ -462,84 +445,6 @@ def check_cyverse_transfer_completion(guid: str, iteration: int = 0):
 #                 directory=agent.workdir,
 #                 allow_stderr=True):
 #             logger.info(line)
-
-
-# @app.task()
-# def open_dataset_session(guid: str):
-#     try:
-#         session = DatasetSession.objects.get(guid=guid)
-#         ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
-#
-#         with ssh:
-#             msg = f"Creating working directory {session.workdir}"
-#             update_dataset_session(session, [f"Creating working directory {session.workdir}"])
-#             logger.info(msg)
-#
-#             for line in execute_command(
-#                     ssh_client=ssh,
-#                     pre_command=':',
-#                     command=f"mkdir {session.guid}/",
-#                     directory=session.agent.workdir):
-#                 logger.info(line)
-#
-#             msg = f"Transferring files from {session.path} to {session.agent.name}"
-#             update_dataset_session(session, [msg])
-#             logger.info(msg)
-#
-#             command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_access_token}\n"
-#             for line in execute_command(
-#                     ssh_client=ssh,
-#                     pre_command=session.agent.pre_commands,
-#                     command=command,
-#                     directory=session.workdir,
-#                     allow_stderr=True):
-#                 update_dataset_session(session, [line])
-#
-#             session.opening = False
-#             session.save()
-#             msg = f"Succesfully opened dataset"
-#             update_dataset_session(session, [msg])
-#             logger.info(msg)
-#     except:
-#         msg = f"Failed to open session: {traceback.format_exc()}."
-#         logger.error(msg)
-
-
-# @app.task()
-# def save_dataset_session(guid: str, only_modified: bool):
-#     try:
-#         session = DatasetSession.objects.get(guid=guid)
-#
-#         msg = f"Saving dataset session {session.guid} on {session.agent.name}"
-#         update_dataset_session(session, [msg])
-#         logger.info(msg)
-#
-#         ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
-#
-#         with ssh:
-#             msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
-#             update_dataset_session(session, [msg])
-#             logger.info(msg)
-#
-#             command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_access_token}"
-#             for file in session.modified:
-#                 command += f" --include_name {file}"
-#
-#             for line in execute_command(
-#                     ssh_client=ssh,
-#                     pre_command=session.agent.pre_commands,
-#                     command=command,
-#                     directory=session.workdir,
-#                     allow_stderr=True):
-#                 update_dataset_session(session, [line])
-#     except:
-#         msg = f"Failed to open session: {traceback.format_exc()}."
-#         logger.error(msg)
-
-
-# @app.task()
-# def close_dataset_session(guid: str):
-#     pass
 
 
 @app.task()
