@@ -774,8 +774,36 @@
                                         >Choose who to share this directory
                                         with.</small
                                     ></b-col
-                                ></b-row
-                            >
+                                ><b-col md="auto"
+                                    ><b-button
+                                        :disabled="usersLoading"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Rescan users"
+                                        @click="refreshUsers"
+                                        class="text-right"
+                                    >
+                                        <b-spinner
+                                            small
+                                            v-if="usersLoading"
+                                            label="Rescanning..."
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'light'
+                                                    : 'dark'
+                                            "
+                                            class="mr-1"
+                                        ></b-spinner
+                                        ><i v-else class="fas fa-redo mr-1"></i
+                                        >Rescan Users</b-button
+                                    ></b-col
+                                >
+                            </b-row>
                             <b-row v-if="usersLoading"
                                 ><b-col align-self="end" class="text-center">
                                     <b-spinner
@@ -820,7 +848,30 @@
                                                     v-model="sharedUsers"
                                                     v-bind:key="user.username"
                                                     :value="user.username"
-                                                    >{{ user.username }}
+                                                    ><b-img
+                                                        v-if="
+                                                            user.github_profile
+                                                        "
+                                                        class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
+                                                        style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                                        rounded="circle"
+                                                        :src="
+                                                            user.github_profile
+                                                                ? user
+                                                                      .github_profile
+                                                                      .avatar_url
+                                                                : ''
+                                                        "
+                                                    ></b-img>
+                                                    <i
+                                                        v-else
+                                                        class="far fa-user fa-fw mr-2 ml-2"
+                                                    ></i
+                                                    ><b
+                                                        >{{ user.first_name }}
+                                                        {{ user.last_name }}</b
+                                                    >
+                                                    ({{ user.username }})
                                                     <i
                                                         v-if="
                                                             sharedUsers.includes(
@@ -1441,6 +1492,9 @@ export default {
         }
     },
     methods: {
+        async refreshUsers() {
+            await this.$store.dispatch('users/loadAll');
+        },
         projectFor(study) {
             return this.personalProjects.find(
                 p =>
