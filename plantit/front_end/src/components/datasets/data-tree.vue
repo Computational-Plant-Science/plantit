@@ -82,7 +82,7 @@
                 class="mt-1 ml-1"
                 :class="profile.darkMode ? 'text-light' : 'text-dark'"
                 md="auto"
-                v-if="!isRoot"
+                v-if="isPersonalDirectory && !isRoot"
                 ><span v-if="associatedStudies.length > 0"
                     ><b-img
                         class="mb-1 mr-1"
@@ -1345,15 +1345,15 @@ export default {
                     p.studies.some(s => s.dataset_paths.includes(path))
                 );
             return projects
-                    .flatMap(p => p.studies)
-                    .filter(s => s.dataset_paths.includes(path))
-                    .map(s => {
-                        return {
-                            title: s.title,
-                            project_title: s.project_title,
-                            project_owner: s.project_owner
-                        };
-                    });
+                .flatMap(p => p.studies)
+                .filter(s => s.dataset_paths.includes(path))
+                .map(s => {
+                    return {
+                        title: s.title,
+                        project_title: s.project_title,
+                        project_owner: s.project_owner
+                    };
+                });
         },
         internalLoadedFolders() {
             return this.internalNode.folders;
@@ -1380,6 +1380,15 @@ export default {
         },
         isDir: function() {
             return !('file-size' in this);
+        },
+        isPersonalDirectory() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let isPersonal = path.startsWith(
+                `/iplant/home/${this.profile.djangoProfile.username}`
+            );
+            return isPersonal;
         },
         isRoot() {
             let path = this.internalLoaded

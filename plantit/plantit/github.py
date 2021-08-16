@@ -229,6 +229,7 @@ async def get_repo_config(owner: str, name: str, token: str) -> dict:
         #                       headers={"Authorization": f"token {token}"})
         response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/master/plantit.yaml")
         config = response.text
+        logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
         # config = await client.get(response.json()['download_url']).text
         return yaml.load(config)
 
