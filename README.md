@@ -226,11 +226,4 @@ Some variables must be reconfigured for production environments (`scripts/deploy
 
 ## Deployment targets
 
-Deployment targets may be configured via the Django admin interface. Note that [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) must be installed on the target. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
-
-PlantIT uses `paramiko` to orchestrate workflows on deployment targets over SSH. Password and public-key authentication are supported; to use a key, leave the `password` field blank and provide the `plantit` container with a key and fingerprint in `config/ssh/`:
-
-- `config/ssh/id_rsa`
-- `config/ssh/known_hosts`
-
-Key authentication is configured for the `sandbox` deployment target when bootstrapping or deploying PlantIT; refer to `scripts/bootstrap.sh` or `scripts/deploy` for more detail.
+Deployment targets may be configured via the Django admin interface or directly via the UI. The [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) package must be installed and invokable on deployment targets. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
