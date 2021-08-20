@@ -61,17 +61,3 @@ mkdir -p logs
 echo "Running migrations..."
 $compose exec -T plantit /code/scripts/wait-for-postgres.sh postgres python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
-
-echo "Configuring sandbox container deployment target..."
-$compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh
-if [ ! -d config/ssh ]; then
-  mkdir config/ssh
-fi
-if [ ! -f config/ssh/known_hosts ]; then
-  touch config/ssh/known_hosts
-fi
-$compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
-if [ ! -f config/ssh/id_rsa.pub ]; then
-  ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
-fi
-$compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"

@@ -50,13 +50,11 @@ To set up a new (or restore a clean) development environment, run `scripts/boots
 
 - Stop and remove project containers and networks
 - If an `.env` file (to configure environment variables) does not exist, generate one with default values
-- Rebuild containers
-- Run migrations
-- If a Django superuser does not exist, create one (username and password specified in `.env`)
-- Configure a sandbox container to act as a test deployment target (creates a public/private keypair in `config/ssh` if one does not exist, then configures SSH key authentication between the web application container and the sandbox environment)
 - Build the Vue front end
+- Build Docker images
+- Run migrations
 
-Bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for detached mode).
+Then bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for detached mode).
 
 This will start a number of containers:
 
@@ -76,9 +74,11 @@ user.is_superuser = True
 user.save()
 ```
 
+Note that the bootstrap script will not clear migrations. To restore to a totally clean database state, you will need to remove all `*.py` files from the `plantit/plantit/migrations` directory (except for `__init__.py`).
+
 #### Tests
 
-Tests can be run with `docker-compose -f docker-compose.dev.yml exec plantit ./manage.py test`.
+Once the containers are up, tests can be run with `docker-compose -f docker-compose.dev.yml exec plantit ./manage.py test`.
 
 ### Production
 
