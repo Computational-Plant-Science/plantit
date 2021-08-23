@@ -350,7 +350,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             hostname = request.data['hostname']
             port = int(request.data['port'])
             username = request.data['username']
-            directory = request.data.get('directory', None)
+            workdir = request.data.get('workdir', None)
         except:
             return HttpResponseBadRequest()
 
@@ -363,9 +363,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         with ssh:
             try:
-                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir .plantit && cd .plantit && pwd", directory=directory, allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir {workdir} && cd {workdir} && pwd", allow_stderr=False):
                     self.logger.info(line)
-                    return JsonResponse({'workdir': line.strip()})
+                    if 'cannot' in line:  # TODO are there other error cases we should catch here?
+                        return HttpResponse(line, status=500)
+                    else:
+                        return JsonResponse({'workdir': line.strip()})
             except:
                 return JsonResponse({'workdir': False})
 
@@ -375,7 +378,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             hostname = request.data['hostname']
             username = request.data['username']
             precommand = request.data['precommand']
-            # executor = request.data['executor']
+            executor = request.data['executor']  # TODO if this is jobqueue, check if scheduler exists
             workdir = request.data['workdir']
         except:
             return HttpResponseBadRequest()

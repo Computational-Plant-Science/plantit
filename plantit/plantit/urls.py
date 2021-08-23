@@ -17,8 +17,8 @@ router.register('idp', IDPViewSet, basename='idp')
 
 urlpatterns = [
                   url('', include(router.urls)),
-                  url('auth/login/', login_view),
-                  url('auth/logout/', logout_view),
+                  # url('auth/login/', login_view),
+                  # url('auth/logout/', logout_view),
                   url('agents/', include("plantit.agents.urls")),
                   url('datasets/', include("plantit.datasets.urls")),
                   url('workflows/', include("plantit.workflows.urls")),

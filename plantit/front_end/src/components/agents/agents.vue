@@ -309,7 +309,9 @@
                             ></template
                         >
                         <b-form-input
-                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                            :class="
+                                profile.darkMode ? 'input-dark' : 'input-light'
+                            "
                             :state="agentNameValid"
                             v-model="agentName"
                             type="text"
@@ -330,7 +332,9 @@
                             ></template
                         >
                         <b-form-textarea
-                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                            :class="
+                                profile.darkMode ? 'input-dark' : 'input-light'
+                            "
                             :state="agentDescriptionValid"
                             v-model="agentDescription"
                             placeholder="Enter a description"
@@ -402,7 +406,11 @@
                                             ></template
                                         >
                                         <b-form-input
-                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'input-dark'
+                                                    : 'input-light'
+                                            "
                                             :state="agentHostValid"
                                             v-model="agentHost"
                                             type="text"
@@ -422,7 +430,11 @@
                                             ></template
                                         >
                                         <b-form-input
-                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'input-dark'
+                                                    : 'input-light'
+                                            "
                                             :state="agentPortValid"
                                             v-model="agentPort"
                                             type="number"
@@ -445,7 +457,11 @@
                                             ></template
                                         >
                                         <b-form-input
-                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'input-dark'
+                                                    : 'input-light'
+                                            "
                                             :state="agentUsernameValid"
                                             v-model="agentUsername"
                                             type="text"
@@ -531,7 +547,11 @@
                                     to make sure your agent is reachable.
                                 </span>
                                 <b-form-textarea
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     plaintext
                                     :value="publicKey"
                                     max-rows="15"
@@ -681,8 +701,11 @@
                                     ></template
                                 >
                                 <b-form-input
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                                    :state="agentWorkdirValid"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     v-model="agentWorkdir"
                                     type="text"
                                     placeholder="$HOME/.plantit"
@@ -817,27 +840,6 @@
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        >Directory in which to run user
-                                        workflows.</span
-                                    ></template
-                                >
-                                <b-form-input
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                                    :state="agentWorkdir !== ''"
-                                    v-model="agentWorkdir"
-                                    type="text"
-                                    placeholder="Enter a working directory path"
-                                    required
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group>
-                                <template #description
-                                    ><span
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
                                         >Commands to run before user commands
                                         (e.g., loading modules, setting
                                         environment variables). Frequently
@@ -845,7 +847,11 @@
                                     ></template
                                 >
                                 <b-form-textarea
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     v-model="agentPrecommands"
                                     type="text"
                                     rows="3"
@@ -950,7 +956,11 @@
                                     ></template
                                 >
                                 <b-form-input
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     v-model="agentQueue"
                                     :state="agentQueue !== ''"
                                     type="text"
@@ -972,7 +982,11 @@
                                     ></template
                                 >
                                 <b-form-input
-                                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'input-dark'
+                                            : 'input-light'
+                                    "
                                     v-model="agentProject"
                                     type="text"
                                     placeholder="Enter a project name"
@@ -1277,7 +1291,7 @@ export default {
             agentPort: 22,
             agentUsername: '',
             agentDescription: '',
-            agentWorkdir: '',
+            agentWorkdir: '$HOME/.plantit',
             agentPrecommands:
                 'export LC_ALL=en_US.utf8 && export LANG=en_US.utf8',
             agentMaxTime: 60,
@@ -1462,7 +1476,7 @@ export default {
                 hostname: this.agentHost,
                 username: this.agentUsername,
                 precommand: this.agentPrecommands,
-                // executor: this.agentExecutor,
+                executor: this.agentExecutor,
                 workdir: this.agentWorkdir
             };
 
@@ -1597,9 +1611,8 @@ export default {
                           port: this.agentPort,
                           username: this.agentUsername
                       };
-            if (this.agentWorkdir !== '') {
-                data['directory'] = this.agentWorkdir;
-            }
+
+            data['workdir'] = this.agentWorkdir;
 
             await axios({
                 method: 'post',
