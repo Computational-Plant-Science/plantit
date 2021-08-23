@@ -61,3 +61,11 @@ mkdir -p logs
 echo "Running migrations..."
 $compose exec -T plantit /code/scripts/wait-for-postgres.sh postgres python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
+
+echo "Configuring SSH"
+if [ ! -d config/ssh ]; then
+  mkdir config/ssh
+fi
+if [ ! -f config/ssh/known_hosts ]; then
+  touch config/ssh/known_hosts
+fi
