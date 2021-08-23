@@ -127,27 +127,29 @@
                                                 >
                                                     {{ getAgent.name }}
                                                     <small>
-                                                    <i
-                                                        v-if="
-                                                            getAgent.is_healthy
-                                                        "
-                                                        v-b-tooltip:hover
-                                                        title="Healthy"
-                                                        class="fas fa-heartbeat text-success fa-fw"
-                                                    ></i
-                                                    ><i
-                                                        v-else
-                                                        v-b-tooltip:hover
-                                                        title="Unhealthy"
-                                                        class="fas fa-heart-broken text-danger fa-fw"
-                                                    ></i
-                                                    ><i
-                                                        v-if="getAgent.disabled"
-                                                        v-b-tooltip:hover
-                                                        title="Disabled"
-                                                        class="fas fa-exclamation-circle text-secondary fa-fw"
-                                                    ></i>
-                                                      </small>
+                                                        <i
+                                                            v-if="
+                                                                getAgent.is_healthy
+                                                            "
+                                                            v-b-tooltip:hover
+                                                            title="Healthy"
+                                                            class="fas fa-heartbeat text-success fa-fw"
+                                                        ></i
+                                                        ><i
+                                                            v-else
+                                                            v-b-tooltip:hover
+                                                            title="Unhealthy"
+                                                            class="fas fa-heart-broken text-danger fa-fw"
+                                                        ></i
+                                                        ><i
+                                                            v-if="
+                                                                getAgent.disabled
+                                                            "
+                                                            v-b-tooltip:hover
+                                                            title="Disabled"
+                                                            class="fas fa-exclamation-circle text-secondary fa-fw"
+                                                        ></i>
+                                                    </small>
                                                 </h1>
                                                 <b-badge
                                                     v-if="
@@ -1744,7 +1746,9 @@
                 <b-form-group id="input-group-1" label-for="input-1">
                     <b-input-group size="md" prepend="Name">
                         <b-form-input
-                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                            :class="
+                                profile.darkMode ? 'input-dark' : 'input-light'
+                            "
                             id="input-1"
                             v-model="createTaskForm.name"
                             required
@@ -1759,7 +1763,9 @@
                 <b-form-group id="input-group-3" label-for="input-3">
                     <b-input-group size="md" prepend="Command">
                         <b-form-input
-                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                            :class="
+                                profile.darkMode ? 'input-dark' : 'input-light'
+                            "
                             id="input-3"
                             v-model="createTaskForm.command"
                             required
@@ -1970,9 +1976,9 @@ export default {
     },
     methods: {
         copyPublicKey() {
-            var copyTextarea = document.getElementById('publicKey');
-            copyTextarea.focus();
-            copyTextarea.select();
+            let copied = document.getElementById('publicKey');
+            copied.focus();
+            copied.select();
             document.execCommand('copy');
             this.$bvToast.toast(`Copied public key to clipboard`, {
                 autoHideDelay: 3000,
