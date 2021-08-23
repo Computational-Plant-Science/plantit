@@ -1693,6 +1693,7 @@
                         <code>~/.ssh/authorized_keys</code> file on your agent.
                     </p>
                     <b-form-textarea
+                        id="publicKey"
                         plaintext
                         :value="publicKey"
                         max-rows="15"
@@ -1969,12 +1970,10 @@ export default {
     },
     methods: {
         copyPublicKey() {
-            const el = document.createElement('textarea');
-            el.value = this.publicKey;
-            document.body.appendChild(el);
-            el.select();
+            var copyTextarea = document.getElementById('publicKey');
+            copyTextarea.focus();
+            copyTextarea.select();
             document.execCommand('copy');
-            document.body.removeChild(el);
             this.$bvToast.toast(`Copied public key to clipboard`, {
                 autoHideDelay: 3000,
                 appendToast: false,
