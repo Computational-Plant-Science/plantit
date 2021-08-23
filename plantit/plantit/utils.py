@@ -1808,6 +1808,7 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
 
     Returns: True if the agent was successfully reached, otherwise false.
     """
+
     output = []
     try:
         if agent.authentication == AgentAuthentication.PASSWORD:

@@ -1,5 +1,6 @@
 import json
 import json
+import subprocess
 import logging
 import os
 from urllib.parse import parse_qs
@@ -332,6 +333,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             pkey = str(get_user_private_key_path(request.user.username))
             self.logger.info(pkey)
             ssh = SSH(hostname, port=port, username=username, pkey=pkey)
+
+        # subprocess.run(f"ssh-keyscan -H {hostname} >> ../config/ssh/known_hosts", shell=True)
 
         with ssh:
             try:

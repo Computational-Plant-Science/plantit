@@ -64,7 +64,7 @@ This will start a number of containers:
 - `redis`: Redis server (used as cache and Celery message broker)
 - `sandbox`: an Ubuntu environment for testing workflows
 
-The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into PlantIT at least once with CyVerse (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
+The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into the site at least once (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
 ```python
 from django.contrib.auth.models import User
@@ -82,7 +82,7 @@ Once the containers are up, tests can be run with `docker-compose -f docker-comp
 
 ### Production
 
-In production configuration, NGINX servers static assets and reverse-proxies the back-end. Django also runs behind Gunicorn (both in the same container).
+In production configuration, NGINX serves static assets and reverse-proxies Django via Gunicorn (both in the same container).
 
 To configure PlantIT for deployment, first clone the repo, then, from the root directory, run:
 
