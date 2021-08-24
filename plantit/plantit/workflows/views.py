@@ -32,7 +32,7 @@ async def list_public(request):
 @login_required
 @async_to_sync
 async def list_personal(request, owner):
-    profile = await get_user_django_profile(request.user)
+    profile = await sync_to_async(Profile.objects.get)(user=request.user)
     if owner != profile.github_username:
         try:
             await sync_to_async(Profile.objects.get)(github_username=owner)
@@ -48,7 +48,7 @@ async def list_personal(request, owner):
 @login_required
 @async_to_sync
 async def get(request, owner, name):
-    profile = await get_user_django_profile(request.user)
+    profile = await sync_to_async(Profile.objects.get)(user=request.user)
     invalidate = request.GET.get('invalidate', False)
     bundle = await get_workflow(owner=owner, name=name, token=profile.github_token, invalidate=bool(invalidate))
     return HttpResponseNotFound() if bundle is None else JsonResponse(bundle)

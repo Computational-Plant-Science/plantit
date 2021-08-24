@@ -159,6 +159,7 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
         Timeout) | retry_if_exception_type(HTTPError)))
 async def get_profile(owner: str, token: str) -> dict:
     headers = {'Authorization': f"Bearer {token}"}
+    logger.info(headers)
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.get(f"https://api.github.com/users/{owner}")
         if response.status_code == 200: return response.json()

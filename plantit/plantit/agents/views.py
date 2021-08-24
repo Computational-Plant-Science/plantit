@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest, HttpResponse
 from django.utils import timezone
 
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAuthentication
@@ -52,12 +52,26 @@ def list_or_bind(request):
         name = config['name'] if 'name' in config else None
         authentication = str(config['authentication']).lower()
         executor = str(config['executor']).lower()
+
+        # get workdir
+        if 'password' in auth:
+            ssh = SSH(auth['hostname'], port=auth['port'], username=auth['username'], password=auth['password'])
+        else:
+            pkey = str(get_user_private_key_path(request.user.username))
+            ssh = SSH(auth['hostname'], port=auth['port'], username=auth['username'], pkey=pkey)
+
+        workdir = None
+        with ssh:
+            for line in execute_command(ssh=ssh, precommand=':', command='pwd', directory=f"{config['workdir']}/.plantit", allow_stderr=False): workdir = line
+            if workdir is None or '.plantit' not in workdir: return HttpResponse(status=500)
+        # workdir = workdir.rpartition('/')[0]
+
         agent, created = Agent.objects.get_or_create(
             name=guid if name is None else name,
             guid=guid,
             user=request.user,
             description=config['description'],
-            workdir=config['workdir'],
+            workdir=workdir.strip(),
             username=auth['username'],
             port=auth['port'],
             hostname=config['hostname'],

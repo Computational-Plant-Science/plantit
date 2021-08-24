@@ -3804,18 +3804,21 @@
                 @ok="onStart"
                 ok-variant="success"
             >
+                <b-form-group description="Enter your username.">
                 <b-form-input
                     v-model="authenticationUsername"
                     type="text"
                     placeholder="Your username"
                     required
-                ></b-form-input>
-                <b-form-input
+                ></b-form-input></b-form-group>
+              <b-form-group description="Enter your password.">
+              <b-form-input
                     v-model="authenticationPassword"
                     type="password"
                     placeholder="Your password"
                     required
                 ></b-form-input>
+              </b-form-group>
             </b-modal>
             <b-modal
                 id="unbind"

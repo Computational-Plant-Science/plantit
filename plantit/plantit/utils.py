@@ -118,7 +118,10 @@ def get_profile_user(profile: Profile):
 
 @sync_to_async
 def get_user_django_profile(user: User):
-    return user.profile
+    logger.info(user.username)
+    profile = Profile.objects.get(user=user)
+    logger.info(profile.github_username)
+    return profile
 
 
 def get_user_cyverse_profile(user: User) -> dict:
@@ -150,8 +153,9 @@ def refresh_user_cyverse_tokens(user: User):
     user.save()
 
 
-async def get_user_github_profile(user: User) -> dict:
-    profile = await get_user_django_profile(user)
+async def get_user_github_profile(user: User):
+    profile = await sync_to_async(Profile.objects.get)(user=user)
+    logger.warning(profile.github_username)
     return await github.get_profile(profile.github_username, profile.github_token)
 
 
@@ -226,7 +230,7 @@ def get_user_statistics(user: User) -> dict:
 
 
 async def calculate_user_statistics(user: User) -> dict:
-    profile = await get_user_django_profile(user)
+    profile = await sync_to_async(Profile.objects.get)(user=user)
     all_tasks = await filter_tasks(user=user)
     completed_tasks = await filter_tasks(user=user, completed=True)
     total_tasks = len(all_tasks)
@@ -401,7 +405,7 @@ async def repopulate_personal_workflow_cache(owner: str):
 
     empty_personal_workflow_cache(owner)
 
-    profile = await get_user_django_profile(user)
+    profile = await sync_to_async(Profile.objects.get)(user=user)
     owned = await list_workflows(user=user)
     bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token) for workflow in owned])
     tasks = await asyncio.gather(*[bind, github.list_connectable_repos_by_owner(owner, profile.github_token)])
@@ -448,7 +452,7 @@ async def repopulate_public_workflow_cache(token: str):
         else:
             # otherwise refresh all the workflow owner's workflows (but only once)
             if user.username in encountered_users: continue
-            profile = await get_user_django_profile(user)
+            profile = await sync_to_async(Profile.objects.get)(user=user)
             empty_personal_workflow_cache(profile.github_username)
             await repopulate_personal_workflow_cache(profile.github_username)
             encountered_users.append(user.username)
@@ -839,10 +843,10 @@ def configure_local_task_environment(task: Task, ssh: SSH):
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
     work_dir = join(task.agent.workdir, task.guid)
-    log_task_orchestrator_status(task, [f"Creating working directory"])
+    log_task_orchestrator_status(task, [f"Creating working directory: {work_dir}"])
     async_to_sync(push_task_event)(task)
 
-    list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
+    list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {task.guid}", directory=task.agent.workdir))
 
     log_task_orchestrator_status(task, [f"Uploading task"])
     upload_task_executables(task, ssh, cli_options)
@@ -1252,6 +1256,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
         workdir = join(task.agent.workdir, task.workdir)
+        logger.info(workdir)
         sftp.chdir(workdir)
         template_path = environ.get('TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM')

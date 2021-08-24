@@ -18,6 +18,7 @@ from django.utils import timezone
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
+from plantit.users.models import Profile
 from plantit.utils import dataset_access_policy_to_dict, project_to_dict, get_user_django_profile
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ async def share(request):
             }
         })
 
-    profile = await get_user_django_profile(request.user)
+    profile = await sync_to_async(Profile.objects.get)(user=owner)
     headers = {
         "Authorization": f"Bearer {profile.cyverse_access_token}",
         "Content-Type": "application/json;charset=utf-8"
@@ -146,7 +147,7 @@ async def unshare(request):
         }
     })
 
-    profile = await get_user_django_profile(request.user)
+    profile = await sync_to_async(Profile.objects.get)(user=owner)
     headers = {
         "Authorization": f"Bearer {profile.cyverse_access_token}",
         "Content-Type": 'application/json;charset=utf-8'
@@ -174,7 +175,7 @@ async def create(request):
     path = body['path']
     project = body.get('project', None)
     study = body.get('study', None)
-    profile = await get_user_django_profile(request.user)
+    profile = await sync_to_async(Profile.objects.get)(user=owner)
     headers = {
         "Authorization": f"Bearer {profile.cyverse_access_token}",
     }

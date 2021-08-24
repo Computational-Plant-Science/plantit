@@ -1253,13 +1253,15 @@
                 placeholder="Your username"
                 required
             ></b-form-input>-->
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationPassword"
-                type="password"
-                placeholder="Your password"
-                required
-            ></b-form-input>
+            <b-form-group description="Enter your password.">
+                <b-form-input
+                    :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                    v-model="authenticationPassword"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                ></b-form-input>
+            </b-form-group>
         </b-modal>
     </b-container>
 </template>
@@ -1467,6 +1469,8 @@ export default {
             if (this.agentBindingStage === 'details') return;
             else if (this.agentBindingStage === 'connection')
                 this.checkAgentConnection();
+            else if (this.agentBindingStage === 'workdir')
+                this.createAgentWorkdir();
             else if (!this.agentExecutorValid) this.checkAgentExecutor();
             else this.bindAgent();
         },
@@ -1744,6 +1748,7 @@ export default {
                 auth: {
                     username: this.agentUsername,
                     password: this.authenticationPassword,
+                    hostname: this.agentHost,
                     port: this.agentPort
                 },
                 config: {

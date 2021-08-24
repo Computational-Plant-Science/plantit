@@ -107,8 +107,8 @@ class IDPViewSet(viewsets.ViewSet):
         if created: profile.created = timezone.now()
         profile.cyverse_access_token = access_token
         profile.cyverse_refresh_token = refresh_token
-        profile.save()
         user.profile = profile
+        profile.save()
         user.save()
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -220,7 +220,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
-        stats = get_user_statistics(user)
+        stats = get_user_statistics(user) if request.user.profile.github_token != '' else None
 
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
@@ -333,7 +333,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             pkey = str(get_user_private_key_path(request.user.username))
             ssh = SSH(hostname, port=port, username=username, pkey=pkey)
 
-        # subprocess.run(f"ssh-keyscan -H {hostname} >> ../config/ssh/known_hosts", shell=True)
+        subprocess.run(f"ssh-keyscan -H {hostname} >> ../config/ssh/known_hosts", shell=True)
 
         with ssh:
             try:
@@ -362,7 +362,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         with ssh:
             try:
-                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir {workdir}/.plantit && cd {workdir}/.plantit && pwd", allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir -p {workdir}/.plantit && cd {workdir}/.plantit && pwd", allow_stderr=False):
                     self.logger.info(line)
                     if 'cannot' in line or '/.plantit' not in line:  # TODO are there other error cases we should catch here?
                         return HttpResponse(line, status=500)
