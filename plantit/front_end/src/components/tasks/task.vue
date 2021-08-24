@@ -916,7 +916,7 @@
                                                     align-self="end"
                                                     v-if="
                                                         getWorkflow.config
-                                                            .output
+                                                            .output && !getTask.is_failure
                                                     "
                                                 >
                                                     <b-button
