@@ -679,9 +679,9 @@
                                         "
                                     >
                                         You must have write permissions in the
-                                        chosen directory. A `.plantit` hidden
-                                        directory will be created and used to
-                                        store your tasks.
+                                        chosen directory. A hidden directory
+                                        named <code>.plantit</code> will be
+                                        created and used to store your tasks.
                                     </p>
                                 </b-col></b-row
                             ></b-col
@@ -1291,7 +1291,7 @@ export default {
             agentPort: 22,
             agentUsername: '',
             agentDescription: '',
-            agentWorkdir: '$HOME/.plantit',
+            agentWorkdir: '$HOME',
             agentPrecommands:
                 'export LC_ALL=en_US.utf8 && export LANG=en_US.utf8',
             agentMaxTime: 60,

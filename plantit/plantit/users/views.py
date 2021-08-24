@@ -331,7 +331,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             ssh = SSH(hostname, port=port, username=username, password=request.data['password'])
         else:
             pkey = str(get_user_private_key_path(request.user.username))
-            self.logger.info(pkey)
             ssh = SSH(hostname, port=port, username=username, pkey=pkey)
 
         # subprocess.run(f"ssh-keyscan -H {hostname} >> ../config/ssh/known_hosts", shell=True)
@@ -363,9 +362,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         with ssh:
             try:
-                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir {workdir} && cd {workdir} && pwd", allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir {workdir}/.plantit && cd {workdir}/.plantit && pwd", allow_stderr=False):
                     self.logger.info(line)
-                    if 'cannot' in line:  # TODO are there other error cases we should catch here?
+                    if 'cannot' in line or '/.plantit' not in line:  # TODO are there other error cases we should catch here?
                         return HttpResponse(line, status=500)
                     else:
                         return JsonResponse({'workdir': line.strip()})

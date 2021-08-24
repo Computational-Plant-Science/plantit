@@ -1890,7 +1890,7 @@ export default {
         otherUsers() {
             return this.allUsers.filter(
                 u =>
-                    u.username !== this.profile.djangoProfile.username &&
+                    u.username !== this.profile.djangoProfile.username && u.github_profile !== undefined &&
                     !this.getAgent.users_authorized.some(
                         ua => ua.username === u.username
                     )
