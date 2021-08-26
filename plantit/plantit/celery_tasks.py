@@ -538,7 +538,7 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
-    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
+    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens for users with running tasks')
 
     # refresh user institution geocoding info
     sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
@@ -547,8 +547,8 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')
 
     # agent healthchecks
-    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='agents healthchecks')
+    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
 
     # refresh workflow cache
-    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='workflows cache refresh')
+    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='refresh user workflows cache')
 

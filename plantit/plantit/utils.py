@@ -1491,11 +1491,34 @@ def get_jobqueue_task_job_status(task: Task, auth: dict) -> str:
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
 
-        job_line = next(l for l in lines if task.job_id in l)
-        job_split = job_line.split()
-        job_status = job_split[5].replace('+', '')
-        return job_status
-    pass
+        line = next(l for l in lines if task.job_id in l)
+        status = line.split()[5].replace('+', '')
+
+        # check the scheduler log file in case `sacct` is no longer displaying info
+        # about this job so we don't miss a cancellation/timeout/failure/completion
+        with ssh.client.open_sftp() as sftp:
+
+            log_file_path = get_task_scheduler_log_file_path(task)
+            stdin, stdout, stderr = ssh.client.exec_command(f"test -e {log_file_path} && echo exists")
+            if stdout.read().decode().strip() != 'exists': return status
+
+            with sftp.open(log_file_path, 'r') as log_file:
+                logger.info(f"Checking scheduler log file {log_file_path} for job {task.job_id} status")
+                for line in log_file.readlines():
+                    if 'CANCELLED' in line or 'CANCELED' in line:
+                        status = 'CANCELED'
+                        continue
+                    if 'TIMEOUT' in line:
+                        status = 'TIMEOUT'
+                        continue
+                    if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
+                        status = 'FAILED'
+                        break
+                    if 'SUCCESS' in line or 'COMPLETED' in line:
+                        status = 'SUCCESS'
+                        break
+
+                return status
 
 
 def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
