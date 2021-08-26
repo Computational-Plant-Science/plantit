@@ -4,6 +4,7 @@ django-filter
 django-model-utils
 django-taggit
 django-celery-beat
+django-celerybeat-status
 djangorestframework
 djangochannelsrestframework
 django-enum-choices
@@ -39,3 +40,4 @@ czifile
 opencv-python
 redis
 boto3
+flower

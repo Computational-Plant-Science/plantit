@@ -195,6 +195,7 @@ AWS_REGION=<your AWS region>
 AWS_FEEDBACK_ARN=<your AWS feedback ARN>
 TUTORIALS_FILE=/code/tutorials.pdf
 FEEDBACK_FILE=/code/feedback.pdf
+CELERY_AUTH=user:password
 ```
 
 Note that the following environment variables must be supplied manually:

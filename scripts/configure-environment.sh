@@ -157,4 +157,5 @@ AWS_FEEDBACK_ARN=$aws_feedback_arn
 AGENTS_HEALTHCHECKS_MINUTES=2
 TUTORIALS_FILE=/code/tutorials.pdf
 FEEDBACK_FILE=/code/feedback.pdf
+CELERY_AUTH=user:password
 EOT
