@@ -1745,10 +1745,10 @@ export default {
         async bindAgent() {
             this.bindingAgent = true;
             var auth = {
-                    username: this.agentUsername,
-                    hostname: this.agentHost,
-                    port: this.agentPort
-                };
+                username: this.agentUsername,
+                hostname: this.agentHost,
+                port: this.agentPort
+            };
             if (this.agentAuthentication === 'password')
                 auth['password'] = this.authenticationPassword;
             let data = {

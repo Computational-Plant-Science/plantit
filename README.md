@@ -41,7 +41,7 @@ The following are required to run `PlantIT` in a Unix environment:
 First, clone the repository:
 
 ```bash
-git clone git@github.com:Computational-Plant-Science/plantit.git
+git clone https://github.com/Computational-Plant-Science/plantit.git
 ```
 
 ### Development
@@ -60,9 +60,10 @@ This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:3000`)
 - `postgres`: PostgreSQL database
-- `celery`: Celery worker
-- `redis`: Redis server (used as cache and Celery message broker)
-- `sandbox`: an Ubuntu environment for testing workflows
+- `celery`: Celery background worker
+- `flower`: Flower web UI for Celery (`http://localhost:5555`)
+- `redis`: Redis instance (caching, Celery message broker)
+- `sandbox`: Ubuntu test environment
 
 The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into the site at least once (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
@@ -105,12 +106,12 @@ This script is idempotent and may safely be triggered to run by e.g., a CI/CD se
 
 At this point the following containers should be running:
 
-- `plantit`: Django web application (`http://localhost:80`)
+- `nginx`: NGINX server (reverse proxy)
+- `plantit`: Django web application behind Gunicorn (`http://localhost:80`)
 - `postgres`: PostgreSQL database
-- `redis`: Redis server
-- `celery`: Celery worker
-- `sandbox`: an Ubuntu environment for testing workflows
-- `nginx`: NGINX server/reverse proxy
+- `celery`: Celery background worker
+- `redis`: Redis instance
+- `sandbox`: Ubuntu test environment
 
 #### SSL Certificates
 
