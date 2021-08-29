@@ -11,45 +11,22 @@ case $key in
     shift
     shift
     ;;
-    -p|--password)
-    password="$2"
-    shift
-    shift
-    ;;
-    -e|--email)
-    email="$2"
-    shift
-    shift
-    ;;
-    -v|--verbose) verbose=1;shift;;
-    *)
-    positional+=("$1")
-    shift
-    ;;
 esac
 done
 set -- "${positional[@]}"
 
-if (( verbose == 1 )); then
-  echo "Creating Django superuser with..."
-  echo "username: ${username}"
-  echo "password: ${password}"
-  echo "email: ${email}"
-fi
-
 script="
 from django.contrib.auth.models import User
-from plantit.users.models import Profile
 
 username = '$username';
-password = '$password';
-email = '$email';
 
 if User.objects.filter(username=username).count()==0:
-    user = User.objects.create_superuser(username, email, password);
-    profile = Profile.objects.create(user=user)
-    print('Superuser created.');
+    print('No user with username ' + username);
 else:
-    print('User with that name already exists!');
+    user = User.objects.get(username=username)
+    user.is_staff = True
+    user.is_superuser = True
+    user.save()
+    print('Configured staff/superuser permissions for user ' + username)
 "
 printf "$script" | python manage.py shell

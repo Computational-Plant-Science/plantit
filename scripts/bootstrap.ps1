@@ -1,4 +1,4 @@
-Write-Host "Bootstrapping ${PWD##*/} development environment..."
+Write-Host "Bootstrapping development environment..."
 $compose="docker-compose -f docker-compose.dev.yml"
 $nocache=0
 $quiet=0
