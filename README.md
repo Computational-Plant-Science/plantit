@@ -75,6 +75,8 @@ user.is_superuser = True
 user.save()
 ```
 
+You can also run `./scripts/configure-superuser.sh -u <your CyVerse username>` to accomplish the same thing.
+
 Note that the bootstrap script will not clear migrations. To restore to a totally clean database state, you will need to remove all `*.py` files from the `plantit/plantit/migrations` directory (except for `__init__.py`).
 
 #### Tests
