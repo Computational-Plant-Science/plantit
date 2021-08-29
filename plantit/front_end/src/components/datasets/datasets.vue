@@ -470,14 +470,6 @@ export default {
             unsharing: false
         };
     },
-    async created() {
-        await Promise.all([
-            // this.$store.dispatch('datasets/loadPublic'),
-            // this.$store.dispatch('datasets/loadPersonal'),
-            // this.$store.dispatch('datasets/loadShared'),
-            // this.$store.dispatch('datasets/loadSharing')
-        ]);
-    },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('datasets', [

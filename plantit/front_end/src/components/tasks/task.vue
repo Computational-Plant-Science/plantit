@@ -441,7 +441,7 @@
                                             {{ prettify(getTask.due_time) }}
                                         </small>
                                     </b-col>
-                                  <b-col
+                                    <b-col
                                         class="m-0 p-0 text-center"
                                         v-if="getTask.is_complete"
                                         ><small>
@@ -916,7 +916,8 @@
                                                     align-self="end"
                                                     v-if="
                                                         getWorkflow.config
-                                                            .output && !getTask.is_failure
+                                                            .output &&
+                                                            !getTask.is_failure
                                                     "
                                                 >
                                                     <b-button
@@ -2179,14 +2180,15 @@ export default {
                 return require('../../assets/PlantITLoading.gif');
             else return this.thumbnailFor(file.path);
         },
-        thumbnailFor(path) {
+        async thumbnailFor(path) {
             let i = this.getTask.output_files.findIndex(f => f.path === path);
             if (
                 this.viewMode === 'Grid' &&
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
                 i <= this.outputFilePage * this.outputPageSize
             )
-                return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+            // return `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`;
+            return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function(date) {

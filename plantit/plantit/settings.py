@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     'plantit.apps.PlantITConfig',
     'taggit',
     'django_celery_beat',
-    'celerybeat_status',
     'channels',
 ]
 

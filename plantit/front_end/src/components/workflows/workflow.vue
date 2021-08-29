@@ -3935,15 +3935,17 @@ export default {
     },
     async mounted() {
         this.populateComponents();
-        if (
-            'input' in this.getWorkflow.config &&
-            this.getWorkflow.config['input'] !== undefined
-        )
-            await Promise.all([
-                this.$store.dispatch('datasets/loadPersonal'),
-                this.$store.dispatch('datasets/loadPublic'),
-                this.$store.dispatch('datasets/loadShared')
-            ]);
+
+        // datasets should already be loaded
+        // if (
+        //     'input' in this.getWorkflow.config &&
+        //     this.getWorkflow.config['input'] !== undefined
+        // )
+        //     await Promise.all([
+        //         this.$store.dispatch('datasets/loadPersonal'),
+        //         this.$store.dispatch('datasets/loadPublic'),
+        //         this.$store.dispatch('datasets/loadShared')
+        //     ]);
 
         if (
             this.getWorkflow.config.jobqueue !== undefined &&

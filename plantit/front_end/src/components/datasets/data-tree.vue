@@ -1168,6 +1168,11 @@
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-col>
+                    <b-img
+                        v-if="previewsLoaded"
+                        :src="getFileURL(child)"
+                        style="width: 3rem"
+                    ></b-img>
                     <b-button
                         class="mt-1 mb-1 ml-4"
                         :disabled="!select || select !== 'file'"
@@ -1184,7 +1189,7 @@
                     ><small>{{ formatBytes(child['file-size']) }}</small></b-col
                 >
                 <b-col md="auto">
-                    <!--<b-button
+                    <b-button
                         id="popover-reactive-1"
                         :disabled="
                             !fileIsImage(child.label) &&
@@ -1198,7 +1203,7 @@
                         @click="viewFile(child)"
                     >
                         <i class="fas fa-eye fa-fw"></i>
-                    </b-button-->
+                    </b-button>
                     <b-button
                         v-if="!isShared"
                         class="m-1"
@@ -1255,6 +1260,7 @@
             ></data-tree>
         </b-list-group-item>
         <b-modal
+            v-if="internalLoaded && internalNode !== null && selectedFile !== null"
             ok-only
             :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
             :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
@@ -1268,31 +1274,29 @@
             ok-title="Close"
             size="xl"
             centered
-            :title="thumbnailTitle"
-            id="thumbnail"
+            :title="selectedFileTitle"
+            :id="'selectedFile' + internalNode.path"
             class="overflow-hidden"
-            @close="onThumbnailHidden"
+            @close="onSelectedFileClosed"
         >
             <b-spinner
-                v-if="loadingThumbnail"
+                v-if="!previewsLoaded"
                 type="grow"
                 label="Loading..."
                 variant="secondary"
             ></b-spinner>
             <b-img
-                v-if="fileIsImage(thumbnailName)"
+                v-if="fileIsImage(selectedFile.label)"
                 center
-                :src="thumbnailUrl"
+                :src="fileURLs[selectedFile.path]"
                 style="width: 68rem"
-                @load="thumbnailLoaded"
-                v-show="thumbnailDoneLoading"
+                v-show="previewsLoaded"
             >
             </b-img>
             <b-embed
-                @load="thumbnailLoaded"
-                v-else-if="fileIsText(thumbnailName)"
+                v-else-if="fileIsText(selectedFile.label)"
                 type="iframe"
-                :src="thumbnailUrl"
+                :src="fileURLs[selectedFile.path]"
             ></b-embed>
         </b-modal>
     </b-list-group>
@@ -1301,8 +1305,8 @@
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import router from '@/router';
 import { guid } from '@/utils';
+
 export default {
     name: 'data-tree',
     props: {
@@ -1351,12 +1355,12 @@ export default {
             sharedUsers: [],
             sharedAlertMessage: '',
             showSharedAlert: false,
-            // thumbnail view
-            loadingThumbnail: true,
-            thumbnailName: '',
-            thumbnailUrl: '',
-            thumbnailTitle: '',
-            thumbnailDoneLoading: false,
+            // selected file view
+            selectedFileLoading: true,
+            selectedFileTitle: '',
+            selectedFile: null,
+            fileURLs: [],
+            previewsLoaded: false,
             selectedProject: null,
             selectedStudy: null,
             showingProjectSelection: false,
@@ -1366,6 +1370,7 @@ export default {
             studyToUnbind: null
         };
     },
+    mounted: {},
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
@@ -1382,8 +1387,7 @@ export default {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
-            let matches = this.sharingDatasets.filter(d => d.path === path);
-            return matches;
+            return this.sharingDatasets.filter(d => d.path === path);
         },
         associatedStudies() {
             let path = this.internalLoaded
@@ -1407,7 +1411,7 @@ export default {
                 });
         },
         internalLoadedFolders() {
-            return this.internalNode.folders;
+            return this.internalNode !== null ? this.internalNode.folders : [];
         },
         sharedBy: function() {
             if (this.isShared) {
@@ -1492,6 +1496,52 @@ export default {
         }
     },
     methods: {
+        getFileURL(file) {
+            let url = this.fileURLs[file.path];
+            return url;
+        },
+        async loadFileURLs() {
+            if (
+                this.internalLoaded &&
+                this.internalNode !== null &&
+                this.internalNode.files !== undefined &&
+                this.internalNode.files !== null
+            ) {
+                await Promise.all(
+                    this.internalNode.files.map(f => this.fileURL(f))
+                ).then(urls => {
+                    for (const url of urls)
+                        this.fileURLs[url['path']] = url['url'];
+                });
+            }
+            this.previewsLoaded = true;
+        },
+        async fileURL(file) {
+            var result = null;
+            await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/fileio/download?path=${file.path}`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        },
+                        responseType: 'blob'
+                    }
+                )
+                .then(response => {
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
+                    result = {
+                        path: file.path,
+                        url: url
+                    };
+                });
+
+            return result;
+        },
         async refreshUsers() {
             await this.$store.dispatch('users/loadAll');
         },
@@ -1709,18 +1759,13 @@ export default {
             );
         },
         viewFile(file) {
-            router.push({
-                name: 'artifact',
-                params: {
-                    path: file.path
-                }
-            });
+            this.selectedFile = file;
+            this.selectedFileTitle = file.label;
+            this.$bvModal.show('selectedFile' + this.internalNode.path);
         },
-        onThumbnailHidden() {
-            this.thumbnailUrl = '';
-            this.thumbnailTitle = '';
-            this.thumbnailDoneLoading = false;
-            this.loadingThumbnail = true;
+        onSelectedFileClosed() {
+            this.selectedFile = null;
+            this.selectedFileTitle = '';
         },
         showCreateDirectoryModal() {
             this.$bvModal.show(
@@ -2094,12 +2139,13 @@ export default {
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
                     { headers: { Authorization: 'Bearer ' + token } }
                 )
-                .then(response => {
+                .then(async response => {
                     this.internalNode = response.data;
                     this.internalLoading = false;
                     this.internalLoaded = true;
                     this.deleting = false;
                     if (!this.isOpen) this.isOpen = true;
+                    await this.loadFileURLs();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
