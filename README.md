@@ -1,8 +1,14 @@
-<p align="center">
-<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" />
-</p>
+<div align="center">
 
-# PlantIT
+<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative;top: 75px" />
+
+<h1 align="center"
+    style="text-decoration: underline;">
+        plant<small
+            class="mb-3 text-success"
+            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000; color: #d6df5D"
+            >IT</small>
+</h1>
 
 Plant phenotyping automation in the browser.
 
@@ -11,7 +17,7 @@ Plant phenotyping automation in the browser.
 [![Documentation Status](https://readthedocs.org/projects/plantit/badge/?version=latest)](https://plantit.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit)
 
-**This project is in open beta and is not yet stable**.
+</div>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
