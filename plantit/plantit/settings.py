@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     'taggit',
     'django_celery_beat',
     'channels',
+    'simple_history'
 ]
 
 MIDDLEWARE = [

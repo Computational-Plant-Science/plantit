@@ -8,6 +8,7 @@ django-celerybeat-status
 djangorestframework
 djangochannelsrestframework
 django-enum-choices
+django-simple-history
 psycopg2-binary
 markdown
 paramiko
