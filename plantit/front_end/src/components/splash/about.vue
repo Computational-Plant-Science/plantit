@@ -21,7 +21,6 @@
                             class="m-0 p-0"
                         ></b-img>
                         <div
-                            style="background: linear-gradient(rgba(97,97,99,1), rgba(97,97,99,1)) no-repeat center/3px 75%;margin-left: -2px"
                         >
                             <h1
                                 class="text-white mb-0"
@@ -40,7 +39,7 @@
                                 center
                             ></b-img>
                             <h4 class="text-white mt-4">
-                                A browser portal for easy
+                                A web portal for cloud
                                 <span class="text-success"
                                     ><span class="fa-stack mr-0 fa-2x">
                                         <i
@@ -116,24 +115,30 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Maximize data's yield
+                                    Data storage & provenance
                                 </h4>
-                                Store in the <b-link
+                                Built on the
+                                <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
-                                > Data Store and annotate with <b-link
-                                    class="text-white"
-                                    href="https://www.miappe.org/"
-                                    >MIAPPE</b-link
                                 >
-                                <br />
-                                Provenance-tracking, metadata, and versioning in the cloud<!--, or plug in cloud stores like
+                                Data Store
+                                <!--, or plug in cloud stores like
                             <b-link
                                 class="text-white"
                                 href="https://aws.amazon.com/s3/"
                                 >Amazon S3</b-link
                             >-->
+                                and Terrain API for virtual data science
+                                <br />
+                                Track experiments & datasets and export
+                                <b-link
+                                    class="text-white"
+                                    href="https://www.miappe.org/"
+                                    >MIAPPE</b-link
+                                >
+                                metadata with a click
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -182,26 +187,26 @@
                                 <h4 class="text-success">
                                     Cultivate open source science
                                 </h4>
-                                Develop with
+                                Develop software with
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
                                     >Docker</b-link
                                 >
-                                and
+                                and deploy anywhere with
                                 <b-link
                                     class="text-white"
                                     href="https://sylabs.io/docs/"
                                     >Singularity</b-link
                                 >
-                                and deploy anywhere
                                 <br />
-                                Join the open source plant phenotyping ecosystem on
+                                Explore F/OSS phenotyping tools or bind your own
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
                                     >Github</b-link
                                 >
+                                repository
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -225,20 +230,12 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    No code, no problem
+                                    Code optional but visible
                                 </h4>
-                                High-throughput phenotyping in the browser, no
-                                programming required
+                                High-throughput phenotyping on the web, no
+                                programming necessary
                                 <br />
-                                Click
-                                <b-badge
-                                    size="sm"
-                                    class="m-0 p-1 mr-1"
-                                    disabled
-                                    variant="success"
-                                    >Submit</b-badge
-                                >&mdash; forget about it &mdash; get notified when
-                                results are ready
+                                Transparently reproducible container workflows on the command line
                             </b-card-text>
                         </b-card>
                     </b-col>
