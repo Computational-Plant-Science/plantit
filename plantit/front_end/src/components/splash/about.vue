@@ -38,8 +38,8 @@
                                 style="max-width: 3rem; overflow: hidden; position: absolute; left: 48.6%; z-index: 1; opacity: 0.2"
                                 center
                             ></b-img>
-                            <h4 class="text-white mt-4">
-                                A web portal for cloud
+                            <h4 class="text-white mt-4 ml-4">
+                                a web portal for cloud
                                 <span class="text-success"
                                     ><span class="fa-stack mr-0 fa-2x">
                                         <i
@@ -48,7 +48,7 @@
                                         <i
                                             class="text-dark fas fa-camera-retro fa-stack-1x"
                                             style="opacity: 0.4;"
-                                        ></i> </span
+                                        ></i><i class="fas fa-cloud fa-stack-2x" style="opacity: 0.3;position: relative;top:-10px;left:-3px;color: #d9edfe"></i></span
                                     >phenotyping automation</span
                                 >
                             </h4>
@@ -187,6 +187,14 @@
                                 <h4 class="text-success">
                                     Cultivate open source science
                                 </h4>
+                                Explore F/OSS phenotyping tools or bind your own
+                                <b-link
+                                    class="text-white"
+                                    href="https://www.github.com/"
+                                    >Github</b-link
+                                >
+                                repository
+                                <br/>
                                 Develop software with
                                 <b-link
                                     class="text-white"
@@ -199,14 +207,6 @@
                                     href="https://sylabs.io/docs/"
                                     >Singularity</b-link
                                 >
-                                <br />
-                                Explore F/OSS phenotyping tools or bind your own
-                                <b-link
-                                    class="text-white"
-                                    href="https://www.github.com/"
-                                    >Github</b-link
-                                >
-                                repository
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -230,7 +230,7 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Code optional but visible
+                                    Code optional, always visible
                                 </h4>
                                 High-throughput phenotyping on the web, no
                                 programming necessary
