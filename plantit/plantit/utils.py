@@ -1049,9 +1049,9 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
                 output['include']['names'] = output['include']['names'] + task.workflow['config']['output']['include']['names']
         if 'exclude' in config['output']:
             if 'patterns' in config['output']['exclude']:
-                output['exclude']['patterns'] = output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']
+                output['exclude']['patterns'] = set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns'])
             if 'names' in config['output']['exclude']:
-                output['exclude']['names'] = output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']
+                output['exclude']['names'] = set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names'])
 
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
@@ -1385,29 +1385,32 @@ def get_task_scheduler_log_file_path(task: Task):
 
 def get_remote_logs(log_file_name: str, log_file_path: str, task: Task, ssh: SSH, sftp):
     work_dir = join(task.agent.workdir, task.workdir)
-    cmd = 'test -e {0} && echo exists'.format(join(work_dir, log_file_name))
-    stdin, stdout, stderr = ssh.client.exec_command(cmd)
-
-    if not stdout.read().decode().strip() == 'exists':
-        logger.warning(f"Agent log file {log_file_name} does not exist")
-    else:
+    log_path = join(work_dir, log_file_name)
+    # cmd = f"test -e {log_path} && echo exists"
+    # logger.info(f"Using command: {cmd}")
+    # stdin, stdout, stderr = ssh.client.exec_command(cmd)
+    # if not stdout.read().decode().strip() == 'exists':
+    #     logger.warning(f"Agent log file {log_file_name} does not exist")
+    try:
         with open(log_file_path, 'a+') as log_file:
             sftp.chdir(work_dir)
             sftp.get(log_file_name, log_file.name)
+    except:
+        logger.warning(f"Agent log file {log_file_name} does not exist")
 
-        # obfuscate Docker auth info before returning logs to the user
-        docker_username = environ.get('DOCKER_USERNAME', None)
-        docker_password = environ.get('DOCKER_PASSWORD', None)
-        lines = 0
-        for line in fileinput.input([log_file_path], inplace=True):
-            if docker_username in line.strip():
-                line = line.strip().replace(docker_username, '*' * 7, 1)
-            if docker_password in line.strip():
-                line = line.strip().replace(docker_password, '*' * 7)
-            lines += 1
-            sys.stdout.write(line)
+    # obfuscate Docker auth info before returning logs to the user
+    docker_username = environ.get('DOCKER_USERNAME', None)
+    docker_password = environ.get('DOCKER_PASSWORD', None)
+    lines = 0
+    for line in fileinput.input([log_file_path], inplace=True):
+        if docker_username in line.strip():
+            line = line.strip().replace(docker_username, '*' * 7, 1)
+        if docker_password in line.strip():
+            line = line.strip().replace(docker_password, '*' * 7)
+        lines += 1
+        sys.stdout.write(line)
 
-        logger.info(f"Retrieved {lines} line(s) from {log_file_name}")
+    logger.info(f"Retrieved {lines} line(s) from {log_file_name}")
 
 
 def get_task_remote_logs(task: Task, ssh: SSH):

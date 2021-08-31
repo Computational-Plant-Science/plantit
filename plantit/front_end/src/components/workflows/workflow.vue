@@ -1191,7 +1191,12 @@
                                                                     class="mt-1"
                                                                 >
                                                                     <b-col>
-                                                                        <b-form-input :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                                                        <b-form-input
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'input-dark'
+                                                                                    : 'input-light'
+                                                                            "
                                                                             v-model="
                                                                                 taskName
                                                                             "
@@ -1443,7 +1448,11 @@
                                                                 >
                                                                     <b-col>
                                                                         <multiselect
-                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'input-dark'
+                                                                                    : 'input-light'
+                                                                            "
                                                                             style="z-index: 100"
                                                                             v-model="
                                                                                 tags
@@ -1806,7 +1815,11 @@
                                                                             filetypes.
                                                                         </b>
                                                                         <multiselect
-                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'input-dark'
+                                                                                    : 'input-light'
+                                                                            "
                                                                             :multiple="
                                                                                 true
                                                                             "
@@ -2034,7 +2047,11 @@
                                                                             patterns.
                                                                         </b>
                                                                         <multiselect
-                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'input-dark'
+                                                                                    : 'input-light'
+                                                                            "
                                                                             :multiple="
                                                                                 true
                                                                             "
@@ -2103,7 +2120,11 @@
                                                                             name.
                                                                         </b>
                                                                         <multiselect
-                                                                            :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'input-dark'
+                                                                                    : 'input-light'
+                                                                            "
                                                                             :multiple="
                                                                                 true
                                                                             "
@@ -3805,20 +3826,21 @@
                 ok-variant="success"
             >
                 <b-form-group description="Enter your username.">
-                <b-form-input
-                    v-model="authenticationUsername"
-                    type="text"
-                    placeholder="Your username"
-                    required
-                ></b-form-input></b-form-group>
-              <b-form-group description="Enter your password.">
-              <b-form-input
-                    v-model="authenticationPassword"
-                    type="password"
-                    placeholder="Your password"
-                    required
-                ></b-form-input>
-              </b-form-group>
+                    <b-form-input
+                        v-model="authenticationUsername"
+                        type="text"
+                        placeholder="Your username"
+                        required
+                    ></b-form-input
+                ></b-form-group>
+                <b-form-group description="Enter your password.">
+                    <b-form-input
+                        v-model="authenticationPassword"
+                        type="password"
+                        placeholder="Your password"
+                        required
+                    ></b-form-input>
+                </b-form-group>
             </b-modal>
             <b-modal
                 id="unbind"
@@ -4406,11 +4428,12 @@ export default {
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
             }
-            config.output = this.getWorkflow.config.output;
             if (this.output !== undefined && this.output.to) {
-                // config.output['to'] = config['output']['path'];
-
-                // config.output['from'] = '';
+                config.output = {};
+                config.output['to'] = this.output.to;
+                if (this.getWorkflow.config.output.path !== undefined)
+                    config.output['from'] = this.getWorkflow.config.output.path;
+                else config.output['from'] = '';
                 if (config.output.include === undefined)
                     config.output['include'] = {
                         patterns: [],
