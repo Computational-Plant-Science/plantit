@@ -1028,7 +1028,7 @@
                                                         >
                                                     </b-dropdown>
                                                 </b-col>
-                                                <b-col
+                                                <!--<b-col
                                                     md="auto"
                                                     align-self="end"
                                                     ><b-dropdown
@@ -1086,7 +1086,7 @@
                                                             >Carousel</b-dropdown-item
                                                         >
                                                     </b-dropdown></b-col
-                                                >
+                                                >-->
                                                 <br />
                                                 <br />
                                             </b-row>
@@ -1367,7 +1367,7 @@
                                                             </b-col>
                                                         </b-row>
                                                     </div>
-                                                    <b-card-group
+                                                    <!--<b-card-group
                                                         v-else-if="
                                                             viewMode === 'Grid'
                                                         "
@@ -1422,29 +1422,6 @@
                                                                 "
                                                                 top
                                                             ></b-card-img>
-                                                            <!--<template #header
-                                                                ><b-img-lazy
-                                                                    center
-                                                                    v-if="
-                                                                        viewMode ===
-                                                                            'Grid'
-                                                                    "
-                                                                    fluid-grow
-                                                                    :style="
-                                                                        getTask.result_previews_loaded ||
-                                                                        noPreview(
-                                                                            file
-                                                                        )
-                                                                            ? 'min-width: 20rem'
-                                                                            : 'max-width: 4rem'
-                                                                    "
-                                                                    :src="
-                                                                        thumbnailPath(
-                                                                            file
-                                                                        )
-                                                                    "
-                                                                ></b-img-lazy
-                                                            ></template>-->
                                                             <b-card-body
                                                                 class="text-center"
                                                             >
@@ -1485,8 +1462,8 @@
                                                                 </b-button>
                                                             </b-card-body>
                                                         </b-card>
-                                                    </b-card-group>
-                                                    <b-carousel
+                                                    </b-card-group>-->
+                                                    <!--<b-carousel
                                                         v-if="
                                                             viewMode ===
                                                                 'Carousel'
@@ -1660,31 +1637,9 @@
                                                                         </b-button>
                                                                     </b-col> </b-row></template
                                                         ></b-carousel-slide>
-                                                    </b-carousel>
+                                                    </b-carousel>-->
                                                 </div>
                                             </b-overlay>
-                                            <!--<b-row class="pl-1 pr-1 pb-1">
-                                        <b-col
-                                            class="text-right"
-                                            align-self="end"
-                                            ><b-button
-                                                :variant="
-                                                    darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                title="Download zip file"
-                                                @click="downloadZip"
-                                            >
-                                                <i
-                                                    class="fas fa-file-archive fa-fw"
-                                                ></i>
-                                                Download All
-                                            </b-button></b-col
-                                        >
-                                    </b-row>-->
                                         </div>
                                         <!--<div
                                                         v-else-if="
@@ -2187,8 +2142,8 @@ export default {
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
                 i <= this.outputFilePage * this.outputPageSize
             )
-            // return `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`;
-            return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+                // return `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`;
+                return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function(date) {

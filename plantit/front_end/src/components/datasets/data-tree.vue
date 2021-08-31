@@ -1157,22 +1157,38 @@
             v-if="isDir && internalLoaded"
             :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
         >
+            <b-row v-show="numFiles > filePageSize"
+                ><b-col md="auto" align-self="center" class="ml-2">
+                    <b-pagination
+                        v-model="filePage"
+                        pills
+                        class="mt-3"
+                        size="md"
+                        :total-rows="numFiles"
+                        :per-page="filePageSize"
+                        aria-controls="files"
+                    >
+                        <template class="theme-dark" #page="{ page, active }">
+                            <b v-if="active">{{ page }}</b>
+                            <i v-else>{{ page }}</i>
+                        </template>
+                    </b-pagination>
+                </b-col></b-row
+            >
             <b-row
-                align-v="middle"
+                id="files"
                 class="mt-1 mb-1 ml-2 mr-0 p-0"
                 style="border-top: 1px solid rgba(211, 211, 211, .5);"
-                v-for="(child, index) in internalLoaded
-                    ? internalNode.files
-                    : node.files"
+                v-for="(child, index) in filteredFiles"
                 :key="index"
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-col>
-                    <b-img
+                    <b-img-lazy
                         v-if="previewsLoaded"
                         :src="getFileURL(child)"
-                        style="width: 3rem"
-                    ></b-img>
+                        style="width: 3rem; height: 3rem"
+                    ></b-img-lazy>
                     <b-button
                         class="mt-1 mb-1 ml-4"
                         :disabled="!select || select !== 'file'"
@@ -1188,7 +1204,7 @@
                 <b-col md="auto" align-self="center"
                     ><small>{{ formatBytes(child['file-size']) }}</small></b-col
                 >
-                <b-col md="auto">
+                <b-col md="auto" align-self="center">
                     <b-button
                         id="popover-reactive-1"
                         :disabled="
@@ -1260,7 +1276,9 @@
             ></data-tree>
         </b-list-group-item>
         <b-modal
-            v-if="internalLoaded && internalNode !== null && selectedFile !== null"
+            v-if="
+                internalLoaded && internalNode !== null && selectedFile !== null
+            "
             ok-only
             :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
             :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
@@ -1367,7 +1385,10 @@ export default {
             bindingProject: false,
             unbindingProject: false,
             projectToUnbind: null,
-            studyToUnbind: null
+            studyToUnbind: null,
+            // file paging
+            filePage: 1,
+            filePageSize: 10
         };
     },
     mounted: {},
@@ -1383,6 +1404,21 @@ export default {
             'sharingDatasets',
             'sharingDatasetsLoading'
         ]),
+        numFiles() {
+            return (this.internalLoaded
+                ? this.internalNode.files
+                : this.node.files
+            ).length;
+        },
+        filteredFiles() {
+            return (this.internalLoaded
+                ? this.internalNode.files
+                : this.node.files
+            ).slice(
+                (this.filePage - 1) * this.filePageSize,
+                this.filePage * this.filePageSize
+            );
+        },
         matchingSharingDatasets() {
             let path = this.internalLoaded
                 ? this.internalNode.path
@@ -1493,14 +1529,20 @@ export default {
     watch: {
         internalLoadedFolders() {
             //
+        },
+        filePage() {
+            this.loadFileURLs();
         }
     },
     methods: {
         getFileURL(file) {
-            let url = this.fileURLs[file.path];
-            return url;
+            // let url = await this.fileURL(file);
+            // return url['url'];
+            if (file.path in this.fileURLs) return this.fileURLs[file.path];
+            return null;
         },
         async loadFileURLs() {
+            this.previewsLoaded = false;
             if (
                 this.internalLoaded &&
                 this.internalNode !== null &&
@@ -1508,7 +1550,15 @@ export default {
                 this.internalNode.files !== null
             ) {
                 await Promise.all(
-                    this.internalNode.files.map(f => this.fileURL(f))
+                    (this.internalLoaded
+                        ? this.internalNode.files
+                        : this.node.files
+                    )
+                        .slice(
+                            (this.filePage - 1) * this.filePageSize,
+                            this.filePage * this.filePageSize
+                        )
+                        .map(f => this.fileURL(f))
                 ).then(urls => {
                     for (const url of urls)
                         this.fileURLs[url['path']] = url['url'];

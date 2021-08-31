@@ -277,107 +277,107 @@ def list_task_results(guid: str, auth: dict):
         # async_to_sync(push_task_event)(task)
         check_cyverse_transfer_completion.s(guid).apply_async(priority=1)
 
-    log_task_orchestrator_status(task, [f"Creating file previews"])
-    async_to_sync(push_task_event)(task)
+    # log_task_orchestrator_status(task, [f"Creating file previews"])
+    # async_to_sync(push_task_event)(task)
 
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            sftp.chdir(workdir)
-            for result in expected:
-                name = result['name']
-                path = result['path']
-                exists = result['exists']
+    # with ssh:
+    #     with ssh.client.open_sftp() as sftp:
+    #         sftp.chdir(workdir)
+    #         for result in expected:
+    #             name = result['name']
+    #             path = result['path']
+    #             exists = result['exists']
 
-                if not exists: continue
-                if name.endswith('txt') or \
-                        name.endswith('csv') or \
-                        name.endswith('yml') or \
-                        name.endswith('yaml') or \
-                        name.endswith('tsv') or \
-                        name.endswith('out') or \
-                        name.endswith('err') or \
-                        name.endswith('log'):
-                    logger.info(f"Creating preview for text file: {name}")
-                    with tempfile.NamedTemporaryFile() as temp_file:
-                        sftp.get(name, temp_file.name)
+    #             if not exists: continue
+    #             if name.endswith('txt') or \
+    #                     name.endswith('csv') or \
+    #                     name.endswith('yml') or \
+    #                     name.endswith('yaml') or \
+    #                     name.endswith('tsv') or \
+    #                     name.endswith('out') or \
+    #                     name.endswith('err') or \
+    #                     name.endswith('log'):
+    #                 logger.info(f"Creating preview for text file: {name}")
+    #                 with tempfile.NamedTemporaryFile() as temp_file:
+    #                     sftp.get(name, temp_file.name)
 
-                        try:
-                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                        except UnsupportedMimeType:
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                           logger.info(f"Saved empty file preview to cache: {name}")
-                           continue
+    #                     try:
+    #                         preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+    #                     except UnsupportedMimeType:
+    #                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+    #                        logger.info(f"Saved empty file preview to cache: {name}")
+    #                        continue
 
-                        with open(preview, 'rb') as pf:
-                           content = pf.read()
-                           encoded = base64.b64encode(content)
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                           logger.info(f"Saved file preview to cache: {name}")
-                elif path.endswith('png'):
-                    logger.info(f"Creating preview for PNG file: {name}")
-                    with tempfile.NamedTemporaryFile() as temp_file:
-                        sftp.get(result['name'], temp_file.name)
+    #                     with open(preview, 'rb') as pf:
+    #                        content = pf.read()
+    #                        encoded = base64.b64encode(content)
+    #                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+    #                        logger.info(f"Saved file preview to cache: {name}")
+    #             elif path.endswith('png'):
+    #                 logger.info(f"Creating preview for PNG file: {name}")
+    #                 with tempfile.NamedTemporaryFile() as temp_file:
+    #                     sftp.get(result['name'], temp_file.name)
 
-                        try:
-                            preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                        except UnsupportedMimeType:
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                            logger.info(f"Saved empty preview for PNG file to cache: {name}")
-                            continue
+    #                     try:
+    #                         preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+    #                     except UnsupportedMimeType:
+    #                         redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+    #                         logger.info(f"Saved empty preview for PNG file to cache: {name}")
+    #                         continue
 
-                        with open(preview, 'rb') as pf:
-                            content = pf.read()
-                            encoded = base64.b64encode(content)
-                            redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                            logger.info(f"Saved file preview to cache: {name}")
-                elif path.endswith('jpg') or path.endswith('jpeg'):
-                   logger.info(f"Creating preview for JPG file: {name}")
-                   with tempfile.NamedTemporaryFile() as temp_file:
-                       sftp.get(result['name'], temp_file.name)
+    #                     with open(preview, 'rb') as pf:
+    #                         content = pf.read()
+    #                         encoded = base64.b64encode(content)
+    #                         redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+    #                         logger.info(f"Saved file preview to cache: {name}")
+    #             elif path.endswith('jpg') or path.endswith('jpeg'):
+    #                logger.info(f"Creating preview for JPG file: {name}")
+    #                with tempfile.NamedTemporaryFile() as temp_file:
+    #                    sftp.get(result['name'], temp_file.name)
 
-                       try:
-                           preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                       except UnsupportedMimeType:
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                           logger.info(f"Saved empty preview for JPG file to cache: {name}")
-                           continue
+    #                    try:
+    #                        preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+    #                    except UnsupportedMimeType:
+    #                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+    #                        logger.info(f"Saved empty preview for JPG file to cache: {name}")
+    #                        continue
 
-                       with open(preview, 'rb') as pf:
-                           content = pf.read()
-                           encoded = base64.b64encode(content)
-                           redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                           logger.info(f"Saved JPG file preview to cache: {name}")
-                elif path.endswith('czi'):
-                    logger.info(f"Creating preview for CZI file: {name}")
-                    with tempfile.NamedTemporaryFile() as temp_file:
-                        sftp.get(result['name'], temp_file.name)
+    #                    with open(preview, 'rb') as pf:
+    #                        content = pf.read()
+    #                        encoded = base64.b64encode(content)
+    #                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+    #                        logger.info(f"Saved JPG file preview to cache: {name}")
+    #             elif path.endswith('czi'):
+    #                 logger.info(f"Creating preview for CZI file: {name}")
+    #                 with tempfile.NamedTemporaryFile() as temp_file:
+    #                     sftp.get(result['name'], temp_file.name)
 
-                        image = czifile.imread(temp_file.name)
-                        image.shape = (image.shape[2], image.shape[3], image.shape[4])
-                        success, buffer = cv2.imencode(".jpg", image)
-                        buffer.tofile(temp_file.name)
+    #                     image = czifile.imread(temp_file.name)
+    #                     image.shape = (image.shape[2], image.shape[3], image.shape[4])
+    #                     success, buffer = cv2.imencode(".jpg", image)
+    #                     buffer.tofile(temp_file.name)
 
-                    try:
-                        preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                    except UnsupportedMimeType:
-                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
-                        logger.info(f"Saved empty preview for CZI file to cache: {name}")
-                        continue
+    #                 try:
+    #                     preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+    #                 except UnsupportedMimeType:
+    #                     redis.set(f"previews/{task.user.username}/{task.guid}/{name}", 'EMPTY')
+    #                     logger.info(f"Saved empty preview for CZI file to cache: {name}")
+    #                     continue
 
-                    with open(preview, 'rb') as pf:
-                        content = pf.read()
-                        encoded = base64.b64encode(content)
-                        redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
-                        logger.info(f"Saved file preview to cache: {name}")
-                elif path.endswith('ply'):
-                    logger.info(f"Creating preview for PLY file: {name}")
-                    with tempfile.NamedTemporaryFile() as temp_file:
-                        sftp.get(result['name'], temp_file.name)
+    #                 with open(preview, 'rb') as pf:
+    #                     content = pf.read()
+    #                     encoded = base64.b64encode(content)
+    #                     redis.set(f"previews/{task.user.username}/{task.guid}/{name}", encoded)
+    #                     logger.info(f"Saved file preview to cache: {name}")
+    #             elif path.endswith('ply'):
+    #                 logger.info(f"Creating preview for PLY file: {name}")
+    #                 with tempfile.NamedTemporaryFile() as temp_file:
+    #                     sftp.get(result['name'], temp_file.name)
 
     cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
     cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
     task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
-    task.previews_loaded = True
+    # task.previews_loaded = True
     task.save()
     async_to_sync(push_task_event)(task)
 
