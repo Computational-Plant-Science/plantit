@@ -10,6 +10,7 @@ urlpatterns = [
     path(r'<name>/public/', views.toggle_public),
     path(r'<name>/disable/', views.toggle_disabled),
     path(r'<name>/health/', views.healthcheck),
+    path(r'<name>/checks/', views.healthchecks),
     path(r'<name>/policies/', views.get_access_policies),
     path(r'<name>/auth/', views.set_authentication_strategy),
     path(r'<name>/authorize_user/', views.authorize_user),

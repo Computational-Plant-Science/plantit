@@ -502,10 +502,22 @@ def refresh_all_user_cyverse_tokens():
 def agents_healthchecks():
     agents = Agent.objects.filter(authentication=AgentAuthentication.KEY)
     for agent in agents:
-        health, _ = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
-        agent.is_healthy = health
+        healthy, output = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
+        agent.is_healthy = healthy
         agent.disabled = not agent.is_healthy
         agent.save()
+
+        redis = RedisClient.get()
+        length = redis.llen(f"healthchecks/{agent.name}")
+        checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
+        if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
+        redis.lpush(
+            f"healthchecks/{agent.name}",
+            json.dumps({
+                'timestamp': timezone.now().isoformat(),
+                'healthy': healthy,
+                'output': output
+            }))
 
 
 class TerrainToken:
@@ -522,10 +534,7 @@ class TerrainToken:
         if cyverse_username is None: raise ValueError("Missing environment variable 'CYVERSE_USERNAME'")
         if cyverse_password is None: raise ValueError("Missing environment variable 'CYVERSE_PASSWORD'")
 
-        print(f"Using CyVerse username '{cyverse_username}' and password '{cyverse_password}'")
-
         response = requests.get('https://de.cyverse.org/terrain/token/cas', auth=(cyverse_username, cyverse_password)).json()
-        print(response)
         TerrainToken.__token = response['access_token']
 
         return TerrainToken.__token

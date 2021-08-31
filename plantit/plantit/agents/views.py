@@ -16,6 +16,7 @@ from plantit.notifications.models import Notification
 from plantit.ssh import SSH, execute_command
 from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path, is_healthy
 from plantit.workflows.models import Workflow
+from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
 
@@ -355,6 +356,13 @@ def healthcheck(request, name):
     body = json.loads(request.body.decode('utf-8'))
     healthy, output = is_healthy(agent, body['auth'])
     return JsonResponse({'healthy': healthy, 'output': output})
+
+
+@login_required
+def healthchecks(request, name):
+    redis = RedisClient.get()
+    checks = [json.loads(check) for check in redis.lrange(f"healthchecks/{name}", 0, -1)]
+    return JsonResponse({'healthchecks': checks})
 
 
 @login_required

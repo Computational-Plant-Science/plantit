@@ -1125,6 +1125,12 @@
                             </b-row>
                         </div>
                     </b-col>-->
+                        <br/>
+                        <Plotly
+                            v-if="healthchecks.length > 0"
+                            :data="healthchecksTimeseriesData"
+                            :layout="healthchecksTimeseriesLayout"
+                        ></Plotly>
                     </b-col>
                 </b-row>
             </div>
@@ -1830,12 +1836,14 @@ import parser from 'cron-parser';
 import { guid } from '@/utils';
 import router from '@/router';
 import blurb from '@/components/workflows/workflow-blurb.vue';
+import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'agent',
     components: {
         VueCronEditorBuefy,
-        blurb
+        blurb,
+        Plotly
     },
     data: function() {
         return {
@@ -1862,7 +1870,9 @@ export default {
             authorizingWorkflow: false,
             blockingWorkflow: false,
             authorizingUser: false,
-            healthcheckOutput: []
+            healthcheckOutput: [],
+            healthchecks: [],
+            loadingHealthchecks: false
         };
     },
     computed: {
@@ -1890,7 +1900,8 @@ export default {
         otherUsers() {
             return this.allUsers.filter(
                 u =>
-                    u.username !== this.profile.djangoProfile.username && u.github_profile !== undefined &&
+                    u.username !== this.profile.djangoProfile.username &&
+                    u.github_profile !== undefined &&
                     !this.getAgent.users_authorized.some(
                         ua => ua.username === u.username
                     )
@@ -1953,15 +1964,80 @@ export default {
                 this.getAgent.role !== 'admin' ||
                 this.getAgent.authentication === 'password'
             );
+        },
+        healthchecksTimeseriesData() {
+            return [
+                {
+                    x: this.healthchecks.map(t => t.timestamp),
+                    y: this.healthchecks.map(t => t.healthy ? 'Healthy' : 'Unhealthy'),
+                    mode: 'markers',
+                    type: 'scatter',
+                    marker: {
+                        color: this.healthchecks.map(t =>
+                            t.healthy
+                                ? 'rgb(214, 223, 93)'
+                                : 'rgb(255, 114, 114)'
+                        ),
+                        line: {
+                            color: 'rgba(156, 165, 196, 1.0)',
+                            width: 1
+                        },
+                        symbol: 'circle',
+                        size: 16
+                    }
+                }
+            ];
+        },
+        healthchecksTimeseriesLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                },
+                autosize: true,
+                title: {
+                    text: 'Recent Healthchecks',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    }
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    }
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)'
+                        }
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)'
+                        }
+                    }
+                },
+                yaxis: {
+                    showticklabels: false
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+            };
         }
     },
-    mounted: function() {
+    async mounted() {
         this.workflowPolicyType =
             this.getAgent.workflows_authorized.length > 0
                 ? 'authorized'
                 : this.getAgent.workflows_blocked.length > 0
                 ? 'blocked'
                 : 'none';
+
+        await this.loadHealthchecks();
     },
     watch: {
         workflowPolicyType() {
@@ -1975,6 +2051,27 @@ export default {
         }
     },
     methods: {
+        async loadHealthchecks() {
+            this.loadingHealthchecks = true;
+            await axios
+                .get(
+                    `/apis/v1/agents/${this.$router.currentRoute.params.name}/checks/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken
+                        }
+                    }
+                )
+                .then(response => {
+                    this.healthchecks = response.data.healthchecks;
+                    this.loadingHealthchecks = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.loadingHealthchecks = false;
+                    throw error;
+                });
+        },
         copyPublicKey() {
             let copied = document.getElementById('publicKey');
             copied.focus();

@@ -58,6 +58,7 @@ services:
       - TUTORIALS_FILE=${TUTORIALS_FILE}
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
+      - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -127,6 +128,7 @@ services:
       - TUTORIALS_FILE=${TUTORIALS_FILE}
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
+      - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
