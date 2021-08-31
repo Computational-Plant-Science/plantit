@@ -1993,7 +1993,7 @@ export default {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                 },
-                autosize: true,
+                height: 250,
                 title: {
                     text: 'Recent Healthchecks',
                     font: {

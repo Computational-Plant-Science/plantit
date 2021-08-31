@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest, HttpResponse
@@ -355,6 +356,20 @@ def healthcheck(request, name):
 
     body = json.loads(request.body.decode('utf-8'))
     healthy, output = is_healthy(agent, body['auth'])
+
+    # update cache
+    redis = RedisClient.get()
+    length = redis.llen(f"healthchecks/{agent.name}")
+    checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
+    if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
+    redis.lpush(
+        f"healthchecks/{agent.name}",
+        json.dumps({
+            'timestamp': timezone.now().isoformat(),
+            'healthy': healthy,
+            'output': output
+        }))
+
     return JsonResponse({'healthy': healthy, 'output': output})
 
 
