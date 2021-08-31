@@ -371,7 +371,7 @@
                             </h4></b-col
                         >
                     </b-row>
-                    <b-row v-if="agentConnectionValid !== true">
+                    <b-row v-if="agentConnectionComplete !== true">
                         <b-col>
                             <b-row
                                 ><b-col>
@@ -501,7 +501,7 @@
                     <b-row
                         v-if="
                             agentAuthentication === 'key' &&
-                                !agentConnectionValid
+                                !agentConnectionComplete
                         "
                         style="word-wrap: break-word;"
                         class="mb-3 p-1"
@@ -559,7 +559,7 @@
                                 ></b-form-textarea></div></b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
-                        ><b-col v-if="agentConnectionValid === true"
+                        ><b-col v-if="agentConnectionComplete === true"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -580,7 +580,7 @@
                                 ><i class="fas fa-redo fa-fw fa-1x"></i> Select
                                 another authentication strategy</b-button
                             ></b-col
-                        ><b-col v-else-if="agentConnectionValid === false"
+                        ><b-col v-else-if="agentConnectionComplete === false"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -616,7 +616,7 @@
                                 Back: Details</b-button
                             ></b-col
                         >
-                        <b-col v-if="!gettingKey && !agentConnectionValid">
+                        <b-col v-if="!gettingKey && !agentConnectionComplete">
                             <b-button
                                 :disabled="
                                     !(agentHostValid && agentUsernameValid) ||
@@ -639,7 +639,7 @@
                                 Check Connection</b-button
                             ></b-col
                         >
-                        <b-col v-if="agentConnectionValid">
+                        <b-col v-if="agentConnectionComplete">
                             <b-button
                                 block
                                 variant="success"
@@ -667,7 +667,7 @@
                             </h4></b-col
                         >
                     </b-row>
-                    <b-row v-if="agentWorkdirCreated !== true">
+                    <b-row v-if="agentWorkdirComplete !== true">
                         <b-col>
                             <b-row
                                 ><b-col>
@@ -687,7 +687,7 @@
                             ></b-col
                         ></b-row
                     >
-                    <b-row v-if="agentWorkdirCreated !== true"
+                    <b-row v-if="agentWorkdirComplete !== true"
                         ><b-col>
                             <b-form-group>
                                 <template #description
@@ -714,7 +714,7 @@
                             </b-form-group> </b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
-                        ><b-col v-if="agentWorkdirCreated === true"
+                        ><b-col v-if="agentWorkdirComplete === true"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -735,7 +735,7 @@
                                 ><i class="fas fa-redo fa-fw fa-1x"></i> Select
                                 another working directory</b-button
                             ></b-col
-                        ><b-col v-else-if="agentWorkdirCreated === false"
+                        ><b-col v-else-if="agentWorkdirComplete === false"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -776,7 +776,7 @@
                                 Back: Connection</b-button
                             ></b-col
                         >
-                        <b-col v-if="!gettingKey && !agentWorkdirCreated">
+                        <b-col v-if="!gettingKey && !agentWorkdirComplete">
                             <b-button
                                 :disabled="
                                     !(agentHostValid && agentUsernameValid) ||
@@ -803,7 +803,7 @@
                                         : '$HOME/.plantit'
                                 }}</b></b-button
                             ></b-col
-                        ><b-col v-if="agentWorkdirCreated">
+                        ><b-col v-if="agentWorkdirComplete">
                             <b-button
                                 block
                                 variant="success"
@@ -830,7 +830,7 @@
                             </h4></b-col
                         >
                     </b-row>
-                    <b-row v-if="agentExecutorValid !== true"
+                    <b-row v-if="agentExecutorComplete !== true"
                         ><b-col>
                             <b-form-group>
                                 <template #description
@@ -1090,7 +1090,7 @@
                             ></b-form-group> </b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
-                        ><b-col v-if="agentExecutorValid === true"
+                        ><b-col v-if="agentExecutorComplete === true"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -1111,7 +1111,7 @@
                                 ><i class="fas fa-redo fa-fw fa-1x"></i>
                                 Reconfigure executor</b-button
                             ></b-col
-                        ><b-col v-else-if="agentExecutorValid === false"
+                        ><b-col v-else-if="agentExecutorComplete === false"
                             ><h5
                                 :class="
                                     profile.darkMode
@@ -1133,6 +1133,11 @@
                                 v-if="agentAuthentication === 'key'"
                                 >Are you sure you've installed the
                                 <b-link
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
                                     href="https://github.com/Computational-Plant-Science/plantit-cli"
                                     >PlantIT CLI</b-link
                                 >? You may also need to use pre-commands (e.g.,
@@ -1164,7 +1169,7 @@
                                 Back: Working Directory</b-button
                             ></b-col
                         >
-                        <b-col v-if="agentExecutorValid !== true">
+                        <b-col v-if="agentExecutorComplete !== true">
                             <b-button
                                 :disabled="
                                     !agentWorkdirValid || checkingExecutor
@@ -1186,7 +1191,7 @@
                                 Check Executor</b-button
                             ></b-col
                         >
-                        <b-col v-if="agentExecutorValid">
+                        <b-col v-if="agentExecutorComplete">
                             <b-button block variant="success" @click="bindAgent"
                                 ><i class="fas fa-plug fa-fw fa-1x"></i> Bind
                                 {{ agentName }}</b-button
@@ -1277,12 +1282,20 @@ export default {
     name: 'agents',
     data: function() {
         return {
-            // stages when binding new agent
+            /* new agent binding stages:
+              - details
+              - connection
+              - workdir
+              - executor
+              
+              state transitions:
+              details <-> connection <-> workdir <-> executor -> submit (if fails, start again from left)
+           */
             agentBindingStage: 'details',
-            agentDetailsValid: null,
-            agentConnectionValid: null,
-            agentWorkdirCreated: null,
-            agentExecutorValid: null,
+            agentDetailsComplete: null, // we use null to distinguish between 'incomplete' and 'failed' (false)
+            agentConnectionComplete: null,
+            agentWorkdirComplete: null,
+            agentExecutorComplete: null,
             // new agent properties
             agentNameLoading: false,
             agentNameExists: false,
@@ -1333,18 +1346,9 @@ export default {
             // public key
             publicKey: '',
             gettingKey: false,
-            // executor check output
+            // misc
             executorCheckOutput: []
         };
-    },
-    async mounted() {
-        // await Promise.all([
-        //     this.$store.dispatch(
-        //         'agents/loadPersonal',
-        //         this.profile.djangoProfile.username
-        //     ),
-        //     this.$store.dispatch('agents/loadPublic')
-        // ]);
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -1386,24 +1390,27 @@ export default {
         agentWorkdirValid() {
             return this.agentWorkdir !== '';
         },
+        agentExecutorValid() {
+            return (
+                this.agentExecutor !== 'Local' &&
+                (this.agentQueue === '' ||
+                    // this.agentProject === '' ||   not all SLURM configurations require this
+                    this.agentMaxWalltime <= 0 ||
+                    this.agentMaxProcesses <= 0 ||
+                    this.agentMaxCores <= 0 ||
+                    this.agentMaxNodes <= 0 ||
+                    this.agentMaxMem <= 0)
+            );
+        },
         agentValid() {
-            // TODO refactor to use above computed props
-            return !(
-                this.agentName === '' ||
-                this.agentDescription === '' ||
-                this.agentHost === '' ||
-                this.agentPort === 0 ||
-                this.agentWorkdir === '' ||
-                this.agentPrecommands === '' ||
-                this.agentExecutor === '' ||
-                (this.agentExecutor !== 'Local' &&
-                    (this.agentQueue === '' ||
-                        // this.agentProject === '' ||   not all SLURM configurations require this
-                        this.agentMaxWalltime <= 0 ||
-                        this.agentMaxProcesses <= 0 ||
-                        this.agentMaxCores <= 0 ||
-                        this.agentMaxNodes <= 0 ||
-                        this.agentMaxMem <= 0))
+            return (
+                this.agentNameValid &&
+                this.agentDescriptionValid &&
+                this.agentHostValid &&
+                this.agentPortValid &&
+                this.agentUsernameValid &&
+                this.agentWorkdirValid &&
+                this.agentExecutorValid
             );
         }
     },
@@ -1413,26 +1420,8 @@ export default {
         publicContext: function(_) {
             this.refreshAgents();
         }
-        // items: function(value, _) {
-        //     this.agentNameExists = value;
-        //     this.agentNameLoading = false;
-        // }
     },
     methods: {
-        resetAgentConnection() {
-            this.agentConnectionValid = null;
-        },
-        resetAgentExecutor() {
-            this.agentExecutorValid = null;
-        },
-        resetAgentWorkdir() {
-            this.agentWorkdirCreated = null;
-        },
-        handleAuthenticationChange() {
-            if (this.agentAuthentication === 'key') {
-                this.getKey();
-            }
-        },
         async getKey() {
             this.gettingKey = true;
             await axios
@@ -1471,75 +1460,21 @@ export default {
                 this.checkAgentConnection();
             else if (this.agentBindingStage === 'workdir')
                 this.createAgentWorkdir();
-            else if (!this.agentExecutorValid) this.checkAgentExecutor();
+            else if (!this.agentExecutorComplete) this.checkAgentExecutor();
             else this.bindAgent();
-        },
-        async checkAgentExecutor() {
-            this.checkingExecutor = true;
-            var data = {
-                hostname: this.agentHost,
-                username: this.agentUsername,
-                precommand: this.agentPrecommands,
-                executor: this.agentExecutor,
-                workdir: this.agentWorkdir
-            };
-
-            if (this.agentAuthentication === 'password')
-                data['password'] = this.authenticationPassword;
-
-            await axios({
-                method: 'post',
-                url: `/apis/v1/users/check_executor/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    if (response.status === 200 && response.data.success) {
-                        this.agentExecutorValid = true;
-                        this.executorCheckOutput = response.data.output;
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Executor check succeeded on ${this.agentName}`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
-                    } else {
-                        this.agentExecutorValid = false;
-                        this.executorCheckOutput = response.data.output;
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Executor check failed on ${this.agentName}`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
-                    }
-                    this.checkingExecutor = false;
-                })
-                .catch(async error => {
-                    Sentry.captureException(error);
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Executor check failed on ${this.agentName}`,
-                        guid: guid().toString(),
-                        time: moment().format()
-                    });
-                    this.agentExecutorValid = false;
-                    this.checkingExecutor = false;
-                    throw error;
-                });
         },
         changeAgentBindingStage(stage) {
             this.agentBindingStage = stage;
-        },
-        preCreateAgentWorkdir() {
-            if (this.agentAuthentication === 'password')
-                this.$bvModal.show('authenticate');
-            else this.createAgentWorkdir();
         },
         preCheckAgentConnection() {
             if (this.agentAuthentication === 'password')
                 this.$bvModal.show('authenticate');
             else this.checkAgentConnection();
+        },
+        preCreateAgentWorkdir() {
+            if (this.agentAuthentication === 'password')
+                this.$bvModal.show('authenticate');
+            else this.createAgentWorkdir();
         },
         preCheckAgentExecutor() {
             if (this.agentAuthentication === 'password')
@@ -1569,7 +1504,7 @@ export default {
             })
                 .then(async response => {
                     if (response.status === 200 && response.data.success) {
-                        this.agentConnectionValid = true;
+                        this.agentConnectionComplete = true;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Connection to ${this.agentName} succeeded`,
@@ -1577,7 +1512,7 @@ export default {
                             time: moment().format()
                         });
                     } else {
-                        this.agentConnectionValid = false;
+                        this.agentConnectionComplete = false;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to connect to ${this.agentName}`,
@@ -1595,7 +1530,7 @@ export default {
                         guid: guid().toString(),
                         time: moment().format()
                     });
-                    this.agentConnectionValid = false;
+                    this.agentConnectionComplete = false;
                     this.checkingConnection = false;
                     throw error;
                 });
@@ -1626,7 +1561,7 @@ export default {
             })
                 .then(async response => {
                     if (response.status === 200) {
-                        this.agentWorkdirCreated = true;
+                        this.agentWorkdirComplete = true;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Created working directory ${response.data.workdir} on ${this.agentName}`,
@@ -1634,7 +1569,7 @@ export default {
                             time: moment().format()
                         });
                     } else {
-                        this.agentWorkdirCreated = false;
+                        this.agentWorkdirComplete = false;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to create working directory ${this.agentWorkdir} on ${this.agentName}`,
@@ -1652,8 +1587,62 @@ export default {
                         guid: guid().toString(),
                         time: moment().format()
                     });
-                    this.agentWorkdirCreated = false;
+                    this.agentWorkdirComplete = false;
                     this.creatingWorkdir = false;
+                    throw error;
+                });
+        },
+        async checkAgentExecutor() {
+            this.checkingExecutor = true;
+            var data = {
+                hostname: this.agentHost,
+                username: this.agentUsername,
+                precommand: this.agentPrecommands,
+                executor: this.agentExecutor,
+                workdir: this.agentWorkdir
+            };
+
+            if (this.agentAuthentication === 'password')
+                data['password'] = this.authenticationPassword;
+
+            await axios({
+                method: 'post',
+                url: `/apis/v1/users/check_executor/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200 && response.data.success) {
+                        this.agentExecutorComplete = true;
+                        this.executorCheckOutput = response.data.output;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Executor check succeeded on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    } else {
+                        this.agentExecutorComplete = false;
+                        this.executorCheckOutput = response.data.output;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Executor check failed on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    }
+                    this.checkingExecutor = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Executor check failed on ${this.agentName}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.agentExecutorComplete = false;
+                    this.checkingExecutor = false;
                     throw error;
                 });
         },
@@ -1697,29 +1686,55 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        resetAgentInfo() {
+        handleAuthenticationChange() {
+            if (this.agentAuthentication === 'key') {
+                this.getKey();
+            }
+        },
+        resetAgentDetails() {
+            this.agentDetailsComplete = null;
+            this.agentNameLoading = false;
+            this.agentNameExists = false;
             this.agentName = '';
             this.agentDescription = '';
-            this.agentWorkdir = '';
+        },
+        resetAgentConnection() {
+            this.agentConnectionComplete = null;
+            this.agentHostLoading = false;
+            this.agentHostExists = false;
             this.agentHost = '';
-            this.agentPrecommands = '';
-            this.agentMaxTime = 0;
-            this.agentPublic = false;
-            this.agentLogo = '';
+            this.agentPort = 22;
+            this.agentUsername = '';
+        },
+        resetAgentWorkdir() {
+            this.agentWorkdirComplete = null;
+            this.agentWorkdir = '$HOME';
+        },
+        resetAgentExecutor() {
+            this.agentExecutorComplete = null;
+            this.agentPrecommands =
+                'export LC_ALL=en_US.utf8 && export LANG=en_US.utf8';
+            this.agentMaxTime = 60;
             this.agentExecutor = 'Local';
             this.agentAuthentication = 'password';
-            this.agentProject = '';
             this.agentQueue = '';
-            this.agentMaxCores = 0;
-            this.agentMaxProcesses = 0;
-            this.agentMaxNodes = 0;
-            this.agentMaxMem = 0;
-            this.agentMaxWalltime = 0;
-            this.agentJobArray = false;
+            this.agentProject = '';
+            this.agentMaxWalltime = 1;
+            this.agentMaxMem = 1;
+            this.agentMaxCores = 1;
+            this.agentMaxProcesses = 1;
+            this.agentMaxNodes = 1;
             this.agentLauncher = false;
+            this.agentJobArray = false;
+            this.agentPublic = false;
+            this.agentLogo = '';
+        },
+        resetAgentInfo() {
             this.agentBindingStage = 'details';
-            this.agentConnectionValid = null;
-            this.agentExecutorValid = null;
+            this.resetAgentDetails();
+            this.resetAgentConnection();
+            this.resetAgentWorkdir();
+            this.resetAgentExecutor();
         },
         refreshAgents() {
             if (this.publicContext) this.$store.dispatch('agents/loadPublic');
