@@ -4439,8 +4439,8 @@ export default {
                         patterns: [],
                         names: []
                     };
-                config.output.include.patterns = this.outputSelectedPatterns;
-                config.output.include.names = this.outputSelectedNames;
+                config.output.include.patterns = Array.from(this.outputSelectedPatterns);
+                config.output.include.names = Array.from(this.outputSelectedNames);
 
                 // config.output.patterns =
                 //     this.outputSelectedPatterns.length > 0

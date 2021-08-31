@@ -1185,7 +1185,7 @@
             >
                 <b-col>
                     <b-img-lazy
-                        v-if="previewsLoaded"
+                        v-if="previewsLoaded && fileIsImage(child)"
                         :src="getFileURL(child)"
                         style="width: 3rem; height: 3rem"
                     ></b-img-lazy>
@@ -1208,8 +1208,7 @@
                     <b-button
                         id="popover-reactive-1"
                         :disabled="
-                            !fileIsImage(child.label) &&
-                                !fileIsText(child.label)
+                            !fileIsImage(child.label)
                         "
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         class="m-1"

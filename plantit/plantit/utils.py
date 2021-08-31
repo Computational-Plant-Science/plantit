@@ -45,7 +45,7 @@ from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter
+from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter, Task
 from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount, EnvironmentVariable
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
@@ -1044,14 +1044,14 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'output' in config:
         if 'include' in config['output']:
             if 'patterns' in config['output']['include']:
-                output['include']['patterns'] = output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']
+                output['include']['patterns'] = list(set(output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']))
             if 'names' in config['output']['include']:
-                output['include']['names'] = output['include']['names'] + task.workflow['config']['output']['include']['names']
+                output['include']['names'] = list(set(output['include']['names'] + task.workflow['config']['output']['include']['names']))
         if 'exclude' in config['output']:
             if 'patterns' in config['output']['exclude']:
-                output['exclude']['patterns'] = set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns'])
+                output['exclude']['patterns'] = list(set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']))
             if 'names' in config['output']['exclude']:
-                output['exclude']['names'] = set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names'])
+                output['exclude']['names'] = list(set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']))
 
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
@@ -1082,10 +1082,13 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'to' in output and output['to'] is not None:
         command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
+        # command = command + ' ' + ' '.join(['--include_name ' + name for name in get_included_by_name(task)])
+        # command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_included_by_pattern(task)])
+        # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+
         if 'include' in output:
             if 'patterns' in output['include']:
-                patterns = output['include']['patterns']
-                pprint.pprint(patterns)
+                patterns = list(output['include']['patterns'])
                 patterns.append('.out')
                 patterns.append('.err')
                 patterns.append('.zip')
@@ -1430,6 +1433,28 @@ def get_task_remote_logs(task: Task, ssh: SSH):
                 get_remote_logs(agent_log_file_name, agent_log_file_path, task, ssh, sftp)
 
 
+def get_included_by_name(task: Task) -> List[str]:
+    included_by_name = (
+        (task.workflow['output']['include']['names'] if 'names' in task.workflow['output']['include'] else [])) if 'output' in task.workflow else []
+    included_by_name.append(f"{task.guid}.zip")  # zip file
+    if not task.agent.launcher: included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
+    if task.agent.executor != AgentExecutor.LOCAL and task.job_id is not None and task.job_id != '':
+        included_by_name.append(f"plantit.{task.job_id}.out")
+        included_by_name.append(f"plantit.{task.job_id}.err")
+
+    return included_by_name
+
+
+def get_included_by_pattern(task: Task) -> List[str]:
+    included_by_pattern = (task.workflow['output']['include']['patterns'] if 'patterns' in task.workflow['output'][
+        'include'] else []) if 'output' in task.workflow else []
+    included_by_pattern.append('.out')
+    included_by_pattern.append('.err')
+    included_by_pattern.append('.zip')
+
+    return included_by_pattern
+
+
 def check_logs_for_progress(task: Task):
     """
     Parse scheduler log files for CLI output and update progress counters
@@ -1696,6 +1721,7 @@ def task_to_dict(task: Task) -> dict:
         'results_transferred': task.results_transferred,
         'cleaned_up': task.cleaned_up,
         'transferred': task.transferred,
+        'transfer_path': task.transfer_path,
         'output_files': json.loads(results) if results is not None else [],
         'job_id': task.job_id,
         'job_status': task.job_status,

@@ -76,6 +76,7 @@ class Task(models.Model):
     completed = models.DateTimeField(null=True, blank=True)
     celery_task_id = models.CharField(max_length=50, null=True, blank=True)
     transferred = models.BooleanField(default=False)
+    transfer_path = models.CharField(max_length=250, null=True, blank=True)
     due_time = models.DateTimeField(null=True, blank=True)
     cleanup_time = models.DateTimeField(null=True, blank=True)
 

@@ -21,6 +21,7 @@ assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOW
 assert 'TASKS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: TASKS_TIMEOUT_MULTIPLIER"
 assert 'TASKS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: TASKS_REFRESH_SECONDS"
 assert 'TASKS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: TASKS_CLEANUP_MINUTES"
+assert 'TASKS_STEP_TIME_LIMIT_SECONDS' in os.environ, f"{missing_variable}: TASKS_STEP_TIME_LIMIT_SECONDS"
 assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
@@ -37,7 +38,6 @@ assert 'TUTORIALS_FILE' in os.environ, f"{missing_variable} TUTORIALS_FILE"
 assert 'FEEDBACK_FILE' in os.environ, f"{missing_variable} FEEDBACK_FILE"
 assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_MINUTES"
 assert 'AGENTS_HEALTHCHECKS_SAVED' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_SAVED"
-
 
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
@@ -58,6 +58,7 @@ WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')
 TASKS_TIMEOUT_MULTIPLIER = os.environ.get('TASKS_TIMEOUT_MULTIPLIER')
 TASKS_REFRESH_SECONDS = os.environ.get('TASKS_REFRESH_SECONDS')
 TASKS_CLEANUP_MINUTES = os.environ.get('TASKS_CLEANUP_MINUTES')
+TASKS_STEP_TIME_LIMIT_SECONDS = os.environ.get('TASKS_STEP_TIME_LIMIT_SECONDS')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")

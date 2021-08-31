@@ -35,7 +35,7 @@ def list_files(path,
         if include_names is not None else included_by_pattern
 
     # gather only included files
-    included = set(included_by_pattern + included_by_name)
+    included = list(set(included_by_pattern + included_by_name))
 
     # remove files matched excluded patterns
     excluded_by_pattern = [name for name in included if all(pattern.lower() not in name.lower() for pattern in

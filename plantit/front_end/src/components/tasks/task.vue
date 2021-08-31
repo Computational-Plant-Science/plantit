@@ -911,7 +911,7 @@
                                                     result(s) found
                                                     <br />
                                                 </b-col>
-                                                <b-col
+                                                <!--<b-col
                                                     md="auto"
                                                     align-self="end"
                                                     v-if="
@@ -971,7 +971,7 @@
                                                             "
                                                         ></b-img
                                                     ></b-button>
-                                                </b-col>
+                                                </b-col>-->
                                                 <b-col
                                                     md="auto"
                                                     align-self="end"
@@ -1748,48 +1748,57 @@
                                                     </div>-->
                                     </b-col>
                                 </b-row>
-
-                                <!--<b-card
+                                <b-card
                                     v-if="
-                                        flow.config.output &&
-                                            (getRun.state === 6 || getRun.state === 0)
+                                        getTask.is_complete &&
+                                            getTask.transferred
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :footer-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :footer-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     no-body
                                 >
                                     <b-card-header
                                         class="mt-1"
                                         :header-bg-variant="
-                                            darkMode ? 'dark' : 'white'
+                                            profile.darkMode ? 'dark' : 'white'
                                         "
                                         ><h5
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
                                         >
-                                            CyVerse Data Store
+                                            Data Store
                                         </h5></b-card-header
                                     >
                                     <b-card-body>
                                         <b-row>
                                             <b-col>
                                                 <datatree
-                                                    :upload="false"
+                                                    :node="
+                                                        personalDatasets
+                                                    "
+                                                    :upload="true"
                                                     :download="true"
-                                                    :node="userData"
+                                                    :create="true"
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'theme-dark'
+                                                            : 'theme-light'
+                                                    "
                                                 ></datatree></b-col
                                         ></b-row>
                                     </b-card-body>
-                                </b-card>-->
+                                </b-card>
                             </b-col>
                         </b-row>
                     </div>

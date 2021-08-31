@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import tempfile
@@ -15,16 +14,15 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from plantit import settings
-from plantit.agents.models import Agent, AgentExecutor, AgentAuthentication
+from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
-from plantit.redis import RedisClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
     log_task_orchestrator_status, \
     push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, parse_time_limit_seconds, \
-    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, get_task_agent_log_file_name, get_task_agent_log_file_path, \
-    compose_task_push_command, parse_task_cli_options
+    get_task_scheduler_log_file_path, get_task_agent_log_file_path, \
+    get_included_by_name, get_included_by_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +51,16 @@ def get_all_or_create(request):
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
 
-            time_limit = parse_time_limit_seconds(workflow['config']['time'])
-
-            # submit the task
             auth = parse_task_auth_options(workflow['auth'])
-            submit_task.apply_async(args=[task.guid, auth], soft_time_limit=time_limit, priority=1)  # TODO soft time limits too?
+            step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
+            task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
+
+            # check_task_completion.apply_async(args=[task.guid, auth], countdown=task_time_limit, priority=1)
+            submit_task.apply_async(
+                args=[task.guid, auth],
+                soft_time_limit=task_time_limit if agent.executor == AgentExecutor.LOCAL else step_time_limit,
+                priority=1)
+
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
@@ -107,8 +110,10 @@ def get_by_owner(request, owner):
     # params = request.query_params
     # page = params.get('page') if 'page' in params else -1
 
-    try: user = User.objects.get(username=owner)
-    except: return HttpResponseNotFound()
+    try:
+        user = User.objects.get(username=owner)
+    except:
+        return HttpResponseNotFound()
 
     tasks = Task.objects.filter(user=user)
     paginator = Paginator(tasks, 20)
@@ -152,88 +157,33 @@ def get_by_owner_and_name(request, owner, name):
 def transfer_to_cyverse(request, owner, name):
     body = json.loads(request.body.decode('utf-8'))
     auth = parse_task_auth_options(body['auth'])
-    path = body['path']
+    transfer_path = body['path']
 
+    # find the task
     try:
         user = User.objects.get(username=owner)
         task = Task.objects.get(user=user, name=name)
     except: return HttpResponseNotFound()
     if not task.is_complete: return HttpResponseBadRequest('task incomplete')
 
-    ssh = get_task_ssh_client(task, auth)
-    options = parse_task_cli_options(task)
-
     # compose command
-    command = f"plantit terrain push {path} -p {join(task.agent.workdir, task.workdir)} "
-
-    # TODO factor this out into its own method
-    included_by_name = ((task.workflow['output']['include']['names'] if 'names' in task.workflow['output']['include'] else [])) if 'output' in task.workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{task.guid}.zip")  # zip file
-    if not task.agent.launcher: included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    if task.agent.executor != AgentExecutor.LOCAL and task.job_id is not None and task.job_id != '':
-        included_by_name.append(f"plantit.{task.job_id}.out")
-        included_by_name.append(f"plantit.{task.job_id}.err")
-    included_by_pattern = (task.workflow['output']['include']['patterns'] if 'patterns' in task.workflow['output']['include'] else []) if 'output' in task.workflow else []
-    included_by_pattern.append('.out')
-    included_by_pattern.append('.err')
-    included_by_pattern.append('.zip')
-
-    command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in included_by_pattern])
-    command = command + ' ' + ' '.join(['--include_name ' + name for name in included_by_name])
+    command = f"plantit terrain push {transfer_path} -p {join(task.agent.workdir, task.workdir)} "
+    command = command + ' ' + ' '.join(['--include_name ' + name for name in get_included_by_name(task)])
+    command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_included_by_pattern(task)])
     command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
+    # run command
+    ssh = get_task_ssh_client(task, auth)
     with ssh:
         for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
             logger.info(f"[{task.agent.name}] {line}")
+
+    # update task
+    task.transfer_path = transfer_path
     task.transferred = True
     task.save()
 
     return JsonResponse(task_to_dict(task))
-
-
-@login_required
-def get_thumbnail(request, owner, name):
-    path = request.GET.get('path')
-    file = path.rpartition('/')[2]
-
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except:
-        return HttpResponseNotFound()
-
-    redis = RedisClient.get()
-    preview = redis.get(f"previews/{user.username}/{task.name}/{file}")
-
-    if preview is None or preview == b'EMPTY':
-        with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
-            return HttpResponse(thumbnail, content_type="image/png")
-    elif file.endswith('txt') or \
-            file.endswith('csv') or \
-            file.endswith('yml') or \
-            file.endswith('yaml') or \
-            file.endswith('tsv') or \
-            file.endswith('out') or \
-            file.endswith('err') or \
-            file.endswith('log'):
-        decoded = base64.b64decode(preview)
-        print(f"Retrieved text file preview from cache: {file}")
-        return HttpResponse(decoded, content_type="image/jpg")
-    elif file.endswith('png'):
-        decoded = base64.b64decode(preview)
-        print(f"Retrieved PNG file preview from cache: {file}")
-        return HttpResponse(decoded, content_type="image/png")
-    elif file.endswith('jpg') or file.endswith('jpeg'):
-        decoded = base64.b64decode(preview)
-        print(f"Retrieved JPG file preview from cache: {file}")
-        return HttpResponse(decoded, content_type="image/jpg")
-    elif file.endswith('czi'):
-        decoded = base64.b64decode(preview)
-        print(f"Retrieved CZI file preview from cache: {file}")
-        return HttpResponse(decoded, content_type="image/jpg")
-    else:
-        with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
-            return HttpResponse(thumbnail, content_type="image/png")
 
 
 # @login_required
