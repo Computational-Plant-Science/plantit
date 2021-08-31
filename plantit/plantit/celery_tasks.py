@@ -62,10 +62,10 @@ def submit_task(guid: str, auth: dict):
                 async_to_sync(push_task_event)(task)
 
                 execute_local_task(task, ssh)
-                list_task_results.s(guid, auth).apply_async()
+                list_task_results.s(guid, auth).apply_async(priority=1)
                 cleanup_delay_minutes = int(environ.get('TASKS_CLEANUP_MINUTES'))
                 cleanup_delay_seconds = cleanup_delay_minutes * 60
-                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay_seconds)
+                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay_seconds, priority=2)
                 task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay_seconds)
                 task.save()
 
@@ -84,7 +84,7 @@ def submit_task(guid: str, auth: dict):
 
                 job_id = submit_jobqueue_task(task, ssh)
                 refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
-                poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay)
+                poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay, priority=1)
 
                 log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id})"])
                 async_to_sync(push_task_event)(task)
@@ -119,7 +119,7 @@ def poll_job_status(guid: str, auth: dict):
         final_message = f"Job {task.job_id} failed"
         log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
 
@@ -157,7 +157,7 @@ def poll_job_status(guid: str, auth: dict):
 
         task.save()
         if task.is_complete:
-            list_task_results.s(guid, auth).apply_async()
+            list_task_results.s(guid, auth).apply_async(priority=1)
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
@@ -167,7 +167,7 @@ def poll_job_status(guid: str, auth: dict):
         else:
             log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
             async_to_sync(push_task_event)(task)
-            poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay)
+            poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay, priority=1)
     except StopIteration:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
             task.status = TaskStatus.FAILURE
@@ -182,7 +182,7 @@ def poll_job_status(guid: str, auth: dict):
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
-            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
             task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
             task.save()
 
@@ -198,7 +198,7 @@ def poll_job_status(guid: str, auth: dict):
         final_message = f"Job {task.job_id} encountered unexpected error: {traceback.format_exc()}"
         log_task_orchestrator_status(task, [final_message])
         async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
 
@@ -275,7 +275,7 @@ def list_task_results(guid: str, auth: dict):
 
         # log_task_orchestrator_status(task, [f"Verifying result(s) were transferred to CyVerse Data Store directory {task.workflow['config']['output']['to']}"])
         # async_to_sync(push_task_event)(task)
-        check_cyverse_transfer_completion.s(guid).apply_async()
+        check_cyverse_transfer_completion.s(guid).apply_async(priority=1)
 
     log_task_orchestrator_status(task, [f"Creating file previews"])
     async_to_sync(push_task_event)(task)
@@ -375,7 +375,7 @@ def list_task_results(guid: str, auth: dict):
                         sftp.get(result['name'], temp_file.name)
 
     cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
-    cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
+    cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
     task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
     task.previews_loaded = True
     task.save()
@@ -547,17 +547,17 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
-    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens for users with running tasks')
+    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens for users with running tasks', priority=1)
 
     # refresh user institution geocoding info
-    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
+    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions', priority=2)
 
     # aggregate usage stats for each user
-    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')
+    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics', priority=2)
 
     # agent healthchecks
-    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
+    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)
 
     # refresh workflow cache
-    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='refresh user workflows cache')
+    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='refresh user workflows cache', priority=2)
 

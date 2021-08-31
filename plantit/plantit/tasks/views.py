@@ -57,7 +57,7 @@ def get_all_or_create(request):
 
             # submit the task
             auth = parse_task_auth_options(workflow['auth'])
-            submit_task.apply_async(args=[task.guid, auth], soft_time_limit=time_limit)  # TODO should we use soft time limits too?
+            submit_task.apply_async(args=[task.guid, auth], soft_time_limit=time_limit, priority=1)  # TODO soft time limits too?
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
