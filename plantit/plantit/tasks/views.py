@@ -3,6 +3,7 @@ import logging
 import tempfile
 from os.path import join
 from pathlib import Path
+from zipfile import ZipFile
 
 from asgiref.sync import sync_to_async, async_to_sync
 from celery.result import AsyncResult
@@ -238,7 +239,11 @@ def get_output_file(request, owner, name):
             with tempfile.NamedTemporaryFile() as tf:
                 sftp.chdir(workdir)
                 sftp.get(path, tf.name)
-                return FileResponse(open(tf.name, 'rb'))
+                tf.seek(0)
+                if file_path.endswith('.txt'):
+                    return FileResponse(open(tf.name, 'rb'))
+                elif file_path.endswith('.zip'):
+                    return FileResponse(open(tf.name, 'rb'), content_type='application/x-zip-compressed', as_attachment=True)
 
 
 @login_required

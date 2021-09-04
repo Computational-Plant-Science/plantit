@@ -948,7 +948,6 @@ def compose_task_singularity_command(
 
     cmd += f" {image} {command}"
 
-    print(parameters)
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
@@ -1188,8 +1187,6 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     docker_password = environ.get('DOCKER_PASSWORD', None)
     gpu = options['gpu'] if 'gpu' in options else False
     lines = []
-
-    print(options['parameters'])
 
     if 'input' in options:
         files = list_task_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []

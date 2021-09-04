@@ -1784,9 +1784,7 @@
                                         <b-row>
                                             <b-col>
                                                 <datatree
-                                                    :node="
-                                                        personalDatasets
-                                                    "
+                                                    :node="personalDatasets"
                                                     :upload="true"
                                                     :download="true"
                                                     :create="true"
