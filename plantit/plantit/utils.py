@@ -57,13 +57,13 @@ logger = logging.getLogger(__name__)
 
 # users
 
-def list_users(github_token: str, invalidate: bool = False) -> List[dict]:
+def list_users(invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     updated = redis.get(f"users_updated")
 
     # repopulate if empty or invalidation requested
     if updated is None or len(list(redis.scan_iter(match=f"users/*"))) == 0 or invalidate:
-        repopulate_user_cache(github_token)
+        refresh_user_cache()
     else:
         age = (datetime.now() - datetime.fromtimestamp(float(updated)))
         age_secs = age.total_seconds()
@@ -72,43 +72,47 @@ def list_users(github_token: str, invalidate: bool = False) -> List[dict]:
         # otherwise only if stale
         if age_secs > max_secs:
             logger.info(f"User cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            repopulate_user_cache(github_token)
+            refresh_user_cache()
 
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"users/*")]
 
 
-def repopulate_user_cache(github_token: str):
-    redis = RedisClient.get()
-    users = User.objects.all()
-    mapped = []
-    for user in list(users.exclude(profile__isnull=True)):
-        if user.profile.github_username:
-            github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                          headers={'Authorization': f"Bearer {github_token}"}).json()
-            if 'login' in github_profile:
-                mapped.append({
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'github_username': user.profile.github_username,
-                    'github_profile': github_profile
-                })
-            else:
-                mapped.append({
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                })
-        else:
-            mapped.append({
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-            })
+def refresh_user_cache():
+    for user in list(User.objects.all().exclude(profile__isnull=True)): get_user_bundle(user)
+    RedisClient.get().set(f"users_updated", timezone.now().timestamp())
 
-    logger.info(f"Populating user cache")
-    for user in mapped: redis.set(f"users/{user['username']}", json.dumps(user))
-    redis.set(f"users_updated", timezone.now().timestamp())
+
+def get_user_bundle(user: User):
+    redis = RedisClient.get()
+    if not user.profile.github_username:
+        profile = {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        }
+    else:
+        # github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+        #                               headers={'Authorization': f"Bearer {github_token}"}).json()
+
+        # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
+        cached = redis.get(f"users/{user.username}")
+        if cached is not None: return json.loads(cached)
+
+        github_profile = async_to_sync(get_user_github_profile)(user)
+        profile = {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'github_username': user.profile.github_username,
+            'github_profile': github_profile
+        } if 'login' in github_profile else  {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        }
+
+    redis.set(f"users/{user.username}", json.dumps(profile))
+    return profile
 
 
 @sync_to_async
@@ -118,9 +122,7 @@ def get_profile_user(profile: Profile):
 
 @sync_to_async
 def get_user_django_profile(user: User):
-    logger.info(user.username)
     profile = Profile.objects.get(user=user)
-    logger.info(profile.github_username)
     return profile
 
 
@@ -155,8 +157,8 @@ def refresh_user_cyverse_tokens(user: User):
 
 async def get_user_github_profile(user: User):
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    logger.warning(profile.github_username)
-    return await github.get_profile(profile.github_username, profile.github_token)
+    gh_profile = await github.get_profile(profile.github_username, profile.github_token)
+    return gh_profile
 
 
 @sync_to_async
@@ -1822,13 +1824,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'authentication': agent.authentication,
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
-        'users_authorized': [{
-            'username': user.username,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'github_profile': async_to_sync(get_user_github_profile)(user)
-        } for user in users_authorized if user is not None],
+        'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
         'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
         'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
     }

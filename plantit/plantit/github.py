@@ -159,11 +159,13 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
         Timeout) | retry_if_exception_type(HTTPError)))
 async def get_profile(owner: str, token: str) -> dict:
     headers = {'Authorization': f"Bearer {token}"}
-    logger.info(headers)
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.get(f"https://api.github.com/users/{owner}")
-        if response.status_code == 200: return response.json()
-        else: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
+        if response.status_code != 200: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
+
+        profile = response.json()
+        logger.info(f"Retrieved GitHub user profile {owner}:\n{profile}")
+        return profile
 
 
 @retry(
@@ -186,6 +188,7 @@ async def get_repo(owner: str, name: str, token: str) -> dict:
             })
         repo = response.json()
         if 'message' in repo and repo['message'] == 'Not Found': raise ValueError(f"Repo {owner}/{name} not found")
+        logger.info(f"Retrieved repo {owner}/{name}:\n{repo}")
         return repo
 
 
@@ -201,14 +204,19 @@ def get_repo_readme(owner: str, name: str, token: str) -> str:
         url = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
         request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
         file = request.json()
-        return requests.get(file['download_url']).text
+        text = requests.get(file['download_url']).text
+        logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
+        return text
     except:
         try:
             url = f"https://api.github.com/repos/{owner}/{name}/contents/README"
             request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
             file = request.json()
-            return requests.get(file['download_url']).text
+            text = requests.get(file['download_url']).text
+            logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
+            return text
         except:
+            logger.warning(f"Failed to retrieve README for {owner}/{name}")
             return None
 
 

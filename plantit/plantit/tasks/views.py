@@ -1,5 +1,6 @@
 import json
 import logging
+import subprocess
 import tempfile
 from os.path import join
 from pathlib import Path
@@ -10,9 +11,10 @@ from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from paramiko.message import Message
 
 from plantit import settings
 from plantit.agents.models import Agent, AgentExecutor
@@ -231,19 +233,21 @@ def get_output_file(request, owner, name):
             file_path = join(workdir, path)
             print(f"Downloading {file_path}")
 
-            stdin, stdout, stderr = ssh.client.exec_command(
-                'test -e {0} && echo exists'.format(file_path))
+            stdin, stdout, stderr = ssh.client.exec_command('test -e {0} && echo exists'.format(file_path))
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
             with tempfile.NamedTemporaryFile() as tf:
                 sftp.chdir(workdir)
                 sftp.get(path, tf.name)
-                tf.seek(0)
-                if file_path.endswith('.txt'):
+                lower = file_path.lower()
+                if lower.endswith('.txt') or lower.endswith('.log') or lower.endswith('.out') or lower.endswith('.err'):
                     return FileResponse(open(tf.name, 'rb'))
-                elif file_path.endswith('.zip'):
-                    return FileResponse(open(tf.name, 'rb'), content_type='application/x-zip-compressed', as_attachment=True)
+                elif lower.endswith('.zip'):
+                    response = FileResponse(open(tf.name, 'rb'))
+                    # response['Content-Disposition'] = 'attachment; filename={}'.format("%s" % path)
+                    return response
+                    # return FileResponse(open(tf.name, 'rb'), content_type='application/zip', as_attachment=True)
 
 
 @login_required

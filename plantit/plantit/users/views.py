@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 import jwt
 import requests
+import pprint
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -27,7 +28,7 @@ from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils import list_users, calculate_user_statistics, get_user_cyverse_profile, get_user_github_profile, \
-    get_user_private_key_path, get_or_create_user_keypair, get_user_statistics
+    get_user_private_key_path, get_or_create_user_keypair, get_user_statistics, get_user_bundle
 from plantit.misc import get_csrf_token
 
 
@@ -214,8 +215,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        users = list_users(request.user.profile.github_token)
-        return JsonResponse({'users': users})
+        return JsonResponse({'users': list_users()})
 
     @action(detail=False, methods=['get'])
     def get_current(self, request):
@@ -252,7 +252,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                                 "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
         if request.user.profile.github_token != '' and user.profile.github_username != '':
-            response['github_profile'] = async_to_sync(get_user_github_profile)(request.user)
+            bundle = get_user_bundle(request.user)
+            response['github_profile'] = bundle['github_profile']
 
         return JsonResponse(response)
 
