@@ -1966,11 +1966,10 @@
                                                                                     class="fas fa-check text-success fa-fw"
                                                                                 ></i>
                                                                             </span>
-                                                                            <span
+                                                                            <i
                                                                                 v-else
-                                                                                >None
-                                                                                Selected</span
-                                                                            >
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i>
                                                                         </h5></b-col
                                                                     >
                                                                 </b-row>
@@ -4733,15 +4732,15 @@ export default {
             return true;
         },
         outputValid: function() {
-            if (
-                this.selectedOutput !== null &&
-                this.getWorkflow &&
-                this.getWorkflow.config &&
-                this.getWorkflow.config.input !== undefined &&
-                this.getWorkflow.config.output.to !== undefined
-            )
-                return this.output.to !== '';
-            return true;
+            // if (
+            //     this.selectedOutput !== null &&
+            //     this.getWorkflow &&
+            //     this.getWorkflow.config &&
+            //     this.getWorkflow.config.input !== undefined &&
+            //     this.getWorkflow.config.output.to !== undefined
+            // )
+              return this.output.to !== '';
+            // return true;
         },
         canSubmit: function() {
             return (

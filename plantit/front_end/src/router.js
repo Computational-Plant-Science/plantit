@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import splash from './views/splash.vue';
 import about from './views/about.vue';
-import usage from './views/usage.vue';
+import stats from './views/stats.vue';
 import beta from './views/beta.vue';
 import home from './views/home.vue';
 import users from './components/users/users.vue';
@@ -46,11 +46,11 @@ let router = new Router({
             }
         },
         {
-            path: '/usage',
-            name: 'usage',
-            component: usage,
+            path: '/stats',
+            name: 'stats',
+            component: stats,
             meta: {
-                title: 'PlantIT Usage',
+                title: 'PlantIT Stats',
                 crumb: [],
                 requiresAuth: false
             }

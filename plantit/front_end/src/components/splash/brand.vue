@@ -52,8 +52,8 @@
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item
-                                title="Usage"
-                                to="/usage"
+                                title="Stats"
+                                to="/stats"
                                 class="m-0 p-0"
                                 :link-class="
                                     profile.darkMode
@@ -62,7 +62,7 @@
                                 "
                                 ><b-button variant="outline-dark"
                                     ><i class="fas fa-chart-bar fa-2x"></i
-                                    ><br />Usage</b-button
+                                    ><br />Stats</b-button
                                 ></b-nav-item
                             >
                             <b-nav-item

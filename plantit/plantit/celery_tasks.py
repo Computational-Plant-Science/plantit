@@ -36,58 +36,33 @@ from plantit.utils import log_task_orchestrator_status, push_task_event, get_tas
 logger = get_task_logger(__name__)
 
 
-@app.task(track_started=True)
-def submit_task(guid: str, auth: dict):
+# Task lifecycle:
+#   prep environment
+#   submit executable/run script
+#   poll status until complete
+#   check results
+#   check CyVerse transfer
+#   clean up
+
+
+@app.task(track_started=True, bind=True)
+def prepare_task_environment(self, guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
 
-    task.status = TaskStatus.RUNNING
-    task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
-    task.save()
-
-    log_task_orchestrator_status(task, [f"Preparing to submit to {task.agent.name}"])
-    async_to_sync(push_task_event)(task)
-
     try:
-        local = task.agent.executor == AgentExecutor.LOCAL
         ssh = get_task_ssh_client(task, auth)
-
         with ssh:
-            if local:
-                configure_local_task_environment(task, ssh)
-                log_task_orchestrator_status(task, [f"Invoking script"])
-                async_to_sync(push_task_event)(task)
+            log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.name} on {task.agent.name}"])
+            async_to_sync(push_task_event)(task)
 
-                execute_local_task(task, ssh)
-                list_task_results.s(guid, auth).apply_async(priority=1)
-                cleanup_delay_minutes = int(environ.get('TASKS_CLEANUP_MINUTES'))
-                cleanup_delay_seconds = cleanup_delay_minutes * 60
-                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay_seconds, priority=2)
-                task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay_seconds)
-                task.save()
-
-                final_message = f"Completed"
-                log_task_orchestrator_status(task, [final_message])
-                async_to_sync(push_task_event)(task)
-
-                if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
-
-                check_logs_for_progress(task)
-            else:
-                configure_jobqueue_task_environment(task, ssh)
-                log_task_orchestrator_status(task, [f"Submitting script"])
-                async_to_sync(push_task_event)(task)
-
-                job_id = submit_jobqueue_task(task, ssh)
-                refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
-                poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay, priority=1)
-
-                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id})"])
-                async_to_sync(push_task_event)(task)
+            local = task.agent.executor == AgentExecutor.LOCAL
+            if local: configure_local_task_environment(task, ssh)
+            else: configure_jobqueue_task_environment(task, ssh)
+        return guid
     except Exception:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -97,16 +72,76 @@ def submit_task(guid: str, auth: dict):
 
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
-        logger.error(f"Failed to submit {task.user.username}'s task {task.name} to {task.agent.name}: {error}")
+        logger.error(f"Failed to prepare environment for {task.user.username}'s task {task.name} on {task.agent.name}: {error}")
         async_to_sync(push_task_event)(task)
+        self.request.callbacks = None # stop the task chain
 
 
-@app.task()
-def poll_job_status(guid: str, auth: dict):
+@app.task(track_started=True, bind=True)
+def submit_task(self, guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None  # stop the task chain
+        return
+
+    local = task.agent.executor == AgentExecutor.LOCAL
+    task.status = TaskStatus.RUNNING
+    task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
+    task.save()
+
+    try:
+        ssh = get_task_ssh_client(task, auth)
+
+        with ssh:
+            if local:
+                log_task_orchestrator_status(task, [f"Invoking executable"])
+                async_to_sync(push_task_event)(task)
+
+                execute_local_task(task, ssh)
+                task.status = TaskStatus.SUCCESS
+                task.save()
+
+                message = f"Task {task.name} (GUID: {task.guid}) succeeded"
+                log_task_orchestrator_status(task, [message])
+                async_to_sync(push_task_event)(task)
+
+                if task.user.profile.push_notification_status == 'enabled':
+                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+                check_logs_for_progress(task)
+            else:
+                log_task_orchestrator_status(task, [f"Submitting job script"])
+                async_to_sync(push_task_event)(task)
+
+                job_id = submit_jobqueue_task(task, ssh)
+
+                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id})"])
+                async_to_sync(push_task_event)(task)
+
+            return guid
+    except Exception:
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        error = traceback.format_exc()
+        log_task_orchestrator_status(task, [f"Failed with error: {error}"])
+        logger.error(f"Failed to {'run' if local else 'submit'} {task.user.username}'s task {task.name} on {task.agent.name}: {error}")
+        async_to_sync(push_task_event)(task)
+        self.request.callbacks = None  # stop the task chain
+
+
+@app.task(bind=True)
+def poll_task_status(self, guid: str, auth: dict):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None  # stop the task chain
         return
 
     refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
@@ -125,6 +160,17 @@ def poll_job_status(guid: str, auth: dict):
 
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
+
+        return guid
+
+    # if the task already completed
+    local = task.agent.executor == AgentExecutor.LOCAL
+    if local:
+        if task.status == TaskStatus.SUCCESS:
+            return guid
+        if task.status == TaskStatus.FAILURE:
+            self.request.callbacks = None  # stop the task chain
+            return
 
     # otherwise poll the scheduler for its status
     try:
@@ -157,17 +203,19 @@ def poll_job_status(guid: str, auth: dict):
 
         task.save()
         if task.is_complete:
-            list_task_results.s(guid, auth).apply_async(priority=1)
+            list_task_results.s(guid, auth).apply_async()
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
+
+            return guid
         else:
             log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
             async_to_sync(push_task_event)(task)
-            poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay, priority=1)
+            poll_task_status.s(guid, auth).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
             task.status = TaskStatus.FAILURE
@@ -178,6 +226,7 @@ def poll_job_status(guid: str, auth: dict):
 
             log_task_orchestrator_status(task, [f"Job {task.job_id} not found"])
             async_to_sync(push_task_event)(task)
+            self.request.callbacks = None  # stop the task chain
         else:
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
@@ -188,6 +237,8 @@ def poll_job_status(guid: str, auth: dict):
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
+
+            return guid
     except:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -205,38 +256,16 @@ def poll_job_status(guid: str, auth: dict):
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
+        self.request.callbacks = None  # stop the task chain
 
-@app.task()
-def cleanup_task(guid: str, auth: dict):
+
+@app.task(bind=True)
+def list_task_results(self, guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
-
-    logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
-    remove_task_orchestration_logs(task)
-
-    logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
-    command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
-    ssh = get_task_ssh_client(task, auth)
-    with ssh:
-        for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
-            logger.info(f"[{task.agent.name}] {line}")
-
-    task.cleaned_up = True
-    task.save()
-
-    log_task_orchestrator_status(task, [f"Cleaned up task {task.guid}"])
-    async_to_sync(push_task_event)(task)
-
-
-@app.task()
-def list_task_results(guid: str, auth: dict):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None  # stop the task chain
         return
 
     redis = RedisClient.get()
@@ -268,29 +297,18 @@ def list_task_results(guid: str, auth: dict):
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
-    if should_transfer_results(task):
-        # log_task_orchestrator_status(task, [f"Transferring result(s) to CyVerse Data Store directory {task.workflow['config']['output']['to']}"])
-        # async_to_sync(push_task_event)(task)
-        # transfer_results_to_cyverse.s(task.guid, auth).apply_async()
+    check_task_cyverse_transfer.s(guid, auth).apply_async()
 
-        # log_task_orchestrator_status(task, [f"Verifying result(s) were transferred to CyVerse Data Store directory {task.workflow['config']['output']['to']}"])
-        # async_to_sync(push_task_event)(task)
-        check_cyverse_transfer_completion.s(guid).apply_async(priority=1)
-
-    cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
-    cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
-    task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
-    # task.previews_loaded = True
-    task.save()
-    async_to_sync(push_task_event)(task)
+    return guid
 
 
-@app.task()
-def check_cyverse_transfer_completion(guid: str, iteration: int = 0):
+@app.task(bind=True)
+def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None  # stop the task chain
         return
 
     path = task.workflow['config']['output']['to']
@@ -313,11 +331,35 @@ def check_cyverse_transfer_completion(guid: str, iteration: int = 0):
         log_task_orchestrator_status(task, [msg])
         async_to_sync(push_task_event)(task)
 
+    cleanup_task.s(guid, auth).apply_async(priority=2)
 
-@app.task()
-def check_task_completion(guid: str, auth):
-    # TODO logic for local vs jobqueue tasks
-    pass
+    return guid
+
+
+@app.task(bind=True)
+def cleanup_task(self, guid: str, auth: dict):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None  # stop the task chain
+        return
+
+    logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
+    remove_task_orchestration_logs(task)
+
+    logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
+    command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
+    ssh = get_task_ssh_client(task, auth)
+    with ssh:
+        for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
+            logger.info(f"[{task.agent.name}] {line}")
+
+    task.cleaned_up = True
+    task.save()
+
+    log_task_orchestrator_status(task, [f"Cleaned up task {task.guid}"])
+    async_to_sync(push_task_event)(task)
 
 
 # @app.task()

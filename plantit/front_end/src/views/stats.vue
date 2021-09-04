@@ -19,13 +19,10 @@
                             class="mb-3 text-success"
                             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                             >IT</small
-                        ><small class="ml-1">usage</small>
+                        ><small class="ml-1">stats</small>
                     </h1>
                 </b-col>
             </b-row>
-            <br />
-            <div id="map" style="height: 40rem"></div>
-            <br />
             <b-row>
                 <b-col align-self="end" class="text-right mr-0">
                     <b-tabs
@@ -33,6 +30,7 @@
                         nav-class="bg-transparent"
                         active-nav-item-class="bg-transparent text-dark"
                         pills
+                        align="center"
                         ><b-tab
                             title="Users"
                             :title-link-class="
@@ -45,7 +43,7 @@
                             "
                         >
                             <template #title>
-                                <h1 v-if="userCount >= 0" class="text-success">
+                                <h1 v-if="userCount >= 0" class="text-success text-center">
                                     {{ userCount }}
                                 </h1>
                                 <b-spinner
@@ -75,7 +73,7 @@
                                 :data="usersPlotData"
                                 :layout="usersPlotLayout"
                             ></Plotly>
-                            <br />
+                      <br/>
                             <h1 v-if="onlineCount >= 0" class="text-success">
                                 {{ onlineCount }}
                             </h1>
@@ -87,11 +85,7 @@
                             ></b-spinner
                             ><b-badge
                                 :variant="
-                                    activeTab === 0
-                                        ? profile.darkMode
-                                            ? 'outline-success'
-                                            : 'success'
-                                        : profile.darkMode
+                                    profile.darkMode
                                         ? 'outline-light'
                                         : 'white'
                                 "
@@ -112,7 +106,7 @@
                             ><template #title
                                 ><h1
                                     v-if="workflowCount >= 0"
-                                    class="text-success"
+                                    class="text-success text-center"
                                 >
                                     {{ workflowCount }}
                                 </h1>
@@ -164,7 +158,7 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
-                            <br/>
+                            <br />
                             <h5 class="text-left">Workflow Developers</h5>
                             <b-card-group
                                 ><b-card
@@ -188,7 +182,33 @@
                                         )
                                     )"
                                     v-bind:key="user"
-                                    ><b-row><b-col><b-link :class="profile.darkMode ? 'text-light' : 'text-dark'" :href="`https://github.com/${user}`"><i class="fab fa-github fa-fw"></i> {{ user }}</b-link></b-col><b-col md="auto">{{ publicWorkflows.filter(wf => wf.repo.owner.login === user).length }} workflow(s)</b-col></b-row></b-card
+                                    ><b-row
+                                        ><b-col
+                                            ><b-link
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                :href="
+                                                    `https://github.com/${user}`
+                                                "
+                                                ><i
+                                                    class="fab fa-github fa-fw"
+                                                ></i>
+                                                {{ user }}</b-link
+                                            ></b-col
+                                        ><b-col md="auto"
+                                            >{{
+                                                publicWorkflows.filter(
+                                                    wf =>
+                                                        wf.repo.owner.login ===
+                                                        user
+                                                ).length
+                                            }}
+                                            workflow(s)</b-col
+                                        ></b-row
+                                    ></b-card
                                 ></b-card-group
                             ></b-tab
                         >
@@ -203,7 +223,7 @@
                                     : 'theme-light m-0 p-3'
                             "
                             ><template #title
-                                ><h1 v-if="taskCount >= 0" class="text-success">
+                                ><h1 v-if="taskCount >= 0" class="text-success text-center">
                                     {{ taskCount }}
                                 </h1>
                                 <b-spinner
@@ -232,10 +252,32 @@
                                 :data="tasksPlotData"
                                 :layout="tasksPlotLayout"
                             ></Plotly
-                        ></b-tab>
+                      >
+                            <br/>
+                        <h1 v-if="runningCount >= 0" class="text-success">
+                                {{ runningCount }}
+                            </h1>
+                            <b-spinner
+                                v-else
+                                type="grow"
+                                label="Loading..."
+                                variant="secondary"
+                            ></b-spinner
+                            ><b-badge
+                                :variant="
+                                    profile.darkMode
+                                        ? 'outline-light'
+                                        : 'white'
+                                "
+                                ><i class="fas fa-terminal fa-fw"></i>
+                          Running</b-badge
+                            ></b-tab>
                     </b-tabs>
                 </b-col>
             </b-row>
+            <br />
+            <div id="map" style="height: 40rem"></div>
+            <br />
         </b-container>
     </div>
 </template>
@@ -249,7 +291,7 @@ import mapboxgl from 'mapbox-gl';
 import { Plotly } from 'vue-plotly';
 
 export default {
-    name: 'usage',
+    name: 'stats',
     components: {
         blurb,
         Plotly
@@ -266,6 +308,7 @@ export default {
             onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
+            runningCount: -1,
             institutions: [],
             activeTab: 0
         };
@@ -330,6 +373,7 @@ export default {
                     this.onlineCount = response.data.online;
                     this.workflowCount = response.data.workflows;
                     this.taskCount = response.data.tasks;
+                    this.runningCount = response.data.running;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -441,6 +485,7 @@ export default {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                 },
                 autosize: true,
+                height: 350,
                 title: {
                     text: 'Total Users',
                     font: {

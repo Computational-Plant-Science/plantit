@@ -18,7 +18,7 @@ from paramiko.message import Message
 
 from plantit import settings
 from plantit.agents.models import Agent, AgentExecutor
-from plantit.celery_tasks import submit_task
+from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status, list_task_results, check_task_cyverse_transfer, cleanup_task
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
@@ -39,12 +39,17 @@ def get_all_or_create(request):
         tasks = Task.objects.all()
         return JsonResponse({'tasks': [task_to_dict(sub) for sub in tasks]})
     elif request.method == 'POST':
-        config = workflow['config']
-        agent = Agent.objects.get(name=config['agent']['name'])
         if workflow['type'] == 'Now':
+            config = workflow['config']
             task_name = config.get('task_name', None)
             task_guid = config.get('task_guid', None)
+
             if task_guid is None: return HttpResponseBadRequest()
+
+            task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
+            step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
+            agent = Agent.objects.get(name=config['agent']['name'])
+            auth = parse_task_auth_options(workflow['auth'])
             task = create_task(
                 username=user.username,
                 agent_name=agent.name,
@@ -54,17 +59,13 @@ def get_all_or_create(request):
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
 
-            auth = parse_task_auth_options(workflow['auth'])
-            step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-            task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
-
-            # check_task_completion.apply_async(args=[task.guid, auth], countdown=task_time_limit, priority=1)
-            submit_task.s(task.guid, auth).apply_async(
+            (prepare_task_environment.s(task.guid, auth) |\
+             submit_task.s(auth) |\
+             poll_task_status.s(auth)).apply_async(
                 soft_time_limit=task_time_limit if agent.executor == AgentExecutor.LOCAL else step_time_limit,
                 priority=1)
 
-            tasks = list(Task.objects.filter(user=user))
-            return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+            return JsonResponse({'tasks': [task_to_dict(t) for t in Task.objects.filter(user=user)]})
 
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':
@@ -165,7 +166,8 @@ def transfer_to_cyverse(request, owner, name):
     try:
         user = User.objects.get(username=owner)
         task = Task.objects.get(user=user, name=name)
-    except: return HttpResponseNotFound()
+    except:
+        return HttpResponseNotFound()
     if not task.is_complete: return HttpResponseBadRequest('task incomplete')
 
     # compose command
