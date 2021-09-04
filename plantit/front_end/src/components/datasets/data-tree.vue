@@ -1185,7 +1185,7 @@
             >
                 <b-col>
                     <b-img-lazy
-                        v-if="previewsLoaded && fileIsImage(child)"
+                        v-if="previewsLoaded && fileIsImage(child.label)"
                         :src="getFileURL(child)"
                         style="width: 3rem; height: 3rem"
                     ></b-img-lazy>

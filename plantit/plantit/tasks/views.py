@@ -59,8 +59,7 @@ def get_all_or_create(request):
             task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
 
             # check_task_completion.apply_async(args=[task.guid, auth], countdown=task_time_limit, priority=1)
-            submit_task.apply_async(
-                args=[task.guid, auth],
+            submit_task.s(task.guid, auth).apply_async(
                 soft_time_limit=task_time_limit if agent.executor == AgentExecutor.LOCAL else step_time_limit,
                 priority=1)
 
