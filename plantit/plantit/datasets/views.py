@@ -76,7 +76,7 @@ async def share(request):
             created=timezone.now(),
             message=f"{owner.username} shared directory {policy.path} with you")
 
-        await get_channel_layer().group_send(f"notifications-{user.username}", {
+        await get_channel_layer().group_send(f"{user.username}", {
             'type': 'push_notification',
             'notification': {
                 'id': notification.guid,
@@ -136,7 +136,7 @@ async def unshare(request):
         created=timezone.now(),
         message=f"{owner.username} revoked your access to directory {policy.path}")
 
-    await get_channel_layer().group_send(f"notifications-{guest.username}", {
+    await get_channel_layer().group_send(f"{guest.username}", {
         'type': 'push_notification',
         'notification': {
             'id': notification.guid,

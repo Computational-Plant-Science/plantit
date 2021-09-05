@@ -1008,9 +1008,10 @@
                 :show="dismissCountDown"
                 :variant="alerts[0].variant"
                 dismissible
-                @dismissed="dismissCountDown=0"
+                @dismissed="dismissCountDown = 0"
                 @dismiss-count-down="countdownChanged"
-                ><b>{{ alerts[0].message }}</b> {{ prettifyShort(alerts[0].time)
+                ><b>{{ alerts[0].message }}</b>
+                {{ prettifyShort(alerts[0].time)
                 }}<b-progress
                     variant="dark"
                     :max="dismissSecs"
@@ -1019,47 +1020,49 @@
                 ></b-progress
             ></b-alert>
         </div>
-      <b-toaster-bottom-full  >
-      <b-toast
-            auto-hide-delay="10000"
-            v-if="$route.name !== 'task' && taskToasted !== null"
-            id="toast"
-            :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
-            solid
-        >
-            <template #toast-title
-                ><b-link
-                    class="text-dark"
-                    :to="{
-                        name: 'task',
-                        params: {
-                            name: taskToasted.name,
-                            owner: taskToasted.owner
-                        }
-                    }"
-                    >{{ `Task ${taskToasted.name}` }}</b-link
-                ></template
+        <b-toaster-bottom-full>
+            <b-toast
+                auto-hide-delay="10000"
+                v-if="$route.name !== 'task' && taskToasted !== null"
+                id="toast"
+                :variant="
+                    profile.darkMode ? 'dark text-light' : 'light text-dark'
+                "
+                solid
             >
-            <small>
-                <b v-if="!taskToasted.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{
-                    !taskToasted.agent.is_local &&
-                    !taskToasted.is_complete &&
-                    taskToasted.job_status !== null
-                        ? taskToasted.job_status.toUpperCase()
-                        : taskToasted.status.toUpperCase()
-                }}</b>
-                on
-                <b>{{ taskToasted.agent.name }}</b>
-                {{ prettifyShort(taskToasted.updated) }}
-                <br />
-                {{
-                    taskToasted.orchestrator_logs[
-                        taskToasted.orchestrator_logs.length - 1
-                    ]
-                }}
-            </small>
-        </b-toast>
+                <template #toast-title
+                    ><b-link
+                        class="text-dark"
+                        :to="{
+                            name: 'task',
+                            params: {
+                                name: taskToasted.name,
+                                owner: taskToasted.owner
+                            }
+                        }"
+                        >{{ `Task ${taskToasted.name}` }}</b-link
+                    ></template
+                >
+                <small>
+                    <b v-if="!taskToasted.is_complete">Running</b>
+                    <b class="ml-0 mr-0" v-else>{{
+                        !taskToasted.agent.is_local &&
+                        !taskToasted.is_complete &&
+                        taskToasted.job_status !== null
+                            ? taskToasted.job_status.toUpperCase()
+                            : taskToasted.status.toUpperCase()
+                    }}</b>
+                    on
+                    <b>{{ taskToasted.agent.name }}</b>
+                    {{ prettifyShort(taskToasted.updated) }}
+                    <br />
+                    {{
+                        taskToasted.orchestrator_logs[
+                            taskToasted.orchestrator_logs.length - 1
+                        ]
+                    }}
+                </small>
+            </b-toast>
         </b-toaster-bottom-full>
         <b-modal
             id="feedback"
@@ -1116,7 +1119,9 @@
                 placeholder="Are there any particular features you'd like to see in PlantIT?"
             ></b-form-textarea>
             <br />
-            <b-form-checkbox :class="profile.darkMode ? 'input-dark' : 'input-light'" v-model="feedbackAnonymous"
+            <b-form-checkbox
+                :class="profile.darkMode ? 'input-dark' : 'input-light'"
+                v-model="feedbackAnonymous"
                 ><b>Anonymize?</b> By default all feedback is anonymous. Uncheck
                 this box if you'd like us to be able to see who you are. We
                 might get in touch to ask if we can display your comments on the
@@ -1147,10 +1152,7 @@ export default {
             cyverseProfile: null,
             githubProfile: null,
             // websockets
-            workflowSocket: null,
-            taskSocket: null,
-            notificationSocket: null,
-            interactiveSocket: null,
+            socket: null,
             // breadcrumb & brand
             crumbs: [],
             titleContent: 'brand',
@@ -1219,15 +1221,20 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
 
-        // user profile must be loaded before everything else to make sure we have tokens/profile properties
+        // no need to load user model if we're in about or stats view
         if (this.$route.name === 'about' || this.$route.name === 'stats') {
             await this.getVersion();
             return;
         }
 
-        await store.dispatch('user/loadProfile');
+        // otherwise need to fetch user profile first to get tokens/etc for other API requests
         await Promise.all([
-            this.getVersion(),
+            store.dispatch('user/loadProfile'),
+            this.getVersion()
+        ]);
+
+        // load the rest of the model
+        await Promise.all([
             this.$store.dispatch('users/loadAll'),
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
@@ -1254,15 +1261,12 @@ export default {
         ]);
 
         // TODO move websockets to vuex
+        // connect to this user's event stream, pushed from backend channel
         let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        this.taskSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/tasks/${this.profile.djangoProfile.username}/`
+        this.socket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/${this.profile.djangoProfile.username}/`
         );
-        this.notificationSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
-        );
-        this.taskSocket.onmessage = this.handleTaskEvent;
-        this.notificationSocket.onmessage = this.handleNotificationEvent;
+        this.socket.onmessage = this.handleUserEvent;
     },
     watch: {
         $route() {
@@ -1367,16 +1371,24 @@ export default {
                     return error;
                 });
         },
-        async handleTaskEvent(event) {
+        async handleUserEvent(event) {
             let data = JSON.parse(event.data);
-            let task = data.task;
+            if (data.task !== undefined) {
+                // task event
+                await this.handleTask(data.task);
+            } else if (data.notification !== undefined) {
+                // notification event
+                await this.handleNotification(data.notification);
+            } else {
+                // unrecognized event type
+            }
+        },
+        async handleTask(task) {
             this.taskToasted = task;
             this.$bvToast.show('toast');
             await this.$store.dispatch('tasks/update', task);
         },
-        async handleNotificationEvent(event) {
-            let data = JSON.parse(event.data);
-            let notification = data.notification;
+        async handleNotification(notification) {
             await this.$store.dispatch('notifications/update', notification);
         },
         removeTask(task) {

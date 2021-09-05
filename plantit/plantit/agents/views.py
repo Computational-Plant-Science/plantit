@@ -167,7 +167,7 @@ async def authorize_user(request, name):
         created=timezone.now(),
         message=f"You were granted access to agent {agent.name}")
 
-    await get_channel_layer().group_send(f"notifications-{user.username}", {
+    await get_channel_layer().group_send(f"{user.username}", {
         'type': 'push_notification',
         'notification': {
             'id': notification.guid,
@@ -209,7 +209,7 @@ async def unauthorize_user(request, name):
         created=timezone.now(),
         message=f"Your access to agent {agent.name} was revoked")
 
-    await get_channel_layer().group_send(f"notifications-{user.username}", {
+    await get_channel_layer().group_send(f"{user.username}", {
         'type': 'push_notification',
         'notification': {
             'id': notification.guid,

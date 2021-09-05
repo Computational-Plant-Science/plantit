@@ -646,145 +646,6 @@
                                         </div>
                                         <div
                                             class="m-3"
-                                        >
-                                            <b-row
-                                                ><b-col
-                                                    >{{
-                                                        Math.max(
-                                                            getTask.inputs_downloaded,
-                                                            getTask.inputs_submitted
-                                                        )
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    input(s) loaded<b-progress
-                                                        :value="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            )
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            ) !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            ) !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                ><b-col
-                                                    v-if="
-                                                        getWorkflow.config.input
-                                                            .kind !==
-                                                            'directory'
-                                                    "
-                                                    >{{
-                                                        getTask.inputs_submitted
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    container(s)
-                                                    submitted<b-progress
-                                                        :value="
-                                                            getTask.inputs_submitted
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            getTask.inputs_submitted !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.inputs_submitted !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                ><b-col
-                                                    v-if="
-                                                        getWorkflow.config.input
-                                                            .kind !==
-                                                            'directory'
-                                                    "
-                                                    >{{
-                                                        getTask.inputs_completed
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    container(s)
-                                                    completed<b-progress
-                                                        :value="
-                                                            getTask.inputs_completed
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            getTask.inputs_completed !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.inputs_completed !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                ><b-col
-                                                    v-if="
-                                                        getTask.result_transfer
-                                                    "
-                                                    >{{
-                                                        getTask.results_transferred
-                                                    }}/{{
-                                                        getTask.output_files
-                                                            .length > 0
-                                                            ? getTask
-                                                                  .output_files
-                                                                  .length
-                                                            : '?'
-                                                    }}
-                                                    result(s)
-                                                    transferred<b-progress
-                                                        :value="
-                                                            getTask.results_transferred
-                                                        "
-                                                        :max="
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                        :variant="
-                                                            getTask.results_transferred !==
-                                                            getTask.output_files
-                                                                .length
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.results_transferred !==
-                                                                getTask
-                                                                    .output_files
-                                                                    .length
-                                                        "
-                                                    ></b-progress></b-col
-                                            ></b-row>
-                                        </div>
-                                        <div
-                                            class="m-3"
                                             v-if="
                                                 getTask.is_complete &&
                                                     getTask.output_files !==
@@ -1608,7 +1469,154 @@
                                                 </div>
                                             </b-overlay>
                                         </div>
-                                        <!--<div
+                                      <div class="m-3">
+                                            <b-row
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .input !== undefined
+                                                    "
+                                                    >{{
+                                                        Math.max(
+                                                            getTask.inputs_downloaded,
+                                                            getTask.inputs_submitted
+                                                        )
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    input(s) loaded<b-progress
+                                                        :value="
+                                                            Math.max(
+                                                                getTask.inputs_downloaded,
+                                                                getTask.inputs_submitted
+                                                            )
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :variant="
+                                                            Math.max(
+                                                                getTask.inputs_downloaded,
+                                                                getTask.inputs_submitted
+                                                            ) !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
+                                                        :animated="
+                                                            Math.max(
+                                                                getTask.inputs_downloaded,
+                                                                getTask.inputs_submitted
+                                                            ) !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .input !==
+                                                            undefined &&
+                                                            getWorkflow.config
+                                                                .input.kind !==
+                                                                'directory'
+                                                    "
+                                                    >{{
+                                                        getTask.inputs_submitted
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    container(s)
+                                                    submitted<b-progress
+                                                        :value="
+                                                            getTask.inputs_submitted
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :variant="
+                                                            getTask.inputs_submitted !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
+                                                        :animated="
+                                                            getTask.inputs_submitted !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                                ><b-col
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .input !==
+                                                            undefined &&
+                                                            getWorkflow.config
+                                                                .input.kind !==
+                                                                'directory'
+                                                    "
+                                                    >{{
+                                                        getTask.inputs_completed
+                                                    }}/{{
+                                                        getTask.inputs_detected
+                                                    }}
+                                                    container(s)
+                                                    completed<b-progress
+                                                        :value="
+                                                            getTask.inputs_completed
+                                                        "
+                                                        :max="
+                                                            getTask.inputs_detected
+                                                        "
+                                                        :variant="
+                                                            getTask.inputs_completed !==
+                                                            getTask.inputs_detected
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
+                                                        :animated="
+                                                            getTask.inputs_completed !==
+                                                                getTask.inputs_detected
+                                                        "
+                                                    ></b-progress></b-col
+                                                ><b-col
+                                                    v-if="
+                                                        getTask.result_transfer
+                                                    "
+                                                    >{{
+                                                        getTask.results_transferred
+                                                    }}/{{
+                                                        getTask.output_files
+                                                            .length > 0
+                                                            ? getTask
+                                                                  .output_files
+                                                                  .length
+                                                            : '?'
+                                                    }}
+                                                    result(s)
+                                                    transferred<b-progress
+                                                        :value="
+                                                            getTask.results_transferred
+                                                        "
+                                                        :max="
+                                                            getTask.output_files
+                                                                .length
+                                                        "
+                                                        :variant="
+                                                            getTask.results_transferred !==
+                                                            getTask.output_files
+                                                                .length
+                                                                ? 'warning'
+                                                                : 'success'
+                                                        "
+                                                        :animated="
+                                                            getTask.results_transferred !==
+                                                                getTask
+                                                                    .output_files
+                                                                    .length
+                                                        "
+                                                    ></b-progress></b-col
+                                            ></b-row>
+                                        </div>
+                                      <!--<div
                                                         v-else-if="
                                                             flow.config
                                                                 .output &&
@@ -2692,17 +2700,23 @@ export default {
             'personalDatasetsLoading'
         ]),
         timeseriesData() {
-            // var x = [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')];
-            // var y = [0];
-            // if (this.getTask.is_complete) {
-            //     x.push(moment(this.getTask.completed).format('YYYY-MM-DD HH:mm:ss'));
-            //     y.push(0);
-            // }
+            var x = [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')];
+            var y = [0];
+            if (this.getTask.is_complete) {
+                x.push(moment(this.getTask.completed).format('YYYY-MM-DD HH:mm:ss'));
+                y.push(0);
+            }
 
             return [
                 {
-                    x: [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')],
-                    y: [0],
+                    x: x,
+                    y: y,
+                    // x: [
+                    //     moment(this.getTask.created).format(
+                    //         'YYYY-MM-DD HH:mm:ss'
+                    //     )
+                    // ],
+                    // y: [0],
                     hovertemplate: '<br>%{text}<br><extra></extra>',
                     text: [
                         `created ${this.prettify(this.getTask.created)}`,

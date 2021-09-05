@@ -1352,7 +1352,7 @@ def log_task_orchestrator_status(task: Task, messages: List[str]):
 
 async def push_task_event(task: Task):
     user = await get_task_user(task)
-    await get_channel_layer().group_send(f"tasks-{user.username}", {
+    await get_channel_layer().group_send(f"{user.username}", {
         'type': 'task_event',
         'task': await sync_to_async(task_to_dict)(task),
     })

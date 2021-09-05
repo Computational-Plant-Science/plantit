@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, consumers
+from . import views
 
 urlpatterns = [
     path(r'', views.get_all_or_create),
@@ -21,9 +21,4 @@ urlpatterns = [
     path(r'<owner>/<name>/orchestrator_logs_content/', views.get_task_logs_content),
     path(r'<owner>/<name>/transfer/', views.transfer_to_cyverse),
     path(r'search/<owner>/<workflow_name>/<page>/', views.search),
-]
-
-websocket_urlpatterns = [
-    path(r'ws/tasks/<username>/', consumers.TaskConsumer.as_asgi()),
-    path(r'ws/tasks/<username>/<guid>/', consumers.TaskLogConsumer.as_asgi())
 ]

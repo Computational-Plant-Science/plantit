@@ -3,11 +3,8 @@ from django.conf.urls.static import static
 from django.urls import path
 from rest_framework import routers
 
-from .auth.views import login_view, logout_view
-from .miappe.views import *
-from .notifications.consumers import NotificationConsumer
-from .tasks.consumers import TaskConsumer
 from .users.views import UsersViewSet, IDPViewSet
+from .consumers import UserEventConsumer
 
 router = routers.DefaultRouter()
 
@@ -29,7 +26,4 @@ urlpatterns = [
                   url('miappe/', include("plantit.miappe.urls")),
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
-websocket_urlpatterns = [
-    path(r'ws/tasks/<username>/', TaskConsumer.as_asgi()),
-    path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
-]
+websocket_urlpatterns = [path(r'ws/<username>/', UserEventConsumer.as_asgi())]
