@@ -182,15 +182,15 @@
                                                     class="mr-1"
                                                     :variant="
                                                         getWorkflow.public
-                                                            ? 'warning'
-                                                            : 'info'
+                                                            ? 'success'
+                                                            : 'warning'
                                                     "
                                                     ><span
                                                         v-if="
                                                             getWorkflow.public
                                                         "
                                                         ><i
-                                                            class="fas fa-unlock fa-fw"
+                                                            class="fas fa-lock-open fa-fw"
                                                         ></i>
                                                         Public</span
                                                     ><span v-else
@@ -1879,14 +1879,6 @@
                                                                     getWorkflow !==
                                                                         null &&
                                                                         getWorkflow.config !==
-                                                                            undefined &&
-                                                                        getWorkflow
-                                                                            .config
-                                                                            .output !==
-                                                                            undefined &&
-                                                                        getWorkflow
-                                                                            .config
-                                                                            .output !==
                                                                             undefined
                                                                 "
                                                                 :bg-variant="
@@ -1968,9 +1960,8 @@
                                                                             </span>
                                                                             <span
                                                                                 v-else
-                                                                                >None
-                                                                                Selected</span
-                                                                            >
+
+                                                                            ><i class="fas fa-exclamation text-danger fa-fw ml-1"></i></span>
                                                                         </h5></b-col
                                                                     >
                                                                 </b-row>
@@ -2013,9 +2004,17 @@
                                                                     v-if="
                                                                         getWorkflow
                                                                             .config
-                                                                            .output
-                                                                            .include !==
+                                                                            .output !==
                                                                             undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output !==
+                                                                                null &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include !==
+                                                                                undefined &&
                                                                             getWorkflow
                                                                                 .config
                                                                                 .output
@@ -2084,9 +2083,17 @@
                                                                     v-if="
                                                                         getWorkflow
                                                                             .config
-                                                                            .output
-                                                                            .include !==
+                                                                            .output !==
                                                                             undefined &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output !==
+                                                                                null &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output
+                                                                                .include !==
+                                                                                undefined &&
                                                                             getWorkflow
                                                                                 .config
                                                                                 .output
@@ -2475,8 +2482,7 @@
                                                                                     selectedProject ===
                                                                                         null
                                                                                 "
-                                                                                >None
-                                                                                Selected</span
+                                                                                ></span
                                                                             ><span
                                                                                 v-else
                                                                                 ><i
@@ -2683,8 +2689,7 @@
                                                                             ></i>
                                                                             <span
                                                                                 v-else
-                                                                                >None
-                                                                                Selected<i
+                                                                                ><i
                                                                                     class="fas fa-exclamation text-danger fa-fw ml-1"
                                                                                 ></i>
                                                                             </span></h5
@@ -3942,7 +3947,7 @@ export default {
                 from: '',
                 to: '',
                 include: {
-                    patterns: [],
+                    patterns: ['log', 'out', 'err'],
                     names: []
                 },
                 exclude: {
@@ -4431,7 +4436,7 @@ export default {
             if (this.output !== undefined && this.output.to) {
                 config.output = {};
                 config.output['to'] = this.output.to;
-                if (this.getWorkflow.config.output.path !== undefined)
+                if (this.getWorkflow.config.output !== undefined && this.getWorkflow.config.output.path !== undefined)
                     config.output['from'] = this.getWorkflow.config.output.path;
                 else config.output['from'] = '';
                 if (config.output.include === undefined)
@@ -4439,8 +4444,12 @@ export default {
                         patterns: [],
                         names: []
                     };
-                config.output.include.patterns = Array.from(this.outputSelectedPatterns);
-                config.output.include.names = Array.from(this.outputSelectedNames);
+                config.output.include.patterns = Array.from(
+                    this.outputSelectedPatterns
+                );
+                config.output.include.names = Array.from(
+                    this.outputSelectedNames
+                );
 
                 // config.output.patterns =
                 //     this.outputSelectedPatterns.length > 0

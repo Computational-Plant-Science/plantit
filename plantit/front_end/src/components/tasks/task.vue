@@ -472,6 +472,15 @@
                                 </b-row>
                                 <b-row class="m-0 p-0 mt-2">
                                     <b-col class="m-0 p-1">
+                                        <Plotly
+                                            style="position: relative;top: 20px"
+                                            :data="timeseriesData"
+                                            :layout="timeseriesLayout"
+                                        ></Plotly>
+                                    </b-col>
+                                </b-row>
+                                <b-row class="m-0 p-0 mt-2">
+                                    <b-col class="m-0 p-1">
                                         <div
                                             :class="
                                                 profile.darkMode
@@ -2008,12 +2017,14 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { guid } from '@/utils';
+import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'task',
     components: {
         WorkflowBlurb,
-        datatree
+        datatree,
+        Plotly
     },
     data() {
         return {
@@ -2720,6 +2731,65 @@ export default {
             'personalDatasets',
             'personalDatasetsLoading'
         ]),
+        timeseriesData() {
+            return [
+                {
+                    x: [
+                        moment(this.getTask.created).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        ),
+                        moment(this.getTask.updated).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        ),
+                        moment(this.getTask.completed).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        )
+                    ],
+                    y: ['created', 'updated', 'completed'],
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: {
+                        // color: ['rgb(214, 223, 93)', 'rgb(255, 114, 114)'],
+                        // color: this.healthchecks.map(t =>
+                        //     t.healthy
+                        //         ? 'rgb(214, 223, 93)'
+                        //         : 'rgb(255, 114, 114)'
+                        // ),
+                        line: {
+                            color: '#d6df5D',
+                            width: 1
+                        },
+                        symbol: 'circle',
+                        size: 16
+                    }
+                }
+            ];
+        },
+        timeseriesLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                },
+                height: 220,
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    }
+                },
+                xaxis: {
+                    showgrid: false,
+                    lines: false
+                },
+                yaxis: {
+                    showticklabels: false,
+                    showgrid: false,
+                    lines: false
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+            };
+        },
         filteredResults() {
             return this.getTask.output_files
                 .slice(

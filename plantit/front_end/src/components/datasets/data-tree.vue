@@ -1042,6 +1042,7 @@
                             profile.darkMode ? 'outline-light' : 'outline-dark'
                         "
                         @click="toggle"
+                        :disabled="deleting"
                     >
                         <i class="fas fa-caret-down fa-fw"></i>
                     </b-button> </b-input-group
