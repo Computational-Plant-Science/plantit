@@ -13,6 +13,7 @@
             <router-view
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>
+            <br/>
         </b-container>
     </div>
 </template>

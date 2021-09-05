@@ -1000,70 +1000,42 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <br />
-        <br />
-        <div v-if="alerts.length > 0">
-            <b-alert
-                class="m-0"
-                :show="dismissCountDown"
-                :variant="alerts[0].variant"
-                dismissible
-                @dismissed="dismissCountDown = 0"
-                @dismiss-count-down="countdownChanged"
-                ><b>{{ alerts[0].message }}</b>
-                {{ prettifyShort(alerts[0].time)
-                }}<b-progress
-                    variant="dark"
-                    :max="dismissSecs"
-                    :value="dismissCountDown"
-                    height="4px"
-                ></b-progress
-            ></b-alert>
-        </div>
-        <b-toaster-bottom-full>
-            <b-toast
-                auto-hide-delay="10000"
-                v-if="$route.name !== 'task' && taskToasted !== null"
-                id="toast"
-                :variant="
-                    profile.darkMode ? 'dark text-light' : 'light text-dark'
-                "
-                solid
-            >
-                <template #toast-title
-                    ><b-link
-                        class="text-dark"
-                        :to="{
-                            name: 'task',
-                            params: {
-                                name: taskToasted.name,
-                                owner: taskToasted.owner
-                            }
-                        }"
-                        >{{ `Task ${taskToasted.name}` }}</b-link
-                    ></template
+        <b-navbar
+            toggleable="md"
+            class="p-0 pt-1 pb-2"
+            style="height: 0px; z-index: 1000"
+            fixed="bottom"
+            :type="profile.darkMode ? 'dark' : 'secondary'"
+            :variant="profile.darkMode ? 'dark' : 'white'"
+        >
+            <b-container fluid>
+                <b-row
+                    v-if="alerts.length > 0"
+                    style="position: relative; top: -10px"
                 >
-                <small>
-                    <b v-if="!taskToasted.is_complete">Running</b>
-                    <b class="ml-0 mr-0" v-else>{{
-                        !taskToasted.agent.is_local &&
-                        !taskToasted.is_complete &&
-                        taskToasted.job_status !== null
-                            ? taskToasted.job_status.toUpperCase()
-                            : taskToasted.status.toUpperCase()
-                    }}</b>
-                    on
-                    <b>{{ taskToasted.agent.name }}</b>
-                    {{ prettifyShort(taskToasted.updated) }}
-                    <br />
-                    {{
-                        taskToasted.orchestrator_logs[
-                            taskToasted.orchestrator_logs.length - 1
-                        ]
-                    }}
-                </small>
-            </b-toast>
-        </b-toaster-bottom-full>
+                    <b-col>
+                        <b-alert
+                            class="m-0"
+                            :show="dismissCountDown"
+                            :variant="alerts[0].variant"
+                            dismissible
+                            @dismissed="dismissCountDown = 0"
+                            @dismiss-count-down="countdownChanged"
+                            ><b>{{ alerts[0].message }}</b>
+                            {{ prettifyShort(alerts[0].time)
+                            }}<b-progress
+                                variant="dark"
+                                :max="dismissSecs"
+                                :value="dismissCountDown"
+                                height="4px"
+                            ></b-progress
+                        ></b-alert>
+                    </b-col>
+                </b-row>
+            </b-container>
+        </b-navbar>
+        <br />
+        <br />
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"
@@ -1139,6 +1111,7 @@ import * as Sentry from '@sentry/browser';
 import router from '@/router';
 import store from '@/store/store';
 import taskblurb from '@/components/tasks/task-blurb.vue';
+import { guid } from '@/utils';
 
 export default {
     name: 'Navigation',
@@ -1384,9 +1357,22 @@ export default {
             }
         },
         async handleTask(task) {
-            this.taskToasted = task;
-            this.$bvToast.show('toast');
+            // this.taskToasted = task;
+            // this.$bvToast.show('toast');
             await this.$store.dispatch('tasks/update', task);
+            await this.$store.dispatch('alerts/add', {
+                variant: 'success',
+                message: `Task ${task.name} ${
+                    !task.agent.is_local &&
+                    !task.is_complete &&
+                    task.job_status !== null
+                        ? task.job_status.toUpperCase()
+                        : task.status.toUpperCase()
+                } on ${task.agent.name}: ${
+                    task.orchestrator_logs[task.orchestrator_logs.length - 1]
+                }`,
+                guid: guid().toString()
+            });
         },
         async handleNotification(notification) {
             await this.$store.dispatch('notifications/update', notification);
