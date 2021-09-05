@@ -36,14 +36,7 @@
             </b-row>-->
             <b-row>
                 <b-col>
-                    <b-row align-h="center" v-if="tasksLoading">
-                        <b-spinner
-                            type="grow"
-                            label="Loading..."
-                            variant="secondary"
-                        ></b-spinner>
-                    </b-row>
-                    <div v-else-if="getWorkflow.config">
+                    <div v-if="!tasksLoading && getWorkflow.config">
                         <b-row class="m-0 p-0">
                             <b-col v-if="showCanceledAlert" class="m-0 p-0">
                                 <b-alert

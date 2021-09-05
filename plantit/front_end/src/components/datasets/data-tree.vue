@@ -1102,6 +1102,7 @@
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i
+                    ><i v-if="sprout === (internalLoaded ? internalNode.label : node.label)" class="fas fa-seedling fa-fw mr-2 text-success"></i
                     >{{
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
