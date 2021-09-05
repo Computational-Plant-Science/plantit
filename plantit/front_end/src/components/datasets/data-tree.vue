@@ -41,6 +41,13 @@
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
+                    <i
+                        v-if="
+                            sprout ===
+                                (internalLoaded ? internalNode.path : node.path)
+                        "
+                        class="fas fa-seedling fa-fw mr-2 text-success"
+                    ></i>
                     {{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
             </b-col>
@@ -1208,9 +1215,7 @@
                 <b-col md="auto" align-self="center">
                     <b-button
                         id="popover-reactive-1"
-                        :disabled="
-                            !fileIsImage(child.label)
-                        "
+                        :disabled="!fileIsImage(child.label)"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         class="m-1"
                         size="sm"
@@ -1268,6 +1273,7 @@
                 :download="download"
                 :create="create"
                 :agents="agents"
+                :sprout="sprout"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="waitForDeletion(child.path)"
@@ -1351,6 +1357,10 @@ export default {
         agents: {
             required: false,
             type: Array
+        },
+        sprout: {
+            required: false,
+            type: String
         }
     },
     data: function() {

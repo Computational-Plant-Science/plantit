@@ -167,6 +167,19 @@ def poll_task_status(self, guid: str, auth: dict):
     local = task.agent.executor == AgentExecutor.LOCAL
     if local:
         if task.status == TaskStatus.SUCCESS:
+            ssh = get_task_ssh_client(task, auth)
+            get_task_remote_logs(task, ssh)
+
+            check_logs_for_progress(task)
+
+            list_task_results.s(guid, auth).apply_async()
+            final_message = f"{task.agent.executor} task {task.guid} completed"
+            log_task_orchestrator_status(task, [final_message])
+            async_to_sync(push_task_event)(task)
+
+            if task.user.profile.push_notification_status == 'enabled':
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
+
             return guid
         if task.status == TaskStatus.FAILURE:
             self.request.callbacks = None  # stop the task chain
@@ -331,7 +344,8 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         log_task_orchestrator_status(task, [msg])
         async_to_sync(push_task_event)(task)
 
-    cleanup_task.s(guid, auth).apply_async(priority=2)
+    cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
+    cleanup_task.s(guid, auth).apply_async(priority=2, countdown=cleanup_delay)
 
     return guid
 

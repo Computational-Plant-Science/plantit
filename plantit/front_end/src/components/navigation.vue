@@ -1019,7 +1019,8 @@
                 ></b-progress
             ></b-alert>
         </div>
-        <b-toast
+      <b-toaster-bottom-full  >
+      <b-toast
             auto-hide-delay="10000"
             v-if="$route.name !== 'task' && taskToasted !== null"
             id="toast"
@@ -1059,6 +1060,7 @@
                 }}
             </small>
         </b-toast>
+        </b-toaster-bottom-full>
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"

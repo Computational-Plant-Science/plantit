@@ -611,22 +611,27 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if config['output']['from'] is not None and config['output']['from'] != '':
             config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
 
-    # if we have outputs, make sure we don't push configuration or job scripts
-    if 'output' in config:
-        if 'exclude' in config['output']:
-            if 'names' in config['output']['exclude']:
-                config['output']['exclude']['names'].append(f"{task.guid}.yaml")
-                config['output']['exclude']['names'].append("template_local_run.sh")
-                config['output']['exclude']['names'].append("template_slurm_run.sh")
-            else:
-                config['output']['exclude']['names'] = [
-                    f"{task.guid}.yaml",
-                    "template_local_run.sh",
-                    "template_slurm_run.sh"
-                ]
-        output = config['output']
-    else:
-        output = None
+    # make sure we don't push configuration or job scripts
+    if 'output' not in config:
+        config['output'] = dict()
+    if 'include' not in config['output']:
+        config['output']['include'] = dict()
+    if 'patterns' not in config['output']['include']:
+        config['output']['exclude']['patterns'] = []
+
+    config['output']['include']['patterns'].append("out")
+    config['output']['include']['patterns'].append("err")
+    config['output']['include']['patterns'].append("log")
+
+    if 'exclude' not in config['output']:
+        config['output']['exclude'] = dict()
+    if 'names' not in config['output']['exclude']:
+        config['output']['exclude']['names'] = []
+
+    config['output']['exclude']['names'].append(f"{task.guid}.yaml")
+    config['output']['exclude']['names'].append("template_local_run.sh")
+    config['output']['exclude']['names'].append("template_slurm_run.sh")
+    output = config['output']
 
     # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
     # new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)

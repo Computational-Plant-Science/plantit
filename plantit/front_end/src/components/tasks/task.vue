@@ -26,15 +26,15 @@
                     </p>
                 </b-col>
             </b-row>
-            <b-row v-else-if="getTask.cleaned_up" align-content="center">
+            <!--<b-row v-else-if="getTask.cleaned_up" align-content="center">
                 <b-col>
                     <h6 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                         <i class="fas fa-broom fa-1x fa-fw"></i> This task has
                         been cleaned up.
                     </h6>
                 </b-col>
-            </b-row>
-            <b-row v-else>
+            </b-row>-->
+            <b-row>
                 <b-col>
                     <b-row align-h="center" v-if="tasksLoading">
                         <b-spinner
@@ -424,6 +424,19 @@
                                             {{ prettify(getTask.updated) }}
                                         </small>
                                     </b-col>
+                                    <b-col
+                                        class="m-0 p-0 text-center"
+                                        v-if="getTask.is_complete"
+                                        ><small>
+                                            <i class="fas fa-clock fa-fw"></i>
+                                            Ran for
+                                            {{
+                                                prettifyDuration(
+                                                    duration(getTask)
+                                                )
+                                            }}</small
+                                        ></b-col
+                                    >
                                     <b-col class="m-0 p-0 text-center">
                                         <small v-if="getTask.is_complete">
                                             <i class="fas fa-check fa-fw"></i>
@@ -441,19 +454,7 @@
                                             {{ prettify(getTask.due_time) }}
                                         </small>
                                     </b-col>
-                                    <b-col
-                                        class="m-0 p-0 text-center"
-                                        v-if="getTask.is_complete"
-                                        ><small>
-                                            <i class="fas fa-clock fa-fw"></i>
-                                            Ran for
-                                            {{
-                                                prettifyDuration(
-                                                    duration(getTask)
-                                                )
-                                            }}</small
-                                        ></b-col
-                                    >
+
                                     <b-col
                                         class="m-0 p-0 text-center"
                                         v-if="
@@ -1342,38 +1343,6 @@
                                                             >
                                                                 {{ file.name }}
                                                             </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
-                                                            >
-                                                                <b-button
-                                                                    :disabled="
-                                                                        !file.exists ||
-                                                                            downloading
-                                                                    "
-                                                                    :variant="
-                                                                        profile.darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                    v-b-tooltip.hover
-                                                                    :title="
-                                                                        'Download ' +
-                                                                            file.name
-                                                                    "
-                                                                    @click="
-                                                                        preDownloadFile(
-                                                                            file.name
-                                                                        )
-                                                                    "
-                                                                >
-                                                                    <i
-                                                                        class="fas fa-download fa-fw"
-                                                                    ></i>
-                                                                    Download
-                                                                </b-button>
-                                                            </b-col>
                                                         </b-row>
                                                     </div>
                                                     <!--<b-card-group
@@ -1801,6 +1770,9 @@
                                                         profile.darkMode
                                                             ? 'theme-dark'
                                                             : 'theme-light'
+                                                    "
+                                                    :sprout="
+                                                        getTask.transfer_path
                                                     "
                                                 ></datatree></b-col
                                         ></b-row>
@@ -2499,9 +2471,8 @@ export default {
                 });
         },
         prettify: function(date) {
-            return `${moment(date).fromNow()} (${moment(date).format(
-                'MMMM Do YYYY, h:mm a'
-            )})`;
+            return moment(date).fromNow();
+            // (${moment(date).format('MMMM Do YYYY, h:mm a')})
         },
         parseSeconds(seconds) {
             return moment.utc(seconds * 1000);
@@ -2734,22 +2705,33 @@ export default {
         timeseriesData() {
             return [
                 {
+                    name: 'Events',
                     x: [
                         moment(this.getTask.created).format(
-                            'YYYY-MM-DD HH:mm:ss'
-                        ),
-                        moment(this.getTask.updated).format(
                             'YYYY-MM-DD HH:mm:ss'
                         ),
                         moment(this.getTask.completed).format(
                             'YYYY-MM-DD HH:mm:ss'
                         )
                     ],
-                    y: ['created', 'updated', 'completed'],
+                    y: [0, 0],
+                    hovertemplate: '<br>%{text}<br><extra></extra>',
+                    text: [
+                        this.prettify(this.getTask.created),
+                        this.prettify(this.getTask.completed)
+                    ],
                     type: 'scatter',
-                    mode: 'markers',
+                    mode: 'lines+markers',
+                    line: {
+                        color: '#d6df5D'
+                    },
                     marker: {
-                        // color: ['rgb(214, 223, 93)', 'rgb(255, 114, 114)'],
+                        color: [
+                            '#d6df5D',
+                            this.getTask.is_success
+                                ? '#d6df5D'
+                                : 'rgb(255, 114, 114)'
+                        ],
                         // color: this.healthchecks.map(t =>
                         //     t.healthy
                         //         ? 'rgb(214, 223, 93)'
@@ -2759,8 +2741,8 @@ export default {
                             color: '#d6df5D',
                             width: 1
                         },
-                        symbol: 'circle',
-                        size: 16
+                        symbol: 'hourglass',
+                        size: 20
                     }
                 }
             ];
@@ -2786,6 +2768,34 @@ export default {
                     showgrid: false,
                     lines: false
                 },
+                annotations: [
+                    {
+                        x: moment(this.getTask.created).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        ),
+                        y: 0,
+                        xref: 'x',
+                        yref: 'y',
+                        text: 'created',
+                        showarrow: true,
+                        arrowhead: 7,
+                        ax: -20,
+                        ay: -30
+                    },
+                    {
+                        x: moment(this.getTask.completed).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        ),
+                        y: 0,
+                        xref: 'x',
+                        yref: 'y',
+                        text: 'completed',
+                        showarrow: true,
+                        arrowhead: 7,
+                        ax: 20,
+                        ay: -50
+                    }
+                ],
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
             };
