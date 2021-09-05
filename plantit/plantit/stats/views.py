@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 
-from plantit.tasks.models import Task, TaskCounter
+from plantit.tasks.models import Task, TaskCounter, TaskStatus
 from plantit.utils import list_institutions, filter_online
 from plantit.workflows.models import Workflow
 
@@ -15,7 +15,8 @@ def counts(request):
         'users': len(users),
         'online': len(online),
         'workflows': Workflow.objects.count(),
-        'tasks': TaskCounter.load().count
+        'tasks': TaskCounter.load().count,
+        'running': len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
     })
 
 

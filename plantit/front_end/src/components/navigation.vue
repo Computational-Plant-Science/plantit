@@ -680,8 +680,8 @@
                             ></b-nav-item
                         >-->
                         <b-nav-item
-                            title="Usage"
-                            to="/usage"
+                            title="Stats"
+                            to="/stats"
                             class="mt-2"
                             :link-class="
                                 profile.darkMode
@@ -695,7 +695,7 @@
                                         : 'text-dark'
                                 "
                                 ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                >Usage</span
+                                >Stats</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -1218,7 +1218,7 @@ export default {
         this.crumbs = this.$route.meta.crumb;
 
         // user profile must be loaded before everything else to make sure we have tokens/profile properties
-        if (this.$route.name === 'about' || this.$route.name === 'usage') {
+        if (this.$route.name === 'about' || this.$route.name === 'stats') {
             await this.getVersion();
             return;
         }

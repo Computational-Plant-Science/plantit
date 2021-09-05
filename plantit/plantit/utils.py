@@ -90,13 +90,28 @@ def get_user_bundle(user: User):
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
+        redis.set(f"users/{user.username}", json.dumps(profile))
+        return profile
     else:
         # github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
         #                               headers={'Authorization': f"Bearer {github_token}"}).json()
 
         # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
         cached = redis.get(f"users/{user.username}")
-        if cached is not None: return json.loads(cached)
+        if cached is not None:
+            decoded = json.loads(cached)
+            if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
+
+            github_profile = async_to_sync(get_user_github_profile)(user)
+            profile = {
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'github_username': user.profile.github_username,
+                'github_profile': github_profile
+            }
+            redis.set(f"users/{user.username}", json.dumps(profile))
+            return profile
 
         github_profile = async_to_sync(get_user_github_profile)(user)
         profile = {
@@ -111,8 +126,9 @@ def get_user_bundle(user: User):
             'last_name': user.last_name,
         }
 
-    redis.set(f"users/{user.username}", json.dumps(profile))
-    return profile
+        redis.set(f"users/{user.username}", json.dumps(profile))
+        return profile
+
 
 
 @sync_to_async
@@ -1346,7 +1362,8 @@ def cancel_task(task: Task, auth):
                     ssh=ssh,
                     precommand=':',
                     command=f"squeue -u {task.agent.username}",
-                    directory=join(task.agent.workdir, task.workdir)):
+                    directory=join(task.agent.workdir, task.workdir),
+                    allow_stderr=True):
                 logger.info(line)
                 lines.append(line)
 
