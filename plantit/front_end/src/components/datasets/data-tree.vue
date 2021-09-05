@@ -1102,7 +1102,15 @@
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i
-                    ><i v-if="sprout === (internalLoaded ? internalNode.label : node.label)" class="fas fa-seedling fa-fw mr-2 text-success"></i
+                    ><i
+                        v-if="
+                            sprout ===
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
+                        "
+                        class="fas fa-seedling fa-fw mr-2 text-success"
+                    ></i
                     >{{
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
@@ -1275,6 +1283,7 @@
                 :create="create"
                 :agents="agents"
                 :sprout="sprout"
+                :search="search"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="waitForDeletion(child.path)"
@@ -1362,6 +1371,10 @@ export default {
         sprout: {
             required: false,
             type: String
+        },
+        search: {
+          required: false,
+          type: String
         }
     },
     data: function() {
@@ -1402,7 +1415,10 @@ export default {
             filePageSize: 10
         };
     },
-    mounted: {},
+    mounted() {
+      //if (this.search !== undefined)
+        this.findPath(this.search);
+    },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
@@ -1546,6 +1562,20 @@ export default {
         }
     },
     methods: {
+        findPath(path) {
+            // TODO recursively follow path
+            var p = path.replace(
+                this.internalLoaded ? this.internalNode.path : this.node.path,
+                ''
+            );
+            var q = p.split('/')[0];
+            if (this.internalLoaded) {
+                for (var folder of this.internalNode.folders)
+                    if (folder.label === q) alert(folder.label);
+                    this.$refs.childNode.findPath(path);
+
+            }
+        },
         getFileURL(file) {
             // let url = await this.fileURL(file);
             // return url['url'];

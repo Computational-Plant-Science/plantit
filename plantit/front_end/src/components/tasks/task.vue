@@ -1469,7 +1469,7 @@
                                                 </div>
                                             </b-overlay>
                                         </div>
-                                      <div class="m-3">
+                                        <div class="m-3">
                                             <b-row
                                                 ><b-col
                                                     v-if="
@@ -1616,7 +1616,7 @@
                                                     ></b-progress></b-col
                                             ></b-row>
                                         </div>
-                                      <!--<div
+                                        <!--<div
                                                         v-else-if="
                                                             flow.config
                                                                 .output &&
@@ -1763,6 +1763,7 @@
                                                     :upload="true"
                                                     :download="true"
                                                     :create="true"
+                                                    :search="getTask.transfer_node"
                                                     :class="
                                                         profile.darkMode
                                                             ? 'theme-dark'
@@ -2700,10 +2701,14 @@ export default {
             'personalDatasetsLoading'
         ]),
         timeseriesData() {
-            var x = [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')];
+            var x = [
+                moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')
+            ];
             var y = [0];
             if (this.getTask.is_complete) {
-                x.push(moment(this.getTask.completed).format('YYYY-MM-DD HH:mm:ss'));
+                x.push(
+                    moment(this.getTask.completed).format('YYYY-MM-DD HH:mm:ss')
+                );
                 y.push(0);
             }
 
