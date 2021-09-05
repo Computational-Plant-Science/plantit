@@ -43,7 +43,10 @@
                             "
                         >
                             <template #title>
-                                <h1 v-if="userCount >= 0" class="text-success text-center">
+                                <h1
+                                    v-if="userCount >= 0"
+                                    class="text-success text-center"
+                                >
                                     {{ userCount }}
                                 </h1>
                                 <b-spinner
@@ -73,7 +76,7 @@
                                 :data="usersPlotData"
                                 :layout="usersPlotLayout"
                             ></Plotly>
-                      <br/>
+                            <br />
                             <h1 v-if="onlineCount >= 0" class="text-success">
                                 {{ onlineCount }}
                             </h1>
@@ -85,9 +88,7 @@
                             ></b-spinner
                             ><b-badge
                                 :variant="
-                                    profile.darkMode
-                                        ? 'outline-light'
-                                        : 'white'
+                                    profile.darkMode ? 'outline-light' : 'white'
                                 "
                                 ><i class="fas fa-signal fa-fw"></i>
                                 Online</b-badge
@@ -132,7 +133,15 @@
                                     Workflows</b-button
                                 ></template
                             >
-                            <h5 class="text-left">Public Workflows</h5>
+                            <h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Public Workflows ({{ publicWorkflows.length }})
+                            </h5>
                             <b-card-group deck columns
                                 ><b-card
                                     :bg-variant="
@@ -159,7 +168,15 @@
                                     ></blurb></b-card
                             ></b-card-group>
                             <br />
-                            <h5 class="text-left">Workflow Developers</h5>
+                            <h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Public Workflow Developers ({{ publicWorkflowDevelopers.length }})
+                            </h5>
                             <b-card-group
                                 ><b-card
                                     :bg-variant="
@@ -176,11 +193,7 @@
                                         profile.darkMode ? 'white' : 'dark'
                                     "
                                     class="overflow-hidden text-left p-2"
-                                    v-for="user in new Set(
-                                        publicWorkflows.map(
-                                            wf => wf.repo.owner.login
-                                        )
-                                    )"
+                                    v-for="user in publicWorkflowDevelopers"
                                     v-bind:key="user"
                                     ><b-row
                                         ><b-col
@@ -198,16 +211,12 @@
                                                 ></i>
                                                 {{ user }}</b-link
                                             ></b-col
-                                        ><b-col md="auto"
-                                            >{{
-                                                publicWorkflows.filter(
-                                                    wf =>
-                                                        wf.repo.owner.login ===
-                                                        user
-                                                ).length
-                                            }}
-                                            workflow(s)</b-col
-                                        ></b-row
+                                        ><b-col md="auto">{{
+                                            publicWorkflows.filter(
+                                                wf =>
+                                                    wf.repo.owner.login === user
+                                            ).length
+                                        }}</b-col></b-row
                                     ></b-card
                                 ></b-card-group
                             ></b-tab
@@ -223,7 +232,10 @@
                                     : 'theme-light m-0 p-3'
                             "
                             ><template #title
-                                ><h1 v-if="taskCount >= 0" class="text-success text-center">
+                                ><h1
+                                    v-if="taskCount >= 0"
+                                    class="text-success text-center"
+                                >
                                     {{ taskCount }}
                                 </h1>
                                 <b-spinner
@@ -251,10 +263,9 @@
                                 v-if="timeseriesTasks.length > 0"
                                 :data="tasksPlotData"
                                 :layout="tasksPlotLayout"
-                            ></Plotly
-                      >
-                            <br/>
-                        <h1 v-if="runningCount >= 0" class="text-success">
+                            ></Plotly>
+                            <br />
+                            <h1 v-if="runningCount >= 0" class="text-success">
                                 {{ runningCount }}
                             </h1>
                             <b-spinner
@@ -265,13 +276,12 @@
                             ></b-spinner
                             ><b-badge
                                 :variant="
-                                    profile.darkMode
-                                        ? 'outline-light'
-                                        : 'white'
+                                    profile.darkMode ? 'outline-light' : 'white'
                                 "
                                 ><i class="fas fa-terminal fa-fw"></i>
-                          Running</b-badge
-                            ></b-tab>
+                                Running</b-badge
+                            ></b-tab
+                        >
                     </b-tabs>
                 </b-col>
             </b-row>
@@ -446,6 +456,9 @@ export default {
             'publicWorkflows',
             'publicWorkflowsLoading'
         ]),
+        publicWorkflowDevelopers() {
+            return Array.from(new Set(this.publicWorkflows.map(wf => wf.repo.owner.login)));
+        },
         darkMode() {
             return this.profile.darkMode;
         },

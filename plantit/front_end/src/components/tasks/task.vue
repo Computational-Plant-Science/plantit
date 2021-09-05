@@ -464,7 +464,10 @@
                                         ></b-col
                                     >
                                 </b-row>
-                                <b-row class="m-0 p-0 mt-2">
+                                <b-row
+                                    class="m-0 p-0 mt-2"
+                                    v-if="getTask.status !== 'created'"
+                                >
                                     <b-col class="m-0 p-1">
                                         <Plotly
                                             style="position: relative;top: 20px"
@@ -642,13 +645,6 @@
                                             </div>
                                         </div>
                                         <div
-                                            v-if="
-                                                getTask.agent.executor !==
-                                                    'local' &&
-                                                    !getTask.agent.launcher &&
-                                                    getTask.inputs_detected !==
-                                                        0
-                                            "
                                             class="m-3"
                                         >
                                             <b-row
@@ -2696,22 +2692,21 @@ export default {
             'personalDatasetsLoading'
         ]),
         timeseriesData() {
+            // var x = [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')];
+            // var y = [0];
+            // if (this.getTask.is_complete) {
+            //     x.push(moment(this.getTask.completed).format('YYYY-MM-DD HH:mm:ss'));
+            //     y.push(0);
+            // }
+
             return [
                 {
-                    name: 'Events',
-                    x: [
-                        moment(this.getTask.created).format(
-                            'YYYY-MM-DD HH:mm:ss'
-                        ),
-                        moment(this.getTask.completed).format(
-                            'YYYY-MM-DD HH:mm:ss'
-                        )
-                    ],
-                    y: [0, 0],
+                    x: [moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')],
+                    y: [0],
                     hovertemplate: '<br>%{text}<br><extra></extra>',
                     text: [
-                        this.prettify(this.getTask.created),
-                        this.prettify(this.getTask.completed)
+                        `created ${this.prettify(this.getTask.created)}`,
+                        `completed ${this.prettify(this.getTask.completed)}` // TODO show status instead
                     ],
                     type: 'scatter',
                     mode: 'lines+markers',
@@ -2761,34 +2756,34 @@ export default {
                     showgrid: false,
                     lines: false
                 },
-                annotations: [
-                    {
-                        x: moment(this.getTask.created).format(
-                            'YYYY-MM-DD HH:mm:ss'
-                        ),
-                        y: 0,
-                        xref: 'x',
-                        yref: 'y',
-                        text: 'created',
-                        showarrow: true,
-                        arrowhead: 7,
-                        ax: -20,
-                        ay: -30
-                    },
-                    {
-                        x: moment(this.getTask.completed).format(
-                            'YYYY-MM-DD HH:mm:ss'
-                        ),
-                        y: 0,
-                        xref: 'x',
-                        yref: 'y',
-                        text: 'completed',
-                        showarrow: true,
-                        arrowhead: 7,
-                        ax: 20,
-                        ay: -50
-                    }
-                ],
+                // annotations: [
+                //     {
+                //         x: moment(this.getTask.created).format(
+                //             'YYYY-MM-DD HH:mm:ss'
+                //         ),
+                //         y: 0,
+                //         xref: 'x',
+                //         yref: 'y',
+                //         text: 'created',
+                //         showarrow: true,
+                //         arrowhead: 7,
+                //         ax: -20,
+                //         ay: -30
+                //     },
+                //     {
+                //         x: moment(this.getTask.completed).format(
+                //             'YYYY-MM-DD HH:mm:ss'
+                //         ),
+                //         y: 0,
+                //         xref: 'x',
+                //         yref: 'y',
+                //         text: 'completed',
+                //         showarrow: true,
+                //         arrowhead: 7,
+                //         ax: 20,
+                //         ay: -50
+                //     }
+                // ],
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
             };

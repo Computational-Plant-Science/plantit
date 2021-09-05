@@ -187,6 +187,8 @@ def poll_task_status(self, guid: str, auth: dict):
 
     # otherwise poll the scheduler for its status
     try:
+        check_logs_for_progress(task)
+
         job_status = get_jobqueue_task_job_status(task, auth)
         job_walltime = get_jobqueue_task_job_walltime(task, auth)
         task.job_status = job_status
@@ -198,8 +200,6 @@ def poll_task_status(self, guid: str, auth: dict):
 
         ssh = get_task_ssh_client(task, auth)
         get_task_remote_logs(task, ssh)
-
-        check_logs_for_progress(task)
 
         if job_status == 'COMPLETED':
             task.completed = now
@@ -229,17 +229,20 @@ def poll_task_status(self, guid: str, auth: dict):
             log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
             async_to_sync(push_task_event)(task)
             poll_task_status.s(guid, auth).apply_async(countdown=refresh_delay)
-    except StopIteration:
+    except StopIteration as e:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
-            task.status = TaskStatus.FAILURE
+            # task.status = TaskStatus.FAILURE
             now = timezone.now()
             task.updated = now
-            task.completed = now
+            # task.completed = now
             task.save()
 
-            log_task_orchestrator_status(task, [f"Job {task.job_id} not found"])
+            retry_seconds = 10
+            log_task_orchestrator_status(task, [f"Job {task.job_id} not found, retrying in {retry_seconds} seconds"])
             async_to_sync(push_task_event)(task)
-            self.request.callbacks = None  # stop the task chain
+            poll_task_status.s(guid, auth).apply_async(countdown=retry_seconds)
+            return
+            # raise self.retry(exc=e, countdown=retry_seconds, max_retries=3)
         else:
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
@@ -332,7 +335,7 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         logger.warning(f"Expected {len(expected)} results but found {len(actual)}")
         if iteration < 5:
             logger.warning(f"Checking again in 30 seconds (iteration {iteration})")
-            check_cyverse_transfer_completion.s(guid, iteration + 1).apply_async(countdown=30)
+            check_task_cyverse_transfer.s(guid, iteration + 1).apply_async(countdown=30)
     else:
         msg = f"Transfer to CyVerse directory {path} completed"
         logger.info(msg)
