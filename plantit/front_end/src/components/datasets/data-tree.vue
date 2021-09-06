@@ -42,10 +42,7 @@
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
                     <i
-                        v-if="
-                            sprout ===
-                                (internalLoaded ? internalNode.path : node.path)
-                        "
+                        v-if="sprout"
                         class="fas fa-seedling fa-fw mr-2 text-success"
                     ></i>
                     {{ internalLoaded ? internalNode.label : node.label }}
@@ -1103,12 +1100,7 @@
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i
                     ><i
-                        v-if="
-                            sprout ===
-                                (internalLoaded
-                                    ? internalNode.label
-                                    : node.label)
-                        "
+                        v-if="sprout"
                         class="fas fa-seedling fa-fw mr-2 text-success"
                     ></i
                     >{{
@@ -1275,6 +1267,7 @@
             :variant="profile.darkMode ? 'outline-light' : 'outline'"
         >
             <data-tree
+                ref="childNode"
                 class="pt-1 pb-1 mb-0 ml-2 mr-0 p-0"
                 style="border-top: 1px solid rgba(211, 211, 211, .5); border-left: 2px solid rgba(211, 211, 211, .5)"
                 :select="select"
@@ -1282,7 +1275,6 @@
                 :download="download"
                 :create="create"
                 :agents="agents"
-                :sprout="sprout"
                 :search="search"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
@@ -1336,6 +1328,7 @@
     </b-list-group>
 </template>
 <script>
+import { bus } from '../../main';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -1368,17 +1361,14 @@ export default {
             required: false,
             type: Array
         },
-        sprout: {
+        search: {
             required: false,
             type: String
-        },
-        search: {
-          required: false,
-          type: String
         }
     },
     data: function() {
         return {
+            sprout: false,
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
@@ -1416,8 +1406,9 @@ export default {
         };
     },
     mounted() {
-      //if (this.search !== undefined)
-        this.findPath(this.search);
+        if (this.search !== undefined) {
+            this.findPath(this.search);
+        }
     },
     computed: {
         ...mapGetters('user', ['profile']),
@@ -1562,19 +1553,24 @@ export default {
         }
     },
     methods: {
-        findPath(path) {
-            // TODO recursively follow path
-            var p = path.replace(
-                this.internalLoaded ? this.internalNode.path : this.node.path,
-                ''
-            );
-            var q = p.split('/')[0];
-            if (this.internalLoaded) {
-                for (var folder of this.internalNode.folders)
-                    if (folder.label === q) alert(folder.label);
-                    this.$refs.childNode.findPath(path);
+        async findPath(path) {
+            let own_path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
 
+            if (path === own_path) {
+                // we've found it
+                this.toggle();
+                this.sprout = true;
+                return;
             }
+
+            // if parent of target, do deeper
+            if (!this.internalLoaded && path.includes(own_path))
+                await this.loadDirectory(
+                    this.node.path,
+                    this.profile.djangoProfile.cyverse_token
+                );
         },
         getFileURL(file) {
             // let url = await this.fileURL(file);
@@ -1957,7 +1953,11 @@ export default {
         },
         toggle: function() {
             if (this.internalLoaded) this.isOpen = !this.isOpen;
-            else this.loadDirectory();
+            else
+                this.loadDirectory(
+                    this.node.path,
+                    this.profile.djangoProfile.cyverse_token
+                );
         },
         waitForCreation(path) {
             this.waitFor(() => {

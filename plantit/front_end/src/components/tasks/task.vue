@@ -663,7 +663,7 @@
                                                             getWorkflow.config
                                                                 .output
                                                         "
-                                                        >Expecting result(s):
+                                                        >Matching:
                                                         <code
                                                             :class="
                                                                 profile.darkMode
@@ -853,7 +853,7 @@
                                                         :title="
                                                             'Showing ' +
                                                                 outputPageSize +
-                                                                ' files per page'
+                                                                ' files at once'
                                                         "
                                                         v-b-tooltip.hover
                                                         :variant="
@@ -1471,7 +1471,7 @@
                                         </div>
                                         <div class="m-3">
                                             <b-row
-                                                ><b-col
+                                                ><!--<b-col
                                                     v-if="
                                                         getWorkflow.config
                                                             .input !== undefined
@@ -1577,9 +1577,10 @@
                                                                 getTask.inputs_detected
                                                         "
                                                     ></b-progress></b-col
-                                                ><b-col
+                                                >--><b-col
                                                     v-if="
-                                                        getTask.result_transfer
+                                                        getTask.is_complete &&
+                                                            getTask.result_transfer
                                                     "
                                                     >{{
                                                         getTask.results_transferred
@@ -1752,6 +1753,15 @@
                                                     : 'text-dark'
                                             "
                                         >
+                                            <b-img
+                                                class="mr-2"
+                                                rounded
+                                                style="max-height: 1.7rem;"
+                                                left
+                                                :src="
+                                                    require('../../assets/logos/cyverse_bright.png')
+                                                "
+                                            ></b-img>
                                             Data Store
                                         </h5></b-card-header
                                     >
@@ -1763,14 +1773,13 @@
                                                     :upload="true"
                                                     :download="true"
                                                     :create="true"
-                                                    :search="getTask.transfer_node"
+                                                    :search="
+                                                        getTask.transfer_path
+                                                    "
                                                     :class="
                                                         profile.darkMode
                                                             ? 'theme-dark'
                                                             : 'theme-light'
-                                                    "
-                                                    :sprout="
-                                                        getTask.transfer_path
                                                     "
                                                 ></datatree></b-col
                                         ></b-row>
@@ -2775,34 +2784,6 @@ export default {
                     showgrid: false,
                     lines: false
                 },
-                // annotations: [
-                //     {
-                //         x: moment(this.getTask.created).format(
-                //             'YYYY-MM-DD HH:mm:ss'
-                //         ),
-                //         y: 0,
-                //         xref: 'x',
-                //         yref: 'y',
-                //         text: 'created',
-                //         showarrow: true,
-                //         arrowhead: 7,
-                //         ax: -20,
-                //         ay: -30
-                //     },
-                //     {
-                //         x: moment(this.getTask.completed).format(
-                //             'YYYY-MM-DD HH:mm:ss'
-                //         ),
-                //         y: 0,
-                //         xref: 'x',
-                //         yref: 'y',
-                //         text: 'completed',
-                //         showarrow: true,
-                //         arrowhead: 7,
-                //         ax: 20,
-                //         ay: -50
-                //     }
-                // ],
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
             };

@@ -80,6 +80,7 @@ if (
 //    .then(auth => {
 //        if (!auth) {
 //            window.location.reload();
+
 new Vue({
     router,
     store,
