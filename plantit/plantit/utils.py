@@ -1049,6 +1049,16 @@ def compose_task_run_commands(task: Task, options: PlantITCLIOptions, inputs: Li
     return commands
 
 
+def compose_task_clean_commands(task: Task) -> str:
+    if task.agent.launcher:
+        workdir = join(task.agent.workdir, task.workdir)
+        launcher_script = join(workdir, os.environ.get('LAUNCHER_SCRIPT_NAME'))
+        docker_username = environ.get('DOCKER_USERNAME', None)
+        docker_password = environ.get('DOCKER_PASSWORD', None)
+        return f"plantit clean {launcher_script} -p {docker_username} -p {docker_password}"
+    else: return ''
+
+
 def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'output' in options:
         output = options['output']
@@ -1138,16 +1148,23 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
         path = options['input']['path']
         cyverse_token = task.user.profile.cyverse_access_token
         inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path, cyverse_token)
-    else:
-        inputs = []
+    else: inputs = []
 
-    resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_jobqueue_task_resource_requests(task, options, inputs)
-    pull_command = compose_task_pull_command(task, options)
-    run_commands = compose_task_run_commands(task, options, inputs)
-    zip_command = compose_task_zip_command(task, options)
-    push_command = compose_task_push_command(task, options)
+    local = task.agent.executor == AgentExecutor.LOCAL
+    resource_requests = [] if local else compose_jobqueue_task_resource_requests(task, options, inputs)
+    cli_pull = compose_task_pull_command(task, options)
+    cli_run = compose_task_run_commands(task, options, inputs)
+    cli_clean = compose_task_clean_commands(task)
+    cli_zip = compose_task_zip_command(task, options)
+    cli_push = compose_task_push_command(task, options)
 
-    return template_header + resource_requests + [task.agent.pre_commands] + [pull_command] + run_commands + [zip_command] + [push_command]
+    return template_header + \
+           resource_requests + \
+           [task.agent.pre_commands] + \
+           [cli_pull] + \
+           cli_run + \
+           [cli_zip] + \
+           [cli_push]
 
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
@@ -1279,7 +1296,6 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
         workdir = join(task.agent.workdir, task.workdir)
-        logger.info(workdir)
         sftp.chdir(workdir)
         template_path = environ.get('TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM')
