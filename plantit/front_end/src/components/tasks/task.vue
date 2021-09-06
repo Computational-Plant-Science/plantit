@@ -2734,7 +2734,7 @@ export default {
                     },
                     marker: {
                         color: [
-                            '#d6df5D',
+                            '#e2e3b0',
                             this.getTask.is_success
                                 ? '#d6df5D'
                                 : 'rgb(255, 114, 114)'
@@ -2745,7 +2745,7 @@ export default {
                         //         : 'rgb(255, 114, 114)'
                         // ),
                         line: {
-                            color: '#d6df5D',
+                            color: '#e2e3b0',
                             width: 1
                         },
                         symbol: 'hourglass',

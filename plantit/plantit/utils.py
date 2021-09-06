@@ -1163,6 +1163,7 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
            [task.agent.pre_commands] + \
            [cli_pull] + \
            cli_run + \
+           [cli_clean] + \
            [cli_zip] + \
            [cli_push]
 
