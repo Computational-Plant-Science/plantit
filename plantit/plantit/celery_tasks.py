@@ -362,8 +362,8 @@ def cleanup_task(self, guid: str, auth: dict):
         self.request.callbacks = None  # stop the task chain
         return
 
-    logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
-    remove_task_orchestration_logs(task)
+    # logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
+    # remove_task_orchestration_logs(task)
 
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
     command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
