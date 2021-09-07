@@ -74,7 +74,7 @@ services:
       start_period: 20s
   celery1:
     image: computationalplantscience/plantit
-    command: ["celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair"]
+    command: ["celery", "-A", "plantit", "worker", "-B", "-n", "celery1", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -141,7 +141,7 @@ services:
     restart: always
   celery2:
     image: computationalplantscience/plantit
-    command: [ "celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair" ]
+    command: [ "celery", "-A", "plantit", "worker", "-B", "-n", "celery2", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair" ]
     volumes:
       - .:/code
     working_dir: /code/plantit
