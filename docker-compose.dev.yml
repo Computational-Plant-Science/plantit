@@ -61,7 +61,8 @@ services:
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
-      - celery
+      - celery1
+      - celery2
       - sandbox
     ports:
       - "3000:3000"
@@ -239,7 +240,8 @@ services:
     volumes:
       - .:/code
     depends_on:
-      - celery
+      - celery1
+      - celery2
     ports:
       - "5555:5555"
     healthcheck:
