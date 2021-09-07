@@ -98,7 +98,7 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
   celery1:
     image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery1", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO", "-Ofair"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery1", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -166,7 +166,7 @@ services:
       start_period: 20s
   celery2:
     image: computationalplantscience/plantit
-    command: [ "/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery2", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO", "-Ofair" ]
+    command: [ "/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery2", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
     volumes:
       - .:/code
     working_dir: /code/plantit
