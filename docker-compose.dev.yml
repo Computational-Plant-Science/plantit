@@ -61,8 +61,8 @@ services:
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
-      - celery1
-      - celery2
+      - beat
+      - celery
       - sandbox
     ports:
       - "3000:3000"
@@ -96,9 +96,9 @@ services:
       retries: 2
       start_period: 20s
     command: ["redis-server", "--appendonly", "yes"]
-  celery1:
+  beat:
     image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery1", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -164,9 +164,9 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  celery2:
+  celery:
     image: computationalplantscience/plantit
-    command: [ "/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "-n", "celery2", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
+    command: [ "/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-n", "celery" ]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -240,8 +240,8 @@ services:
     volumes:
       - .:/code
     depends_on:
-      - celery1
-      - celery2
+      - beat
+      - celery
     ports:
       - "5555:5555"
     healthcheck:
