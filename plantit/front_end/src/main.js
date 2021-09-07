@@ -81,6 +81,8 @@ if (
 //        if (!auth) {
 //            window.location.reload();
 
+export const bus = new Vue();
+
 new Vue({
     router,
     store,

@@ -1405,6 +1405,11 @@ export default {
             filePageSize: 10
         };
     },
+    created() {
+        bus.$on('close', () => {
+            this.close();
+        });
+    },
     mounted() {
         if (this.search !== undefined) {
             this.findPath(this.search);
@@ -1951,8 +1956,11 @@ export default {
                         : this.node.label)
             );
         },
-        toggle: function() {
-            if (this.internalLoaded) this.isOpen = !this.isOpen;
+        close() {
+          this.isOpen = false;
+        },
+        toggle() {
+            if (this.internalLoaded) this.close();
             else
                 this.loadDirectory(
                     this.node.path,
@@ -2248,6 +2256,7 @@ export default {
         selectNode: function(node, kind) {
             node['kind'] = kind;
 
+            // TODO remove this eldritch horror and use the message bus
             // 15 layers should be deep enough for any conceivable use case, right?
             // ..right?
             if (this.$parent !== undefined) {
@@ -2400,6 +2409,7 @@ export default {
                 }
             }
             this.$emit('selectNode', node);
+            bus.$emit('close');
 
             this.$parent.toggle();
         }
