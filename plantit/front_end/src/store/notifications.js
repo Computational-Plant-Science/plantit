@@ -15,7 +15,7 @@ export const notifications = {
         setLoading(state, loading) {
             state.loading = loading;
         },
-        update(state, notification) {
+        addOrUpdate(state, notification) {
             let i = state.notifications.findIndex(
                 n => n.id === notification.id
             );
@@ -60,8 +60,8 @@ export const notifications = {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async update({ commit }, notification) {
-            commit('update', notification);
+        async addOrUpdate({ commit }, notification) {
+            commit('addOrUpdate', notification);
         }
     },
     getters: {

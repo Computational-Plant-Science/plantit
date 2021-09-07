@@ -65,7 +65,8 @@ def get_all_or_create(request):
                 soft_time_limit=task_time_limit if agent.executor == AgentExecutor.LOCAL else step_time_limit,
                 priority=1)
 
-            return JsonResponse({'tasks': [task_to_dict(t) for t in Task.objects.filter(user=user)]})
+            return JsonResponse(task_to_dict(task))
+            # return JsonResponse({'tasks': [task_to_dict(t) for t in Task.objects.filter(user=user)]})
 
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':

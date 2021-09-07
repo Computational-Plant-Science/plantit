@@ -95,9 +95,77 @@ services:
       retries: 2
       start_period: 20s
     command: ["redis-server", "--appendonly", "yes"]
-  celery:
+  celery1:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO", "-Ofair"]
+    volumes:
+      - .:/code
+    working_dir: /code/plantit
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+      - MAPBOX_FEATURE_REFRESH_MINUTES=${MAPBOX_FEATURE_REFRESH_MINUTES}
+      - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
+      - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
+      - CYVERSE_CLIENT_SECRET=${CYVERSE_CLIENT_SECRET}
+      - CYVERSE_USERNAME=${CYVERSE_USERNAME}
+      - CYVERSE_PASSWORD=${CYVERSE_PASSWORD}
+      - CYVERSE_TOKEN_REFRESH_MINUTES=${CYVERSE_TOKEN_REFRESH_MINUTES}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
+      - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
+      - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
+      - TASKS_TEMPLATE_SCRIPT_LOCAL=${TASKS_TEMPLATE_SCRIPT_LOCAL}
+      - TASKS_TEMPLATE_SCRIPT_SLURM=${TASKS_TEMPLATE_SCRIPT_SLURM}
+      - USERS_CACHE=${USERS_CACHE}
+      - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
+      - USERS_STATS_REFRESH_MINUTES=${USERS_STATS_REFRESH_MINUTES}
+      - MORE_USERS=${MORE_USERS}
+      - AGENT_KEYS=${AGENT_KEYS}
+      - WORKFLOWS_CACHE=${WORKFLOWS_CACHE}
+      - WORKFLOWS_REFRESH_MINUTES=${WORKFLOWS_REFRESH_MINUTES}
+      - TASKS_TIMEOUT_MULTIPLIER=${TASKS_TIMEOUT_MULTIPLIER}
+      - TASKS_LOGS=${TASKS_LOGS}
+      - TASKS_REFRESH_SECONDS=${TASKS_REFRESH_SECONDS}
+      - TASKS_CLEANUP_MINUTES=${TASKS_CLEANUP_MINUTES}
+      - TASKS_STEP_TIME_LIMIT_SECONDS=${TASKS_STEP_TIME_LIMIT_SECONDS}
+      - LAUNCHER_SCRIPT_NAME=${LAUNCHER_SCRIPT_NAME}
+      - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
+      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - DOCKER_USERNAME=${DOCKER_USERNAME}
+      - DOCKER_PASSWORD=${DOCKER_PASSWORD}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
+      - TUTORIALS_FILE=${TUTORIALS_FILE}
+      - FEEDBACK_FILE=${FEEDBACK_FILE}
+      - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
+      - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+    healthcheck:
+      test: celery -A plantit status | grep "OK"
+      interval: 60s
+      timeout: 60s
+      retries: 2
+      start_period: 20s
+  celery2:
+    image: computationalplantscience/plantit
+    command: [ "/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO", "-Ofair" ]
     volumes:
       - .:/code
     working_dir: /code/plantit

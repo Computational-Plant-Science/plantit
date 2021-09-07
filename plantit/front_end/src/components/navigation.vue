@@ -1359,7 +1359,7 @@ export default {
         async handleTask(task) {
             // this.taskToasted = task;
             // this.$bvToast.show('toast');
-            await this.$store.dispatch('tasks/update', task);
+            await this.$store.dispatch('tasks/addOrUpdate', task);
             await this.$store.dispatch('alerts/add', {
                 variant: 'success',
                 message: `Task ${task.name} ${

@@ -103,7 +103,7 @@ export const agents = {
                     }
                 })
                 .then(response => {
-                    commit('update', response.data);
+                    commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })
@@ -124,7 +124,7 @@ export const agents = {
                     }
                 })
                 .then(response => {
-                    commit('update', response.data);
+                    commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })

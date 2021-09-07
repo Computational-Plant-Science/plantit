@@ -4485,7 +4485,6 @@ export default {
 
             this.submitted = true;
             if (this.submitType === 'Now')
-                // submit immediately
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
@@ -4494,10 +4493,10 @@ export default {
                 })
                     .then(async response => {
                         await this.$store.dispatch(
-                            'tasks/setAll',
-                            response.data.tasks
+                            'tasks/addOrUpdate',
+                            response.data
                         );
-                        router.push({
+                        await router.push({
                             name: 'task',
                             params: {
                                 owner: this.profile.djangoProfile.username,
@@ -4510,7 +4509,6 @@ export default {
                         throw error;
                     });
             else if (this.submitType === 'After')
-                // schedule after delay
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
@@ -4537,7 +4535,6 @@ export default {
                         throw error;
                     });
             else if (this.submitType === 'Every')
-                // schedule periodically
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,

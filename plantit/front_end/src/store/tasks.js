@@ -22,7 +22,7 @@ export const tasks = {
         setNextPage(state, nextPage) {
             state.nextPage = nextPage;
         },
-        update(state, task) {
+        addOrUpdate(state, task) {
             let i = state.tasks.findIndex(t => t.guid === task.guid);
             if (i === -1) state.tasks.unshift(task);
             else Vue.set(state.tasks, i, task);
@@ -103,7 +103,7 @@ export const tasks = {
             axios
                 .get(`/apis/v1/tasks/${payload.owner}/${payload.name}/`)
                 .then(response => {
-                    commit('update', response.data);
+                    commit('addOrUpdate', response.data);
                     commit('setLoading', false);
                 })
                 .catch(error => {
@@ -112,8 +112,8 @@ export const tasks = {
                     return error;
                 });
         },
-        update({ commit }, task) {
-            commit('update', task);
+        addOrUpdate({ commit }, task) {
+            commit('addOrUpdate', task);
         }
     },
     getters: {
