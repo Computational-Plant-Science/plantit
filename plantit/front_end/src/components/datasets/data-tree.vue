@@ -1034,7 +1034,7 @@
                         :variant="
                             profile.darkMode ? 'outline-light' : 'outline-dark'
                         "
-                        @click="toggle"
+                        @click="open"
                     >
                         <i class="fas fa-caret-up fa-fw"></i> </b-button
                     ><b-button
@@ -1955,6 +1955,9 @@ export default {
                         ? this.internalNode.label
                         : this.node.label)
             );
+        },
+        open() {
+          this.isOpen = true;
         },
         close() {
           this.isOpen = false;
