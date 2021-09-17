@@ -474,8 +474,6 @@ def agents_healthchecks():
     for agent in agents:
         healthy, output = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
         agent.is_healthy = healthy
-        agent.disabled = not agent.is_healthy
-        agent.save()
 
         redis = RedisClient.get()
         length = redis.llen(f"healthchecks/{agent.name}")

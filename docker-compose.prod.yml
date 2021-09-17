@@ -211,9 +211,9 @@ services:
     volumes:
       - redisdata:/data
     restart: always
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server"]
   sandbox:
-    image: computationalplantscience/plantit-sandbox
+    image: computationalplantscience/plantit-cli
     command: ["/usr/sbin/sshd", "-D"]
     working_dir: /opt/plantit-cli
     privileged: true

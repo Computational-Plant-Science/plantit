@@ -95,7 +95,7 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server"]
   beat:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
@@ -251,7 +251,7 @@ services:
       retries: 2
       start_period: 20s
   sandbox:
-    image: computationalplantscience/plantit-sandbox
+    image: computationalplantscience/plantit-cli
     command: ["/usr/sbin/sshd", "-D"]
     working_dir: /opt/plantit-cli
     privileged: true
