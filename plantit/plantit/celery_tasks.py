@@ -14,8 +14,6 @@ from celery.utils.log import get_task_logger
 from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
-from preview_generator.exception import UnsupportedMimeType
-from preview_generator.manager import PreviewManager
 
 from plantit import settings
 import plantit.terrain as terrain
@@ -286,7 +284,6 @@ def list_task_results(self, guid: str, auth: dict):
 
     redis = RedisClient.get()
     ssh = get_task_ssh_client(task, auth)
-    previews = PreviewManager(join(settings.MEDIA_ROOT, task.guid), create_folder=True)
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
     if workflow is None:
