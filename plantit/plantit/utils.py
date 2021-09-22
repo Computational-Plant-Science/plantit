@@ -711,7 +711,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         elif kind == 'files':
             input = Input(path=path, kind='files', patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
         elif kind == 'directory':
-            input = Input(path=path, kind='directory')
+            input = Input(path=path, kind='directory', patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
         else:
             errors.append('Section \'input.kind\' must be \'file\', \'files\', or \'directory\'')
 

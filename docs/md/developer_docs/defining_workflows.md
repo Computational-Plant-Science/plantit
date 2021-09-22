@@ -142,18 +142,18 @@ To specify which filetypes your workflow is permitted to accept, add a `filetype
 input:
   path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
   kind: file
-  filetypes:
+  patterns:
     - txt
 ```
 
-Any values provided to `filetypes` will be joined (with `,`) and substituted for `$FILETYPES` in your workflow's command. Use this to inform your code which filetypes to expect, e.g.:
+Any values provided to `patterns` will be joined (with `,`) and substituted for `$PATTERNS` in your workflow's command. Use this to inform your code which filetypes to expect, e.g.:
 
 ```yaml
-commands: ls "$INPUT"/*.{"$FILETYPES"} >> things_cow_say.txt
+commands: ls "$INPUT"/*.{"$PATTERNS"} >> things_cow_say.txt
 input:
   path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
   kind: file
-  filetypes:
+  patterns:
     - txt
     - md     
 ```
