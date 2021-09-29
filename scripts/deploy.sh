@@ -49,7 +49,7 @@ $compose exec -T plantit python manage.py makemigrations --noinput
 $compose exec -T plantit python manage.py migrate --noinput
 
 echo "Configuring sandbox..."
-$compose exec -T plantit rm /code/config/ssh/known_hosts
+$compose exec -T plantit rm -f /code/config/ssh/known_hosts
 $compose exec -T plantit touch /code/config/ssh/known_hosts
 $compose exec -T plantit ssh-keyscan sandbox >> /code/config/ssh/known_hosts
 $compose exec -T sandbox mkdir /root/.plantit
