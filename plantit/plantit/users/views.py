@@ -138,13 +138,13 @@ class IDPViewSet(viewsets.ViewSet):
         stats_last_aggregated = user.profile.stats_last_aggregated
         if stats_last_aggregated is None:
             self.logger.info(f"No usage statistics for {user.username}. Scheduling aggregation...")
-            aggregate_user_usage_stats.s().apply_async()
+            aggregate_user_usage_stats.s(user.username).apply_async()
         else:
             stats = redis.get(f"stats/{user.username}")
             stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
-                aggregate_user_usage_stats.s().apply_async()
+                aggregate_user_usage_stats.s(user.username).apply_async()
 
         # open the user's dashboard
         return redirect(f"/home/")
