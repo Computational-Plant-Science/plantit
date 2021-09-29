@@ -118,23 +118,24 @@ class IDPViewSet(viewsets.ViewSet):
         # log the user in
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        # if user's workflow cache is empty or stale, schedule (re)population
+        # if user's workflow cache is empty or stale, schedule a (re)population task
         redis = RedisClient.get()
         owner = user.profile.github_username
-        last_updated = redis.get(f"workflows_updated/{owner}")
-        num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
-        if last_updated is None or num_cached == 0:
-            self.logger.info(f"GitHub user {owner}'s workflow cache is empty, scheduling refresh")
-            refresh_personal_workflows.s(owner).apply_async()
-        else:
-            age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
-            age_secs = age.total_seconds()
-            max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-            if age_secs > max_secs:
-                self.logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
+        if owner is not None:  # ...but only if they've connected their GitHub account
+            last_updated = redis.get(f"workflows_updated/{owner}")
+            num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
+            if last_updated is None or num_cached == 0:
+                self.logger.info(f"GitHub user {owner}'s workflow cache is empty, scheduling refresh")
                 refresh_personal_workflows.s(owner).apply_async()
+            else:
+                age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
+                age_secs = age.total_seconds()
+                max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+                if age_secs > max_secs:
+                    self.logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
+                    refresh_personal_workflows.s(owner).apply_async()
 
-        # if user's usage stats are stale or haven't been calculated yet, schedule it
+        # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
         stats_last_aggregated = user.profile.stats_last_aggregated
         if stats_last_aggregated is None:
             self.logger.info(f"No usage statistics for {user.username}. Scheduling aggregation...")
