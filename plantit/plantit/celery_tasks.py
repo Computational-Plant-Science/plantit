@@ -1,22 +1,19 @@
-import base64
 import json
-import tempfile
+import json
 import traceback
 from datetime import timedelta
 from os import environ
 from os.path import join
 
-import cv2
 import requests
 from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
-from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from plantit import settings
 import plantit.terrain as terrain
+from plantit import settings
 from plantit.agents.models import AgentExecutor, Agent, AgentAuthentication
 from plantit.celery import app
 from plantit.github import get_repo
@@ -26,10 +23,9 @@ from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
-    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, remove_task_orchestration_logs, get_task_result_files, \
+    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, should_transfer_results, \
-    refresh_user_cyverse_tokens
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens
 
 logger = get_task_logger(__name__)
 
@@ -444,12 +440,12 @@ def aggregate_user_usage_stats(username: str):
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    repopulate_personal_workflow_cache(owner)
+    async_to_sync(repopulate_personal_workflow_cache)(owner)
 
 
 @app.task()
 def refresh_all_workflows(token: str):
-    repopulate_public_workflow_cache(token)
+    async_to_sync(repopulate_public_workflow_cache)(token)
 
 
 @app.task()
