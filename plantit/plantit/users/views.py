@@ -1,14 +1,13 @@
-import json
-import json
 import subprocess
 import logging
 import os
+import subprocess
+from datetime import datetime
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import jwt
 import requests
-import pprint
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -22,18 +21,20 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from plantit.celery_tasks import refresh_personal_workflows, aggregate_user_usage_stats
+from plantit.misc import get_csrf_token
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.utils import list_users, calculate_user_statistics, get_user_cyverse_profile, get_user_github_profile, \
-    get_user_private_key_path, get_or_create_user_keypair, get_user_statistics, get_user_bundle
-from plantit.misc import get_csrf_token
+from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, get_user_statistics, \
+    get_user_bundle
 
 
 class IDPViewSet(viewsets.ViewSet):
     permission_classes = (AllowAny,)
+    logger = logging.getLogger(__name__)
 
     def get_object(self):
         return self.request.user
@@ -57,29 +58,28 @@ class IDPViewSet(viewsets.ViewSet):
         session_state = request.GET.get('session_state', None)
         code = request.GET.get('code', None)
 
-        if session_state is None:
-            return HttpResponseBadRequest("Missing param: 'session_state'")
-        if code is None:
-            return HttpResponseBadRequest("Missing param: 'code'")
+        # missing session state string or code indicates a mis-configured redirect from the KeyCloak client?
+        if session_state is None: return HttpResponseBadRequest("Missing param: 'session_state'")
+        if code is None: return HttpResponseBadRequest("Missing param: 'code'")
 
+        # send the authorization request
         response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
             'grant_type': 'authorization_code',
             'client_id': os.environ.get('CYVERSE_CLIENT_ID'),
             'code': code,
-            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')},
-                                 auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
+            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')}, auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
 
-        if response.status_code == 400:
-            return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
-        elif response.status_code != 200:
-            return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
+        # if we have anything other than a 200 the auth request did not succeed
+        if response.status_code == 400: return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
+        elif response.status_code != 200: return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
 
         content = response.json()
-        if 'access_token' not in content:
-            return HttpResponseBadRequest("Missing param on token response: 'access_token'")
-        if 'refresh_token' not in content:
-            return HttpResponseBadRequest("Missing param on token response: 'refresh_token'")
 
+        # make sure we have CyVerse access & refresh tokens
+        if 'access_token' not in content: return HttpResponseBadRequest("Missing param on token response: 'access_token'")
+        if 'refresh_token' not in content: return HttpResponseBadRequest("Missing param on token response: 'refresh_token'")
+
+        # decode the tokens
         access_token = content['access_token']
         refresh_token = content['refresh_token']
         decoded_access_token = jwt.decode(access_token, options={
@@ -97,13 +97,16 @@ class IDPViewSet(viewsets.ViewSet):
             'verify_iss': False
         })
 
+        # retrieve the user entry (or create it if it's their first time logging in)
         user, _ = User.objects.get_or_create(username=decoded_access_token['preferred_username'])
 
+        # update the user's personal info
         user.first_name = decoded_access_token['given_name']
         user.last_name = decoded_access_token['family_name']
         user.email = decoded_access_token['email']
         user.save()
 
+        # update the user's profile (CyVerse tokens, etc)
         profile, created = Profile.objects.get_or_create(user=user)
         if created: profile.created = timezone.now()
         profile.cyverse_access_token = access_token
@@ -112,7 +115,38 @@ class IDPViewSet(viewsets.ViewSet):
         profile.save()
         user.save()
 
+        # log the user in
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        # if user's workflow cache is empty or stale, schedule (re)population
+        redis = RedisClient.get()
+        owner = user.profile.github_username
+        last_updated = redis.get(f"workflows_updated/{owner}")
+        num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
+        if last_updated is None or num_cached == 0:
+            self.logger.info(f"GitHub user {owner}'s workflow cache is empty, scheduling refresh")
+            refresh_personal_workflows.s(owner).apply_async()
+        else:
+            age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
+            age_secs = age.total_seconds()
+            max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+            if age_secs > max_secs:
+                self.logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
+                refresh_personal_workflows.s(owner).apply_async()
+
+        # if user's usage stats are stale or haven't been calculated yet, schedule it
+        stats_last_aggregated = user.profile.stats_last_aggregated
+        if stats_last_aggregated is None:
+            self.logger.info(f"No usage statistics for {user.username}. Scheduling aggregation...")
+            aggregate_user_usage_stats.s().apply_async()
+        else:
+            stats = redis.get(f"stats/{user.username}")
+            stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
+            if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
+                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
+                aggregate_user_usage_stats.s().apply_async()
+
+        # open the user's dashboard
         return redirect(f"/home/")
 
     @action(methods=['get'], detail=False)

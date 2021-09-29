@@ -415,7 +415,7 @@ def cleanup_task(self, guid: str, auth: dict):
 
 
 @app.task()
-def aggregate_user_statistics():
+def aggregate_all_users_usage_stats():
     users = User.objects.all()
     for user in users:
         logger.info(f"Aggregating usage statistics for {user.username}")
@@ -424,6 +424,22 @@ def aggregate_user_statistics():
         redis.set(f"stats/{user.username}", json.dumps(stats))
         user.profile.stats_last_aggregated = timezone.now()
         user.profile.save()
+
+
+@app.task()
+def aggregate_user_usage_stats(username: str):
+    try:
+        user = User.objects.get(username=username)
+    except:
+        logger.warning(f"User {username} not found: {traceback.format_exc()}")
+        return
+
+    logger.info(f"Aggregating usage statistics for {user.username}")
+    stats = async_to_sync(calculate_user_statistics)(user)
+    redis = RedisClient.get()
+    redis.set(f"stats/{user.username}", json.dumps(stats))
+    user.profile.stats_last_aggregated = timezone.now()
+    user.profile.save()
 
 
 @app.task()
@@ -518,7 +534,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions', priority=2)
 
     # aggregate usage stats for each user
-    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics', priority=2)
+    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_all_users_usage_stats.s(), name='aggregate user statistics', priority=2)
 
     # agent healthchecks
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)

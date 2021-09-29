@@ -223,6 +223,7 @@ def get_user_statistics(user: User) -> dict:
     redis = RedisClient.get()
     stats_last_aggregated = user.profile.stats_last_aggregated
 
+    # if we haven't aggregated stats for this user before, do it now
     if stats_last_aggregated is None:
         logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
         stats = async_to_sync(calculate_user_statistics)(user)
@@ -232,17 +233,7 @@ def get_user_statistics(user: User) -> dict:
         user.profile.save()
     else:
         stats = redis.get(f"stats/{user.username}")
-        stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
-
-        if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-            logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-            stats = async_to_sync(calculate_user_statistics)(user)
-            redis = RedisClient.get()
-            redis.set(f"stats/{user.username}", json.dumps(stats))
-            user.profile.stats_last_aggregated = timezone.now()
-            user.profile.save()
-        else:
-            stats = json.loads(stats)
+        stats = json.loads(stats)
 
     return stats
 
@@ -483,19 +474,10 @@ async def list_public_workflows(token: str, invalidate: bool = False) -> List[di
     last_updated = redis.get('public_workflows_updated')
     num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
 
-    # repopulate if empty or invalidation requested
+    # if public workflow cache is empty or invalidation is requested, (re)populate it before returning
     if last_updated is None or num_cached == 0 or invalidate:
         logger.info(f"Populating public workflow cache")
         await repopulate_public_workflow_cache(token)
-    else:
-        age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
-        age_secs = age.total_seconds()
-        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-
-        # otherwise only if stale
-        if age_secs > max_secs:
-            logger.info(f"Public workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            await repopulate_public_workflow_cache(token)
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
     return [workflow for workflow in workflows if workflow['public']]
@@ -506,18 +488,10 @@ async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[
     last_updated = redis.get(f"workflows_updated/{owner}")
     num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
 
-    # repopulate if empty or invalidation requested
+    # if user's workflow cache is empty or invalidation is requested, (re)populate it before returning
     if last_updated is None or num_cached == 0 or invalidate:
+        logger.info(f"GitHub user {owner}'s workflow cache is empty, populating it now")
         await repopulate_personal_workflow_cache(owner)
-    else:
-        age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
-        age_secs = age.total_seconds()
-        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-
-        # otherwise only if stale
-        if age_secs > max_secs:
-            logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            await repopulate_personal_workflow_cache(owner)
 
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 

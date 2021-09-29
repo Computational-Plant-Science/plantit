@@ -193,17 +193,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    Welcome,
-                                                    {{
-                                                        profile.djangoProfile
-                                                            .first_name
-                                                            ? profile
-                                                                  .djangoProfile
-                                                                  .first_name
-                                                            : profile
-                                                                  .djangoProfile
-                                                                  .username
-                                                    }}
+                                                   Your Usage
                                                 </h2>
                                             </b-col>
                                         </b-row>
@@ -581,7 +571,7 @@ export default {
         workflowPlotLayout() {
             return {
                 title: {
-                    text: 'Your Workflow Usage Distribution',
+                    text: 'Workflows Used',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }
@@ -608,7 +598,7 @@ export default {
         agentPlotLayout() {
             return {
                 title: {
-                    text: 'Your Agent Usage Distribution',
+                    text: 'Agents Used',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }
@@ -693,7 +683,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Your Recent Task History',
+                    text: 'Recent Tasks',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }
