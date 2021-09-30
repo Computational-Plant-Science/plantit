@@ -283,7 +283,7 @@ def list_task_results(self, guid: str, auth: dict):
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
     if workflow is None:
-        workflow = get_repo(task.workflow_owner, task.workflow_name, task.user.profile.github_token)['config']
+        workflow = async_to_sync(get_repo)(task.workflow_owner, task.workflow_name, task.user.profile.github_token)['config']
     else:
         workflow = json.loads(workflow)['config']
 
