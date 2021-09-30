@@ -51,7 +51,6 @@ $compose exec -T plantit python manage.py migrate --noinput
 echo "Configuring sandbox..."
 if [[ ! -e /code/config/ssh/known_hosts ]]
 then
-  $compose exec -T plantit rm -f /code/config/ssh/known_hosts
   $compose exec -T plantit touch /code/config/ssh/known_hosts
 fi
 $compose exec -T plantit ssh-keyscan sandbox >> /code/config/ssh/known_hosts
