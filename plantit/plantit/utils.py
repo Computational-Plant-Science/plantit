@@ -24,7 +24,7 @@ import pprint
 import requests
 import yaml
 import jwt
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
 from dateutil import parser
@@ -33,6 +33,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
+from paramiko.ssh_exception import SSHException
 
 import plantit.github as github
 import plantit.terrain as terrain
@@ -1882,13 +1883,26 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
         else:
             ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
 
-        with ssh:
-            logger.info(f"Checking agent {agent.name}'s health")
-            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
-                logger.info(line)
-                output.append(line)
-            logger.info(f"Agent {agent.name} healthcheck succeeded")
-            return True, output
+        try:
+            with ssh:
+                logger.info(f"Checking agent {agent.name}'s health")
+                for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
+                    logger.info(line)
+                    output.append(line)
+                logger.info(f"Agent {agent.name} healthcheck succeeded")
+                return True, output
+        except SSHException as e:
+            if 'not found in known_hosts' in str(e):
+                # add the hostname to known_hosts and retry
+                subprocess.run(f"ssh-keyscan {agent.hostname} >> /code/config/ssh/known_hosts", shell=True)
+                with ssh:
+                    logger.info(f"Checking agent {agent.name}'s health")
+                    for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
+                        logger.info(line)
+                        output.append(line)
+                    logger.info(f"Agent {agent.name} healthcheck succeeded")
+                    return True, output
+            else: raise e
     except:
         msg = f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}"
         logger.warning(msg)
@@ -1952,3 +1966,8 @@ def project_to_dict(project: Investigation) -> dict:
         'studies': studies,
         'team': team,
     }
+
+
+@sync_to_async
+def check_user_authentication(user):
+    return user.is_authenticated

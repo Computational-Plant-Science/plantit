@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, list_personal_workflows, get_workflow, \
-    workflow_to_dict
+    workflow_to_dict, check_user_authentication
 from plantit.misc import del_none
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 async def list_public(request):
-    if request.user.is_authenticated:
+    if await check_user_authentication(request.user):
         profile = await get_user_django_profile(request.user)
         token = profile.github_token
     else: token = None
