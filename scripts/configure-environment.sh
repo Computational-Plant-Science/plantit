@@ -1,9 +1,8 @@
 #!/bin/bash
 
-admin_password=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
-secret_key=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
-sql_password=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
-field_encryption_key=$(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")")
+admin_password=$(python3 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
+secret_key=$(python3 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
+sql_password=$(python3 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
 
 if [[ -z "${MAPBOX_TOKEN}" ]]; then
   mapbox_token="some_mapbox_token"
@@ -117,7 +116,6 @@ NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key
 DJANGO_DEBUG=True
-DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
 DJANGO_API_URL=http://plantit/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 DJANGO_SECURE_SSL_REDIRECT=False
