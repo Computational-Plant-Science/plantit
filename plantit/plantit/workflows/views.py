@@ -18,14 +18,15 @@ logger = logging.getLogger(__name__)
 # TODO: when this (https://code.djangoproject.com/ticket/31949) gets merged, remove the sync_to_async/async_to_sync hack
 
 
-@sync_to_async
-@login_required
-@async_to_sync
 async def list_public(request):
-    profile = await get_user_django_profile(request.user)
+    if request.user.is_authenticated:
+        profile = await get_user_django_profile(request.user)
+        token = profile.github_token
+    else: token = None
+
     invalidate = request.GET.get('invalidate', False)
-    bundles = await list_public_workflows(token=profile.github_token, invalidate=False) # invalidate=bool(invalidate))
-    return JsonResponse({'workflows': bundles})
+    workflows = await list_public_workflows(token=token, invalidate=invalidate)
+    return JsonResponse({'workflows': workflows})
 
 
 @sync_to_async
@@ -40,8 +41,8 @@ async def list_personal(request, owner):
             return HttpResponseNotFound()
 
     invalidate = request.GET.get('invalidate', False)
-    bundles = await list_personal_workflows(owner=owner, invalidate=bool(invalidate))
-    return JsonResponse({'workflows': bundles})
+    workflows = await list_personal_workflows(owner=owner, invalidate=bool(invalidate))
+    return JsonResponse({'workflows': workflows})
 
 
 @sync_to_async

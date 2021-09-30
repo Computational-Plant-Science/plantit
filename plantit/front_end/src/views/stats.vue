@@ -175,7 +175,9 @@
                                         : 'text-dark'
                                 "
                             >
-                                Public Workflow Developers ({{ publicWorkflowDevelopers.length }})
+                                Public Workflow Developers ({{
+                                    publicWorkflowDevelopers.length
+                                }})
                             </h5>
                             <b-card-group
                                 ><b-card
@@ -324,57 +326,66 @@ export default {
         };
     },
     async mounted() {
-        mapboxgl.accessToken = process.env.VUE_APP_MAPBOX_TOKEN;
-        this.map = new mapboxgl.Map({
-            container: 'map',
-            style: `mapbox://styles/mapbox/${
-                this.profile.darkMode ? 'dark-v10' : 'light-v10'
-            }`,
-            center: this.mapCenter,
-            zoom: 1
-        });
+        // set up map
+        this.configureMap();
 
-        this.mapPopup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false
-        });
-
-        var map = this.map;
-        var popup = this.mapPopup;
-
-        this.map.on('mouseenter', 'institutions', function(e) {
-            // Change the cursor style as a UI indicator.
-            map.getCanvas().style.cursor = 'pointer';
-
-            var feature = e.features[0];
-            var coordinates = feature.geometry.coordinates.slice();
-            var html = `<span class="text-dark">${feature.properties.name}, ${feature.properties.count} user(s)</span>`;
-
-            // Ensure that if the map is zoomed out such that multiple
-            // copies of the feature are visible, the popup appears
-            // over the copy being pointed to.
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-
-            // Populate the popup and set its coordinates
-            // based on the feature found.
-            popup
-                .setLngLat(coordinates)
-                .setHTML(html)
-                .addTo(map);
-        });
-
-        this.map.on('mouseleave', 'institutions', function() {
-            map.getCanvas().style.cursor = '';
-            popup.remove();
-        });
-
+        // load stats
         await this.loadCounts();
         await this.loadInstitutions();
         await this.loadTimeseries();
+
+        // load public workflows
+        await this.$store.dispatch('workflows/loadPublic');
     },
     methods: {
+        configureMap() {
+            mapboxgl.accessToken = process.env.VUE_APP_MAPBOX_TOKEN;
+            this.map = new mapboxgl.Map({
+                container: 'map',
+                style: `mapbox://styles/mapbox/${
+                    this.profile.darkMode ? 'dark-v10' : 'light-v10'
+                }`,
+                center: this.mapCenter,
+                zoom: 1
+            });
+
+            this.mapPopup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
+            var map = this.map;
+            var popup = this.mapPopup;
+
+            this.map.on('mouseenter', 'institutions', function(e) {
+                // Change the cursor style as a UI indicator.
+                map.getCanvas().style.cursor = 'pointer';
+
+                var feature = e.features[0];
+                var coordinates = feature.geometry.coordinates.slice();
+                var html = `<span class="text-dark">${feature.properties.name}, ${feature.properties.count} user(s)</span>`;
+
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] +=
+                        e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+
+                // Populate the popup and set its coordinates
+                // based on the feature found.
+                popup
+                    .setLngLat(coordinates)
+                    .setHTML(html)
+                    .addTo(map);
+            });
+
+            this.map.on('mouseleave', 'institutions', function() {
+                map.getCanvas().style.cursor = '';
+                popup.remove();
+            });
+        },
         async loadCounts() {
             await axios
                 .get('/apis/v1/stats/counts/')
@@ -457,7 +468,9 @@ export default {
             'publicWorkflowsLoading'
         ]),
         publicWorkflowDevelopers() {
-            return Array.from(new Set(this.publicWorkflows.map(wf => wf.repo.owner.login)));
+            return Array.from(
+                new Set(this.publicWorkflows.map(wf => wf.repo.owner.login))
+            );
         },
         darkMode() {
             return this.profile.darkMode;
