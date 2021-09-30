@@ -1,7 +1,7 @@
 import json
 import json
 import traceback
-from datetime import timedelta
+from datetime import timedelta, datetime
 from os import environ
 from os.path import join
 
@@ -497,6 +497,17 @@ def agents_healthchecks():
             }))
 
 
+@app.task()
+def stranded_task_sweep():
+    running = Task.objects.filter(status=TaskStatus.RUNNING)
+    for task in running:
+        now = timezone.now()
+        period = int(environ.get('TASKS_REFRESH_SECONDS'))
+        # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded, so we poll it again
+        if (now - task.updated).total_seconds > (2 * period):
+            poll_task_status.s(task.guid).apply_async()
+
+
 class TerrainToken:
     __token = None
 
@@ -537,4 +548,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # refresh workflow cache
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='refresh user workflows cache', priority=2)
+
+    # stranded task sweeps
+    sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS) * 2, stranded_task_sweep, name='checking for stranded tasks', priority=2)
 
