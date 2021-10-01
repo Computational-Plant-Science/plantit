@@ -4248,7 +4248,7 @@ export default {
                     type: param.type,
                     value:
                         param.default !== undefined
-                            ? param.default.toString().toLowerCase() === 'false'
+                            ? param.default.toString().toLowerCase() === 'true'
                             : false
                 };
         },
