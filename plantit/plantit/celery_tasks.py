@@ -444,8 +444,8 @@ def refresh_personal_workflows(owner: str):
 
 
 @app.task()
-def refresh_all_workflows(token: str):
-    async_to_sync(repopulate_public_workflow_cache)(token)
+def refresh_all_workflows(github_token: str, cyverse_token: str):
+    async_to_sync(repopulate_public_workflow_cache)(github_token, cyverse_token)
 
 
 @app.task()
@@ -547,7 +547,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)
 
     # refresh workflow cache
-    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(token=TerrainToken.get()), name='refresh user workflows cache', priority=2)
+    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(github_token=settings.GITHUB_TOKEN, cyverse_token=TerrainToken.get()), name='refresh user workflows cache', priority=2)
 
     # stranded task sweeps
     sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS) * 2, stranded_task_sweep, name='checking for stranded tasks', priority=2)

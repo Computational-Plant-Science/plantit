@@ -51,8 +51,14 @@ async def list_personal(request, owner):
 async def get(request, owner, name):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
     invalidate = request.GET.get('invalidate', False)
-    bundle = await get_workflow(owner=owner, name=name, token=profile.github_token, invalidate=bool(invalidate))
-    return HttpResponseNotFound() if bundle is None else JsonResponse(bundle)
+    workflow = await get_workflow(
+        owner=owner,
+        name=name,
+        github_token=profile.github_token,
+        cyverse_token=profile.cyverse_access_token,
+        invalidate=bool(invalidate))
+
+    return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 
 
 @sync_to_async
@@ -60,8 +66,8 @@ async def get(request, owner, name):
 @async_to_sync
 async def search(request, owner, name):
     profile = await get_user_django_profile(request.user)
-    repo = await get_repo(owner, name, profile.github_token)
-    return HttpResponseNotFound() if repo is None else JsonResponse(repo)
+    repository = await get_repo(owner, name, profile.github_token)
+    return HttpResponseNotFound() if repository is None else JsonResponse(repository)
 
 
 @sync_to_async
@@ -75,7 +81,7 @@ async def refresh(request, owner, name):
 
     redis = RedisClient.get()
     profile = await get_user_django_profile(request.user)
-    bundle = await workflow_to_dict(workflow, profile.github_token)
+    bundle = await workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token)
     redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Refreshed workflow {owner}/{name}")
     return JsonResponse(bundle)
@@ -105,7 +111,7 @@ async def toggle_public(request, owner, name):
     redis = RedisClient.get()
     workflow.public = not workflow.public
     await sync_to_async(workflow.save)()
-    bundle = await workflow_to_dict(workflow, profile.github_token)
+    bundle = await workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token)
     redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

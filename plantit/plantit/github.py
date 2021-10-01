@@ -14,7 +14,7 @@ from plantit.terrain import path_exists
 logger = logging.getLogger(__name__)
 
 
-def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
+def validate_repo_config(config: dict, cyverse_token: str) -> (bool, List[str]):
     errors = []
 
     # name (required)
@@ -79,7 +79,7 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
         if 'path' not in config['input']:
             errors.append('Missing attribute \'input.path\'')
         if config['input']['path'] != '' and config['input']['path'] is not None:
-            cyverse_path_result = path_exists(config['input']['path'], token)
+            cyverse_path_result = path_exists(config['input']['path'], cyverse_token)
             if type(cyverse_path_result) is bool and not cyverse_path_result:
                 errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
 
@@ -243,12 +243,12 @@ async def get_repo_config(owner: str, name: str, token: str) -> dict:
         return yaml.load(config)
 
 
-async def get_repo_bundle(owner: str, name: str, token: str) -> dict:
-    tasks = [get_repo(owner, name, token), get_repo_config(owner, name, token)]
+async def get_repo_bundle(owner: str, name: str, github_token: str, cyverse_token: str) -> dict:
+    tasks = [get_repo(owner, name, github_token), get_repo_config(owner, name, github_token)]
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]
     config = responses[1]
-    valid = validate_repo_config(config, token)
+    valid = validate_repo_config(config, cyverse_token)
     if isinstance(valid, bool):
         return {
             'repo': repo,

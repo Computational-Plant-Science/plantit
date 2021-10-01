@@ -31,6 +31,7 @@ assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_CLIENT_ID' in os.environ, f"{missing_variable}: GITHUB_CLIENT_ID"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
+assert 'GITHUB_TOKEN' in os.environ, f"{missing_variable}: GITHUB_TOKEN"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 assert 'AWS_FEEDBACK_ARN' in os.environ, f"{missing_variable} AWS_FEEDBACK_ARN"
 assert 'TUTORIALS_FILE' in os.environ, f"{missing_variable} TUTORIALS_FILE"
@@ -74,6 +75,7 @@ GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 
 # Celery timezone
 timezone = 'US/Eastern'

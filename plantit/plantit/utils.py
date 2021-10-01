@@ -385,11 +385,12 @@ def get_workflow_user(workflow: Workflow):
     return workflow.user
 
 
-async def workflow_to_dict(workflow: Workflow, token: str) -> dict:
+async def workflow_to_dict(workflow: Workflow, github_token: str, cyverse_token: str) -> dict:
     bundle = await github.get_repo_bundle(
         workflow.repo_owner,
         workflow.repo_name,
-        token)
+        github_token,
+        cyverse_token)
 
     return {
         'config': bundle['config'],
@@ -417,7 +418,7 @@ async def repopulate_personal_workflow_cache(owner: str):
 
     profile = await sync_to_async(Profile.objects.get)(user=user)
     owned = await list_workflows(user=user)
-    bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token) for workflow in owned])
+    bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token) for workflow in owned])
     tasks = await asyncio.gather(*[bind, github.list_connectable_repos_by_owner(owner, profile.github_token)])
     bound = tasks[0]
     bindable = tasks[1]
@@ -448,7 +449,7 @@ async def repopulate_personal_workflow_cache(owner: str):
         "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-async def repopulate_public_workflow_cache(token: str):
+async def repopulate_public_workflow_cache(github_token: str, cyverse_token: str):
     redis = RedisClient.get()
     public_workflows = await list_workflows(public=True)
     encountered_users = []
@@ -457,7 +458,7 @@ async def repopulate_public_workflow_cache(token: str):
         if user is None:
             # workflow is not owned by any particular user (e.g., added by admins for shared GitHub group) so explicitly refresh the binding
             logger.info(f"Binding unclaimed workflow {workflow.repo_owner}/{workflow.repo_name}")
-            bundle = await workflow_to_dict(workflow, token)
+            bundle = await workflow_to_dict(workflow, github_token, cyverse_token)
             redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(del_none(bundle)))
         else:
             # otherwise refresh all the workflow owner's workflows (but only once)
@@ -500,7 +501,7 @@ async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 
-async def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
+async def get_workflow(owner: str, name: str, github_token: str, cyverse_token: str, invalidate: bool = False) -> dict:
     redis = RedisClient.get()
     last_updated = redis.get(f"workflows_updated/{owner}")
     workflow = redis.get(f"workflows/{owner}/{name}")
@@ -511,7 +512,7 @@ async def get_workflow(owner: str, name: str, token: str, invalidate: bool = Fal
             logger.error(traceback.format_exc())
             raise ValueError(f"Workflow {owner}/{name} not found")
 
-        workflow = await workflow_to_dict(workflow, token)
+        workflow = await workflow_to_dict(workflow, github_token, cyverse_token)
         redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(workflow)))
 
     return workflow
