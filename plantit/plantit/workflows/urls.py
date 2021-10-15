@@ -12,4 +12,5 @@ urlpatterns = [
     path(r'<owner>/<name>/public/', views.toggle_public),
     path(r'<owner>/<name>/bind/', views.bind),
     path(r'<owner>/<name>/unbind/', views.unbind),
+    path(f'<owner>/<name>/branches/', views.branches)
 ]

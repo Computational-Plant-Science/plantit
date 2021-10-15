@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 
-from plantit.github import get_repo_readme, get_repo
+from plantit.github import get_repo_readme, get_repo, list_repo_branches
 from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, list_personal_workflows, get_workflow, \
     workflow_to_dict, check_user_authentication
@@ -98,6 +98,14 @@ def readme(request, owner, name):
 @sync_to_async
 @login_required
 @async_to_sync
+async def branches(request, owner, name):
+    profile = await get_user_django_profile(request.user)
+    return JsonResponse({'branches': await list_repo_branches(owner, name, profile.github_token)})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
 async def toggle_public(request, owner, name):
     profile = await get_user_django_profile(request.user)
     if owner != profile.github_username:
@@ -125,9 +133,10 @@ def bind(request, owner, name):
     redis = RedisClient.get()
     body = json.loads(request.body.decode('utf-8'))
     body['bound'] = True
+    branch = body['branch']
     redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(body)))
-    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
-    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']}")
+    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, repo_branch=branch, public=False)
+    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']} (branch {branch})")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 

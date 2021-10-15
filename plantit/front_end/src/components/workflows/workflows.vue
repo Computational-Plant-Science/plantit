@@ -179,8 +179,24 @@
             hide-header-close
         >
             <template #modal-footer
-                ><b-row v-if="bindingSelected"
-                    ><b-col md="auto"
+                ><b-row v-if="bindingSelected">
+                    <b-col v-if="loadingBranchOptions"
+                        ><b-spinner
+                            small
+                            label="Loading branches..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                    ></b-col>
+                    <b-col v-else
+                        ><b-form-group
+                            description="Select a repository branch to bind."
+                            ><b-form-select
+                                :options="bindingBranchOptions"
+                                v-model="bindingBranch"
+                            ></b-form-select></b-form-group
+                    ></b-col>
+                    <b-col md="auto"
                         ><b-button
                             :disabled="bindingWorkflow"
                             variant="outline-danger"
@@ -189,7 +205,7 @@
                             Back</b-button
                         ></b-col
                     ><b-col
-                        ><b-button variant="success" @click="bindWorkflow"
+                        ><b-button variant="success" @click="bindWorkflow" :disabled="bindingBranchSelected"
                             ><i
                                 v-if="!bindingWorkflow"
                                 class="fas fa-check fa-fw"
@@ -630,6 +646,9 @@ export default {
             name: '',
             binding: null,
             bindingWorkflow: false,
+            bindingBranch: '',
+            bindingBranchOptions: [],
+            loadingBranchOptions: false,
             contextPublic: true,
             contextToggling: false
         };
@@ -676,11 +695,55 @@ export default {
         //             if (error.response.status === 500) throw error;
         //         });
         // }, 500),
+        async loadBindingWorkflowRepoBranches() {
+            this.bindingBranch = '';
+            this.loadingBranchOptions = true;
+            await axios
+                .get(
+                    `/apis/v1/workflows/${this.binding.repo.owner.login}/${this.binding.repo.name}/branches/`
+                )
+                .then(async response => {
+                    if (response.status === 200) {
+                        await Promise.all([
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Listed repository branches for ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
+                        this.bindingBranchOptions = response.data.branches;
+                        this.loadingBranchOptions = false;
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to list repository branches for ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                        this.bindingBranchOptions = [];
+                        this.loadingBranchOptions = false;
+                    }
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to list repository branches for ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.bindingBranchOptions = [];
+                    this.loadingBranchOptions = false;
+                    throw error;
+                });
+        },
         showBindWorkflowModal() {
             this.$bvModal.show('bindWorkflow');
         },
         async bindWorkflow() {
             this.bindingWorkflow = true;
+            this.binding['branch'] = this.bindingBranch;
             await axios({
                 method: 'post',
                 url: `/apis/v1/workflows/${this.binding.repo.owner.login}/${this.binding.repo.name}/bind/`,
@@ -745,6 +808,7 @@ export default {
         },
         selectBinding(workflow) {
             this.binding = workflow;
+            this.loadBindingWorkflowRepoBranches();
         },
         unselectBinding() {
             this.binding = null;
@@ -781,6 +845,9 @@ export default {
         },
         bindingSelected() {
             return this.binding !== null;
+        },
+        bindingBranchSelected() {
+          return this.bindingBranch !== '';
         }
     }
 };

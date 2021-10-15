@@ -9,4 +9,5 @@ class Workflow(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     repo_owner = models.CharField(max_length=280, null=True, blank=True)
     repo_name = models.CharField(max_length=280, null=True, blank=True)
+    repo_branch = models.CharField(max_length=280, null=True, blank=True, default='master')
     public = models.BooleanField(default=False)

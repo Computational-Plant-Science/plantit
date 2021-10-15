@@ -198,6 +198,22 @@ async def get_repo(owner: str, name: str, token: str) -> dict:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
+async def list_repo_branches(owner: str, name: str, token: str) -> list:
+    headers = {
+        "Authorization": f"token {token}",
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.get(f"https://api.github.com/repos/{owner}/{name}/branches")
+        branches = response.json()
+        return [branch['name'] for branch in branches]
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
 def get_repo_readme(owner: str, name: str, token: str) -> str:
     # TODO refactor to use asyncx
     try:
@@ -226,7 +242,7 @@ def get_repo_readme(owner: str, name: str, token: str) -> str:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_repo_config(owner: str, name: str, token: str) -> dict:
+async def get_repo_config(owner: str, name: str, token: str, branch: str = 'master') -> dict:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
@@ -243,8 +259,8 @@ async def get_repo_config(owner: str, name: str, token: str) -> dict:
         return yaml.load(config)
 
 
-async def get_repo_bundle(owner: str, name: str, github_token: str, cyverse_token: str) -> dict:
-    tasks = [get_repo(owner, name, github_token), get_repo_config(owner, name, github_token)]
+async def get_repo_bundle(owner: str, name: str, github_token: str, cyverse_token: str, branch: str = 'master') -> dict:
+    tasks = [get_repo(owner, name, github_token), get_repo_config(owner, name, github_token, branch)]
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]
     config = responses[1]
