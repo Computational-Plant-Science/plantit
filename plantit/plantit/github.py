@@ -252,7 +252,7 @@ async def get_repo_config(owner: str, name: str, token: str, branch: str = 'mast
         #     f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
         #     else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
         #                       headers={"Authorization": f"token {token}"})
-        response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/master/plantit.yaml")
+        response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
         config = response.text
         logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
         # config = await client.get(response.json()['download_url']).text
