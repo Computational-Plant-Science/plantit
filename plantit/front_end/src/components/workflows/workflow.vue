@@ -124,6 +124,9 @@
                                                     {{
                                                         getWorkflow.config.name
                                                     }}
+                                                    <b-badge>{{
+                                                        getWorkflow.branch.name
+                                                    }}</b-badge>
                                                 </h2> </b-col
                                             ><b-col
                                                 md="auto"
@@ -1958,10 +1961,14 @@
                                                                                     class="fas fa-check text-success fa-fw"
                                                                                 ></i>
                                                                             </span>
-                                                                      <span v-else>
-                                                                            <i class="fas fa-exclamation text-danger fa-fw ml-1"></i></span>
-                                                                        </h5></b-col
-                                                                    >
+                                                                            <span
+                                                                                v-else
+                                                                            >
+                                                                                <i
+                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                ></i
+                                                                            ></span></h5
+                                                                    ></b-col>
                                                                 </b-row>
                                                                 <b-row
                                                                     ><b-col
@@ -2480,7 +2487,7 @@
                                                                                     selectedProject ===
                                                                                         null
                                                                                 "
-                                                                                ></span
+                                                                            ></span
                                                                             ><span
                                                                                 v-else
                                                                                 ><i
@@ -3899,6 +3906,9 @@ export default {
         },
         name: {
             required: true
+        },
+        branch: {
+            required: true
         }
     },
     data: function() {
@@ -4434,7 +4444,10 @@ export default {
             if (this.output !== undefined && this.output.to) {
                 config.output = {};
                 config.output['to'] = this.output.to;
-                if (this.getWorkflow.config.output !== undefined && this.getWorkflow.config.output.path !== undefined)
+                if (
+                    this.getWorkflow.config.output !== undefined &&
+                    this.getWorkflow.config.output.path !== undefined
+                )
                     config.output['from'] = this.getWorkflow.config.output.path;
                 else config.output['from'] = '';
                 if (config.output.include === undefined)
@@ -4679,7 +4692,7 @@ export default {
             );
         },
         getWorkflow() {
-            return this.workflow(this.owner, this.name);
+            return this.workflow(this.owner, this.name, this.branch);
         },
         ownsWorkflow() {
             return (
@@ -4744,7 +4757,7 @@ export default {
             //     this.getWorkflow.config.input !== undefined &&
             //     this.getWorkflow.config.output.to !== undefined
             // )
-              return this.output.to !== '';
+            return this.output.to !== '';
             // return true;
         },
         canSubmit: function() {

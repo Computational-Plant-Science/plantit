@@ -205,7 +205,23 @@ async def list_repo_branches(owner: str, name: str, token: str) -> list:
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.get(f"https://api.github.com/repos/{owner}/{name}/branches")
         branches = response.json()
-        return [branch['name'] for branch in branches]
+        return branches
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def list_repositories(owner: str, token: str) -> list:
+    headers = {
+        "Authorization": f"token {token}",
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.get(f"https://api.github.com/users/{owner}/repos")
+        repositories = response.json()
+        return repositories
 
 
 @retry(
@@ -297,27 +313,53 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
     async with httpx.AsyncClient(headers=headers) as client:
-        response = await client.get(
-            f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{owner}",
-            headers={
-                "Authorization": f"token {token}",
-                "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-            })
-        content = response.json()
         workflows = []
-        for item in (content['items'] if 'items' in content else []):
-            repo = item['repository']
-            config = await get_repo_config(item['repository']['owner']['login'], item['repository']['name'], token)
-            # readme = get_repo_readme(item['repository']['owner']['login'], item['repository']['name'], token)
-            validation = validate_repo_config(config, token)
-            workflows.append({
-                'repo': repo,
-                'config': config,
-                # 'readme': readme,
-                'validation': {
-                    'is_valid': validation[0],
-                    'errors': validation[1]
-                }
-            })
+        repositories = await list_repositories(owner, token)
+        for repository in repositories:
+            branches = await list_repo_branches(owner, repository['name'], token)
+            for branch in branches:
+                response = await client.get(
+                    f"https://raw.githubusercontent.com/{owner}/{repository['name']}/{branch['name']}/plantit.yaml",
+                    headers={
+                        "Authorization": f"token {token}",
+                        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+                    })
+
+                if response.status_code == 404:
+                    logger.info(f"No plantit.yaml in {owner}/{repository['name']} branch {branch['name']}")
+                    continue
+                if response.status_code != 200:
+                    logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']} branch {branch['name']}")
+                    continue
+
+                config = yaml.safe_load(response.text)
+                validation = validate_repo_config(config, token)
+                workflows.append({
+                    'repo': repository,
+                    'config': config,
+                    'branch': branch,
+                    # 'readme': readme,
+                    'validation': {
+                        'is_valid': validation[0],
+                        'errors': validation[1]
+                    }
+                })
+
+                # content = response.json()
+                # for item in (content['items'] if 'items' in content else []):
+                #     repo = item['repository']
+                #     config = await get_repo_config(item['repository']['owner']['login'], item['repository']['name'], token)
+                #     # readme = get_repo_readme(item['repository']['owner']['login'], item['repository']['name'], token)
+                #     validation = validate_repo_config(config, token)
+                #     workflows.append({
+                #         'repo': repo,
+                #         'config': config,
+                #         'branch': branch,
+                #         # 'readme': readme,
+                #         'validation': {
+                #             'is_valid': validation[0],
+                #             'errors': validation[1]
+                #         }
+                #     })
 
         return workflows

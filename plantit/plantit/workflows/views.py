@@ -100,7 +100,8 @@ def readme(request, owner, name):
 @async_to_sync
 async def branches(request, owner, name):
     profile = await get_user_django_profile(request.user)
-    return JsonResponse({'branches': await list_repo_branches(owner, name, profile.github_token)})
+    bs = await list_repo_branches(owner, name, profile.github_token)
+    return JsonResponse({'branches': [b['name'] for b in bs]})
 
 
 @sync_to_async
@@ -120,8 +121,8 @@ async def toggle_public(request, owner, name):
     workflow.public = not workflow.public
     await sync_to_async(workflow.save)()
     bundle = await workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token)
-    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
-    logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
+    redis.set(f"workflows/{owner}/{name}/{bundle['branch']['name']}", json.dumps(del_none(bundle)))
+    logger.info(f"Workflow {owner}/{name} (branch {bundle['branch']['name']}) is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
@@ -133,10 +134,10 @@ def bind(request, owner, name):
     redis = RedisClient.get()
     body = json.loads(request.body.decode('utf-8'))
     body['bound'] = True
-    branch = body['branch']
-    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(body)))
-    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, repo_branch=branch, public=False)
-    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']} (branch {branch})")
+    redis.set(f"workflows/{owner}/{name}/{body['branch']['name']}", json.dumps(del_none(body)))
+    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, repo_branch=json.dumps(body['branch']), public=False)
+
+    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']} (branch {body['branch']['name']})")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
@@ -155,6 +156,6 @@ def unbind(request, owner, name):
     cached = json.loads(redis.get(f"workflows/{owner}/{name}"))
     cached['public'] = False
     cached['bound'] = False
-    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(cached)))
+    redis.set(f"workflows/{owner}/{name}/{cached['branch']['name']}", json.dumps(del_none(cached)))
     logger.info(f"Removed binding for workflow {owner}/{name}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

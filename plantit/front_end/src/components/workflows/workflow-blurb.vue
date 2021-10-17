@@ -12,12 +12,14 @@
                             name: 'workflow',
                             params: {
                                 owner: workflow['repo']['owner']['login'],
-                                name: workflow['repo']['name']
+                                name: workflow['repo']['name'],
+                                branch: workflow['branch']['name']
                             }
                         }"
                     >
                         {{ workflow.config.name }}
                     </b-link>
+                    <b-badge>{{ workflow.branch.name }}</b-badge>
                 </h2>
                 <h2 v-else class="text-danger">
                     <i class="fas fa-exclamation-circle text-danger mr-2"></i>

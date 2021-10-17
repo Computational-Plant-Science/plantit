@@ -184,7 +184,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: ':owner/:name',
+                            path: ':owner/:name/:branch',
                             name: 'workflow',
                             props: true,
                             component: workflow,
@@ -355,10 +355,10 @@ router.beforeEach(async (to, from, next) => {
         to.meta.title = 'Home';
     }
     if (to.name === 'workflow') {
-        to.meta.title = `Workflow: ${to.params.name}`;
+        to.meta.title = `Workflow: ${to.params.name} (${to.params.branch})`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.owner}/${to.params.name}`
+            text: `${to.params.owner}/${to.params.name}/${to.params.branch}`
         });
     }
     if (to.name === 'task') {

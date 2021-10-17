@@ -169,15 +169,19 @@ export const workflows = {
         }
     },
     getters: {
-        workflow: state => (owner, name) => {
+        workflow: state => (owner, name, branch) => {
             var found = state.public.find(
                 repo =>
-                    owner === repo.repo.owner.login && name === repo.repo.name
+                    owner === repo.repo.owner.login &&
+                    name === repo.repo.name &&
+                    branch === repo.branch.name
             );
             if (found !== undefined) return found;
             found = state.personal.find(
                 repo =>
-                    owner === repo.repo.owner.login && name === repo.repo.name
+                    owner === repo.repo.owner.login &&
+                    name === repo.repo.name &&
+                    branch === repo.branch.name
             );
             if (found !== undefined) return found;
             return null;
