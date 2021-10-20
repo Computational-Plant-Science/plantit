@@ -314,8 +314,45 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
     }
     async with httpx.AsyncClient(headers=headers) as client:
         workflows = []
-        repositories = await list_repositories(owner, token)
-        for repository in repositories:
+
+        # repos in orgs user is a member of
+        organizations = await list_user_organizations(owner, token)
+        for org in organizations:
+            org_name = org['login']
+            org_repos = await list_repositories(org_name, token)
+            for repository in org_repos:
+                branches = await list_repo_branches(org_name, repository['name'], token)
+                for branch in branches:
+                    response = await client.get(
+                        f"https://raw.githubusercontent.com/{org_name}/{repository['name']}/{branch['name']}/plantit.yaml",
+                        headers={
+                            "Authorization": f"token {token}",
+                            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+                        })
+
+                    if response.status_code == 404:
+                        logger.info(f"No plantit.yaml in {org_name}/{repository['name']} branch {branch['name']}")
+                        continue
+                    if response.status_code != 200:
+                        logger.warning(f"Failed to retrieve plantit.yaml from {org_name}/{repository['name']} branch {branch['name']}")
+                        continue
+
+                    config = yaml.safe_load(response.text)
+                    validation = validate_repo_config(config, token)
+                    workflows.append({
+                        'repo': repository,
+                        'config': config,
+                        'branch': branch,
+                        # 'readme': readme,
+                        'validation': {
+                            'is_valid': validation[0],
+                            'errors': validation[1]
+                        }
+                    })
+
+        # owned repos
+        owned_repos = await list_repositories(owner, token)
+        for repository in owned_repos:
             branches = await list_repo_branches(owner, repository['name'], token)
             for branch in branches:
                 response = await client.get(
@@ -363,3 +400,20 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
                 #     })
 
         return workflows
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def list_user_organizations(username: str, token: str) -> List[dict]:
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.get(f"https://api.github.com/users/{username}/orgs")
+        if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
+        return response.json()

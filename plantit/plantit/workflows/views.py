@@ -21,11 +21,14 @@ logger = logging.getLogger(__name__)
 async def list_public(request):
     if await check_user_authentication(request.user):
         profile = await get_user_django_profile(request.user)
-        token = profile.github_token
-    else: token = None
+        github_token = profile.github_token
+        cyverse_token = profile.cyverse_access_token
+    else:
+        github_token = None
+        cyverse_token = None
 
     invalidate = request.GET.get('invalidate', False)
-    workflows = await list_public_workflows(token=token, invalidate=invalidate)
+    workflows = await list_public_workflows(github_token=github_token, cyverse_token=cyverse_token, invalidate=invalidate)
     return JsonResponse({'workflows': workflows})
 
 
@@ -128,8 +131,8 @@ async def toggle_public(request, owner, name):
 
 @login_required
 def bind(request, owner, name):
-    if owner != request.user.profile.github_username:
-        return HttpResponseForbidden()
+    # if owner != request.user.profile.github_username:
+    #     return HttpResponseForbidden()
 
     redis = RedisClient.get()
     body = json.loads(request.body.decode('utf-8'))
@@ -143,8 +146,8 @@ def bind(request, owner, name):
 
 @login_required
 def unbind(request, owner, name):
-    if owner != request.user.profile.github_username:
-        return HttpResponseForbidden()
+    # if owner != request.user.profile.github_username:
+    #     return HttpResponseForbidden()
 
     try:
         workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)

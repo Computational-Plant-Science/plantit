@@ -474,16 +474,16 @@ async def repopulate_public_workflow_cache(github_token: str, cyverse_token: str
     redis.set(f"public_workflows_updated", timezone.now().timestamp())
 
 
-async def list_public_workflows(token: str = None, invalidate: bool = False) -> List[dict]:
+async def list_public_workflows(github_token: str = None, cyverse_token: str = None, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     last_updated = redis.get('public_workflows_updated')
     num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
 
     # if public workflow cache is empty or invalidation is requested, (re)populate it before returning
     if last_updated is None or num_cached == 0 or invalidate:
-        if token is not None:
+        if github_token is not None and cyverse_token is not None:
             logger.info(f"Populating public workflow cache")
-            await repopulate_public_workflow_cache(token)
+            await repopulate_public_workflow_cache(github_token, cyverse_token)
         else:
             logger.warning(f"No GitHub API token provided, can't refresh cache")
 
