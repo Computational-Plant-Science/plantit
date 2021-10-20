@@ -233,7 +233,7 @@ def get_user_statistics(user: User) -> dict:
         user.profile.save()
     else:
         stats = redis.get(f"stats/{user.username}")
-        stats = json.loads(stats)
+        stats = json.loads(stats) if stats is not None else None
 
     return stats
 
