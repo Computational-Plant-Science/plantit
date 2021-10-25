@@ -4,6 +4,7 @@ from typing import List
 
 import httpx
 import requests
+import traceback
 import yaml
 from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
@@ -337,18 +338,30 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
                         logger.warning(f"Failed to retrieve plantit.yaml from {org_name}/{repository['name']} branch {branch['name']}")
                         continue
 
-                    config = yaml.safe_load(response.text)
-                    validation = validate_repo_config(config, token)
-                    workflows.append({
-                        'repo': repository,
-                        'config': config,
-                        'branch': branch,
-                        # 'readme': readme,
-                        'validation': {
-                            'is_valid': validation[0],
-                            'errors': validation[1]
-                        }
-                    })
+                    try:
+                        config = yaml.safe_load(response.text)
+                        validation = validate_repo_config(config, token)
+                        workflows.append({
+                            'repo': repository,
+                            'config': config,
+                            'branch': branch,
+                            # 'readme': readme,
+                            'validation': {
+                                'is_valid': validation[0],
+                                'errors': validation[1]
+                            }
+                        })
+                    except Exception:
+                        workflows.append({
+                            'repo': repository,
+                            'config': {},
+                            'branch': branch,
+                            # 'readme': readme,
+                            'validation': {
+                                'is_valid': False,
+                                'errors': [traceback.format_exc()]
+                            }
+                        })
 
         # owned repos
         owned_repos = await list_repositories(owner, token)

@@ -452,6 +452,15 @@ async def repopulate_personal_workflow_cache(owner: str):
         "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
+async def repopulate_workflow_cache():
+    users = await sync_to_async(User.objects.all)()
+    online = filter_online(users)
+    for user in online:
+        profile = await sync_to_async(Profile.objects.get)(user=user)
+        empty_personal_workflow_cache(profile.github_username)
+        await repopulate_personal_workflow_cache(profile.github_username)
+
+
 async def repopulate_public_workflow_cache(github_token: str, cyverse_token: str):
     redis = RedisClient.get()
     public_workflows = await list_workflows(public=True)
