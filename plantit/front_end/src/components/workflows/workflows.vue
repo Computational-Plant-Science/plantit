@@ -152,6 +152,23 @@
                     <blurb :linkable="true" :workflow="workflow"></blurb>
                 </b-card>
             </b-card-group>
+          <b-card-group deck columns v-else-if="getOrgWorkflows.length !== 0">
+                <b-card
+                    v-for="workflow in getOrgWorkflows"
+                    :key="workflow.repo.name"
+                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    border-variant="default"
+                    :header-border-variant="
+                        profile.darkMode ? 'secondary' : 'default'
+                    "
+                    :text-variant="profile.darkMode ? 'white' : 'dark'"
+                    style="min-width: 30rem;"
+                    class="overflow-hidden mb-4"
+                >
+                    <blurb :linkable="true" :workflow="workflow"></blurb>
+                </b-card>
+            </b-card-group>
             <b-row v-else
                 ><b-col
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
@@ -802,6 +819,7 @@ export default {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('workflows', [
             'boundWorkflows',
+            'orgWorkflows',
             'personalWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
@@ -821,6 +839,9 @@ export default {
             // ).filter(workflow =>
             //     workflow.config.name.includes(this.searchName)
             // );
+        },
+        getOrgWorkflows() {
+           return this.orgWorkflows;
         },
         workflowsLoading() {
             return this.contextPublic

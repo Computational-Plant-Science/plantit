@@ -12,6 +12,7 @@ from plantit.utils import get_user_django_profile, list_public_workflows, list_p
 from plantit.misc import del_none
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
+from plantit.celery_tasks import refresh_personal_workflows
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,25 @@ async def list_personal(request, owner):
             return HttpResponseNotFound()
 
     invalidate = request.GET.get('invalidate', False)
-    workflows = await list_personal_workflows(owner=owner, invalidate=bool(invalidate))
+    invalidate = False
+    redis = RedisClient.get()
+    last_updated = redis.get(f"workflows_updated/{owner}")
+    num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
+
+    # if user's workflow cache is empty or invalidation is requested, (re)populate it before returning
+    if last_updated is None or num_cached == 0:  # or invalidate:
+        logger.info(f"GitHub user {owner}'s workflow cache is empty, populating it now")
+        refresh_personal_workflows.s(owner).apply_async()
+
+    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
     return JsonResponse({'workflows': workflows})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def list_org(request, owner):
+    pass
 
 
 @sync_to_async

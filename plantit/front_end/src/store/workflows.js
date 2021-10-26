@@ -9,6 +9,8 @@ export const workflows = {
         publicLoading: true,
         personal: [],
         personalLoading: true,
+        org: [],
+        orgLoading: true,
         recentlyRun: {}
     }),
     mutations: {
@@ -18,11 +20,17 @@ export const workflows = {
         setPersonal(state, workflows) {
             state.personal = workflows;
         },
+        setOrg(state, workflows) {
+            state.org = workflows;
+        },
         setPublicLoading(state, loading) {
             state.publicLoading = loading;
         },
         setPersonalLoading(state, loading) {
             state.personalLoading = loading;
+        },
+        setOrgLoading(state, loading) {
+            state.orgLoading = loading;
         },
         setRecentlyRun(state, { name, config }) {
             state.recentlyRun[name] = config;
@@ -46,6 +54,14 @@ export const workflows = {
             );
             if (j === -1) state.personal.unshift(workflow);
             else Vue.set(state.personal, j, workflow);
+
+            let k = state.org.findIndex(
+                wf =>
+                    wf.repo.owner.login === workflow.repo.owner.login &&
+                    wf.repo.name === workflow.repo.name
+            );
+            if (k === -1) state.org.unshift(workflow);
+            else Vue.set(state.org, k, workflow);
         },
         remove(state, owner, name) {
             let i = state.public.findIndex(
@@ -57,6 +73,11 @@ export const workflows = {
                 wf => wf.repo.owner.login === owner && wf.repo.name === name
             );
             if (j > -1) state.personal.splice(j, 1);
+
+            let k = state.org.findIndex(
+                wf => wf.repo.owner.login === owner && wf.repo.name === name
+            );
+            if (k > -1) state.org.splice(k, 1);
         }
     },
     actions: {
@@ -88,6 +109,20 @@ export const workflows = {
                     throw error;
                 });
         },
+        async loadOrg({ commit }, owner) {
+            commit('setOrgLoading', true);
+            await axios
+                .get(`/apis/v1/workflows/${owner}/org/`)
+                .then(response => {
+                    commit('setOrg', response.data.workflows);
+                    commit('setOrgLoading', false);
+                })
+                .catch(error => {
+                    commit('setOrgLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         async setPersonal({ commit }, workflows) {
             commit('setPersonal', workflows);
         },
@@ -101,6 +136,20 @@ export const workflows = {
                 })
                 .catch(error => {
                     commit('setPublicLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        async refreshOrg({ commit }, owner) {
+            commit('setOrgLoading', true);
+            await axios
+                .get(`/apis/v1/workflows/${owner}/org/?invalidate=True`)
+                .then(response => {
+                    commit('setOrg', response.data.workflows);
+                    commit('setOrgLoading', false);
+                })
+                .catch(error => {
+                    commit('setOrgLoading', false);
                     Sentry.captureException(error);
                     throw error;
                 });
@@ -184,6 +233,13 @@ export const workflows = {
                     branch === repo.branch.name
             );
             if (found !== undefined) return found;
+            found = state.org.find(
+                repo =>
+                    owner === repo.repo.owner.login &&
+                    name === repo.repo.name &&
+                    branch === repo.branch.name
+            );
+            if (found !== undefined) return found;
             return null;
         },
         publicWorkflows: state => state.public,
@@ -199,6 +255,7 @@ export const workflows = {
                     else if (l.validation['is_valid']) return -1;
                     else return 1;
                 }),
+        orgWorkflows: state => state.org.filter(workflow => workflow.bound),
         personalWorkflowsLoading: state => state.personalLoading,
         recentlyRunWorkflows: state => state.recentlyRun
     }

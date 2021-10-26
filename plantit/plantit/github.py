@@ -308,17 +308,15 @@ async def get_repo_bundle(owner: str, name: str, github_token: str, cyverse_toke
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
+async def list_connectable_repos_by_org(owner: str, token: str) -> List[dict]:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
     async with httpx.AsyncClient(headers=headers) as client:
         workflows = []
-
-        # repos in orgs user is a member of
-        organizations = await list_user_organizations(owner, token)
-        for org in organizations:
+        orgs = await list_user_organizations(owner, token)
+        for org in orgs:
             org_name = org['login']
             org_repos = await list_repositories(org_name, token)
             for repository in org_repos:
@@ -363,7 +361,20 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
                             }
                         })
 
-        # owned repos
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        workflows = []
         owned_repos = await list_repositories(owner, token)
         for repository in owned_repos:
             branches = await list_repo_branches(owner, repository['name'], token)
@@ -382,35 +393,30 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']} branch {branch['name']}")
                     continue
 
-                config = yaml.safe_load(response.text)
-                validation = validate_repo_config(config, token)
-                workflows.append({
-                    'repo': repository,
-                    'config': config,
-                    'branch': branch,
-                    # 'readme': readme,
-                    'validation': {
-                        'is_valid': validation[0],
-                        'errors': validation[1]
-                    }
-                })
-
-                # content = response.json()
-                # for item in (content['items'] if 'items' in content else []):
-                #     repo = item['repository']
-                #     config = await get_repo_config(item['repository']['owner']['login'], item['repository']['name'], token)
-                #     # readme = get_repo_readme(item['repository']['owner']['login'], item['repository']['name'], token)
-                #     validation = validate_repo_config(config, token)
-                #     workflows.append({
-                #         'repo': repo,
-                #         'config': config,
-                #         'branch': branch,
-                #         # 'readme': readme,
-                #         'validation': {
-                #             'is_valid': validation[0],
-                #             'errors': validation[1]
-                #         }
-                #     })
+                try:
+                    config = yaml.safe_load(response.text)
+                    validation = validate_repo_config(config, token)
+                    workflows.append({
+                        'repo': repository,
+                        'config': config,
+                        'branch': branch,
+                        # 'readme': readme,
+                        'validation': {
+                            'is_valid': validation[0],
+                            'errors': validation[1]
+                        }
+                    })
+                except Exception:
+                    workflows.append({
+                        'repo': repository,
+                        'config': {},
+                        'branch': branch,
+                        # 'readme': readme,
+                        'validation': {
+                            'is_valid': False,
+                            'errors': [traceback.format_exc()]
+                        }
+                    })
 
         return workflows
 

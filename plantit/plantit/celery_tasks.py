@@ -24,8 +24,8 @@ from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
-    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, repopulate_workflow_cache
+    refresh_personal_workflow_cache, refresh_org_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache
 
 logger = get_task_logger(__name__)
 
@@ -440,12 +440,13 @@ def aggregate_user_usage_stats(username: str):
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    async_to_sync(repopulate_personal_workflow_cache)(owner)
+    async_to_sync(refresh_personal_workflow_cache)(owner)
 
 
 @app.task()
 def refresh_all_workflows():
-    async_to_sync(repopulate_workflow_cache)  # (github_token, cyverse_token)
+    async_to_sync(refresh_online_users_workflow_cache)  # (github_token, cyverse_token)
+    async_to_sync(refresh_org_workflow_cache(github_token=settings.GITHUB_TOKEN, cyverse_token=TerrainToken.get()))
 
 
 @app.task()
