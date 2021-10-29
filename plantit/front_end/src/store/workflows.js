@@ -98,7 +98,7 @@ export const workflows = {
         async loadPersonal({ commit }, owner) {
             commit('setPersonalLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/`)
+                .get(`/apis/v1/workflows/${owner}/u/`)
                 .then(response => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
@@ -112,7 +112,7 @@ export const workflows = {
         async loadOrg({ commit }, owner) {
             commit('setOrgLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/org/`)
+                .get(`/apis/v1/workflows/${owner}/o/`)
                 .then(response => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
@@ -143,7 +143,7 @@ export const workflows = {
         async refreshOrg({ commit }, owner) {
             commit('setOrgLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/org/?invalidate=True`)
+                .get(`/apis/v1/workflows/${owner}/o/?invalidate=True`)
                 .then(response => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
@@ -157,7 +157,7 @@ export const workflows = {
         async refreshPersonal({ commit }, owner) {
             commit('setPersonalLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/?invalidate=True`)
+                .get(`/apis/v1/workflows/${owner}/u/?invalidate=True`)
                 .then(response => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
@@ -172,7 +172,7 @@ export const workflows = {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${payload.owner}/${payload.name}/`, {
+                .get(`/apis/v1/workflows/${payload.owner}/u/${payload.name}/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }
@@ -194,7 +194,7 @@ export const workflows = {
             commit('setPublicLoading', true);
             await axios
                 .get(
-                    `/apis/v1/workflows/${payload.owner}/${payload.name}/refresh/`,
+                    `/apis/v1/workflows/${payload.owner}/u/${payload.name}/refresh/`,
                     {
                         headers: {
                             Authorization: 'Bearer ' + this.githubToken

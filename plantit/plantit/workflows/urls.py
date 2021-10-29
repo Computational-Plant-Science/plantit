@@ -4,13 +4,14 @@ from . import views
 
 urlpatterns = [
     path(r'', views.list_public),
-    path(r'<owner>/', views.list_personal),
-    path(r'<owner>/<name>/', views.get),
-    path(r'<owner>/<name>/search/', views.search),
-    path(r'<owner>/<name>/refresh/', views.refresh),
-    path(r'<owner>/<name>/readme/', views.readme),
-    path(r'<owner>/<name>/public/', views.toggle_public),
-    path(r'<owner>/<name>/bind/', views.bind),
-    path(r'<owner>/<name>/unbind/', views.unbind),
-    path(f'<owner>/<name>/branches/', views.branches)
+    path(r'<owner>/u/', views.list_personal),
+    path(r'<member>/o/', views.list_org),
+    path(r'<owner>/u/<name>/', views.get),
+    path(r'<owner>/u/<name>/search/', views.search),
+    path(r'<owner>/u/<name>/refresh/', views.refresh),
+    path(r'<owner>/u/<name>/readme/', views.readme),
+    path(r'<owner>/u/<name>/public/', views.toggle_public),
+    path(r'<owner>/u/<name>/bind/', views.bind),
+    path(r'<owner>/u/<name>/unbind/', views.unbind),
+    path(f'<owner>/u/<name>/branches/', views.branches)
 ]

@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 
-from plantit.github import get_repo_readme, get_repo, list_repo_branches
+from plantit.github import get_repo_readme, get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, list_personal_workflows, get_workflow, \
     workflow_to_dict, check_user_authentication
@@ -62,8 +62,26 @@ async def list_personal(request, owner):
 @sync_to_async
 @login_required
 @async_to_sync
-async def list_org(request, owner):
-    pass
+async def list_org(request, member):
+    profile = await get_user_django_profile(request.user)
+    redis = RedisClient.get()
+    orgs = await list_user_organizations(member, profile.github_token)  # TODO cache organization memberships so don't have to look up each time
+    wfs = []
+
+    for org in orgs:
+        org_name = org['login']
+        last_updated = redis.get(f"workflows_updated/{org_name}")
+        num_cached = len(list(redis.scan_iter(match=f"workflows/{org_name}/*")))
+
+        # if org's workflow cache is empty or invalidation is requested, (re)populate it before returning
+        if last_updated is None or num_cached == 0:  # or invalidate:
+            logger.info(f"GitHub organization {org_name}'s workflow cache is empty, populating it now")
+            refresh_personal_workflows.s(org_name).apply_async()
+
+        workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
+        wfs = wfs + workflows
+
+    return JsonResponse({'workflows': wfs})
 
 
 @sync_to_async

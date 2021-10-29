@@ -1216,6 +1216,10 @@ export default {
                 'workflows/loadPersonal',
                 this.profile.githubProfile.login
             ),
+            this.$store.dispatch(
+                'workflows/loadOrg',
+                this.profile.githubProfile.login
+            ),
             this.$store.dispatch('agents/loadPublic'),
             this.$store.dispatch(
                 'agents/loadPersonal',
