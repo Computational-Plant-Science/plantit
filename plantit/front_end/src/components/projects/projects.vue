@@ -69,8 +69,8 @@
                             v-b-tooltip:hover
                             ><i class="fas fa-plus"></i> Create</b-button
                         ><b-popover
-                            :show.sync="profile.hints"
-                            triggers="manual"
+                            v-if="profile.hints"
+                            triggers="hover"
                             placement="left"
                             target="create-project"
                             title="Create a new project"
