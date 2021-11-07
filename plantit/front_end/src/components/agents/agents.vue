@@ -832,6 +832,8 @@
                     </b-row>
                     <b-row v-if="agentExecutorComplete !== true"
                         ><b-col>
+                            <b-row><b-col>Configure the <code>plantit-cli</code> executor for this agent.</b-col></b-row>
+                          <hr/>
                             <b-form-group>
                                 <template #description
                                     ><span
@@ -1014,7 +1016,6 @@
                             ></b-form-group>
                             <b-form-group
                                 v-if="isJobQueue(agentExecutor)"
-                                label="Maximum processes"
                                 ><template #description
                                     ><span
                                         :class="
@@ -1070,7 +1071,28 @@
                                     max="1000"
                                 ></b-form-spinbutton
                             ></b-form-group>
-                            <b-form-group v-if="isJobQueue(agentExecutor)"
+                        <b-form-group v-if="isSLURM(agentExecutor)"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Does this agent have virtual memory?</span
+                                    ></template
+                                ><b-form-checkbox
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    v-model="agentVirtualMemory"
+                                >
+                                    Virtual memory
+                                </b-form-checkbox>
+                            </b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor) && !agentVirtualMemory"
                                 ><template #description
                                     ><span
                                         :class="
@@ -1087,7 +1109,8 @@
                                     min="1"
                                     max="1000"
                                 ></b-form-spinbutton
-                            ></b-form-group> </b-col
+                            ></b-form-group>
+                    </b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
                         ><b-col v-if="agentExecutorComplete === true"
@@ -1325,6 +1348,7 @@ export default {
             agentProject: '',
             agentMaxWalltime: 60,
             agentMaxMem: 1,
+            agentVirtualMemory: false,
             agentMaxCores: 1,
             agentMaxProcesses: 1,
             agentMaxNodes: 1,
@@ -1721,6 +1745,7 @@ export default {
             this.agentProject = '';
             this.agentMaxWalltime = 1;
             this.agentMaxMem = 1;
+            this.agentVirtualMemory = false;
             this.agentMaxCores = 1;
             this.agentMaxProcesses = 1;
             this.agentMaxNodes = 1;
@@ -1782,7 +1807,7 @@ export default {
                     executor: this.agentExecutor,
                     authentication: this.agentAuthentication,
                     max_walltime: this.agentMaxWalltime,
-                    max_mem: this.agentMaxMem,
+                    max_mem: this.agentVirtualMemory ? -1 : this.agentMaxMem,
                     max_cores: this.agentMaxCores,
                     max_nodes: this.agentMaxNodes,
                     queue: this.agentQueue,
