@@ -193,7 +193,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                   Your Usage
+                                                   Your Account Summary
                                                 </h2>
                                             </b-col>
                                         </b-row>
