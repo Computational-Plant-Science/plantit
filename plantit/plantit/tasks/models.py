@@ -64,6 +64,7 @@ class Task(models.Model):
     workflow = models.JSONField(null=False, blank=False)
     workflow_owner = models.CharField(max_length=280, null=False, blank=False)
     workflow_name = models.CharField(max_length=280, null=False, blank=False)
+    workflow_branch = models.CharField(max_length=280, null=False, blank=False)
     workflow_image_url = models.URLField(null=True, blank=True)
     status = models.CharField(max_length=8, choices=TaskStatus.choices, default=TaskStatus.CREATED)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)

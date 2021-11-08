@@ -805,6 +805,7 @@ def create_task(username: str,
                 study: str = None):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
     agent = Agent.objects.get(name=agent_name)
     user = User.objects.get(username=username)
     if guid is None: guid = str(uuid.uuid4())  # if the browser client hasn't set a GUID, create one
@@ -821,6 +822,7 @@ def create_task(username: str,
         workflow=workflow,
         workflow_owner=repo_owner,
         workflow_name=repo_name,
+        workflow_branch=repo_branch,
         agent=agent,
         status=TaskStatus.CREATED,
         created=now,
@@ -1736,6 +1738,7 @@ def task_to_dict(task: Task) -> dict:
         'cleanup_time': None if task.cleanup_time is None else task.cleanup_time.isoformat(),
         'workflow_owner': task.workflow_owner,
         'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
         'workflow_image_url': task.workflow_image_url,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,

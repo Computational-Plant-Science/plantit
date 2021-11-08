@@ -2843,7 +2843,8 @@ export default {
         getWorkflow() {
             return this.workflow(
                 this.getTask.workflow_owner,
-                this.getTask.workflow_name
+                this.getTask.workflow_name,
+                this.getTask.workflow_branch
             );
         },
         taskLogFileName() {

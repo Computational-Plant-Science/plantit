@@ -747,7 +747,7 @@ export default {
             // this.binding['branch'] = this.bindingBranch;
             await axios({
                 method: 'post',
-                url: `/apis/v1/workflows/${this.binding.repo.owner.login}/${this.binding.repo.name}/bind/`,
+                url: `/apis/v1/workflows/${this.binding.repo.owner.login}/u/${this.binding.repo.name}/bind/`,
                 data: this.binding,
                 headers: { 'Content-Type': 'application/json' }
             })

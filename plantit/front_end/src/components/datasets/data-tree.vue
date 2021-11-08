@@ -222,7 +222,7 @@
                             ><i class="fas fa-plus fa-fw"></i
                         ></b-button>
                         <b-button
-                            v-if="!isShared && !isRoot"
+                            v-if="isOwned && !isRoot"
                             class="ml-1 mr-1"
                             size="sm"
                             :disabled="deletingDirectory"
@@ -1227,7 +1227,7 @@
                         <i class="fas fa-eye fa-fw"></i>
                     </b-button>
                     <b-button
-                        v-if="!isShared"
+                        v-if="isOwned"
                         class="m-1"
                         size="sm"
                         title="Delete File"
@@ -1328,11 +1328,11 @@
     </b-list-group>
 </template>
 <script>
-import { bus } from '../../main';
-import { mapGetters } from 'vuex';
+import {bus} from '../../main';
+import {mapGetters} from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import { guid } from '@/utils';
+import {guid} from '@/utils';
 
 export default {
     name: 'data-tree',
@@ -1481,6 +1481,14 @@ export default {
                 return split[3];
             } else return null;
         },
+        isOwned: function() {
+           let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let split = path.split('/');
+            let user = split[3];
+            return user === this.profile.djangoProfile.username;
+        },
         isShared: function() {
             let path = this.internalLoaded
                 ? this.internalNode.path
@@ -1491,6 +1499,13 @@ export default {
                 user !== this.profile.djangoProfile.username &&
                 user !== 'shared'
             );
+        },
+        isPublic: function() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let split = path.split('/');
+            return split[3] === 'shared';
         },
         isDir: function() {
             return !('file-size' in this);
@@ -1957,10 +1972,10 @@ export default {
             );
         },
         open() {
-          this.isOpen = true;
+            this.isOpen = true;
         },
         close() {
-          this.isOpen = false;
+            this.isOpen = false;
         },
         toggle() {
             if (this.internalLoaded) this.close();

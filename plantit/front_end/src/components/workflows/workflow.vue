@@ -4024,7 +4024,7 @@ export default {
             this.togglingPublic = true;
             await axios({
                 method: 'post',
-                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/public/`,
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/u/${this.$router.currentRoute.params.name}/public/`,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
@@ -4042,7 +4042,9 @@ export default {
                                     response.data.workflows.find(
                                         wf =>
                                             wf.config.name ===
-                                            this.getWorkflow.config.name
+                                                this.getWorkflow.config.name &&
+                                            wf.branch.name ===
+                                                this.getWorkflow.branch.name
                                     ).public
                                         ? 'public'
                                         : 'private'
@@ -4166,7 +4168,7 @@ export default {
         async unbindWorkflow() {
             await axios({
                 method: 'delete',
-                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/unbind/`,
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/u/${this.$router.currentRoute.params.name}/unbind/`,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
