@@ -103,7 +103,7 @@
                             "
                         ></b-img>
                         Projects</b-button
-                    ><b-popover
+                    ><!-- --><b-popover
                         :show.sync="profile.hints && isRootPath"
                         triggers="manual"
                         placement="bottom"
