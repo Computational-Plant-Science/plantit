@@ -47,8 +47,8 @@
                                 ><i class="fas fa-users"></i> Shared</span
                             ></b-button
                         ><b-popover
-                            :show.sync="profile.hints"
-                            triggers="manual"
+                            v-if="profile.hints"
+                            triggers="hover"
                             placement="left"
                             target="switch-projects-context"
                             title="MIAPPE Context"
@@ -84,7 +84,7 @@
                         align-self="center"
                         v-if="!sharedContext"
                         ><b-button
-                            id="refresh-workflows"
+                            id="refresh-projects"
                             :disabled="projectsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
@@ -105,9 +105,9 @@
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
                         ><b-popover
-                            :show.sync="profile.hints"
-                            triggers="manual"
-                            placement="bottomright"
+                            v-if="profile.hints"
+                            triggers="hover"
+                            placement="left"
                             target="refresh-projects"
                             title="Refresh Projects"
                             >Click here to refresh the list of
