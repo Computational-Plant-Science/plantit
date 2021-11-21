@@ -35,8 +35,7 @@
                                 ><i class="fas fa-users"></i> Public</span
                             ></b-button
                         ><b-popover
-                            :show.sync="profile.hints"
-                            triggers="manual"
+                            triggers="hover"
                             placement="left"
                             target="switch-dataset-context"
                             title="Workflow Context"
@@ -67,8 +66,7 @@
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
                         ><b-popover
-                            :show.sync="profile.hints"
-                            triggers="manual"
+                            triggers="hover"
                             placement="bottom"
                             target="refresh-datasets"
                             title="Refresh Datasets"

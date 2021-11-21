@@ -28,8 +28,7 @@
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="left"
                         target="switch-agent-context"
                         title="Agent Context"
@@ -61,8 +60,7 @@
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="bind-agent"
                         title="Bind Agent"
@@ -91,8 +89,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="topright"
                         target="refresh-agents"
                         title="Refresh Agents"
@@ -832,8 +829,14 @@
                     </b-row>
                     <b-row v-if="agentExecutorComplete !== true"
                         ><b-col>
-                            <b-row><b-col>Configure the <code>plantit-cli</code> executor for this agent.</b-col></b-row>
-                          <hr/>
+                            <b-row
+                                ><b-col
+                                    >Configure the
+                                    <code>plantit-cli</code> executor for this
+                                    agent.</b-col
+                                ></b-row
+                            >
+                            <hr />
                             <b-form-group>
                                 <template #description
                                     ><span
@@ -1014,8 +1017,7 @@
                                     max="1440"
                                 ></b-form-spinbutton
                             ></b-form-group>
-                            <b-form-group
-                                v-if="isJobQueue(agentExecutor)"
+                            <b-form-group v-if="isJobQueue(agentExecutor)"
                                 ><template #description
                                     ><span
                                         :class="
@@ -1071,7 +1073,7 @@
                                     max="1000"
                                 ></b-form-spinbutton
                             ></b-form-group>
-                        <b-form-group v-if="isSLURM(agentExecutor)"
+                            <b-form-group v-if="isSLURM(agentExecutor)"
                                 ><template #description
                                     ><span
                                         :class="
@@ -1079,7 +1081,8 @@
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        >Does this agent have virtual memory?</span
+                                        >Does this agent have virtual
+                                        memory?</span
                                     ></template
                                 ><b-form-checkbox
                                     :class="
@@ -1092,7 +1095,11 @@
                                     Virtual memory
                                 </b-form-checkbox>
                             </b-form-group>
-                            <b-form-group v-if="isJobQueue(agentExecutor) && !agentVirtualMemory"
+                            <b-form-group
+                                v-if="
+                                    isJobQueue(agentExecutor) &&
+                                        !agentVirtualMemory
+                                "
                                 ><template #description
                                     ><span
                                         :class="
@@ -1109,8 +1116,7 @@
                                     min="1"
                                     max="1000"
                                 ></b-form-spinbutton
-                            ></b-form-group>
-                    </b-col
+                            ></b-form-group> </b-col
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
                         ><b-col v-if="agentExecutorComplete === true"
