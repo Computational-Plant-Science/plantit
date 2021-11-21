@@ -1,3 +1,5 @@
+<!-- test test -->
+
 <template>
     <div class="m-0 p-0">
         <b-sidebar

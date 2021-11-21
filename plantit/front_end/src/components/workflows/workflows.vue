@@ -28,8 +28,7 @@
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="topleft"
                         target="switch-workflow-context"
                         title="Workflow Context"
@@ -61,8 +60,7 @@
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottomleft"
                         target="bind-workflow"
                         title="Bind Workflow"
@@ -95,8 +93,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
                     ><b-popover
-                        :show.sync="profile.hints"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottomright"
                         target="refresh-workflows"
                         title="Refresh Workflows"
@@ -152,7 +149,7 @@
                     <blurb :linkable="true" :workflow="workflow"></blurb>
                 </b-card>
             </b-card-group>
-          <b-card-group deck columns v-else-if="getOrgWorkflows.length !== 0">
+            <b-card-group deck columns v-else-if="getOrgWorkflows.length !== 0">
                 <b-card
                     v-for="workflow in getOrgWorkflows"
                     :key="workflow.repo.name"
@@ -841,7 +838,7 @@ export default {
             // );
         },
         getOrgWorkflows() {
-           return this.orgWorkflows;
+            return this.orgWorkflows;
         },
         workflowsLoading() {
             return this.contextPublic
@@ -850,7 +847,7 @@ export default {
         },
         bindingSelected() {
             return this.binding !== null;
-        },
+        }
         // bindingBranchSelected() {
         //   return this.bindingBranch !== '';
         // }
