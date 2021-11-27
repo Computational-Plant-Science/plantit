@@ -66,7 +66,7 @@ async def list_org(request, member):
     profile = await get_user_django_profile(request.user)
     redis = RedisClient.get()
     orgs = await list_user_organizations(member, profile.github_token)  # TODO cache organization memberships so don't have to look up each time
-    wfs = []
+    wfs = dict()
 
     for org in orgs:
         org_name = org['login']
@@ -79,7 +79,7 @@ async def list_org(request, member):
             refresh_personal_workflows.s(org_name).apply_async()
 
         workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
-        wfs = wfs + workflows
+        wfs[org_name] = workflows
 
     return JsonResponse({'workflows': wfs})
 

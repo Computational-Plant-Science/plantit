@@ -289,6 +289,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if request.user.profile.github_token != '' and user.profile.github_username != '':
             bundle = get_user_bundle(request.user)
             response['github_profile'] = bundle['github_profile']
+            response['github_organizations'] = bundle['github_organizations']
 
         return JsonResponse(response)
 

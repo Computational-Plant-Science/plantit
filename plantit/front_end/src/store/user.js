@@ -13,6 +13,7 @@ export const user = {
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
+            githubOrganizations: [],
             hints: false,
             stats: null
         },
@@ -36,6 +37,9 @@ export const user = {
         },
         setGithubProfile(state, profile) {
             state.profile.githubProfile = profile;
+        },
+        setGithubOrganizations(state, organizations) {
+            state.profile.githubOrganizations = organizations;
         },
         setHints(state, show) {
             state.profile.hints = show;
@@ -90,7 +94,7 @@ export const user = {
         async loadProfile({ commit }) {
             commit('setProfileLoading', true);
 
-            // fetch Django user profile
+            // fetch user profile
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then(response => {
@@ -98,6 +102,7 @@ export const user = {
                     commit('setDjangoProfile', response.data.django_profile);
                     commit('setCyverseProfile', response.data.cyverse_profile);
                     commit('setGithubProfile', response.data.github_profile);
+                    commit('setGithubOrganizations', response.data.github_organizations);
 
                     // set dark mode
                     commit(

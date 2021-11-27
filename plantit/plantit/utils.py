@@ -103,23 +103,27 @@ def get_user_bundle(user: User):
             if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
 
             github_profile = async_to_sync(get_user_github_profile)(user)
+            github_organizations = async_to_sync(get_user_github_organizations)(user)
             profile = {
                 'username': user.username,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'github_username': user.profile.github_username,
-                'github_profile': github_profile
+                'github_profile': github_profile,
+                'github_organizations': github_organizations
             }
             redis.set(f"users/{user.username}", json.dumps(profile))
             return profile
 
         github_profile = async_to_sync(get_user_github_profile)(user)
+        github_organizations = async_to_sync(get_user_github_organizations)(user)
         profile = {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'github_username': user.profile.github_username,
-            'github_profile': github_profile
+            'github_profile': github_profile,
+            'github_organizations': github_organizations
         } if 'login' in github_profile else  {
             'username': user.username,
             'first_name': user.first_name,
@@ -173,8 +177,12 @@ def refresh_user_cyverse_tokens(user: User):
 
 async def get_user_github_profile(user: User):
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    gh_profile = await github.get_profile(profile.github_username, profile.github_token)
-    return gh_profile
+    return await github.get_profile(profile.github_username, profile.github_token)
+
+
+async def get_user_github_organizations(user: User):
+    profile = await sync_to_async(Profile.objects.get)(user=user)
+    return await github.list_user_organizations(profile.github_username, profile.github_token)
 
 
 @sync_to_async

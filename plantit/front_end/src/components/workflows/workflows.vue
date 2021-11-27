@@ -5,43 +5,62 @@
                 ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-stream fa-fw"></i>
-                        {{ contextPublic ? 'Public' : 'Your' }} Workflows
+                        Workflows
                     </h2></b-col
                 >
-                <b-col align-self="center" class="mb-1" md="auto"
-                    ><b-button
+                <b-col align-self="center" class="mb-1" md="auto">
+                    <b-dropdown
                         id="switch-workflow-context"
                         :disabled="workflowsLoading || bindingWorkflow"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
                         class="ml-0 mt-0 mr-0"
-                        @click="toggleContext"
-                        :title="
-                            contextPublic
-                                ? 'View your workflows'
-                                : 'View public workflows'
-                        "
-                        v-b-tooltip:hover
-                        ><span v-if="contextPublic"
-                            ><i class="fas fa-user"></i> Yours</span
-                        ><span v-else
-                            ><i class="fas fa-users"></i> Public</span
-                        ></b-button
-                    ><b-popover
+                        :title="context"
+                        ><template #button-content>
+                            <span v-if="context === profile.githubProfile.login"
+                                ><i class="fas fa-user"></i> Yours</span
+                            ><span v-else-if="context === ''"
+                                ><i class="fas fa-users"></i> Public</span
+                            ><span v-else
+                                ><i class="fas fa-building"></i>
+                                {{ context }}</span
+                            >
+                        </template>
+                        <b-dropdown-item
+                            @click="switchContext(profile.githubProfile.login)"
+                            ><i class="fas fa-user fa-fw"></i>
+                            Yours</b-dropdown-item
+                        >
+                        <b-dropdown-item @click="switchContext('')"
+                            ><i class="fas fa-users fa-fw"></i>
+                            Public</b-dropdown-item
+                        >
+                        <b-dropdown-divider></b-dropdown-divider>
+                        <b-dropdown-header
+                            >Your Organizations</b-dropdown-header
+                        >
+                        <b-dropdown-item
+                            @click="switchContext(org.login)"
+                            v-for="org in profile.githubOrganizations"
+                            v-bind:key="org.login"
+                            >{{ org.login }}</b-dropdown-item
+                        >
+                    </b-dropdown>
+                    <b-popover
                         v-if="profile.hints"
                         triggers="hover"
                         placement="topleft"
                         target="switch-workflow-context"
                         title="Workflow Context"
-                        >Click here to toggle between public workflows and your
-                        own.</b-popover
-                    ></b-col
-                >
+                        >Click here to toggle between public, organization, and
+                        your own personal workflow context.</b-popover
+                    >
+                </b-col>
                 <b-col
                     md="auto"
                     class="ml-0 mb-1"
                     align-self="center"
-                    v-if="!contextPublic"
+                    v-if="context !== ''"
                     ><b-button
                         id="bind-workflow"
                         :disabled="bindingWorkflow || workflowsLoading"
@@ -70,11 +89,7 @@
                         workflow.</b-popover
                     ></b-col
                 >
-                <b-col
-                    md="auto"
-                    class="ml-0 mb-1"
-                    align-self="center"
-                    v-if="!contextPublic"
+                <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-workflows"
                         :disabled="workflowsLoading || bindingWorkflow"
@@ -152,30 +167,15 @@
                     <blurb :linkable="true" :workflow="workflow"></blurb>
                 </b-card>
             </b-card-group>
-            <b-card-group deck columns v-else-if="getOrgWorkflows.length !== 0">
-                <b-card
-                    v-for="workflow in getOrgWorkflows"
-                    :key="workflow.repo.name"
-                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                    :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                    border-variant="default"
-                    :header-border-variant="
-                        profile.darkMode ? 'secondary' : 'default'
-                    "
-                    :text-variant="profile.darkMode ? 'white' : 'dark'"
-                    style="min-width: 30rem;"
-                    class="overflow-hidden mb-4"
-                >
-                    <blurb :linkable="true" :workflow="workflow"></blurb>
-                </b-card>
-            </b-card-group>
             <b-row v-else
                 ><b-col
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     >{{
-                        contextPublic
+                        context === ''
                             ? 'No workflows have been published by the community yet.'
-                            : "You haven't created any workflow bindings yet."
+                            : context === profile.githubProfile.login
+                            ? "You haven't created any workflow bindings yet."
+                            : 'This organization has no workflow bindings yet.'
                     }}</b-col
                 ></b-row
             >
@@ -648,16 +648,13 @@ export default {
             // bindingBranch: '',
             // bindingBranchOptions: [],
             loadingBranchOptions: false,
-            contextPublic: true,
+            context: '',
             contextToggling: false
         };
     },
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
-        contextPublic: function(_) {
-            // this.$store.dispatch()
-        },
         boundWorkflows: function() {
             // noop
         },
@@ -671,9 +668,9 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        toggleContext() {
+        switchContext(ctx) {
             this.contextToggling = true;
-            this.contextPublic = !this.contextPublic;
+            this.context = ctx;
             this.contextToggling = false;
         },
         // onWorkflowNameChange: debounce(function() {
@@ -797,12 +794,17 @@ export default {
             return 0;
         },
         async refreshWorkflows() {
-            if (this.contextPublic)
+            if (this.context === '')
                 await this.$store.dispatch('workflows/refreshPublic');
-            else
+            else if (this.context === this.profile.githubProfile.login)
                 await this.$store.dispatch(
                     'workflows/refreshPersonal',
                     this.profile.githubProfile.login
+                );
+            else
+                await this.$store.dispatch(
+                    'workflows/refreshOrg',
+                    this.context
                 );
         },
         selectBinding(workflow) {
@@ -818,6 +820,7 @@ export default {
         ...mapGetters('workflows', [
             'boundWorkflows',
             'orgWorkflows',
+            'orgWorkflowsLoading',
             'personalWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
@@ -841,9 +844,11 @@ export default {
             return this.$route.name === 'workflows';
         },
         getWorkflows() {
-            return this.contextPublic
+            return this.context === ''
                 ? this.publicWorkflows
-                : this.boundWorkflows;
+                : this.context === this.profile.githubProfile.login
+                ? this.boundWorkflows
+                : this.orgWorkflows[this.context];
             // return (this.contextPublic
             //     ? this.publicWorkflows
             //     : this.personalWorkflows
@@ -851,13 +856,12 @@ export default {
             //     workflow.config.name.includes(this.searchName)
             // );
         },
-        getOrgWorkflows() {
-            return this.orgWorkflows;
-        },
         workflowsLoading() {
-            return this.contextPublic
+            return this.context === ''
                 ? this.publicWorkflowsLoading
-                : this.personalWorkflowsLoading;
+                : this.context === this.profile.githubProfile.login
+                ? this.personalWorkflowsLoading
+                : this.orgWorkflowsLoading;
         },
         bindingSelected() {
             return this.binding !== null;

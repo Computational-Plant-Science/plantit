@@ -9,7 +9,7 @@ export const workflows = {
         publicLoading: true,
         personal: [],
         personalLoading: true,
-        org: [],
+        org: {},
         orgLoading: true,
         recentlyRun: {}
     }),
@@ -255,7 +255,9 @@ export const workflows = {
                     else if (l.validation['is_valid']) return -1;
                     else return 1;
                 }),
-        orgWorkflows: state => state.org.filter(workflow => workflow.bound),
+        // orgWorkflows: state => state.org.filter(workflow => workflow.bound),
+        orgWorkflows: state => state.org,
+        orgWorkflowsLoading: state => state.orgLoading,
         personalWorkflowsLoading: state => state.personalLoading,
         recentlyRunWorkflows: state => state.recentlyRun
     }
