@@ -28,6 +28,7 @@
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
                     ><b-popover
+                        v-if="profile.hints"
                         triggers="hover"
                         placement="topleft"
                         target="switch-workflow-context"
@@ -60,6 +61,7 @@
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
                     ><b-popover
+                        v-if="profile.hints"
                         triggers="hover"
                         placement="bottomleft"
                         target="bind-workflow"
@@ -93,6 +95,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
                     ><b-popover
+                        v-if="profile.hints"
                         triggers="hover"
                         placement="bottomright"
                         target="refresh-workflows"
@@ -246,7 +249,7 @@
                     ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Bind a workflow
                     </h4></b-col
-                ><b-col md="auto"
+                ><!--<b-col md="auto"
                     ><b-button
                         :disabled="personalWorkflowsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
@@ -266,7 +269,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i>Rescan
                         Workflows</b-button
                     ></b-col
-                ></b-row
+                >--></b-row
             >
             <div v-if="personalWorkflowsLoading">
                 <b-row>
@@ -312,13 +315,11 @@
             </div>
             <div v-else>
                 <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    Select the <i class="fab fa-github fa-fw"></i>GitHub
-                    repository containing your workflow.
-                </p>
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    To connect a repository you must have a configuration file
-                    named
-                    <code>plantit.yaml</code> in the project root. If you don't
+                    Select a <i class="fab fa-github fa-fw"></i>GitHub
+                    repository and branch corresponding to your workflow. To
+                    connect a workflow you must have a configuration file named
+                    <code>plantit.yaml</code> in your project root.
+                    <!-- If you don't
                     see your repo listed here, click
                     <b-badge
                         :variant="profile.darkMode ? 'dark' : 'outline-light'"
@@ -326,7 +327,7 @@
                         Workflows</b-badge
                     >
                     to run a fresh scan for repositories with configuration
-                    files.
+                    files.-->
                 </p>
                 <b-row class="mb-1"
                     ><b-col
@@ -344,7 +345,7 @@
                     :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                     :text-variant="profile.darkMode ? 'white' : 'dark'"
                     class="overflow-hidden"
-                    v-for="workflow in bindableWorkflows"
+                    v-for="workflow in sortedBindableWorkflows"
                     v-bind:key="workflow.config.name + workflow.branch.name"
                     no-body
                     ><b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
@@ -823,6 +824,19 @@ export default {
             'boundWorkflows',
             'bindableWorkflows'
         ]),
+        sortedBindableWorkflows() {
+            return [...this.bindableWorkflows].sort(function(a, b) {
+                if (a.config.name === b.config.name) {
+                    if (a.branch.name < b.branch.name) return -1;
+                    if (a.branch.name > b.branch.name) return 1;
+                    return 0;
+                } else {
+                    if (a.config.name < b.config.name) return -1;
+                    if (a.config.name > b.config.name) return 1;
+                    return 0;
+                }
+            });
+        },
         isRootPath() {
             return this.$route.name === 'workflows';
         },

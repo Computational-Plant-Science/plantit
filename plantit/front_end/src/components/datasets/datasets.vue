@@ -35,6 +35,7 @@
                                 ><i class="fas fa-users"></i> Public</span
                             ></b-button
                         ><b-popover
+                            v-if="profile.hints"
                             triggers="hover"
                             placement="left"
                             target="switch-dataset-context"
@@ -66,6 +67,7 @@
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
                         ><b-popover
+                            v-if="profile.hints"
                             triggers="hover"
                             placement="bottom"
                             target="refresh-datasets"

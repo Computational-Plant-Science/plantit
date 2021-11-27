@@ -33,6 +33,7 @@
                         ><i v-else class="fas fa-redo mr-1"></i
                         >{{ tasksLoading ? 'Loading...' : 'Refresh' }}</b-button
                     ><b-popover
+                        v-if="profile.hints"
                         triggers="hover"
                         placement="left"
                         target="refresh-tasks"
@@ -448,6 +449,7 @@
                                                 : 'Load More'
                                         }}</b-button
                                     ><b-popover
+                                        v-if="profile.hints"
                                         triggers="hover"
                                         placement="left"
                                         target="load-more-completed-tasks"
