@@ -1,4 +1,7 @@
-FROM python:buster
+# due to python 3.10 "loop argument must agree with lock" issue we use 3.11
+#   - https://github.com/django/channels_redis/issues/278
+#   - https://bugs.python.org/issue45416
+FROM python:3.11-rc-bullseye
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get -y update && apt-get install -y \
@@ -19,7 +22,7 @@ RUN apt-get -y update && apt-get install -y \
     libfile-mimeinfo-perl \
     qpdf \
     libimage-exiftool-perl \
-    ufraw-batch \
+    # ufraw-batch \
     ffmpeg \
     scribus \
     libreoffice \

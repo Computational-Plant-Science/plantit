@@ -269,7 +269,7 @@
                                             :data="workflowPlotData"
                                             :layout="workflowPlotLayout"
                                         ></Plotly></b-col></b-col>-->
-                                            <b-col md="auto" class="mt-3">
+                                            <b-col md="auto" class="mt-3" v-if="profile.stats !== null">
                                                 <h5
                                                     :class="
                                                         profile.darkMode

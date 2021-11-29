@@ -458,7 +458,6 @@ async def refresh_personal_workflow_cache(github_username: str):
     # update the cache
     redis = RedisClient.get()
     for workflow in all_wfs:
-        pprint.pprint(workflow)
         redis.set(f"workflows/{github_username}/{workflow['repo']['name']}/{workflow['branch']['name']}", json.dumps(del_none(workflow)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
 
