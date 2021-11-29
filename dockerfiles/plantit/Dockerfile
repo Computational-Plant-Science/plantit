@@ -1,7 +1,4 @@
-# due to python 3.10 "loop argument must agree with lock" issue we use 3.11
-#   - https://github.com/django/channels_redis/issues/278
-#   - https://bugs.python.org/issue45416
-FROM python:3.11-rc-bullseye
+FROM python:bullseye
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get -y update && apt-get install -y \
