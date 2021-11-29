@@ -10,6 +10,7 @@
                 >
                 <b-col align-self="center" class="mb-1" md="auto">
                     <b-dropdown
+                        dropleft
                         id="switch-workflow-context"
                         :disabled="workflowsLoading || bindingWorkflow"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
@@ -43,7 +44,8 @@
                             @click="switchContext(org.login)"
                             v-for="org in profile.githubOrganizations"
                             v-bind:key="org.login"
-                            >{{ org.login }}</b-dropdown-item
+                            ><i class="fas fa-building fa-fw"></i>
+                            {{ org.login }}</b-dropdown-item
                         >
                     </b-dropdown>
                     <b-popover
@@ -828,7 +830,15 @@ export default {
             'bindableWorkflows'
         ]),
         sortedBindableWorkflows() {
-            return [...this.bindableWorkflows].sort(function(a, b) {
+            let bindable =
+                this.context === this.profile.githubProfile.login
+                    ? this.bindableWorkflows
+                    : this.context === ''
+                    ? []
+                    : this.orgWorkflows[this.context].filter(wf => {
+                          return wf.bound;
+                      });
+            return [...bindable].sort(function(a, b) {
                 if (a.config.name === b.config.name) {
                     if (a.branch.name < b.branch.name) return -1;
                     if (a.branch.name > b.branch.name) return 1;
