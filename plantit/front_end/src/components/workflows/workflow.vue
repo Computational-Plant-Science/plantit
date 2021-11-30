@@ -4411,7 +4411,7 @@ export default {
                 time: {
                     limit: this.timeLimit,
                     units: this.timeLimitUnits
-                }
+                },
                 // iterations: this.iterations
             };
             if ('jobqueue' in this.getWorkflow.config)
@@ -4432,8 +4432,8 @@ export default {
                 };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
-            if ('branch' in this.getWorkflow.config)
-                config['branch'] = this.getWorkflow.config.branch;
+            if ('branch' in this.getWorkflow)
+                config['branch'] = this.getWorkflow.branch;
             if (this.getWorkflow.config.mount !== null)
                 config['bind_mounts'] = this.getWorkflow.config.mount;
             if (this.input !== undefined && this.input.path) {
