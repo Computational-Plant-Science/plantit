@@ -11,7 +11,7 @@
         >
             <navigation v-if="!isRootPath"></navigation>
             <router-view
-                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                :class="profile.darkMode ? 'theme-dark mt-1' : 'theme-light mt-1'"
             ></router-view>
             <br/>
         </b-container>

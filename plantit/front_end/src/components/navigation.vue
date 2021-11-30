@@ -561,7 +561,7 @@
         <b-navbar
             toggleable="sm"
             class="logo p-0 pt-1 pb-2"
-            style="min-height: 44px; max-height: 46px; z-index: 1000"
+            style="min-height: 40px; max-height: 40px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
@@ -582,7 +582,7 @@
                             <b-img
                                 class="m-0 p-0 mb-3"
                                 center
-                                width="39px"
+                                width="30px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -591,7 +591,7 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 mt-3"
+                        class="m-o p-0 mt-2"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
@@ -644,7 +644,7 @@
                         <b-nav-item
                             title="About"
                             to="/about"
-                            class="mt-2"
+                            class="mt-1"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -684,7 +684,7 @@
                         <b-nav-item
                             title="Stats"
                             to="/stats"
-                            class="mt-2"
+                            class="mt-1"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -703,7 +703,7 @@
                         <b-nav-item
                             title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
-                            class="mt-2"
+                            class="mt-1"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -721,7 +721,7 @@
                         >
                         <b-nav-item
                             href="https://github.com/Computational-Plant-Science/plantit"
-                            class="mt-2"
+                            class="mt-1"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -771,7 +771,7 @@
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="p-0 mt-2 ml-0 mr-0"
+                        class="p-0 mt-1 ml-0 mr-0"
                     >
                         <b-button
                             class="mt-2 text-left"
@@ -790,7 +790,7 @@
                         :menu-class="
                             profile.darkMode ? 'theme-dark' : 'theme-light'
                         "
-                        style="font-size: 12pt"
+                        style="font-size: 14pt"
                     >
                         <template #button-content>
                             <b-button
@@ -1514,6 +1514,7 @@ export default {
 
 .dropdown-custom:hover
   background-color: transparent !important
+  // border: 1px solid transparent !important
 
 .crumb-light
   font-size: 16px
