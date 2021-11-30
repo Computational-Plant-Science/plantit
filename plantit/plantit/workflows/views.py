@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from plantit.github import get_repo_readme, get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
-from plantit.utils import get_user_django_profile, list_public_workflows, list_personal_workflows, get_workflow, \
+from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
     workflow_to_dict, check_user_authentication
 from plantit.misc import del_none
 from plantit.users.models import Profile
@@ -20,16 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 async def list_public(request):
-    if await check_user_authentication(request.user):
-        profile = await get_user_django_profile(request.user)
-        github_token = profile.github_token
-        cyverse_token = profile.cyverse_access_token
-    else:
-        github_token = None
-        cyverse_token = None
+    # if await check_user_authentication(request.user):
+    #     profile = await get_user_django_profile(request.user)
+    #     github_token = profile.github_token
+    #     cyverse_token = profile.cyverse_access_token
+    # else:
+    #     github_token = None
+    #     cyverse_token = None
 
-    invalidate = request.GET.get('invalidate', False)
-    workflows = await list_public_workflows(github_token=github_token, cyverse_token=cyverse_token, invalidate=invalidate)
+    # invalidate = request.GET.get('invalidate', False)
+    # workflows = await list_public_workflows(github_token=github_token, cyverse_token=cyverse_token, invalidate=invalidate)
+    workflows = list_public_workflows()
     return JsonResponse({'workflows': workflows})
 
 
@@ -44,14 +45,12 @@ async def list_personal(request, owner):
         except:
             return HttpResponseNotFound()
 
-    invalidate = request.GET.get('invalidate', False)
-    invalidate = False
     redis = RedisClient.get()
+
+    # if user's workflow cache is empty (re)populate it
     last_updated = redis.get(f"workflows_updated/{owner}")
     num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
-
-    # if user's workflow cache is empty or invalidation is requested, (re)populate it before returning
-    if last_updated is None or num_cached == 0:  # or invalidate:
+    if last_updated is None or num_cached == 0:
         logger.info(f"GitHub user {owner}'s workflow cache is empty, populating it now")
         refresh_personal_workflows.s(owner).apply_async()
 
@@ -76,7 +75,7 @@ async def list_org(request, member):
         # if org's workflow cache is empty or invalidation is requested, (re)populate it before returning
         if last_updated is None or num_cached == 0:  # or invalidate:
             logger.info(f"GitHub organization {org_name}'s workflow cache is empty, populating it now")
-            refresh_personal_workflows.s(org_name).apply_async()
+            await refresh_org_workflow_cache(org_name, profile.github_token, profile.cyverse_access_token)
 
         workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
         wfs[org_name] = workflows

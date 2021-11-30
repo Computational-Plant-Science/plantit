@@ -254,7 +254,7 @@ async def calculate_user_statistics(user: User) -> dict:
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
     owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for
-                       workflow in await list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
+                       workflow in list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
     used_workflows_counter = Counter(used_workflows)
     unique_used_workflows = list(np.unique(used_workflows))
@@ -380,9 +380,17 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
 # workflows
 
 @sync_to_async
-def list_workflows(user: User = None, public: bool = None):
+def list_user_workflows(user: User, public: bool = None):
     workflows = Workflow.objects.all()
     if user is not None: workflows = workflows.filter(user=user)
+    if public is not None: workflows = workflows.filter(public=public)
+    return list(workflows)
+
+
+@sync_to_async
+def list_organization_workflows(organization: str, public: bool = None):
+    workflows = Workflow.objects.all()
+    if organization is not None: workflows = workflows.filter(organization=organization)
     if public is not None: workflows = workflows.filter(public=public)
     return list(workflows)
 
@@ -409,6 +417,16 @@ async def workflow_to_dict(workflow: Workflow, github_token: str, cyverse_token:
     }
 
 
+
+async def refresh_online_users_workflow_cache():
+    users = await sync_to_async(User.objects.all)()
+    online = filter_online(users)
+    for user in online:
+        profile = await sync_to_async(Profile.objects.get)(user=user)
+        empty_personal_workflow_cache(profile.github_username)
+        await refresh_personal_workflow_cache(profile.github_username)
+
+
 async def refresh_personal_workflow_cache(github_username: str):
     if github_username is None or github_username == '': raise ValueError(f"No GitHub username provided")
 
@@ -424,12 +442,12 @@ async def refresh_personal_workflow_cache(github_username: str):
 
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    owned = await list_workflows(user=user)
+    owned = await list_user_workflows(user=user)
     bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token) for workflow in owned])
     tasks = await asyncio.gather(*[
         bind,
-        github.list_connectable_repos_by_owner(github_username, profile.github_token),
-        github.list_connectable_repos_by_org(github_username, profile.github_token)])
+        github.list_connectable_repos_by_owner(github_username, profile.github_token)])
+        # github.list_connectable_repos_by_org(github_username, profile.github_token)])
     bound_wfs = tasks[0]
     bindable_wfs = tasks[1]
     all_wfs = []
@@ -465,57 +483,83 @@ async def refresh_personal_workflow_cache(github_username: str):
         "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-async def refresh_online_users_workflow_cache():
-    users = await sync_to_async(User.objects.all)()
-    online = filter_online(users)
-    for user in online:
-        profile = await sync_to_async(Profile.objects.get)(user=user)
-        empty_personal_workflow_cache(profile.github_username)
-        await refresh_personal_workflow_cache(profile.github_username)
+async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_token: str):
+    # redis = RedisClient.get()
+    # public_workflows = await list_user_workflows()
 
+    # for workflow, user in list(zip(public_workflows, [await get_workflow_user(workflow) for workflow in public_workflows])):
+    #     if user is not None: continue
 
-async def refresh_org_workflow_cache(github_token: str, cyverse_token: str):
+    #     # workflow is not owned by any particular user (e.g., added by admins for shared GitHub group) so explicitly refresh the binding
+    #     logger.info(f"Binding unclaimed workflow {workflow.repo_owner}/{workflow.repo_name}")
+    #     bundle = await workflow_to_dict(workflow, github_token, cyverse_token)
+    #     redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}/{workflow.repo_branch}", json.dumps(del_none(bundle)))
+
+    # redis.set(f"public_workflows_updated", timezone.now().timestamp())
+
+    # scrape GitHub to synchronize repos and workflow config
+    owned = await list_organization_workflows(organization=org_name)
+    bound_wfs = []
+    bindable_wfs = await github.list_connectable_repos_by_org(org_name, github_token)
+    # bind = asyncio.gather(*[workflow_to_dict(workflow, github_token, cyverse_token) for workflow in owned])
+    # tasks = await asyncio.gather(*[
+    #     bind,
+    #     github.list_connectable_repos_by_org(org_name, github_token)])
+    # bound_wfs = tasks[0]
+    # bindable_wfs = tasks[1]
+    all_wfs = []
+
+    # find and filter bindable workflows
+    for bindable_wf in bindable_wfs:
+        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] == bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in bound_wfs]):
+            bindable_wf['public'] = False
+            bindable_wf['bound'] = False
+            all_wfs.append(bindable_wf)
+
+    # find and filter bound workflows
+    missing = 0
+    for bound_wf in [b for b in bound_wfs if b['repo']['owner']['login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
+        name = bound_wf['config']['name']
+        branch = bound_wf['branch']['name']
+        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in bindable_wfs]):
+            missing += 1
+            logger.warning(f"Configuration file missing for {org_name}'s workflow {name} (branch {branch})")
+            bound_wf['validation'] = {
+                'is_valid': False,
+                'errors': ["Configuration file missing"]
+            }
+        all_wfs.append(bound_wf)
+
+    # update the cache
     redis = RedisClient.get()
-    public_workflows = await list_workflows()
+    for workflow in all_wfs:
+        redis.set(f"workflows/{org_name}/{workflow['repo']['name']}/{workflow['branch']['name']}", json.dumps(del_none(workflow)))
+    redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
 
-    for workflow, user in list(zip(public_workflows, [await get_workflow_user(workflow) for workflow in public_workflows])):
-        if user is not None: continue
-
-        # workflow is not owned by any particular user (e.g., added by admins for shared GitHub group) so explicitly refresh the binding
-        logger.info(f"Binding unclaimed workflow {workflow.repo_owner}/{workflow.repo_name}")
-        bundle = await workflow_to_dict(workflow, github_token, cyverse_token)
-        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}/{workflow.repo_branch}", json.dumps(del_none(bundle)))
-
-    redis.set(f"public_workflows_updated", timezone.now().timestamp())
+    logger.info(f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {org_name}'s workflow cache" + (
+        "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-async def list_public_workflows(github_token: str = None, cyverse_token: str = None, invalidate: bool = False) -> List[dict]:
+def list_public_workflows(github_token: str = None, cyverse_token: str = None, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
-    last_updated = redis.get('public_workflows_updated')
-    num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
+    # last_updated = redis.get('public_workflows_updated')
+    # num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
 
     # if public workflow cache is empty or invalidation is requested, (re)populate it before returning
-    if last_updated is None or num_cached == 0 or invalidate:
-        if github_token is not None and cyverse_token is not None:
-            logger.info(f"Populating public workflow cache")
-            await refresh_org_workflow_cache(github_token, cyverse_token)
-        else:
-            logger.warning(f"No GitHub API token provided, can't refresh cache")
+    # if last_updated is None or num_cached == 0 or invalidate:
+    #     if github_token is not None and cyverse_token is not None:
+    #         logger.info(f"Populating public workflow cache")
+    #         await refresh_org_workflow_cache(github_token, cyverse_token)
+    #     else:
+    #         logger.warning(f"No GitHub API token provided, can't refresh cache")
 
-    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
-    return [workflow for workflow in workflows if workflow['public']]
+    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if wf['public']]
+    # return [workflow for workflow in workflows if workflow['public']]
+    return workflows
 
 
-async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
+def list_personal_workflows(owner: str) -> List[dict]:
     redis = RedisClient.get()
-    last_updated = redis.get(f"workflows_updated/{owner}")
-    num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
-
-    # if user's workflow cache is empty or invalidation is requested, (re)populate it before returning
-    if last_updated is None or num_cached == 0:  # or invalidate:
-        logger.info(f"GitHub user {owner}'s workflow cache is empty, populating it now")
-        refresh_personal_workflows.s(owner).apply_async()
-
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 

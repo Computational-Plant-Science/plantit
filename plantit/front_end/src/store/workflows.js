@@ -55,6 +55,7 @@ export const workflows = {
             if (j === -1) state.personal.unshift(workflow);
             else Vue.set(state.personal, j, workflow);
 
+            let org = state.org.values()
             let k = state.org.findIndex(
                 wf =>
                     wf.repo.owner.login === workflow.repo.owner.login &&

@@ -221,8 +221,12 @@ async def list_repositories(owner: str, token: str) -> list:
     }
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.get(f"https://api.github.com/users/{owner}/repos")
-        repositories = response.json()
-        return repositories
+        jsn = response.json()
+        # if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']: raise ValueError(jsn['message'])
+        if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
+            logger.warning(jsn['message'])
+            return []
+        return jsn
 
 
 @retry(
@@ -315,51 +319,51 @@ async def list_connectable_repos_by_org(owner: str, token: str) -> List[dict]:
     }
     async with httpx.AsyncClient(headers=headers) as client:
         workflows = []
-        orgs = await list_user_organizations(owner, token)
-        for org in orgs:
-            org_name = org['login']
-            org_repos = await list_repositories(org_name, token)
-            for repository in org_repos:
-                branches = await list_repo_branches(org_name, repository['name'], token)
-                for branch in branches:
-                    response = await client.get(
-                        f"https://raw.githubusercontent.com/{org_name}/{repository['name']}/{branch['name']}/plantit.yaml",
-                        headers={
-                            "Authorization": f"token {token}",
-                            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-                        })
+        org_repos = await list_repositories(owner, token)
 
-                    if response.status_code == 404:
-                        logger.info(f"No plantit.yaml in {org_name}/{repository['name']} branch {branch['name']}")
-                        continue
-                    if response.status_code != 200:
-                        logger.warning(f"Failed to retrieve plantit.yaml from {org_name}/{repository['name']} branch {branch['name']}")
-                        continue
+        for repository in org_repos:
+            branches = await list_repo_branches(owner, repository['name'], token)
+            for branch in branches:
+                response = await client.get(
+                    f"https://raw.githubusercontent.com/{owner}/{repository['name']}/{branch['name']}/plantit.yaml",
+                    headers={
+                        "Authorization": f"token {token}",
+                        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+                    })
 
-                    try:
-                        config = yaml.safe_load(response.text)
-                        validation = validate_repo_config(config, token)
-                        workflows.append({
-                            'repo': repository,
-                            'config': config,
-                            'branch': branch,
-                            # 'readme': readme,
-                            'validation': {
-                                'is_valid': validation[0],
-                                'errors': validation[1]
-                            }
-                        })
-                    except Exception:
-                        workflows.append({
-                            'repo': repository,
-                            'config': {},
-                            'branch': branch,
-                            # 'readme': readme,
-                            'validation': {
-                                'is_valid': False,
-                                'errors': [traceback.format_exc()]
-                            }
-                        })
+                if response.status_code == 404:
+                    logger.info(f"No plantit.yaml in {owner}/{repository['name']} branch {branch['name']}")
+                    continue
+                if response.status_code != 200:
+                    logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']} branch {branch['name']}")
+                    continue
+
+                try:
+                    config = yaml.safe_load(response.text)
+                    validation = validate_repo_config(config, token)
+                    workflows.append({
+                        'repo': repository,
+                        'config': config,
+                        'branch': branch,
+                        # 'readme': readme,
+                        'validation': {
+                            'is_valid': validation[0],
+                            'errors': validation[1]
+                        }
+                    })
+                except Exception:
+                    workflows.append({
+                        'repo': repository,
+                        'config': {},
+                        'branch': branch,
+                        # 'readme': readme,
+                        'validation': {
+                            'is_valid': False,
+                            'errors': [traceback.format_exc()]
+                        }
+                    })
+
+        return workflows
 
 
 @retry(
@@ -435,4 +439,10 @@ async def list_user_organizations(username: str, token: str) -> List[dict]:
     async with httpx.AsyncClient(headers=headers) as client:
         response = await client.get(f"https://api.github.com/users/{username}/orgs")
         if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
-        return response.json()
+        jsn = response.json()
+        # if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']: raise ValueError(jsn['message'])
+        if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
+            logger.warning(jsn['message'])
+            return []
+        return jsn
+        # return response.json()

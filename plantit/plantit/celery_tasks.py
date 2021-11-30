@@ -446,7 +446,7 @@ def refresh_personal_workflows(owner: str):
 @app.task()
 def refresh_all_workflows():
     async_to_sync(refresh_online_users_workflow_cache)  # (github_token, cyverse_token)
-    async_to_sync(refresh_org_workflow_cache(github_token=settings.GITHUB_TOKEN, cyverse_token=TerrainToken.get()))
+    # async_to_sync(refresh_org_workflow_cache(github_token=settings.GITHUB_TOKEN, cyverse_token=TerrainToken.get()))
 
 
 @app.task()

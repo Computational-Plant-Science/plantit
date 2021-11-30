@@ -23,8 +23,7 @@
                             ><span v-else-if="context === ''"
                                 ><i class="fas fa-users"></i> Public</span
                             ><span v-else
-                                ><i class="fas fa-building"></i>
-                                {{ context }}</span
+                                ><i class="fas fa-building"></i> {{ context }}</span
                             >
                         </template>
                         <b-dropdown-item
@@ -174,7 +173,7 @@
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     >{{
                         context === ''
-                            ? 'No workflows have been published by the community yet.'
+                            ? 'No public workflows have been published yet.'
                             : context === profile.githubProfile.login
                             ? "You haven't created any workflow bindings yet."
                             : 'This organization has no workflow bindings yet.'

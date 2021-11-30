@@ -7,6 +7,7 @@ class Workflow(models.Model):
         unique_together = ('repo_owner', 'repo_name', 'repo_branch')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    organization = models.CharField(max_length=280, null=True, blank=True)
     repo_owner = models.CharField(max_length=280, null=True, blank=True)
     repo_name = models.CharField(max_length=280, null=True, blank=True)
     repo_branch = models.CharField(max_length=280, null=True, blank=True, default='master')
