@@ -850,13 +850,14 @@ def parse_time_limit_seconds(time):
 def create_task(username: str,
                 agent_name: str,
                 workflow: dict,
+                branch: dict,
                 name: str = None,
                 guid: str = None,
                 investigation: str = None,
                 study: str = None):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
-    repo_branch = workflow['branch']['name']
+    repo_branch = branch['name']
     agent = Agent.objects.get(name=agent_name)
     user = User.objects.get(username=username)
     if guid is None: guid = str(uuid.uuid4())  # if the browser client hasn't set a GUID, create one

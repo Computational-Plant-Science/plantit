@@ -41,6 +41,7 @@ def get_all_or_create(request):
     elif request.method == 'POST':
         if workflow['type'] == 'Now':
             config = workflow['config']
+            branch = workflow['branch']
             task_name = config.get('task_name', None)
             task_guid = config.get('task_guid', None)
 
@@ -54,6 +55,7 @@ def get_all_or_create(request):
                 username=user.username,
                 agent_name=agent.name,
                 workflow=workflow,
+                branch=branch,
                 name=task_name if task_name is not None and task_name != '' else task_guid,
                 guid=task_guid,
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,

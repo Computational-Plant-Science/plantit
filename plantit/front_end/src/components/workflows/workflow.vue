@@ -4432,8 +4432,8 @@ export default {
                 };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
-            if ('branch' in this.getWorkflow)
-                config['branch'] = this.getWorkflow.branch;
+            // if ('branch' in this.getWorkflow)
+            //     config['branch'] = this.getWorkflow.branch;
             if (this.getWorkflow.config.mount !== null)
                 config['bind_mounts'] = this.getWorkflow.config.mount;
             if (this.input !== undefined && this.input.path) {
@@ -4481,6 +4481,7 @@ export default {
 
             let data = {
                 repo: this.getWorkflow.repo,
+                branch: this.getWorkflow.branch,
                 config: config,
                 type: this.submitType,
                 miappe: {
