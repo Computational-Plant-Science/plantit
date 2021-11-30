@@ -193,7 +193,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                   Your Account Summary
+                                                   Account Summary
                                                 </h2>
                                             </b-col>
                                         </b-row>

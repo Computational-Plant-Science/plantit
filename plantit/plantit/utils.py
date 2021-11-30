@@ -518,7 +518,7 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_t
 
     # find and filter bound workflows
     missing = 0
-    for bound_wf in [b for b in bound_wfs if b['repo']['owner']['login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
+    for bound_wf in [b for b in bound_wfs if 'owner' in b['repo'] and b['repo']['owner']['login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
         name = bound_wf['config']['name']
         branch = bound_wf['branch']['name']
         if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in bindable_wfs]):

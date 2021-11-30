@@ -338,6 +338,8 @@ async def list_connectable_repos_by_org(owner: str, token: str) -> List[dict]:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']} branch {branch['name']}")
                     continue
 
+                repository['organization'] = owner
+
                 try:
                     config = yaml.safe_load(response.text)
                     validation = validate_repo_config(config, token)
