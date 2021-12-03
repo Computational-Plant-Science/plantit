@@ -6,6 +6,7 @@ export const user = {
     namespaced: true,
     state: () => ({
         profile: {
+            first: false,
             loggedIn: false,
             keycloak: null,
             darkMode: false,
@@ -20,6 +21,9 @@ export const user = {
         profileLoading: true
     }),
     mutations: {
+        setFirst(state, first) {
+            state.profile.first = first;
+        },
         setLoggedIn(state, loggedIn) {
             state.profile.loggedIn = loggedIn;
         },
@@ -52,6 +56,9 @@ export const user = {
         }
     },
     actions: {
+        setFirst({ commit }, first) {
+            commit('setFirst', first);
+        },
         async toggleDarkMode({ commit }) {
             await axios
                 .get('/apis/v1/users/toggle_dark_mode/')
@@ -103,6 +110,9 @@ export const user = {
                     commit('setCyverseProfile', response.data.cyverse_profile);
                     commit('setGithubProfile', response.data.github_profile);
                     commit('setGithubOrganizations', response.data.github_organizations);
+
+                    // set first login
+                    commit('setFirst', response.data.django_profile.first);
 
                     // set dark mode
                     commit(

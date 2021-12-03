@@ -103,9 +103,9 @@
                             "
                         ></b-img>
                         Projects</b-button
-                    ><!-- --><b-popover
+                    ><b-popover
                         v-if="profile.hints && isRootPath"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="projects-button"
                         title="Your MIAPPE projects"
@@ -121,7 +121,7 @@
                         Datasets</b-button
                     ><b-popover
                         v-if="profile.hints && isRootPath"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="datasets-button"
                         title="Your Datasets"
@@ -136,7 +136,7 @@
                         ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
                     ><b-popover
                         v-if="profile.hints && isRootPath"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="workflows-button"
                         title="Your Workflows"
@@ -152,7 +152,7 @@
                         ><i class="fas fa-server fa-fw"></i> Agents</b-button
                     ><b-popover
                         v-if="profile.hints && isRootPath"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="agents-button"
                         title="Your Agents"
@@ -167,7 +167,7 @@
                         ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
                     ><b-popover
                         v-if="profile.hints && isRootPath"
-                        triggers="manual"
+                        triggers="hover"
                         placement="bottom"
                         target="tasks-button"
                         title="Your Tasks"

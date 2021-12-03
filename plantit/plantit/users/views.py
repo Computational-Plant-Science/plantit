@@ -28,7 +28,8 @@ from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, get_user_statistics, \
+from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, \
+    get_user_statistics, \
     get_user_bundle
 
 
@@ -67,17 +68,22 @@ class IDPViewSet(viewsets.ViewSet):
             'grant_type': 'authorization_code',
             'client_id': os.environ.get('CYVERSE_CLIENT_ID'),
             'code': code,
-            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')}, auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
+            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')},
+                                 auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
 
         # if we have anything other than a 200 the auth request did not succeed
-        if response.status_code == 400: return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
-        elif response.status_code != 200: return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
+        if response.status_code == 400:
+            return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
+        elif response.status_code != 200:
+            return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
 
         content = response.json()
 
         # make sure we have CyVerse access & refresh tokens
-        if 'access_token' not in content: return HttpResponseBadRequest("Missing param on token response: 'access_token'")
-        if 'refresh_token' not in content: return HttpResponseBadRequest("Missing param on token response: 'refresh_token'")
+        if 'access_token' not in content: return HttpResponseBadRequest(
+            "Missing param on token response: 'access_token'")
+        if 'refresh_token' not in content: return HttpResponseBadRequest(
+            "Missing param on token response: 'refresh_token'")
 
         # decode the tokens
         access_token = content['access_token']
@@ -132,7 +138,8 @@ class IDPViewSet(viewsets.ViewSet):
                 age_secs = age.total_seconds()
                 max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
                 if age_secs > max_secs:
-                    self.logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
+                    self.logger.info(
+                        f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
                     refresh_personal_workflows.s(owner).apply_async()
 
         # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
@@ -144,7 +151,8 @@ class IDPViewSet(viewsets.ViewSet):
             stats = redis.get(f"stats/{user.username}")
             stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
+                self.logger.info(
+                    f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
                 aggregate_user_usage_stats.s(user.username).apply_async()
 
         # open the user's dashboard
@@ -196,6 +204,14 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     def get_object(self):
         return self.request.user
+
+    @action(methods=['get'], detail=False)
+    def acknowledge_first_login(self, request):
+        user = self.get_object()
+        user.profile.first_login = False
+        user.profile.save()
+        user.save()
+        return HttpResponse(status=200)
 
     @action(detail=False, methods=['get'])
     def toggle_push_notifications(self, request):
@@ -258,7 +274,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         stats = get_user_statistics(user) if request.user.profile.github_token != '' else None
 
         if user.profile.push_notification_status == 'pending':
-            user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
+            user.profile.push_notification_status = get_sns_subscription_status(
+                user.profile.push_notification_topic_arn)
             user.profile.save()
             user.save()
 
@@ -272,7 +289,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'push_notifications': user.profile.push_notification_status,
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_access_token,
-                'hints': user.profile.hints
+                'hints': user.profile.hints,
+                'first': user.profile.first_login
             },
             'stats': stats
         }
@@ -283,8 +301,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             except ValueError:
                 # if the CyVerse request fails, log the user out
                 logout(request)
-                return redirect("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
-                                "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
+                return redirect(
+                    "https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
+                    "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
         if request.user.profile.github_token != '' and user.profile.github_username != '':
             bundle = get_user_bundle(request.user)
@@ -399,7 +418,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         with ssh:
             try:
-                for line in execute_command(ssh=ssh, precommand=':', command=f"mkdir -p {workdir}/.plantit && cd {workdir}/.plantit && pwd", allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=':',
+                                            command=f"mkdir -p {workdir}/.plantit && cd {workdir}/.plantit && pwd",
+                                            allow_stderr=False):
                     self.logger.info(line)
                     if 'cannot' in line or '/.plantit' not in line:  # TODO are there other error cases we should catch here?
                         return HttpResponse(line, status=500)
@@ -427,7 +448,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         with ssh:
             output = []
             try:
-                for line in execute_command(ssh=ssh, precommand=precommand, command='plantit ping', directory=workdir, allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=precommand, command='plantit ping', directory=workdir,
+                                            allow_stderr=False):
                     output.append(line)
                     self.logger.info(line)
                 return JsonResponse({

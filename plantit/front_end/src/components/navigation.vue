@@ -1,5 +1,3 @@
-<!-- test test -->
-
 <template>
     <div class="m-0 p-0">
         <b-sidebar
@@ -428,7 +426,7 @@
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
                             >
-                                No tasks have completed.
+                                No tasks completed.
                             </p>
                         </b-col>
                     </b-row>
@@ -560,7 +558,7 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0 pt-1 pb-2"
+            class="logo p-0 pt-1 pb-0"
             style="min-height: 40px; max-height: 40px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
@@ -582,7 +580,7 @@
                             <b-img
                                 class="m-0 p-0 mb-3"
                                 center
-                                width="30px"
+                                width="25px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -591,42 +589,48 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 mt-2"
-                        style="background-color: transparent;"
+                        class="m-o p-0 mt-1"
+                        style="background-color: transparent"
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item
                             disabled
-                            class="ml-4"
+                            class="ml-4 mt-1"
                             :class="
                                 profile.darkMode ? 'crumb-dark' : 'crumb-light'
                             "
                         >
-                            <h2
+                            <b
                                 :class="
                                     profile.darkMode
                                         ? 'crumb-dark'
                                         : 'crumb-light'
                                 "
                             >
-                                Your Tasks ({{ tasksRunning.length }} running,
-                                {{ profile.stats.total_tasks }} total)
-                            </h2>
+                                View your tasks ({{
+                                    tasksRunning.length
+                                }}
+                                running, {{ profile.stats.total_tasks }} total)
+                            </b>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-navbar-nav class="m-0 p-0" align="center"
                         ><b-nav-item class="mt-1" href="/"
-                            ><h3
+                            ><h4
                                 :class="
                                     profile.darkMode
                                         ? 'text-white'
                                         : 'text-dark'
                                 "
-                                style="text-decoration: underline;"
+                                style="text-decoration: underline"
                             >
                                 plant<small
                                     class="mb-3 text-success"
-                                    style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                    style="
+                                        text-decoration: underline;
+                                        text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                            0 1px 0 #000, -1px 0 0 #000;
+                                    "
                                     >IT</small
                                 ><small
                                     ><small
@@ -639,10 +643,10 @@
                                                     class="fas fa-spinner"
                                                     v-else
                                                 ></i></b-badge></small></small
-                                ></small></h3
+                                ></small></h4
                         ></b-nav-item>
                         <b-nav-item
-                            title="About"
+                            title="about"
                             to="/about"
                             class="mt-1"
                             :link-class="
@@ -682,7 +686,7 @@
                             ></b-nav-item
                         >-->
                         <b-nav-item
-                            title="Stats"
+                            title="stats"
                             to="/stats"
                             class="mt-1"
                             :link-class="
@@ -701,7 +705,7 @@
                             ></b-nav-item
                         >
                         <b-nav-item
-                            title="Docs"
+                            title="docs"
                             href="https://plantit.readthedocs.io/en/latest"
                             class="mt-1"
                             :link-class="
@@ -727,7 +731,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            title="GitHub"
+                            title="github"
                         >
                             <span
                                 :class="
@@ -783,28 +787,76 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item-dropdown
+                        id="usr"
                         right
                         v-if="profile.loggedIn"
                         :title="profile.djangoProfile.username"
-                        class="p-1 m-2 mr-0 ml-0 dropdown-custom"
+                        class="p-1 m-2 mr-0 ml-0"
                         :menu-class="
                             profile.darkMode ? 'theme-dark' : 'theme-light'
                         "
                         style="font-size: 14pt"
                     >
+                        <b-popover
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            v-if="profile.first && !ackedFirst"
+                            triggers="manual"
+                            :show.sync="profile.first"
+                            target="usr"
+                            placement="bottomleft"
+                            >Welcome! Click your username to open your profile
+                            menu.
+                            <b-button
+                                block
+                                class="mt-2 text-left"
+                                title="Show hints"
+                                @click="toggleHints"
+                                :variant="
+                                    profile.darkMode
+                                        ? 'outline-dark'
+                                        : 'outline-light'
+                                "
+                            >
+                                <i class="fas fa-question-circle fa-fw"></i>
+                                Click here to
+                                <span v-if="profile.hints"> hide</span
+                                ><span v-else> show</span> hints
+                                <b-spinner
+                                    small
+                                    v-if="togglingHints"
+                                    label="Loading..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="ml-2 mb-1"
+                                ></b-spinner>
+                            </b-button>
+                            <b-button
+                                block
+                                title="Hide"
+                                @click="ackFirstLogin"
+                                class="text-left"
+                                :variant="
+                                    profile.darkMode
+                                        ? 'outline-dark'
+                                        : 'outline-light'
+                                "
+                                ><i class="fas fa-times fa-fw"></i> Click here to dismiss.</b-button
+                            ></b-popover
+                        >
                         <template #button-content>
                             <b-button
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                class="ml-0 mr-0 mt-1 text-left"
+                                class="ml-0 mr-0 text-left dropdown-custom"
                                 size="md"
                             >
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            notificationsUnread.length +
-                                            ')'
+                                        notificationsUnread.length +
+                                        ')'
                                     "
                                     v-if="notificationsUnread.length > 0"
                                     ><i
@@ -830,9 +882,17 @@
                                     ></i
                                 ></span>
                                 <b-img
+                                    id="avatar"
                                     v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="min-width: 27px; min-height: 27px; position: relative; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                    style="
+                                        min-width: 22px;
+                                        min-height: 22px;
+                                        position: relative;
+                                        left: -3px;
+                                        top: 1.5px;
+                                        border: 1px solid #e2e3b0;
+                                    "
                                     rounded="circle"
                                     :src="
                                         profile.githubProfile
@@ -867,8 +927,8 @@
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    notificationsUnread.length +
-                                    ')'
+                                notificationsUnread.length +
+                                ')'
                             "
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -1118,11 +1178,12 @@ import { guid } from '@/utils';
 export default {
     name: 'Navigation',
     components: {
-        taskblurb
+        taskblurb,
     },
     data() {
         return {
             // user data
+            ackedFirst: false,
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
@@ -1150,7 +1211,7 @@ export default {
             feedbackAnonymous: true,
             // alert countdown
             dismissSecs: 10,
-            dismissCountDown: 0
+            dismissCountDown: 0,
         };
     },
     computed: {
@@ -1160,13 +1221,13 @@ export default {
             'tasks',
             'tasksLoading',
             'tasksRunning',
-            'tasksCompleted'
+            'tasksCompleted',
         ]),
         ...mapGetters('notifications', [
             'notifications',
             'notificationsLoading',
             'notificationsRead',
-            'notificationsUnread'
+            'notificationsUnread',
         ]),
         feedbackValid() {
             return (
@@ -1178,22 +1239,22 @@ export default {
         },
         filteredRunningTasks() {
             return this.tasksRunning.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.taskSearchText)) ||
-                    sub.tags.some(tag => tag.includes(this.taskSearchText))
+                    sub.tags.some((tag) => tag.includes(this.taskSearchText))
             );
         },
         filteredCompletedTasks() {
             return this.tasksCompleted.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.taskSearchText)) ||
-                    sub.tags.some(tag => tag.includes(this.taskSearchText))
+                    sub.tags.some((tag) => tag.includes(this.taskSearchText))
             );
-        }
+        },
     },
-    created: async function() {
+    created: async function () {
         this.crumbs = this.$route.meta.crumb;
 
         // no need to load user model if we're in about or stats view
@@ -1205,7 +1266,7 @@ export default {
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
         await Promise.all([
             store.dispatch('user/loadProfile'),
-            this.getVersion()
+            this.getVersion(),
         ]);
 
         // load the rest of the model
@@ -1236,7 +1297,7 @@ export default {
             this.$store.dispatch('datasets/loadShared'),
             this.$store.dispatch('datasets/loadSharing'),
             this.$store.dispatch('projects/loadPersonal'),
-            this.$store.dispatch('projects/loadOthers')
+            this.$store.dispatch('projects/loadOthers'),
         ]);
 
         // TODO move websockets to vuex
@@ -1253,9 +1314,32 @@ export default {
         },
         alerts() {
             this.dismissCountDown = this.dismissSecs;
-        }
+        },
     },
     methods: {
+        async ackFirstLogin() {
+            await axios({
+                method: 'get',
+                url: `/apis/v1/users/acknowledge_first_login/`,
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(async (response) => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch('user/setFirst', false);
+                        this.ackedFirst = true;
+                    }
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to connect to ${this.agentName}`,
+                        guid: guid().toString(),
+                        time: moment().format(),
+                    });
+                    throw error;
+                });
+        },
         countdownChanged(dismissCountDown) {
             this.dismissCountDown = dismissCountDown;
         },
@@ -1266,18 +1350,18 @@ export default {
                 wanted: this.feedbackWanted,
                 ease: this.feedbackEase,
                 features: this.feedbackFeatures,
-                anonymous: this.feedbackAnonymous
+                anonymous: this.feedbackAnonymous,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/feedback/`,
                 headers: { 'Content-Type': 'application/json' },
-                data: data
+                data: data,
             })
                 .then(() => {
                     alert('Submitted feedback!');
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1307,12 +1391,12 @@ export default {
             await axios({
                 method: 'get',
                 url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     this.version = response.data[0].name;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1337,15 +1421,15 @@ export default {
             await axios({
                 method: 'delete',
                 url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/${notification.id}/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     await this.$store.dispatch(
                         'notifications/setAll',
                         response.data.notifications
                     );
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1377,7 +1461,7 @@ export default {
                 } on ${task.agent.name}: ${
                     task.orchestrator_logs[task.orchestrator_logs.length - 1]
                 }`,
-                guid: guid().toString()
+                guid: guid().toString(),
             });
         },
         async handleNotification(notification) {
@@ -1386,7 +1470,7 @@ export default {
         removeTask(task) {
             axios
                 .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
-                .then(response => {
+                .then((response) => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
@@ -1398,15 +1482,15 @@ export default {
                             router.push({
                                 name: 'user',
                                 params: {
-                                    username: this.profile.djangoProfile
-                                        .username
-                                }
+                                    username:
+                                        this.profile.djangoProfile.username,
+                                },
                             });
                     } else {
                         this.showFailedToCancelAlert = true;
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1421,15 +1505,15 @@ export default {
             sessionStorage.clear();
             window.location.replace('/apis/v1/idp/cyverse_logout/');
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        prettifyShort: function(date) {
+        prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;
-        }
-    }
+        },
+    },
 };
 </script>
 
@@ -1506,19 +1590,20 @@ export default {
   border: 1px solid $dark
 
 .crumb-dark
-  font-size: 16px
-  font-weight: 200
+  font-size: 12px
+  font-weight: 300
   color: white !important
   // text-decoration: underline
   // text-decoration-color: $color-button
 
 .dropdown-custom:hover
   background-color: transparent !important
-  // border: 1px solid transparent !important
+  border: 1px transparent !important
+  box-shadow: none !important
 
 .crumb-light
-  font-size: 16px
-  font-weight: 200
+  font-size: 12px
+  font-weight: 300
   color: $dark !important
 
 a
