@@ -9,30 +9,45 @@
                 border-variant="default"
                 text-variant="white"
                 bg-variant="white"
-                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
+                style="
+                    max-width: 430px;
+                    padding: 0;
+                    margin: 0 auto;
+                    float: none;
+                    margin-bottom: 10px;
+                    opacity: 0.95;
+                "
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                            style="max-width: 5rem;transform: translate(0px, 20px); position: relative; top: 15px"
+                            style="
+                                max-width: 5rem;
+                                transform: translate(0px, 20px);
+                                position: relative;
+                                top: 15px;
+                            "
                             :src="require('../../assets/logo.png')"
                             center
                             class="m-0 p-0"
                         ></b-img>
                         <b-badge
                             variant="success"
-                            style="top: 14px; position: relative;"
+                            style="top: 14px; position: relative"
                             ><span v-if="version !== 0">{{ version }}</span
                             ><i class="fas fa-spinner" v-else></i
                         ></b-badge>
                         <h1
                             class="text-dark"
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
-                                >IT</small
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 1px 2px black;
+                                "
+                                >it</small
                             >
                         </h1>
                     </b-col>
@@ -177,13 +192,13 @@ import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home-splash',
-    data: function() {
+    data: function () {
         return {
-            version: 0
+            version: 0,
         };
     },
     computed: mapGetters('user', ['profile']),
-    created: async function() {
+    created: async function () {
         this.crumbs = this.$route.meta.crumb;
         await this.getVersion();
         // this.$store.dispatch('user/loadProfile');
@@ -193,17 +208,17 @@ export default {
             await axios({
                 method: 'get',
                 url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     this.version = response.data[0].name;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
-        }
-    }
+        },
+    },
 };
 </script>
 

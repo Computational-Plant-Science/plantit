@@ -4,7 +4,7 @@
             <b-row
                 ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        <i class="fas fa-tasks fa-fw"></i> Your Tasks
+                        <i class="fas fa-tasks fa-fw"></i> Tasks
                     </h2></b-col
                 ><!--<b-col md="auto" align-self="center" class="mb-1"
                     ><small
@@ -18,7 +18,6 @@
                         :disabled="tasksLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
-                        v-b-tooltip.hover
                         title="Refresh tasks"
                         @click="refresh"
                         class="ml-0 mt-0 mr-0"
@@ -77,7 +76,7 @@
                                 "
                                 v-if="filtered.length === 0"
                             >
-                                No tasks to show.
+                                You haven't submitted any tasks yet.
                             </p>
                             <div v-else>
                                 <b-input-group size="sm" style="bottom: 4px"
@@ -422,7 +421,6 @@
                                                 : 'white'
                                         "
                                         size="sm"
-                                        v-b-tooltip.hover
                                         title="Load more"
                                         @click="loadMoreTasks"
                                         block

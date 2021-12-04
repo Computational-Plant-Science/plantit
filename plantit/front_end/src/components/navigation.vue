@@ -580,7 +580,7 @@
                             <b-img
                                 class="m-0 p-0 mb-3"
                                 center
-                                width="25px"
+                                width="30px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -628,9 +628,11 @@
                                     class="mb-3 text-success"
                                     style="
                                         text-decoration: underline;
+                                        text-shadow: 1px 1px 2px black;
                                     "
-                                    >IT</small
-                                ><small
+                                    >it</small
+                                >
+                                <small
                                     ><small
                                         ><small
                                             ><b-badge variant="success"
@@ -804,7 +806,7 @@
                         >, then try hovering the mouse over an option in the
                         context menu on the left side of the screen to trigger a
                         hint box.
-                        <hr/>
+                        <hr />
                         <b-button
                             block
                             size="sm"
@@ -861,8 +863,8 @@
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            notificationsUnread.length +
-                                            ')'
+                                        notificationsUnread.length +
+                                        ')'
                                     "
                                     v-if="notificationsUnread.length > 0"
                                     ><i
@@ -933,8 +935,8 @@
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    notificationsUnread.length +
-                                    ')'
+                                notificationsUnread.length +
+                                ')'
                             "
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -1184,7 +1186,7 @@ import { guid } from '@/utils';
 export default {
     name: 'Navigation',
     components: {
-        taskblurb
+        taskblurb,
     },
     data() {
         return {
@@ -1217,7 +1219,7 @@ export default {
             feedbackAnonymous: true,
             // alert countdown
             dismissSecs: 10,
-            dismissCountDown: 0
+            dismissCountDown: 0,
         };
     },
     computed: {
@@ -1227,13 +1229,13 @@ export default {
             'tasks',
             'tasksLoading',
             'tasksRunning',
-            'tasksCompleted'
+            'tasksCompleted',
         ]),
         ...mapGetters('notifications', [
             'notifications',
             'notificationsLoading',
             'notificationsRead',
-            'notificationsUnread'
+            'notificationsUnread',
         ]),
         feedbackValid() {
             return (
@@ -1245,22 +1247,22 @@ export default {
         },
         filteredRunningTasks() {
             return this.tasksRunning.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.taskSearchText)) ||
-                    sub.tags.some(tag => tag.includes(this.taskSearchText))
+                    sub.tags.some((tag) => tag.includes(this.taskSearchText))
             );
         },
         filteredCompletedTasks() {
             return this.tasksCompleted.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.taskSearchText)) ||
-                    sub.tags.some(tag => tag.includes(this.taskSearchText))
+                    sub.tags.some((tag) => tag.includes(this.taskSearchText))
             );
-        }
+        },
     },
-    created: async function() {
+    created: async function () {
         this.crumbs = this.$route.meta.crumb;
 
         // no need to load user model if we're in about or stats view
@@ -1272,7 +1274,7 @@ export default {
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
         await Promise.all([
             store.dispatch('user/loadProfile'),
-            this.getVersion()
+            this.getVersion(),
         ]);
 
         // load the rest of the model
@@ -1303,7 +1305,7 @@ export default {
             this.$store.dispatch('datasets/loadShared'),
             this.$store.dispatch('datasets/loadSharing'),
             this.$store.dispatch('projects/loadPersonal'),
-            this.$store.dispatch('projects/loadOthers')
+            this.$store.dispatch('projects/loadOthers'),
         ]);
 
         // TODO move websockets to vuex
@@ -1320,28 +1322,28 @@ export default {
         },
         alerts() {
             this.dismissCountDown = this.dismissSecs;
-        }
+        },
     },
     methods: {
         async ackFirstLogin() {
             await axios({
                 method: 'get',
                 url: `/apis/v1/users/acknowledge_first_login/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch('user/setFirst', false);
                         this.ackedFirst = true;
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to connect to ${this.agentName}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     throw error;
                 });
@@ -1356,18 +1358,18 @@ export default {
                 wanted: this.feedbackWanted,
                 ease: this.feedbackEase,
                 features: this.feedbackFeatures,
-                anonymous: this.feedbackAnonymous
+                anonymous: this.feedbackAnonymous,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/feedback/`,
                 headers: { 'Content-Type': 'application/json' },
-                data: data
+                data: data,
             })
                 .then(() => {
                     alert('Submitted feedback!');
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1397,12 +1399,12 @@ export default {
             await axios({
                 method: 'get',
                 url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     this.version = response.data[0].name;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1427,15 +1429,15 @@ export default {
             await axios({
                 method: 'delete',
                 url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/${notification.id}/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     await this.$store.dispatch(
                         'notifications/setAll',
                         response.data.notifications
                     );
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1467,7 +1469,7 @@ export default {
                 } on ${task.agent.name}: ${
                     task.orchestrator_logs[task.orchestrator_logs.length - 1]
                 }`,
-                guid: guid().toString()
+                guid: guid().toString(),
             });
         },
         async handleNotification(notification) {
@@ -1476,7 +1478,7 @@ export default {
         removeTask(task) {
             axios
                 .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
-                .then(response => {
+                .then((response) => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
@@ -1488,15 +1490,15 @@ export default {
                             router.push({
                                 name: 'user',
                                 params: {
-                                    username: this.profile.djangoProfile
-                                        .username
-                                }
+                                    username:
+                                        this.profile.djangoProfile.username,
+                                },
                             });
                     } else {
                         this.showFailedToCancelAlert = true;
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1511,15 +1513,15 @@ export default {
             sessionStorage.clear();
             window.location.replace('/apis/v1/idp/cyverse_logout/');
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        prettifyShort: function(date) {
+        prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;
-        }
-    }
+        },
+    },
 };
 </script>
 

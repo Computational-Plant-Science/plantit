@@ -1,73 +1,76 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <div v-if="isRootPath">
             <b-row
                 ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-server fa-fw"></i>
-                        {{ publicContext ? 'Public' : 'Your' }} Agents
+                        Agents
                     </h2></b-col
                 >
-                <b-col md="auto" class="ml-0 mb-1" align-self="center"
-                    ><b-button
-                        id="switch-agent-context"
+                <b-col align-self="center" class="mb-1" md="auto">
+                    <b-dropdown
+                        dropleft
+                        id="switch-agents-context"
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
                         class="ml-0 mt-0 mr-0"
-                        @click="toggleContext"
-                        :title="
-                            publicContext
-                                ? 'View your agents'
-                                : 'View public agents'
-                        "
-                        v-b-tooltip:hover
-                        ><span v-if="publicContext"
-                            ><i class="fas fa-user"></i> Yours</span
-                        ><span v-else
-                            ><i class="fas fa-users"></i> Public</span
-                        ></b-button
-                    ><b-popover
+                        :title="publicContext ? '' : ''"
+                        ><template #button-content>
+                            <span v-if="!publicContext"
+                                ><i class="fas fa-user"></i> Yours</span
+                            ><span v-else
+                                ><i class="fas fa-users"></i> Public</span
+                            >
+                        </template>
+                        <b-dropdown-item @click="toggleContext"
+                            ><i class="fas fa-user fa-fw"></i>
+                            Yours</b-dropdown-item
+                        >
+                        <b-dropdown-item @click="toggleContext"
+                            ><i class="fas fa-users fa-fw"></i>
+                            Public</b-dropdown-item
+                        >
+                    </b-dropdown>
+                    <b-popover
                         v-if="profile.hints"
                         triggers="hover"
-                        placement="left"
-                        target="switch-agent-context"
+                        placement="topleft"
+                        target="switch-agents-context"
                         title="Agent Context"
                         >Click here to toggle between public agents and your
                         own.</b-popover
-                    ></b-col
-                >
-                <b-col
-                    md="auto"
-                    class="ml-0 mb-1"
-                    align-self="center"
-                    v-if="!publicContext"
+                    >
+                </b-col>
+                <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="bind-agent"
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
-                        v-b-tooltip.hover
-                        title="Bind a new agent"
                         @click="showBindAgentModal"
                         class="ml-0 mt-0 mr-0"
                     >
                         <b-spinner
                             small
                             v-if="agentsLoading || bindingAgent"
-                            label="Binding..."
+                            label="Connecting..."
                             :variant="profile.darkMode ? 'light' : 'dark'"
                             class="mr-1"
                         ></b-spinner
-                        ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
+                        ><i v-else class="fas fa-plug mr-1"></i
+                        >Connect</b-button
                     ><b-popover
                         v-if="profile.hints"
                         triggers="hover"
                         placement="bottom"
                         target="bind-agent"
                         title="Bind Agent"
-                        >Click here to connect a server, cluster, or
-                        supercomputer of your own.</b-popover
+                        >Click here to connect a new agent. This can be a
+                        server, cluster, supercomputer &mdash; anything you can
+                        access with SSH and password or key
+                        authentication.</b-popover
                     ></b-col
                 >
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
@@ -76,7 +79,6 @@
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
-                        v-b-tooltip.hover
                         title="Refresh agents"
                         @click="refreshAgents"
                         class="ml-0 mt-0 mr-0"
@@ -126,7 +128,7 @@
                         profile.darkMode ? 'secondary' : 'default'
                     "
                     :text-variant="profile.darkMode ? 'white' : 'dark'"
-                    style="min-width: 30rem;"
+                    style="min-width: 30rem"
                     class="overflow-hidden mb-4"
                 >
                     <b-row style="z-index: 10">
@@ -139,12 +141,11 @@
                                             : 'text-dark'
                                     "
                                     variant="outline-dark"
-                                    v-b-tooltip.hover
                                     :to="{
                                         name: 'agent',
                                         params: {
-                                            name: agent.name
-                                        }
+                                            name: agent.name,
+                                        },
                                     }"
                                 >
                                     {{ agent.name }}
@@ -152,19 +153,16 @@
                                 <small>
                                     <i
                                         v-if="agent.is_healthy"
-                                        v-b-tooltip:hover
                                         title="Healthy"
                                         class="fas fa-heartbeat text-success fa-fw"
                                     ></i
                                     ><i
                                         v-else
-                                        v-b-tooltip:hover
                                         title="Unhealthy"
                                         class="fas fa-heart-broken text-danger fa-fw"
                                     ></i
                                     ><i
                                         v-if="agent.disabled"
-                                        v-b-tooltip:hover
                                         title="Disabled"
                                         class="fas fa-exclamation-circle text-secondary fa-fw"
                                     ></i
@@ -212,7 +210,13 @@
                         v-if="agent.logo"
                         rounded
                         class="card-img-right overflow-hidden"
-                        style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                        style="
+                            max-height: 4rem;
+                            position: absolute;
+                            right: 20px;
+                            top: 20px;
+                            z-index: 1;
+                        "
                         right
                         :src="agent.logo"
                     ></b-img>
@@ -225,33 +229,11 @@
                         >{{
                             publicContext
                                 ? 'No public agents available.'
-                                : "You haven't created any agent bindings yet."
+                                : "You haven't connected any agents yet."
                         }}</span
                     >
-                    <br />
-                    <span v-if="!publicContext">
-                        View
-                        <b-link
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            @click="toggleContext"
-                            ><i class="fas fa-users fa-1x fa-fw"></i>
-                            Public</b-link
-                        >
-                        agents to use an existing cluster or supercomputer, or
-                        <b-link
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            @click="showBindAgentModal"
-                            ><i class="fas fa-plug fa-1x fa-fw"></i> bind an
-                            agent</b-link
-                        >
-                        of your own.</span
-                    ></b-col
-                ></b-row
-            >
+                    <br /> </b-col
+            ></b-row>
         </div>
         <router-view
             v-else
@@ -501,9 +483,9 @@
                     <b-row
                         v-if="
                             agentAuthentication === 'key' &&
-                                !agentConnectionComplete
+                            !agentConnectionComplete
                         "
-                        style="word-wrap: break-word;"
+                        style="word-wrap: break-word"
                         class="mb-3 p-1"
                     >
                         <b-col>
@@ -620,7 +602,7 @@
                             <b-button
                                 :disabled="
                                     !(agentHostValid && agentUsernameValid) ||
-                                        checkingConnection
+                                    checkingConnection
                                 "
                                 block
                                 variant="success"
@@ -780,7 +762,7 @@
                             <b-button
                                 :disabled="
                                     !(agentHostValid && agentUsernameValid) ||
-                                        creatingWorkdir
+                                    creatingWorkdir
                                 "
                                 block
                                 variant="success"
@@ -1101,7 +1083,7 @@
                             <b-form-group
                                 v-if="
                                     isJobQueue(agentExecutor) &&
-                                        !agentVirtualMemory
+                                    !agentVirtualMemory
                                 "
                                 ><template #description
                                     ><span
@@ -1312,7 +1294,7 @@ import { guid } from '@/utils';
 
 export default {
     name: 'agents',
-    data: function() {
+    data: function () {
         return {
             /* new agent binding stages:
               - details
@@ -1346,12 +1328,12 @@ export default {
             agentExecutorOptions: [
                 { value: 'Local', text: 'Local' },
                 { value: 'SLURM', text: 'SLURM' },
-                { value: 'PBS', text: 'PBS' }
+                { value: 'PBS', text: 'PBS' },
             ],
             agentAuthentication: 'password',
             agentAuthenticationOptions: [
                 { value: 'password', text: 'Password' },
-                { value: 'key', text: 'Key' }
+                { value: 'key', text: 'Key' },
             ],
             agentQueue: '',
             agentProject: '',
@@ -1380,7 +1362,7 @@ export default {
             publicKey: '',
             gettingKey: false,
             // misc
-            executorCheckOutput: []
+            executorCheckOutput: [],
         };
     },
     computed: {
@@ -1390,7 +1372,7 @@ export default {
             'personalAgentsLoading',
             'guestAgents',
             'publicAgents',
-            'publicAgentsLoading'
+            'publicAgentsLoading',
         ]),
         isRootPath() {
             return this.$route.name === 'agents';
@@ -1445,43 +1427,43 @@ export default {
                 this.agentWorkdirValid &&
                 this.agentExecutorValid
             );
-        }
+        },
     },
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
-        publicContext: function(_) {
+        publicContext: function (_) {
             this.refreshAgents();
-        }
+        },
     },
     methods: {
         async getKey() {
             this.gettingKey = true;
             await axios
                 .get(`/apis/v1/users/get_key/`)
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         this.publicKey = response.data.public_key;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Retrieved public key`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to retrieve public key`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.gettingKey = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to retrieve public key`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.gettingKey = false;
                     throw error;
@@ -1522,27 +1504,27 @@ export default {
                           hostname: this.agentHost,
                           port: this.agentPort,
                           username: this.agentUsername,
-                          password: this.authenticationPassword
+                          password: this.authenticationPassword,
                       }
                     : {
                           hostname: this.agentHost,
                           port: this.agentPort,
-                          username: this.agentUsername
+                          username: this.agentUsername,
                       };
             await axios({
                 method: 'post',
                 url: `/apis/v1/users/check_connection/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200 && response.data.success) {
                         this.agentConnectionComplete = true;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Connection to ${this.agentName} succeeded`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     } else {
                         this.agentConnectionComplete = false;
@@ -1550,18 +1532,18 @@ export default {
                             variant: 'danger',
                             message: `Failed to connect to ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                     this.checkingConnection = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to connect to ${this.agentName}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.agentConnectionComplete = false;
                     this.checkingConnection = false;
@@ -1576,12 +1558,12 @@ export default {
                           hostname: this.agentHost,
                           port: this.agentPort,
                           username: this.agentUsername,
-                          password: this.authenticationPassword
+                          password: this.authenticationPassword,
                       }
                     : {
                           hostname: this.agentHost,
                           port: this.agentPort,
-                          username: this.agentUsername
+                          username: this.agentUsername,
                       };
 
             data['workdir'] = this.agentWorkdir;
@@ -1590,16 +1572,16 @@ export default {
                 method: 'post',
                 url: `/apis/v1/users/create_workdir/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         this.agentWorkdirComplete = true;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Created working directory ${response.data.workdir} on ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     } else {
                         this.agentWorkdirComplete = false;
@@ -1607,18 +1589,18 @@ export default {
                             variant: 'danger',
                             message: `Failed to create working directory ${this.agentWorkdir} on ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                     this.creatingWorkdir = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to create working directory ${this.agentWorkdir} on ${this.agentName}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.agentWorkdirComplete = false;
                     this.creatingWorkdir = false;
@@ -1632,7 +1614,7 @@ export default {
                 username: this.agentUsername,
                 precommand: this.agentPrecommands,
                 executor: this.agentExecutor,
-                workdir: this.agentWorkdir
+                workdir: this.agentWorkdir,
             };
 
             if (this.agentAuthentication === 'password')
@@ -1642,9 +1624,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/users/check_executor/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200 && response.data.success) {
                         this.agentExecutorComplete = true;
                         this.executorCheckOutput = response.data.output;
@@ -1652,7 +1634,7 @@ export default {
                             variant: 'success',
                             message: `Executor check succeeded on ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     } else {
                         this.agentExecutorComplete = false;
@@ -1661,25 +1643,25 @@ export default {
                             variant: 'danger',
                             message: `Executor check failed on ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                     this.checkingExecutor = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Executor check failed on ${this.agentName}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.agentExecutorComplete = false;
                     this.checkingExecutor = false;
                     throw error;
                 });
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
@@ -1693,12 +1675,12 @@ export default {
             this.agentNameLoading = true;
             return axios
                 .get(`/apis/v1/agents/${this.agentName}/exists/`)
-                .then(response => {
+                .then((response) => {
                     this.agentNameExists = response.data.exists;
                     this.agentNameLoading = false;
                     this.$emit('input', this.name);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.agentNameLoading = false;
                     if (error.response.status === 500) throw error;
@@ -1708,12 +1690,12 @@ export default {
             this.agentHostLoading = true;
             return axios
                 .get(`/apis/v1/agents/${this.agentHost}/host_exists/`)
-                .then(response => {
+                .then((response) => {
                     this.agentHostExists = response.data.exists;
                     this.agentHostLoading = false;
                     this.$emit('input', this.name);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.agentHostLoading = false;
                     if (error.response.status === 500) throw error;
@@ -1796,7 +1778,7 @@ export default {
             var auth = {
                 username: this.agentUsername,
                 hostname: this.agentHost,
-                port: this.agentPort
+                port: this.agentPort,
             };
             if (this.agentAuthentication === 'password')
                 auth['password'] = this.authenticationPassword;
@@ -1825,17 +1807,18 @@ export default {
                     // gpu: this.agentGPU,
                     // gpu_queue: this.agentGPUQueue,
                     job_array: this.agentJobArray,
-                    launcher: this.agentLauncher
-                }
+                    launcher: this.agentLauncher,
+                },
             };
 
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
+                    this.publicContext = false;
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
@@ -1846,28 +1829,28 @@ export default {
                                 variant: 'success',
                                 message: `Created binding for agent ${response.data.agent.name}`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to bind agent ${this.agentName}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                     this.resetAgentInfo();
                     this.hideBindAgentModal();
                     this.bindingAgent = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to bind agent ${this.agentName}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.hideBindAgentModal();
                     this.bindingAgent = false;
@@ -1879,8 +1862,8 @@ export default {
         },
         isSLURM(executor) {
             return executor === 'SLURM';
-        }
-    }
+        },
+    },
 };
 </script>
 

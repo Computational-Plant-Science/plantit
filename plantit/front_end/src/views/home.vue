@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <div v-if="profileLoading">
             <b-row align-v="center">
                 <b-col class="text-center">
@@ -33,7 +33,7 @@
                     ><b-img
                         class="m-0"
                         rounded
-                        style="max-height: 1.2rem;"
+                        style="max-height: 1.2rem"
                         :src="
                             profile.darkMode
                                 ? require('../assets/logos/github_white.png')
@@ -88,6 +88,37 @@
             <b-row>
                 <b-col class="text-left" md="auto"
                     ><b-button
+                        id="workflows-button"
+                        block
+                        class="m-1 text-left"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        to="/home/workflows/"
+                        ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
+                    ><b-popover
+                        v-if="profile.hints && isRootPath"
+                        triggers="hover"
+                        placement="bottom"
+                        target="workflows-button"
+                        title="Your Workflows"
+                        >Click here to see explore and run public workflows, or
+                        share your own.</b-popover
+                    ><b-button
+                        id="datasets-button"
+                        block
+                        class="m-1 text-left"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        to="/home/datasets/"
+                        ><i class="fas fa-database fa-fw"></i>
+                        Datasets</b-button
+                    ><b-popover
+                        v-if="profile.hints && isRootPath"
+                        triggers="hover"
+                        placement="bottom"
+                        target="datasets-button"
+                        title="Your Datasets"
+                        >Click here to view your data in the CyVerse Data
+                        Store.</b-popover
+                    ><b-button
                         id="projects-button"
                         block
                         class="m-1 text-left"
@@ -111,37 +142,6 @@
                         title="Your MIAPPE projects"
                         >Click here to see your MIAPPE projects and manage your
                         metadata.</b-popover
-                    ><b-button
-                        id="datasets-button"
-                        block
-                        class="m-1 text-left"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/datasets/"
-                        ><i class="fas fa-database fa-fw"></i>
-                        Datasets</b-button
-                    ><b-popover
-                        v-if="profile.hints && isRootPath"
-                        triggers="hover"
-                        placement="bottom"
-                        target="datasets-button"
-                        title="Your Datasets"
-                        >Click here to view your data in the CyVerse Data
-                        Store.</b-popover
-                    ><b-button
-                        id="workflows-button"
-                        block
-                        class="m-1 text-left"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/workflows/"
-                        ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
-                    ><b-popover
-                        v-if="profile.hints && isRootPath"
-                        triggers="hover"
-                        placement="bottom"
-                        target="workflows-button"
-                        title="Your Workflows"
-                        >Click here to see explore and run public workflows, or
-                        share your own.</b-popover
                     >
                     <b-button
                         id="agents-button"
@@ -193,7 +193,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                   Account Summary
+                                                    Account Summary
                                                 </h2>
                                             </b-col>
                                         </b-row>
@@ -206,17 +206,19 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    Projects
+                                                    Workflows
                                                 </h5>
                                                 <b>{{
-                                                    personalProjects.length
+                                                    profile.stats
+                                                        .owned_workflows.length
                                                 }}</b>
                                                 owned
                                                 <br />
                                                 <b>{{
-                                                    othersProjects.length
+                                                    profile.stats.workflow_usage
+                                                        .labels.length
                                                 }}</b>
-                                                guest
+                                                used
                                             </b-col>
                                             <b-col md="auto" class="mt-3">
                                                 <h5
@@ -261,6 +263,26 @@
                                                 }}</b>
                                                 you've shared
                                             </b-col>
+                                            <b-col md="auto" class="mt-3">
+                                                <h5
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    Projects
+                                                </h5>
+                                                <b>{{
+                                                    personalProjects.length
+                                                }}</b>
+                                                owned
+                                                <br />
+                                                <b>{{
+                                                    othersProjects.length
+                                                }}</b>
+                                                guest
+                                            </b-col>
                                             <!--<b-col md="auto"><b-col md="auto"><Plotly
                                             v-if="
                                                 profile.stats.used_datasets
@@ -269,7 +291,11 @@
                                             :data="workflowPlotData"
                                             :layout="workflowPlotLayout"
                                         ></Plotly></b-col></b-col>-->
-                                            <b-col md="auto" class="mt-3" v-if="profile.stats !== null">
+                                            <b-col
+                                                md="auto"
+                                                class="mt-3"
+                                                v-if="profile.stats !== null"
+                                            >
                                                 <h5
                                                     :class="
                                                         profile.darkMode
@@ -293,28 +319,6 @@
                                                 <br />
                                                 <b>{{
                                                     profile.stats.agent_usage
-                                                        .labels.length
-                                                }}</b>
-                                                used
-                                            </b-col>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Workflows
-                                                </h5>
-                                                <b>{{
-                                                    profile.stats
-                                                        .owned_workflows.length
-                                                }}</b>
-                                                owned
-                                                <br />
-                                                <b>{{
-                                                    profile.stats.workflow_usage
                                                         .labels.length
                                                 }}</b>
                                                 used
@@ -387,7 +391,7 @@
                                     <div
                                         v-if="
                                             profile.stats.timeseries !==
-                                                undefined
+                                            undefined
                                         "
                                     >
                                         <h5
@@ -513,11 +517,11 @@ import { Plotly } from 'vue-plotly';
 export default {
     name: 'home',
     components: {
-        Plotly
+        Plotly,
     },
-    data: function() {
+    data: function () {
         return {
-            crumbs: []
+            crumbs: [],
         };
     },
     created() {
@@ -526,12 +530,12 @@ export default {
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
-        }
+        },
     },
     methods: {
-        prettifyDuration: function(dur) {
+        prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
-        }
+        },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -539,7 +543,7 @@ export default {
             'tasks',
             'tasksLoading',
             'tasksRunning',
-            'tasksCompleted'
+            'tasksCompleted',
         ]),
         ...mapGetters('datasets', [
             'personalDatasets',
@@ -548,12 +552,12 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasets',
             'sharingDatasetsLoading',
-            'publicDatasets'
+            'publicDatasets',
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [
             'boundWorkflows',
-            'personalWorkflowsLoading'
+            'personalWorkflowsLoading',
         ]),
         ...mapGetters('projects', ['personalProjects', 'othersProjects']),
         isRootPath() {
@@ -564,8 +568,8 @@ export default {
                 {
                     values: this.profile.stats.workflow_usage.values,
                     labels: this.profile.stats.workflow_usage.labels,
-                    type: 'pie'
-                }
+                    type: 'pie',
+                },
             ];
         },
         workflowPlotLayout() {
@@ -573,17 +577,17 @@ export default {
                 title: {
                     text: 'Workflows Used',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         agentPlotData() {
@@ -591,8 +595,8 @@ export default {
                 {
                     values: this.profile.stats.agent_usage.values,
                     labels: this.profile.stats.agent_usage.labels,
-                    type: 'pie'
-                }
+                    type: 'pie',
+                },
             ];
         },
         agentPlotLayout() {
@@ -600,17 +604,17 @@ export default {
                 title: {
                     text: 'Agents Used',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         taskPlotData() {
@@ -619,16 +623,16 @@ export default {
                     values: this.profile.stats.task_status.values,
                     labels: this.profile.stats.task_status.labels,
                     marker: {
-                        colors: this.tasks.map(t =>
+                        colors: this.tasks.map((t) =>
                             t.status === 'success'
                                 ? 'rgb(214, 223, 93)'
                                 : t.status === 'failure'
                                 ? 'rgb(255, 114, 114)'
                                 : 'rgb(128, 128, 128)'
-                        )
+                        ),
                     },
-                    type: 'pie'
-                }
+                    type: 'pie',
+                },
             ];
         },
         taskPlotLayout() {
@@ -636,30 +640,30 @@ export default {
                 title: {
                     text: 'Task Status Distribution',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         taskTimeseriesData() {
             return [
                 {
-                    x: this.tasks.map(t => t.created),
+                    x: this.tasks.map((t) => t.created),
                     y: this.tasks.map(
-                        t => `${t.workflow_owner}/${t.workflow_name}`
+                        (t) => `${t.workflow_owner}/${t.workflow_name}`
                     ),
                     mode: 'markers',
                     type: 'scatter',
                     marker: {
-                        color: this.tasks.map(t =>
+                        color: this.tasks.map((t) =>
                             t.status === 'success'
                                 ? 'rgb(214, 223, 93)'
                                 : t.status === 'failure'
@@ -668,31 +672,31 @@ export default {
                         ),
                         line: {
                             color: 'rgba(156, 165, 196, 1.0)',
-                            width: 1
+                            width: 1,
                         },
                         symbol: 'circle',
-                        size: 16
-                    }
-                }
+                        size: 16,
+                    },
+                },
             ];
         },
         taskTimeseriesLayout() {
             return {
                 font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
                 title: {
                     text: 'Recent Tasks',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 xaxis: {
                     showgrid: false,
@@ -700,23 +704,23 @@ export default {
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
-                            color: 'rgb(204, 204, 204)'
-                        }
+                            color: 'rgb(204, 204, 204)',
+                        },
                     },
                     tickfont: {
                         font: {
-                            color: 'rgb(102, 102, 102)'
-                        }
-                    }
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
                 },
                 yaxis: {
-                    showticklabels: false
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
-        }
-    }
+        },
+    },
 };
 </script>
 

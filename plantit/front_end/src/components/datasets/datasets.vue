@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <b-row
             ><b-col
                 ><b-row
@@ -10,11 +10,11 @@
                             "
                         >
                             <i class="fas fa-database fa-fw"></i>
-                            {{ publicContext ? 'Public' : 'Your' }} Datasets
+                            Datasets
                         </h2></b-col
-                    >
-                    <b-col md="auto" class="ml-0 mb-1" align-self="center">
-                        <b-button
+                    ><b-col align-self="center" class="mb-1" md="auto">
+                        <b-dropdown
+                            dropleft
                             id="switch-dataset-context"
                             :disabled="datasetsLoading"
                             :variant="
@@ -22,28 +22,33 @@
                             "
                             size="sm"
                             class="ml-0 mt-0 mr-0"
-                            @click="toggleContext"
-                            :title="
-                                publicContext
-                                    ? 'View your datasets'
-                                    : 'View public datasets'
-                            "
-                            v-b-tooltip:hover
-                            ><span v-if="publicContext"
-                                ><i class="fas fa-user"></i> Yours</span
-                            ><span v-else
-                                ><i class="fas fa-users"></i> Public</span
-                            ></b-button
-                        ><b-popover
+                            :title="publicContext ? '' : ''"
+                            ><template #button-content>
+                                <span v-if="!publicContext"
+                                    ><i class="fas fa-user"></i> Yours</span
+                                ><span v-else
+                                    ><i class="fas fa-users"></i> Public</span
+                                >
+                            </template>
+                            <b-dropdown-item @click="toggleContext"
+                                ><i class="fas fa-user fa-fw"></i>
+                                Yours</b-dropdown-item
+                            >
+                            <b-dropdown-item @click="toggleContext"
+                                ><i class="fas fa-users fa-fw"></i>
+                                Public</b-dropdown-item
+                            >
+                        </b-dropdown>
+                        <b-popover
                             v-if="profile.hints"
                             triggers="hover"
-                            placement="left"
+                            placement="topleft"
                             target="switch-dataset-context"
-                            title="Workflow Context"
-                            >Click here to toggle between public datasets and
+                            title="Dataset Context"
+                            >Click here to toggle between public workflows and
                             your own.</b-popover
-                        ></b-col
-                    >
+                        >
+                    </b-col>
                     <b-col md="auto" class="ml-0 mb-1" align-self="center"
                         ><b-button
                             id="refresh-datasets"
@@ -52,7 +57,6 @@
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
                             size="sm"
-                            v-b-tooltip.hover
                             title="Refresh datasets"
                             @click="refreshDatasets"
                             class="ml-0 mt-0 mr-0"
@@ -72,8 +76,7 @@
                             placement="bottom"
                             target="refresh-datasets"
                             title="Refresh Datasets"
-                            >Click here to refresh data from the CyVerse Data
-                            Store.</b-popover
+                            >Click here to refresh your view of the data store.</b-popover
                         ></b-col
                     >
                     <b-col md="auto" align-self="center" class="mb-1"
@@ -81,7 +84,7 @@
                         ><b-img
                             class="ml-2 mt-1"
                             rounded
-                            style="max-height: 1.1rem;"
+                            style="max-height: 1.1rem"
                             right
                             :src="
                                 require('../../assets/logos/cyverse_bright.png')
@@ -144,7 +147,16 @@
                         "
                     >
                         <template #title>
+                            <b-popover
+                                v-if="profile.hints"
+                                triggers="hover"
+                                placement="topleft"
+                                target="yours"
+                                title="Your datasets"
+                                >Click here to view your own datasets.</b-popover
+                            >
                             <b-button
+                                id="yours"
                                 :variant="
                                     activeTab === 0
                                         ? profile.darkMode
@@ -154,12 +166,11 @@
                                         ? 'outline-light'
                                         : 'white'
                                 "
-                                v-b-tooltip.hover
                                 title="
-                                                           Personal
+                                                           Yours
                                                         "
                             >
-                                Personal
+                                Yours
                             </b-button></template
                         >
                         <!--<b-row class="mb-2"
@@ -228,7 +239,17 @@
                         "
                     >
                         <template #title>
+                            <b-popover
+                                v-if="profile.hints"
+                                triggers="hover"
+                                placement="topleft"
+                                target="shared-with-you"
+                                title="Datasets shared with you"
+                                >Click here to view datasets other people have
+                                shared with you.</b-popover
+                            >
                             <b-button
+                                id="shared-with-you"
                                 :variant="
                                     activeTab === 1
                                         ? profile.darkMode
@@ -238,12 +259,11 @@
                                         ? 'outline-light'
                                         : 'white'
                                 "
-                                v-b-tooltip.hover
                                 title="
-                                                            Shared
+                                                            Shared with you
                                                         "
                             >
-                                Shared
+                                Shared with you
                             </b-button></template
                         >
                         <!--<b-row class="mb-2"
@@ -282,7 +302,7 @@
                                             ? 'text-white'
                                             : 'text-dark'
                                     "
-                                    >Loading datasets shared with you...</span
+                                    >Loading datasets...</span
                                 ></b-col
                             ></b-row
                         >
@@ -312,7 +332,17 @@
                         "
                     >
                         <template #title>
+                            <b-popover
+                                v-if="profile.hints"
+                                triggers="hover"
+                                placement="topleft"
+                                target="shared-by-you"
+                                title="Datasets shared by you"
+                                >Click here to view datasets you're sharing with
+                                other people.</b-popover
+                            >
                             <b-button
+                                id="shared-by-you"
                                 :variant="
                                     activeTab === 2
                                         ? profile.darkMode
@@ -322,12 +352,11 @@
                                         ? 'outline-light'
                                         : 'white'
                                 "
-                                v-b-tooltip.hover
                                 title="
-                                                            Sharing
+                                                            Shared by you
                                                         "
                             >
-                                Sharing
+                                Shared by you
                             </b-button></template
                         >
                         <!--<b-row class="mb-2"
@@ -386,7 +415,7 @@
                             <b-row
                                 v-if="
                                     sharingDatasets === null ||
-                                        sharingDatasets.length === 0
+                                    sharingDatasets.length === 0
                                 "
                                 ><b-col
                                     :class="
@@ -457,9 +486,9 @@ import { guid } from '@/utils';
 export default {
     name: 'datasets',
     components: {
-        datatree
+        datatree,
     },
-    data: function() {
+    data: function () {
         return {
             activeTab: 0,
             togglingContext: false,
@@ -467,7 +496,7 @@ export default {
             yourDatasetsSearchText: '',
             sharedDatasetsSearchText: '',
             sharingDatasetsSearchText: '',
-            unsharing: false
+            unsharing: false,
         };
     },
     computed: {
@@ -482,7 +511,7 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasetsLoading',
             'openedDataset',
-            'openedDatasetLoading'
+            'openedDatasetLoading',
         ]),
         datasetsLoading() {
             if (this.publicContext) {
@@ -515,10 +544,10 @@ export default {
                         return [];
                 }
             }
-        }
+        },
     },
     methods: {
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
@@ -552,11 +581,11 @@ export default {
                 data: {
                     user: directory.guest,
                     path: directory.path,
-                    role: directory.role
+                    role: directory.role,
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         this.unsharing = false;
                         await this.$store.dispatch(
@@ -566,11 +595,11 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Stopped sharing dataset ${directory.path} with ${directory.guest}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     this.unsharing = false;
                     await this.$store.dispatch('alerts/add', {
@@ -580,12 +609,12 @@ export default {
                                 ? this.internalNode.path
                                 : this.node.path
                         } with ${this.sharedUsers.length} user(s)`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
-        }
-    }
+        },
+    },
 };
 </script>
 

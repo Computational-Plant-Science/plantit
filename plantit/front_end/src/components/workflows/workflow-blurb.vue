@@ -19,12 +19,12 @@
                     >
                         {{ workflow.config.name }}
                     </b-link>
-                    <b-badge>{{ workflow.branch.name }}</b-badge>
                 </h2>
                 <h2 v-else class="text-danger">
                     <i class="fas fa-exclamation-circle text-danger mr-2"></i>
                     <small>(name not provided)</small>
                 </h2>
+              <h5><b-badge variant="secondary">{{ workflow.branch.name }}</b-badge></h5>
                 <div
                     v-if="
                         workflow.repo.topics !== undefined &&

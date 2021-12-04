@@ -22,7 +22,7 @@
         >
             <b-col
                 :style="{
-                    'font-weight': isDir ? '500' : '300'
+                    'font-weight': isDir ? '500' : '300',
                 }"
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             >
@@ -32,7 +32,7 @@
                     :variant="profile.darkMode ? 'outline-light' : 'white'"
                     :disabled="
                         !select ||
-                            (select !== 'directory' && select !== 'files')
+                        (select !== 'directory' && select !== 'files')
                     "
                     @click="
                         selectNode(
@@ -45,7 +45,11 @@
                         v-if="sprout"
                         class="fas fa-seedling fa-fw mr-2 text-success"
                     ></i>
-                    {{ internalLoaded ? internalNode.label : node.label }}
+                    {{
+                        replaceMe(
+                            internalLoaded ? internalNode.label : node.label
+                        )
+                    }}
                 </b-button>
             </b-col>
             <b-col class="mt-1" md="auto">
@@ -68,8 +72,8 @@
                 md="auto"
                 v-if="
                     matchingSharingDatasets !== undefined &&
-                        matchingSharingDatasets !== null &&
-                        matchingSharingDatasets.length > 0
+                    matchingSharingDatasets !== null &&
+                    matchingSharingDatasets.length > 0
                 "
             >
                 <small
@@ -78,11 +82,9 @@
                 >
             </b-col>
             <b-col
-                :id="
-                    `associated-studies-${
-                        internalLoaded ? internalNode.label : node.label
-                    }`
-                "
+                :id="`associated-studies-${
+                    internalLoaded ? internalNode.label : node.label
+                }`"
                 class="mt-1 ml-1"
                 :class="profile.darkMode ? 'text-light' : 'text-dark'"
                 md="auto"
@@ -105,11 +107,9 @@
                                 : 'projects/studies'
                         }}</small
                     ><b-popover
-                        :target="
-                            `associated-studies-${
-                                internalLoaded ? internalNode.label : node.label
-                            }`
-                        "
+                        :target="`associated-studies-${
+                            internalLoaded ? internalNode.label : node.label
+                        }`"
                         placement="bottom"
                         triggers="hover"
                         :variant="profile.darkMode ? 'dark' : 'light'"
@@ -124,8 +124,8 @@
                                         name: 'project',
                                         params: {
                                             owner: study.project_owner,
-                                            title: study.project_title
-                                        }
+                                            title: study.project_title,
+                                        },
                                     }"
                                     ><b class="text-dark"
                                         >{{ study.project_title }},
@@ -249,9 +249,9 @@
                             title="Bind Project"
                             :id="
                                 'bindProject' +
-                                    (internalLoaded
-                                        ? internalNode.label
-                                        : node.label)
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
                             "
                             centered
                             :header-text-variant="
@@ -330,7 +330,7 @@
                                 v-for="project in personalProjects"
                                 v-bind:key="project.title"
                                 ><b-col
-                                    style="border-top: 2px solid lightgray;"
+                                    style="border-top: 2px solid lightgray"
                                     cols="3"
                                 >
                                     <b-button
@@ -344,14 +344,17 @@
                                         }}<i
                                             v-if="
                                                 selectedProject !== null &&
-                                                    selectedProject.title ===
-                                                        project.title
+                                                selectedProject.title ===
+                                                    project.title
                                             "
                                             class="fas fa-check fa-fw text-success ml-1"
                                         ></i
                                     ></b-button> </b-col
                                 ><b-col
-                                    style="border-top: 2px solid lightgray; left: -5px"
+                                    style="
+                                        border-top: 2px solid lightgray;
+                                        left: -5px;
+                                    "
                                     cols="9"
                                     v-if="selectedProject !== null"
                                     ><b-row
@@ -361,7 +364,7 @@
                                             ><b-button
                                                 :disabled="
                                                     project.title !==
-                                                        selectedProject.title
+                                                    selectedProject.title
                                                 "
                                                 :variant="
                                                     profile.darkMode
@@ -374,10 +377,10 @@
                                                     v-if="
                                                         selectedStudy !==
                                                             null &&
-                                                            selectedStudy.title ===
-                                                                study.title &&
-                                                            selectedProject ===
-                                                                project
+                                                        selectedStudy.title ===
+                                                            study.title &&
+                                                        selectedProject ===
+                                                            project
                                                     "
                                                     class="fas fa-check fa-fw ml-1 text-success"
                                                 ></i></b-button></b-col></b-row></b-col></b-row
@@ -390,9 +393,9 @@
                             title="Create Directory"
                             :id="
                                 'createDirectoryModal' +
-                                    (internalLoaded
-                                        ? internalNode.label
-                                        : node.label)
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
                             "
                             centered
                             :header-text-variant="
@@ -515,7 +518,7 @@
                                     v-for="project in personalProjects"
                                     v-bind:key="project.title"
                                     ><b-col
-                                        style="border-top: 2px solid lightgray;"
+                                        style="border-top: 2px solid lightgray"
                                         cols="3"
                                     >
                                         <b-button
@@ -529,14 +532,17 @@
                                             }}<i
                                                 v-if="
                                                     selectedProject !== null &&
-                                                        selectedProject.title ===
-                                                            project.title
+                                                    selectedProject.title ===
+                                                        project.title
                                                 "
                                                 class="fas fa-check fa-fw text-success ml-1"
                                             ></i
                                         ></b-button> </b-col
                                     ><b-col
-                                        style="border-top: 2px solid lightgray; left: -5px"
+                                        style="
+                                            border-top: 2px solid lightgray;
+                                            left: -5px;
+                                        "
                                         cols="9"
                                         v-if="selectedProject !== null"
                                         ><b-row
@@ -546,7 +552,7 @@
                                                 ><b-button
                                                     :disabled="
                                                         project.title !==
-                                                            selectedProject.title
+                                                        selectedProject.title
                                                     "
                                                     :variant="
                                                         profile.darkMode
@@ -561,10 +567,10 @@
                                                         v-if="
                                                             selectedStudy !==
                                                                 null &&
-                                                                selectedStudy.title ===
-                                                                    study.title &&
-                                                                selectedProject ===
-                                                                    project
+                                                            selectedStudy.title ===
+                                                                study.title &&
+                                                            selectedProject ===
+                                                                project
                                                         "
                                                         class="fas fa-check fa-fw ml-1 text-success"
                                                     ></i></b-button></b-col></b-row></b-col
@@ -601,9 +607,9 @@
                             title="Unbind Project"
                             :id="
                                 'unbindProject' +
-                                    (internalLoaded
-                                        ? internalNode.label
-                                        : node.label)
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
                             "
                             centered
                             :header-text-variant="
@@ -631,7 +637,7 @@
                             <p
                                 v-if="
                                     projectToUnbind !== null &&
-                                        studyToUnbind !== null
+                                    studyToUnbind !== null
                                 "
                                 :class="
                                     profile.darkMode
@@ -673,8 +679,8 @@
                     <b-button
                         v-if="
                             !internalLoading &&
-                                internalNode.path.split('/').length > 4 &&
-                                !isShared
+                            internalNode.path.split('/').length > 4 &&
+                            !isShared
                         "
                         title="Share Directory"
                         size="sm"
@@ -742,7 +748,7 @@
                         "
                         :title="
                             'Share ' +
-                                (internalLoaded ? internalNode.path : node.path)
+                            (internalLoaded ? internalNode.path : node.path)
                         "
                         size="lg"
                         centered
@@ -762,9 +768,7 @@
                         @close="hideShareDirectoryModal"
                         :id="
                             'shareDirectoryModal' +
-                                (internalLoaded
-                                    ? internalNode.label
-                                    : node.label)
+                            (internalLoaded ? internalNode.label : node.label)
                         "
                         ><b-container fluid>
                             <b-row
@@ -857,7 +861,14 @@
                                                             user.github_profile
                                                         "
                                                         class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                                                        style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                                        style="
+                                                            width: 2rem;
+                                                            height: 2rem;
+                                                            left: -3px;
+                                                            top: 1.5px;
+                                                            border: 1px solid
+                                                                #e2e3b0;
+                                                        "
                                                         rounded="circle"
                                                         :src="
                                                             user.github_profile
@@ -1090,7 +1101,7 @@
                     class="ml-1 mr-1"
                     :disabled="
                         !select ||
-                            (select !== 'directory' && select !== 'files')
+                        (select !== 'directory' && select !== 'files')
                     "
                     @click="
                         selectNode(
@@ -1104,7 +1115,7 @@
                         class="fas fa-seedling fa-fw mr-2 text-success"
                     ></i
                     >{{
-                        internalLoaded ? internalNode.label : node.label
+                        replaceMe(internalLoaded ? internalNode.label : node.label)
                     }}</b-button
                 >
             </b-col>
@@ -1115,11 +1126,10 @@
                 <b-button
                     v-if="
                         internalLoaded &&
-                            (internalLoaded
-                                ? internalNode.path
-                                : node.path
-                            ).split('/').length > 4 &&
-                            !isShared
+                        (internalLoaded ? internalNode.path : node.path).split(
+                            '/'
+                        ).length > 4 &&
+                        !isShared
                     "
                     class="ml-1 mr-1"
                     size="sm"
@@ -1161,7 +1171,7 @@
         </b-row>
         <b-list-group-item
             class="mt-2 mb-1 ml-2 mr-0 p-0"
-            style="background-color: transparent;"
+            style="background-color: transparent"
             v-show="isOpen"
             v-if="isDir && internalLoaded"
             :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
@@ -1187,7 +1197,7 @@
             <b-row
                 id="files"
                 class="mt-1 mb-1 ml-2 mr-0 p-0"
-                style="border-top: 1px solid rgba(211, 211, 211, .5);"
+                style="border-top: 1px solid rgba(211, 211, 211, 0.5)"
                 v-for="(child, index) in filteredFiles"
                 :key="index"
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
@@ -1258,7 +1268,7 @@
         </b-list-group-item>
         <b-list-group-item
             class="mt-2 mb-1 ml-2 mr-0 p-0"
-            style="background-color: transparent;"
+            style="background-color: transparent"
             v-for="(child, index) in internalLoaded
                 ? internalLoadedFolders
                 : node.folders"
@@ -1269,7 +1279,10 @@
             <data-tree
                 ref="childNode"
                 class="pt-1 pb-1 mb-0 ml-2 mr-0 p-0"
-                style="border-top: 1px solid rgba(211, 211, 211, .5); border-left: 2px solid rgba(211, 211, 211, .5)"
+                style="
+                    border-top: 1px solid rgba(211, 211, 211, 0.5);
+                    border-left: 2px solid rgba(211, 211, 211, 0.5);
+                "
                 :select="select"
                 :upload="upload"
                 :download="download"
@@ -1328,45 +1341,45 @@
     </b-list-group>
 </template>
 <script>
-import {bus} from '../../main';
-import {mapGetters} from 'vuex';
+import { bus } from '../../main';
+import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import {guid} from '@/utils';
+import { guid } from '@/utils';
 
 export default {
     name: 'data-tree',
     props: {
         node: {
             required: true,
-            type: Object
+            type: Object,
         },
         select: {
             required: false,
-            type: String
+            type: String,
         },
         create: {
             required: false,
-            type: Boolean
+            type: Boolean,
         },
         upload: {
             required: false,
-            type: Boolean
+            type: Boolean,
         },
         download: {
             required: false,
-            type: Boolean
+            type: Boolean,
         },
         agents: {
             required: false,
-            type: Array
+            type: Array,
         },
         search: {
             required: false,
-            type: String
-        }
+            type: String,
+        },
     },
-    data: function() {
+    data: function () {
         return {
             sprout: false,
             internalNode: null,
@@ -1402,7 +1415,7 @@ export default {
             studyToUnbind: null,
             // file paging
             filePage: 1,
-            filePageSize: 10
+            filePageSize: 10,
         };
     },
     created() {
@@ -1421,22 +1434,20 @@ export default {
         ...mapGetters('projects', [
             'personalProjects',
             'projectsLoading',
-            'othersProjects'
+            'othersProjects',
         ]),
         ...mapGetters('datasets', [
             'sharingDatasets',
-            'sharingDatasetsLoading'
+            'sharingDatasetsLoading',
         ]),
         numFiles() {
-            return (this.internalLoaded
-                ? this.internalNode.files
-                : this.node.files
+            return (
+                this.internalLoaded ? this.internalNode.files : this.node.files
             ).length;
         },
         filteredFiles() {
-            return (this.internalLoaded
-                ? this.internalNode.files
-                : this.node.files
+            return (
+                this.internalLoaded ? this.internalNode.files : this.node.files
             ).slice(
                 (this.filePage - 1) * this.filePageSize,
                 this.filePage * this.filePageSize
@@ -1446,7 +1457,7 @@ export default {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
-            return this.sharingDatasets.filter(d => d.path === path);
+            return this.sharingDatasets.filter((d) => d.path === path);
         },
         associatedStudies() {
             let path = this.internalLoaded
@@ -1455,24 +1466,24 @@ export default {
             if (this.projectsLoading) return [];
             let projects = this.personalProjects
                 .concat(this.othersProjects)
-                .filter(p =>
-                    p.studies.some(s => s.dataset_paths.includes(path))
+                .filter((p) =>
+                    p.studies.some((s) => s.dataset_paths.includes(path))
                 );
             return projects
-                .flatMap(p => p.studies)
-                .filter(s => s.dataset_paths.includes(path))
-                .map(s => {
+                .flatMap((p) => p.studies)
+                .filter((s) => s.dataset_paths.includes(path))
+                .map((s) => {
                     return {
                         title: s.title,
                         project_title: s.project_title,
-                        project_owner: s.project_owner
+                        project_owner: s.project_owner,
                     };
                 });
         },
         internalLoadedFolders() {
             return this.internalNode !== null ? this.internalNode.folders : [];
         },
-        sharedBy: function() {
+        sharedBy: function () {
             if (this.isShared) {
                 let path = this.internalLoaded
                     ? this.internalNode.path
@@ -1481,15 +1492,15 @@ export default {
                 return split[3];
             } else return null;
         },
-        isOwned: function() {
-           let path = this.internalLoaded
+        isOwned: function () {
+            let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
             let split = path.split('/');
             let user = split[3];
             return user === this.profile.djangoProfile.username;
         },
-        isShared: function() {
+        isShared: function () {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
@@ -1500,14 +1511,14 @@ export default {
                 user !== 'shared'
             );
         },
-        isPublic: function() {
+        isPublic: function () {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
             let split = path.split('/');
             return split[3] === 'shared';
         },
-        isDir: function() {
+        isDir: function () {
             return !('file-size' in this);
         },
         isPersonalDirectory() {
@@ -1540,12 +1551,12 @@ export default {
                     //         // avatar: user.github_profile.avatar_url
                     //     };
                     // })
-                    .filter(function(item) {
+                    .filter(function (item) {
                         return item.username !== username;
                     })
             );
         },
-        subDirCount: function() {
+        subDirCount: function () {
             return this.internalLoaded
                 ? this.internalNode.folders
                     ? this.internalNode.folders.length
@@ -1554,7 +1565,7 @@ export default {
                 ? this.node.folders.length
                 : 0;
         },
-        fileCount: function() {
+        fileCount: function () {
             return this.internalLoaded
                 ? this.internalNode.files
                     ? this.internalNode.files.length
@@ -1562,7 +1573,7 @@ export default {
                 : this.node.files
                 ? this.node.files.length
                 : 0;
-        }
+        },
     },
     watch: {
         internalLoadedFolders() {
@@ -1570,9 +1581,12 @@ export default {
         },
         filePage() {
             this.loadFileURLs();
-        }
+        },
     },
     methods: {
+        replaceMe(name) {
+            return name.replace('With Me', 'with you');
+        },
         async findPath(path) {
             let own_path = this.internalLoaded
                 ? this.internalNode.path
@@ -1615,8 +1629,8 @@ export default {
                             (this.filePage - 1) * this.filePageSize,
                             this.filePage * this.filePageSize
                         )
-                        .map(f => this.fileURL(f))
-                ).then(urls => {
+                        .map((f) => this.fileURL(f))
+                ).then((urls) => {
                     for (const url of urls)
                         this.fileURLs[url['path']] = url['url'];
                 });
@@ -1632,18 +1646,18 @@ export default {
                         headers: {
                             Authorization:
                                 'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
+                                this.profile.djangoProfile.cyverse_token,
                         },
-                        responseType: 'blob'
+                        responseType: 'blob',
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
                     result = {
                         path: file.path,
-                        url: url
+                        url: url,
                     };
                 });
 
@@ -1654,7 +1668,7 @@ export default {
         },
         projectFor(study) {
             return this.personalProjects.find(
-                p =>
+                (p) =>
                     p.owner === study.project_owner &&
                     p.title === study.project_title
             );
@@ -1666,14 +1680,14 @@ export default {
                 ? this.internalNode.path
                 : this.node.path;
             var data = {
-                path: path
+                path: path,
             };
             if (this.projectToUnbind !== null)
                 data['project'] = this.projectToUnbind;
             if (this.studyToUnbind !== null) data['study'] = this.studyToUnbind;
             await axios
                 .post(`/apis/v1/datasets/unbind/`, data)
-                .then(async response => {
+                .then(async (response) => {
                     if (
                         response.status === 200 &&
                         response.data.project !== undefined
@@ -1685,19 +1699,19 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Unbound project ${this.projectToUnbind.title} study ${this.studyToUnbind.title} from path ${path}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         this.projectToUnbind = null;
                         this.studyToUnbind = null;
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     this.unbindingProject = false;
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to unbind project ${this.projectToUnbind.title} study ${this.studyToUnbind.title} from path ${path}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -1727,14 +1741,14 @@ export default {
             this.bindingProject = true;
             this.hideBindProjectModal();
             var data = {
-                path: path
+                path: path,
             };
             if (this.selectedProject !== null)
                 data['project'] = this.selectedProject;
             if (this.selectedStudy !== null) data['study'] = this.selectedStudy;
             await axios
                 .post(`/apis/v1/datasets/bind/`, data)
-                .then(async response => {
+                .then(async (response) => {
                     if (
                         response.status === 200 &&
                         response.data.project !== undefined
@@ -1746,17 +1760,17 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Bound project ${this.selectedProject.title} study ${this.selectedStudy.title} to path ${path}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     this.bindingProject = false;
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to bind project ${this.selectedProject.title} study ${this.selectedStudy.title} to path ${path}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -1810,59 +1824,26 @@ export default {
                 agent: agent,
                 path: this.internalLoaded
                     ? this.internalNode.path
-                    : this.node.path
+                    : this.node.path,
             });
         },
         fileIsImage(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'png' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpeg'
+                file.toLowerCase().split('.').pop() === 'png' ||
+                file.toLowerCase().split('.').pop() === 'jpg' ||
+                file.toLowerCase().split('.').pop() === 'jpeg'
             );
         },
         fileIsText(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'txt' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'csv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'tsv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yaml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'log' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'out' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'err'
+                file.toLowerCase().split('.').pop() === 'txt' ||
+                file.toLowerCase().split('.').pop() === 'csv' ||
+                file.toLowerCase().split('.').pop() === 'tsv' ||
+                file.toLowerCase().split('.').pop() === 'yml' ||
+                file.toLowerCase().split('.').pop() === 'yaml' ||
+                file.toLowerCase().split('.').pop() === 'log' ||
+                file.toLowerCase().split('.').pop() === 'out' ||
+                file.toLowerCase().split('.').pop() === 'err'
             );
         },
         viewFile(file) {
@@ -1899,21 +1880,21 @@ export default {
                 url: `/apis/v1/datasets/share/`,
                 data: {
                     // sharing
-                    sharing: this.sharedUsers.map(function(user) {
+                    sharing: this.sharedUsers.map(function (user) {
                         return {
                             user: user,
                             paths: [
                                 {
                                     path: path,
-                                    permission: 'read'
-                                }
-                            ]
+                                    permission: 'read',
+                                },
+                            ],
                         };
-                    })
+                    }),
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     await this.$store.dispatch(
                         'datasets/setSharing',
                         response.data.datasets
@@ -1925,7 +1906,7 @@ export default {
                                 ? this.internalNode.path
                                 : this.node.path
                         } with ${this.sharedUsers.length} user(s)`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
 
                     this.$parent.$parent.$parent.$parent.$parent.$emit(
@@ -1939,7 +1920,7 @@ export default {
                     this.$parent.$emit('loadSharedDirectory');
                     this.$emit('loadSharedDirectory');
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
 
                     this.$store.dispatch('alerts/add', {
@@ -1949,7 +1930,7 @@ export default {
                                 ? this.internalNode.path
                                 : this.node.path
                         } with ${this.sharedUsers.length} user(s)`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
 
                     throw error;
@@ -1989,14 +1970,14 @@ export default {
             this.waitFor(() => {
                 this.refresh();
                 let created =
-                    this.internalNode.folders.filter(f => f.path === path)
+                    this.internalNode.folders.filter((f) => f.path === path)
                         .length !== 0;
                 if (created) {
                     this.creatingDirectory = false;
                     this.$store.dispatch('alerts/add', {
                         variant: 'success',
                         message: `Created directory ${path}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                 }
                 return created;
@@ -2007,19 +1988,19 @@ export default {
                 () => {
                     this.refresh();
                     let deleted =
-                        this.internalNode.folders.filter(f => f.path === path)
+                        this.internalNode.folders.filter((f) => f.path === path)
                             .length === 0;
                     if (deleted) {
                         this.deletingDirectory = false;
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Deleted directory ${path}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     return deleted;
                 },
-                () => this.internalNode.folders.map(f => f)
+                () => this.internalNode.folders.map((f) => f)
             );
         },
         waitFor(condition, callback) {
@@ -2045,12 +2026,12 @@ export default {
                     `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`,
                     {
                         headers: {
-                            Authorization: 'Bearer ' + token
+                            Authorization: 'Bearer ' + token,
                         },
-                        responseType: 'blob'
+                        responseType: 'blob',
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
@@ -2061,12 +2042,12 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to download ${path}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -2091,9 +2072,9 @@ export default {
                     cancelVariant: 'secondary',
                     okTitle: 'Yes',
                     cancelTitle: 'No',
-                    centered: true
+                    centered: true,
                 })
-                .then(async value => {
+                .then(async (value) => {
                     if (value) {
                         this.deleting = true;
                         await axios
@@ -2102,31 +2083,31 @@ export default {
                                 { paths: [path] },
                                 {
                                     headers: {
-                                        Authorization: 'Bearer ' + token
-                                    }
+                                        Authorization: 'Bearer ' + token,
+                                    },
                                 }
                             )
                             .then(() =>
                                 setTimeout(this.refreshAfterDeletion, 5000)
                             )
-                            .catch(error => {
+                            .catch((error) => {
                                 Sentry.captureException(error);
                                 this.deleting = false;
                                 this.$store.dispatch('alerts/add', {
                                     variant: 'success',
                                     message: `Failed to delete ${path}`,
-                                    guid: guid().toString()
+                                    guid: guid().toString(),
                                 });
                                 throw error;
                             });
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     throw err;
                 });
         },
         until(conditionFunction) {
-            const poll = resolve => {
+            const poll = (resolve) => {
                 if (conditionFunction()) resolve();
                 else setTimeout(() => poll(resolve), 5000);
             };
@@ -2173,7 +2154,7 @@ export default {
             this.creatingDirectory = true;
             this.$bvModal.hide('createDirectoryModal');
             var data = {
-                path: path
+                path: path,
             };
             if (this.selectedProject !== null)
                 data['project'] = this.selectedProject;
@@ -2181,10 +2162,10 @@ export default {
             await axios
                 .post(`/apis/v1/datasets/create/`, data, {
                     headers: {
-                        Authorization: 'Bearer ' + token
-                    }
+                        Authorization: 'Bearer ' + token,
+                    },
                 })
-                .then(async response => {
+                .then(async (response) => {
                     if (
                         response.status === 200 &&
                         response.data.project !== undefined
@@ -2196,13 +2177,13 @@ export default {
                     }
                     setTimeout(() => this.waitForCreation(path), 3000);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.creatingDirectory = false;
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to create directory ${path}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -2219,25 +2200,25 @@ export default {
                         {
                             headers: {
                                 Authorization: 'Bearer ' + token,
-                                'Content-Type': 'multipart/form-data'
-                            }
+                                'Content-Type': 'multipart/form-data',
+                            },
                         }
                     )
-                    .then(response => {
+                    .then((response) => {
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         this.uploading = false;
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         Sentry.captureException(error);
                         this.uploading = false;
                         this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to upload '${file.name}' to '${to_path}'`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         throw error;
                     });
@@ -2256,7 +2237,7 @@ export default {
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
                     { headers: { Authorization: 'Bearer ' + token } }
                 )
-                .then(async response => {
+                .then(async (response) => {
                     this.internalNode = response.data;
                     this.internalLoading = false;
                     this.internalLoaded = true;
@@ -2264,14 +2245,14 @@ export default {
                     if (!this.isOpen) this.isOpen = true;
                     await this.loadFileURLs();
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.internalLoading = false;
                     this.deleting = false;
                     throw error;
                 });
         },
-        selectNode: function(node, kind) {
+        selectNode: function (node, kind) {
             node['kind'] = kind;
 
             // TODO remove this eldritch horror and use the message bus
@@ -2430,8 +2411,8 @@ export default {
             bus.$emit('close');
 
             this.$parent.toggle();
-        }
-    }
+        },
+    },
 };
 </script>
 

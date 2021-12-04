@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <div v-if="isRootPath">
             <b-row
                 ><b-col
@@ -23,7 +23,8 @@
                             ><span v-else-if="context === ''"
                                 ><i class="fas fa-users"></i> Public</span
                             ><span v-else
-                                ><i class="fas fa-building"></i> {{ context }}</span
+                                ><i class="fas fa-building"></i>
+                                {{ context }}</span
                             >
                         </template>
                         <b-dropdown-item
@@ -57,7 +58,7 @@
                         your own personal workflow context.</b-popover
                     >
                 </b-col>
-                <b-col
+                <!--<b-col
                     md="auto"
                     class="ml-0 mb-1"
                     align-self="center"
@@ -89,7 +90,7 @@
                         >Click here to bind a GitHub repository to a PlantIT
                         workflow.</b-popover
                     ></b-col
-                >
+                >-->
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-workflows"
@@ -128,7 +129,7 @@
                     ><b-img
                         class="mt-1"
                         rounded
-                        style="max-height: 1.2rem;"
+                        style="max-height: 1.2rem"
                         right
                         :src="
                             profile.darkMode
@@ -162,7 +163,7 @@
                         profile.darkMode ? 'secondary' : 'default'
                     "
                     :text-variant="profile.darkMode ? 'white' : 'dark'"
-                    style="min-width: 30rem;"
+                    style="min-width: 30rem"
                     class="overflow-hidden mb-4"
                 >
                     <blurb :linkable="true" :workflow="workflow"></blurb>
@@ -638,9 +639,9 @@ export default {
     name: 'workflows',
     components: {
         blurb,
-        JsonViewer
+        JsonViewer,
     },
-    data: function() {
+    data: function () {
         return {
             login: false,
             name: '',
@@ -650,21 +651,21 @@ export default {
             // bindingBranchOptions: [],
             loadingBranchOptions: false,
             context: '',
-            contextToggling: false
+            contextToggling: false,
         };
     },
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
-        boundWorkflows: function() {
+        boundWorkflows: function () {
             // noop
         },
-        publicWorkflows: function() {
+        publicWorkflows: function () {
             // noop
-        }
+        },
     },
     methods: {
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
@@ -735,9 +736,9 @@ export default {
         //             throw error;
         //         });
         // },
-        showBindWorkflowModal() {
-            this.$bvModal.show('bindWorkflow');
-        },
+        // showBindWorkflowModal() {
+        //     this.$bvModal.show('bindWorkflow');
+        // },
         async bindWorkflow() {
             this.bindingWorkflow = true;
             // this.binding['branch'] = this.bindingBranch;
@@ -745,9 +746,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/workflows/${this.binding.repo.owner.login}/u/${this.binding.repo.name}/bind/`,
                 data: this.binding,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         this.$bvModal.hide('bindWorkflow');
                         await Promise.all([
@@ -759,8 +760,8 @@ export default {
                                 variant: 'success',
                                 message: `Created binding for workflow ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                         this.binding = null;
                         this.bindingWorkflow = false;
@@ -769,30 +770,41 @@ export default {
                             variant: 'danger',
                             message: `Failed to bind workflow ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                         this.$bvModal.hide('bindWorkflow');
                         this.binding = null;
                         this.bindingWorkflow = false;
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to connect ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.binding = null;
                     this.bindingWorkflow = false;
                     throw error;
                 });
         },
-        sortWorkflows(left, right) {
-            if (left.config.name < right.config.name) return -1;
-            if (left.config.name > right.config.name) return 1;
-            return 0;
+        // sortWorkflows(left, right) {
+        //     if (left.config.name < right.config.name) return -1;
+        //     if (left.config.name > right.config.name) return 1;
+        //     return 0;
+        // },
+        sortWorkflows(a, b) {
+            if (a.config.name === b.config.name) {
+                if (a.branch.name < b.branch.name) return -1;
+                if (a.branch.name > b.branch.name) return 1;
+                return 0;
+            } else {
+                if (a.config.name < b.config.name) return -1;
+                if (a.config.name > b.config.name) return 1;
+                return 0;
+            }
         },
         async refreshWorkflows() {
             if (this.context === '')
@@ -808,13 +820,13 @@ export default {
                     this.context
                 );
         },
-        selectBinding(workflow) {
-            this.binding = workflow;
-            this.loadBindingWorkflowRepoBranches();
-        },
-        unselectBinding() {
-            this.binding = null;
-        }
+        // selectBinding(workflow) {
+        //     this.binding = workflow;
+        //     this.loadBindingWorkflowRepoBranches();
+        // },
+        // unselectBinding() {
+        //     this.binding = null;
+        // }
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -826,7 +838,7 @@ export default {
             'publicWorkflows',
             'publicWorkflowsLoading',
             'boundWorkflows',
-            'bindableWorkflows'
+            'bindableWorkflows',
         ]),
         sortedBindableWorkflows() {
             let bindable =
@@ -834,30 +846,22 @@ export default {
                     ? this.bindableWorkflows
                     : this.context === ''
                     ? []
-                    : this.orgWorkflows[this.context].filter(wf => {
+                    : this.orgWorkflows[this.context].filter((wf) => {
                           return wf.bound;
                       });
-            return [...bindable].sort(function(a, b) {
-                if (a.config.name === b.config.name) {
-                    if (a.branch.name < b.branch.name) return -1;
-                    if (a.branch.name > b.branch.name) return 1;
-                    return 0;
-                } else {
-                    if (a.config.name < b.config.name) return -1;
-                    if (a.config.name > b.config.name) return 1;
-                    return 0;
-                }
-            });
+            return [...bindable].sort(this.sortWorkflows);
         },
         isRootPath() {
             return this.$route.name === 'workflows';
         },
         getWorkflows() {
-            return this.context === ''
-                ? this.publicWorkflows
-                : this.context === this.profile.githubProfile.login
-                ? this.boundWorkflows
-                : this.orgWorkflows[this.context];
+            return [
+                ...(this.context === ''
+                    ? this.publicWorkflows
+                    : this.context === this.profile.githubProfile.login
+                    ? this.boundWorkflows
+                    : this.orgWorkflows[this.context]),
+            ].sort(this.sortWorkflows);
             // return (this.contextPublic
             //     ? this.publicWorkflows
             //     : this.personalWorkflows
@@ -874,11 +878,11 @@ export default {
         },
         bindingSelected() {
             return this.binding !== null;
-        }
+        },
         // bindingBranchSelected() {
         //   return this.bindingBranch !== '';
         // }
-    }
+    },
 };
 </script>
 <style scoped lang="sass">

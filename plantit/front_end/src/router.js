@@ -30,7 +30,7 @@ let router = new Router({
             name: 'splash',
             component: splash,
             meta: {
-                title: 'PlantIT',
+                title: 'plantit',
                 crumb: [],
                 requiresAuth: false
             }
@@ -55,16 +55,16 @@ let router = new Router({
                 requiresAuth: false
             }
         },
-        {
-            path: '/beta',
-            name: 'beta',
-            component: beta,
-            meta: {
-                title: 'PlantIT Beta',
-                crumb: [],
-                requiresAuth: false
-            }
-        },
+        // {
+        //     path: '/beta',
+        //     name: 'beta',
+        //     component: beta,
+        //     meta: {
+        //         title: 'PlantIT Beta',
+        //         crumb: [],
+        //         requiresAuth: false
+        //     }
+        // },
         {
             path: '/home',
             name: 'home',

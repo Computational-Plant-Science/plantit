@@ -254,7 +254,7 @@ export const workflows = {
             for (let key in state.org) {
                 found = state.org[key].find(
                     repo =>
-                        owner === repo.repo.organization &&
+                        owner === repo.repo.owner.login &&
                         name === repo.repo.name &&
                         branch === repo.branch.name
                 );

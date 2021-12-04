@@ -3,7 +3,7 @@
         <b-container
             fluid
             class="m-0 p-3"
-            style="background-color: transparent;"
+            style="background-color: transparent"
         >
             <div v-if="isRootPath">
                 <b-row
@@ -22,11 +22,12 @@
                                         : require('../../assets/miappe_icon_black.png')
                                 "
                             ></b-img>
-                            {{ sharedContext ? 'Shared' : 'Your' }} MIAPPE
-                            Projects
-                        </h2> </b-col
-                    ><b-col md="auto" class="ml-0 mb-1" align-self="center"
-                        ><b-button
+                            MIAPPE Projects
+                        </h2>
+                    </b-col>
+                    <b-col align-self="center" class="mb-1" md="auto">
+                        <b-dropdown
+                            dropleft
                             id="switch-projects-context"
                             :disabled="projectsLoading"
                             :variant="
@@ -34,28 +35,34 @@
                             "
                             size="sm"
                             class="ml-0 mt-0 mr-0"
-                            @click="toggleContext"
-                            :title="
-                                sharedContext
-                                    ? 'View your projects'
-                                    : 'View shared projects'
-                            "
-                            v-b-tooltip:hover
-                            ><span v-if="sharedContext"
-                                ><i class="fas fa-user"></i> Yours</span
-                            ><span v-else
-                                ><i class="fas fa-users"></i> Shared</span
-                            ></b-button
-                        ><b-popover
+                            :title="sharedContext ? '' : ''"
+                            ><template #button-content>
+                                <span v-if="!sharedContext"
+                                    ><i class="fas fa-user"></i> Yours</span
+                                ><span v-else
+                                    ><i class="fas fa-users"></i> Shared</span
+                                >
+                            </template>
+                            <b-dropdown-item @click="toggleContext"
+                                ><i class="fas fa-user fa-fw"></i>
+                                Yours</b-dropdown-item
+                            >
+                            <b-dropdown-item @click="toggleContext"
+                                ><i class="fas fa-users fa-fw"></i>
+                                Shared</b-dropdown-item
+                            >
+                        </b-dropdown>
+                        <b-popover
                             v-if="profile.hints"
                             triggers="hover"
-                            placement="left"
-                            target="switch-projects-context"
-                            title="MIAPPE Context"
-                            >Click here to toggle between your projects and
-                            those other users have invited you to.</b-popover
-                        ></b-col
-                    ><b-col md="auto" class="ml-0 mb-1" align-self="center"
+                            placement="topleft"
+                            target="switch-project-context"
+                            title="Project Context"
+                            >Click here to toggle between shared projects and
+                            your own.</b-popover
+                        >
+                    </b-col>
+                    <b-col md="auto" class="ml-0 mb-1" align-self="center"
                         ><b-button
                             id="create-project"
                             :disabled="projectsLoading"
@@ -66,7 +73,6 @@
                             class="ml-0 mt-0 mr-0"
                             @click="showCreateProjectModal"
                             title="Create a new project"
-                            v-b-tooltip:hover
                             ><i class="fas fa-plus"></i> Create</b-button
                         ><b-popover
                             v-if="profile.hints"
@@ -82,7 +88,6 @@
                         md="auto"
                         class="ml-0 mb-1"
                         align-self="center"
-                        v-if="!sharedContext"
                         ><b-button
                             id="refresh-projects"
                             :disabled="projectsLoading"
@@ -90,7 +95,6 @@
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
                             size="sm"
-                            v-b-tooltip.hover
                             title="Refresh projects"
                             @click="refreshProjects"
                             class="ml-0 mt-0 mr-0"
@@ -134,7 +138,7 @@
                 <b-row v-else
                     ><b-col v-if="!sharedContext">
                         <span v-if="personalProjects.length === 0"
-                            >You haven't started any projects.</span
+                            >You haven't created any projects yet.</span
                         >
                         <projectblurb
                             v-for="project in personalProjects"
@@ -194,7 +198,6 @@
                                                         : 'white'
                                                 "
                                                 size="sm"
-                                                v-b-tooltip.hover
                                                 title="Add a new study"
                                                 @click="specifyStudy(project)"
                                                 class="ml-0 mt-0 mr-0"
@@ -285,7 +288,7 @@
                                                 <span
                                                     v-if="
                                                         study.experimental_design_type !==
-                                                            null
+                                                        null
                                                     "
                                                 >
                                                     <small
@@ -297,7 +300,7 @@
                                                     <small
                                                         v-if="
                                                             study.experimental_design_description !==
-                                                                null
+                                                            null
                                                         "
                                                         >{{
                                                             study.experimental_design_description
@@ -308,7 +311,7 @@
                                                 <span
                                                     v-if="
                                                         study.observation_unit_level_hierarchy !==
-                                                            null
+                                                        null
                                                     "
                                                 >
                                                     <small
@@ -320,7 +323,7 @@
                                                     <small
                                                         v-if="
                                                             study.observation_unit_description !==
-                                                                null
+                                                            null
                                                         "
                                                         >{{
                                                             study.observation_unit_description
@@ -331,7 +334,7 @@
                                                 <span
                                                     v-if="
                                                         study.growth_facility_type !==
-                                                            null
+                                                        null
                                                     "
                                                 >
                                                     <small
@@ -343,7 +346,7 @@
                                                     <small
                                                         v-if="
                                                             study.growth_facility_description !==
-                                                                null
+                                                            null
                                                         "
                                                         >{{
                                                             study.growth_facility_description
@@ -354,7 +357,7 @@
                                                 <span
                                                     v-if="
                                                         study.cultural_practices !==
-                                                            null
+                                                        null
                                                     "
                                                 >
                                                     <small
@@ -379,7 +382,7 @@
                                     <b-card-group>
                                         <b-card
                                             v-for="member in project.team.filter(
-                                                u =>
+                                                (u) =>
                                                     u.id !==
                                                     profile.djangoProfile
                                                         .username
@@ -396,7 +399,15 @@
                                                                 ) !== ''
                                                             "
                                                             class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                                                            style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                                            style="
+                                                                width: 2rem;
+                                                                height: 2rem;
+                                                                left: -3px;
+                                                                top: 1.5px;
+                                                                border: 1px
+                                                                    solid
+                                                                    #e2e3b0;
+                                                            "
                                                             rounded="circle"
                                                             :src="
                                                                 avatarUrl(
@@ -501,9 +512,9 @@ import * as Sentry from '@sentry/browser';
 export default {
     name: 'projects.vue',
     components: {
-        projectblurb
+        projectblurb,
     },
-    data: function() {
+    data: function () {
         return {
             projectTitleLoading: false,
             projectTitleExists: false,
@@ -516,7 +527,7 @@ export default {
             addingTeamMember: false,
             removingTeamMember: false,
             addingStudy: false,
-            removingStudy: false
+            removingStudy: false,
         };
     },
     methods: {
@@ -541,12 +552,12 @@ export default {
                 .get(
                     `/apis/v1/miappe/${this.profile.djangoProfile.username}/${this.projectTitle}/exists/`
                 )
-                .then(response => {
+                .then((response) => {
                     this.projectTitleExists = response.data.exists;
                     this.projectTitleLoading = false;
                     this.$emit('input', this.name);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.projectTitleLoading = false;
                     if (error.response.status === 500) throw error;
@@ -556,16 +567,16 @@ export default {
             this.creatingProject = true;
             let data = {
                 title: this.projectTitle,
-                description: this.projectDescription
+                description: this.projectDescription,
             };
 
             await axios({
                 method: 'post',
                 url: `/apis/v1/miappe/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
@@ -576,28 +587,28 @@ export default {
                                 variant: 'success',
                                 message: `Created project ${response.data.title}`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to create project ${response.data.title}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                     this.resetProjectInfo();
                     this.hideCreateProjectModal();
                     this.creatingProject = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to create project ${this.projectTitle}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.hideCreateProjectModal();
                     this.creatingProject = false;
@@ -611,15 +622,15 @@ export default {
             this.togglingContext = false;
         },
         avatarUrl(user) {
-            let found = this.otherUsers.find(u => u.username === user.id);
+            let found = this.otherUsers.find((u) => u.username === user.id);
             if (found === undefined) return undefined;
             return found.github_profile.avatar_url;
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
-        }
+        },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -627,7 +638,7 @@ export default {
         ...mapGetters('projects', [
             'personalProjects',
             'othersProjects',
-            'projectsLoading'
+            'projectsLoading',
         ]),
         isRootPath() {
             return this.$route.name === 'projects';
@@ -651,16 +662,16 @@ export default {
         },
         otherUsers() {
             return this.allUsers.filter(
-                u =>
+                (u) =>
                     u.username !== this.profile.djangoProfile.username &&
                     ((this.projectSelected &&
                         !this.selectedInvestigation.team.some(
-                            ua => ua.id === u.username
+                            (ua) => ua.id === u.username
                         )) ||
                         !this.projectSelected)
             );
-        }
-    }
+        },
+    },
 };
 </script>
 
