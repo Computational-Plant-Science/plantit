@@ -21,7 +21,7 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils import log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
+from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     refresh_personal_workflow_cache, refresh_org_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
@@ -283,7 +283,7 @@ def list_task_results(self, guid: str, auth: dict):
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
     if workflow is None:
-        workflow = async_to_sync(get_repo)(task.workflow_owner, task.workflow_name, task.user.profile.github_token)['config']
+        workflow = async_to_sync(get_workflow)(task.workflow_owner, task.workflow_name, task.user.profile.github_token)['config']
     else:
         workflow = json.loads(workflow)['config']
 

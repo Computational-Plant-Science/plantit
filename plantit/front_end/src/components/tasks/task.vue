@@ -143,13 +143,6 @@
                                             : 'theme-light'
                                     "
                                 >
-                                    <b-spinner
-                                        class="mb-1 mr-1"
-                                        small
-                                        v-if="!getTask.is_complete"
-                                        variant="warning"
-                                    >
-                                    </b-spinner>
                                     <!--<b-badge
                                         :variant="
                                             getTask.is_failure ||
@@ -284,6 +277,10 @@
                                         class="ml-2 mb-1"
                                     ></b-spinner>
                                 </b-button>
+                            </b-col>
+                            <b-col md="auto" v-if="!getTask.is_complete">
+                                <b-spinner class="ml-2" small variant="warning">
+                                </b-spinner>
                             </b-col>
                             <b-col
                                 md="auto"
