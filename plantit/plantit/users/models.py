@@ -16,7 +16,6 @@ class Profile(models.Model):
     push_notification_status = models.CharField(max_length=10, null=False, blank=False, default='disabled')
     push_notification_topic_arn = models.CharField(max_length=255, null=True, blank=True)
     push_notification_sub_arn = models.CharField(max_length=255, null=True, blank=True)
-    stats_last_aggregated = models.DateTimeField(null=True, blank=True)
     hints = models.BooleanField(default=False)
     created = models.DateField(null=True, blank=True)
     first_login = models.BooleanField(default=True)

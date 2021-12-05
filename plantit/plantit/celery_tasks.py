@@ -419,8 +419,7 @@ def aggregate_all_users_usage_stats():
         stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
-        user.profile.stats_last_aggregated = timezone.now()
-        user.profile.save()
+        redis.set(f"stats_updated/{user.username}", timezone.now().timestamp())
 
 
 @app.task()
@@ -435,8 +434,7 @@ def aggregate_user_usage_stats(username: str):
     stats = async_to_sync(calculate_user_statistics)(user)
     redis = RedisClient.get()
     redis.set(f"stats/{user.username}", json.dumps(stats))
-    user.profile.stats_last_aggregated = timezone.now()
-    user.profile.save()
+    redis.set(f"stats_updated/{user.username}", timezone.now().timestamp())
 
 
 @app.task()

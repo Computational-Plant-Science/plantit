@@ -143,13 +143,13 @@ class IDPViewSet(viewsets.ViewSet):
                     refresh_personal_workflows.s(owner).apply_async()
 
         # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
-        stats_last_aggregated = user.profile.stats_last_aggregated
-        if stats_last_aggregated is None:
+        stats_last_updated = redis.get(f"stats_updated/{user.username}")
+        if stats_last_updated is None:
             self.logger.info(f"No usage statistics for {user.username}. Scheduling aggregation...")
             aggregate_user_usage_stats.s(user.username).apply_async()
         else:
             stats = redis.get(f"stats/{user.username}")
-            stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
+            stats_age_minutes = (timezone.now() - stats_last_updated).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(
                     f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")

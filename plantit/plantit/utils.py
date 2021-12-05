@@ -229,16 +229,15 @@ def filter_online(users: List[User]) -> List[User]:
 
 def get_user_statistics(user: User) -> dict:
     redis = RedisClient.get()
-    stats_last_aggregated = user.profile.stats_last_aggregated
+    stats_last_updated = redis.get(f"stats_updated/{user.username}")
 
     # if we haven't aggregated stats for this user before, do it now
-    if stats_last_aggregated is None:
+    if stats_last_updated is None:
         logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
         stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
-        user.profile.stats_last_aggregated = timezone.now()
-        user.profile.save()
+        redis.set(f"stats_updated/{user.username}", timezone.now().timestamp())
     else:
         stats = redis.get(f"stats/{user.username}")
         stats = json.loads(stats) if stats is not None else None

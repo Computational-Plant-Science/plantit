@@ -180,7 +180,7 @@
                         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                     ></router-view>
                     <div v-if="isRootPath" class="p-2">
-                        <b-row>
+                        <b-row v-if="profile.stats !== null">
                             <b-col>
                                 <b-row align-v="start">
                                     <b-col>
@@ -504,6 +504,11 @@
                                         ></div></div
                                 ></b-row> </b-col
                         ></b-row>
+                      <b-row v-else>
+                        <b-col>
+                        No usage statistics to show.
+                          </b-col>
+                      </b-row>
                     </div> </b-col
             ></b-row></div
     ></b-container>
