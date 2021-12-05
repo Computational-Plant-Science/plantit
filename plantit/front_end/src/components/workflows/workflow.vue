@@ -1098,7 +1098,6 @@
                                                                 "
                                                                 class="mb-4"
                                                                 ><b-row
-                                                                    align-v="center"
                                                                 >
                                                                     <b-col
                                                                         md="auto"
@@ -1270,7 +1269,6 @@
                                                                 class="mb-4"
                                                             >
                                                                 <b-row
-                                                                    align-v="center"
                                                                 >
                                                                     <b-col
                                                                         md="auto"
@@ -1649,359 +1647,390 @@
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
-                                                                    <b-col>
-                                                                        <h4
-                                                                            :class="
+                                                                    <b-col
+                                                                        md="auto"
+                                                                    >
+                                                                        <b-button
+                                                                            size="sm"
+                                                                            :variant="
                                                                                 profile.darkMode
-                                                                                    ? 'text-white'
-                                                                                    : 'text-dark'
+                                                                                    ? 'dark'
+                                                                                    : 'outline-dark'
                                                                             "
-                                                                        >
-                                                                            <i
-                                                                                class="fas fa-download fa-fw"
-                                                                            ></i>
-                                                                            Input
-                                                                            <!--{{
+                                                                            v-b-toggle.input
+                                                                            ><i
+                                                                                v-if="
+                                                                                    inputVisible
+                                                                                "
+                                                                                class="fas fa-minus"
+                                                                            ></i
+                                                                            ><i
+                                                                                v-else
+                                                                                class="fas fa-plus"
+                                                                            ></i
+                                                                        ></b-button>
+                                                                    </b-col>
+                                                                    <b-col>
+                                                                        <b-row>
+                                                                            <b-col>
+                                                                                <h4
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    <i
+                                                                                        class="fas fa-download fa-fw"
+                                                                                    ></i>
+                                                                                    Input
+                                                                                    <!--{{
                                                                                 this.input.kind[0].toUpperCase() +
                                                                                     this.input.kind.substr(
                                                                                         1
                                                                                     )
                                                                             }}-->
-                                                                        </h4>
-                                                                    </b-col>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-row
-                                                                            align-v="center"
-                                                                            ><b-col>
-                                                                                <h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
+                                                                                </h4>
+                                                                            </b-col>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-row
+                                                                                    align-v="center"
+                                                                                    ><b-col>
+                                                                                        <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    inputValid
+                                                                                                "
+                                                                                                ><i
+                                                                                                    v-if="
+                                                                                                        selectedInput.type ===
+                                                                                                        'file'
+                                                                                                    "
+                                                                                                    class="fas fa-file fa-fw mr-1"
+                                                                                                ></i>
+                                                                                                <i
+                                                                                                    v-else
+                                                                                                    class="fas fa-folder fa-fw mr-1"
+                                                                                                ></i
+                                                                                                >{{
+                                                                                                    selectedInput.path
+                                                                                                }}
+                                                                                                <i
+                                                                                                    class="fas fa-check text-success fa-fw"
+                                                                                                ></i>
+                                                                                            </span>
+                                                                                            <i
+                                                                                                v-else
+                                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                                            ></i></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                              </b-col>
+                                                                        </b-row>
+                                                                      <b-row>
+                                                                        <b-col>
+                                                                                <b-collapse
+                                                                                    id="input"
+                                                                                    v-model="
+                                                                                        inputVisible
                                                                                     "
                                                                                 >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            inputValid
-                                                                                        "
-                                                                                        ><i
-                                                                                            v-if="
-                                                                                                selectedInput.type ===
-                                                                                                'file'
+                                                                                    <div>
+                                                                                        <b
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
                                                                                             "
-                                                                                            class="fas fa-file fa-fw mr-1"
-                                                                                        ></i>
-                                                                                        <i
-                                                                                            v-else
-                                                                                            class="fas fa-folder fa-fw mr-1"
-                                                                                        ></i
-                                                                                        >{{
-                                                                                            selectedInput.path
+                                                                                        >
+                                                                                            Select
+                                                                                            a
+                                                                                            public
+                                                                                            {{
+                                                                                                this
+                                                                                                    .input
+                                                                                                    .kind ===
+                                                                                                'files'
+                                                                                                    ? 'directory'
+                                                                                                    : this
+                                                                                                          .input
+                                                                                                          .kind
+                                                                                            }}
+                                                                                            from
+                                                                                            the
+                                                                                            Data
+                                                                                            Commons
+                                                                                            or
+                                                                                            your
+                                                                                            own
+                                                                                            {{
+                                                                                                this
+                                                                                                    .input
+                                                                                                    .kind ===
+                                                                                                'files'
+                                                                                                    ? 'directory'
+                                                                                                    : this
+                                                                                                          .input
+                                                                                                          .kind
+                                                                                            }}
+                                                                                            from
+                                                                                            the
+                                                                                            Data
+                                                                                            Store.
+                                                                                        </b>
+                                                                                        <b-tabs
+                                                                                            class="mt-2"
+                                                                                            pills
+                                                                                            nav-class="bg-transparent"
+                                                                                            active-nav-item-class="bg-info text-dark"
+                                                                                        >
+                                                                                            <b-tab
+                                                                                                active
+                                                                                                title="Personal"
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <b-row
+                                                                                                    v-if="
+                                                                                                        personalDatasetsLoading
+                                                                                                    "
+                                                                                                    align-v="center"
+                                                                                                    align-h="center"
+                                                                                                >
+                                                                                                    <b-col
+                                                                                                        align-self="end"
+                                                                                                    >
+                                                                                                        <b-spinner
+                                                                                                            type="grow"
+                                                                                                            variant="secondary"
+                                                                                                        ></b-spinner> </b-col
+                                                                                                ></b-row>
+                                                                                                <b-row
+                                                                                                    v-else
+                                                                                                >
+                                                                                                    <b-col>
+                                                                                                        <datatree
+                                                                                                            :select="
+                                                                                                                input.kind
+                                                                                                            "
+                                                                                                            :upload="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            :download="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            @selectNode="
+                                                                                                                inputSelected
+                                                                                                            "
+                                                                                                            :node="
+                                                                                                                personalDatasets
+                                                                                                            "
+                                                                                                        ></datatree></b-col
+                                                                                                ></b-row>
+                                                                                            </b-tab>
+                                                                                            <b-tab
+                                                                                                title="Shared"
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <b-row
+                                                                                                    v-if="
+                                                                                                        sharedDatasetsLoading
+                                                                                                    "
+                                                                                                    align-v="center"
+                                                                                                    align-h="center"
+                                                                                                >
+                                                                                                    <b-col
+                                                                                                        align-self="end"
+                                                                                                        ><b-spinner
+                                                                                                            type="grow"
+                                                                                                            variant="secondary"
+                                                                                                        ></b-spinner></b-col
+                                                                                                ></b-row>
+                                                                                                <b-row
+                                                                                                    v-else
+                                                                                                >
+                                                                                                    <b-col>
+                                                                                                        <datatree
+                                                                                                            :select="
+                                                                                                                input.kind
+                                                                                                            "
+                                                                                                            :upload="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            :download="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            @selectNode="
+                                                                                                                inputSelected
+                                                                                                            "
+                                                                                                            :node="
+                                                                                                                sharedDatasets
+                                                                                                            "
+                                                                                                        ></datatree> </b-col></b-row
+                                                                                            ></b-tab>
+                                                                                            <b-tab
+                                                                                                title="Public"
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <b-row
+                                                                                                    v-if="
+                                                                                                        publicDatasetsLoading
+                                                                                                    "
+                                                                                                    align-v="center"
+                                                                                                    align-h="center"
+                                                                                                >
+                                                                                                    <b-col
+                                                                                                        align-self="end"
+                                                                                                    >
+                                                                                                        <b-spinner
+                                                                                                            type="grow"
+                                                                                                            variant="secondary"
+                                                                                                        ></b-spinner> </b-col
+                                                                                                ></b-row>
+                                                                                                <b-row
+                                                                                                    v-else
+                                                                                                    ><b-col>
+                                                                                                        <datatree
+                                                                                                            :select="
+                                                                                                                input.kind
+                                                                                                            "
+                                                                                                            :upload="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            :download="
+                                                                                                                true
+                                                                                                            "
+                                                                                                            @selectNode="
+                                                                                                                inputSelected
+                                                                                                            "
+                                                                                                            :node="
+                                                                                                                publicDatasets
+                                                                                                            "
+                                                                                                        ></datatree></b-col
+                                                                                                ></b-row>
+                                                                                            </b-tab>
+                                                                                        </b-tabs>
+                                                                                    </div>
+                                                                                    <b-row
+                                                                                        v-if="
+                                                                                            input
+                                                                                                .filetypes
+                                                                                                .length >
+                                                                                            0
+                                                                                        "
+                                                                                    >
+                                                                                        <b-col>
+                                                                                            <b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Select
+                                                                                                one
+                                                                                                or
+                                                                                                more
+                                                                                                input
+                                                                                                filetypes.
+                                                                                            </b>
+                                                                                            <multiselect
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'input-dark'
+                                                                                                        : 'input-light'
+                                                                                                "
+                                                                                                :multiple="
+                                                                                                    true
+                                                                                                "
+                                                                                                :close-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :clear-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :preserve-search="
+                                                                                                    true
+                                                                                                "
+                                                                                                :preselect-first="
+                                                                                                    true
+                                                                                                "
+                                                                                                v-model="
+                                                                                                    inputSelectedPatterns
+                                                                                                "
+                                                                                                :options="
+                                                                                                    input.filetypes
+                                                                                                "
+                                                                                            ></multiselect>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-alert
+                                                                                        class="mt-1"
+                                                                                        :variant="
+                                                                                            inputFiletypeSelected
+                                                                                                ? 'success'
+                                                                                                : 'danger'
+                                                                                        "
+                                                                                        :show="
+                                                                                            true
+                                                                                        "
+                                                                                        >Selected:
+                                                                                        {{
+                                                                                            inputFiletypeSelected
+                                                                                                ? '*.' +
+                                                                                                  inputSelectedPatterns.join(
+                                                                                                      ', *.'
+                                                                                                  )
+                                                                                                : 'None'
                                                                                         }}
                                                                                         <i
-                                                                                            class="fas fa-check text-success fa-fw"
+                                                                                            v-if="
+                                                                                                inputFiletypeSelected
+                                                                                            "
+                                                                                            class="fas fa-check text-success"
                                                                                         ></i>
-                                                                                    </span>
-                                                                                    <i
-                                                                                        v-else
-                                                                                        class="fas fa-exclamation text-danger fa-fw"
-                                                                                    ></i></h5
-                                                                            ></b-col>
+                                                                                        <i
+                                                                                            v-else
+                                                                                            class="fas fa-exclamation text-danger"
+                                                                                        ></i>
+                                                                                    </b-alert>
+                                                                                </b-collapse>
+                                                                        </b-col>
                                                                         </b-row>
-                                                                        <b-collapse
-                                                                            id="input"
-                                                                            v-model="
-                                                                                inputVisible
-                                                                            "
-                                                                        >
-                                                                            <div>
-                                                                                <b
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    Select
-                                                                                    a
-                                                                                    public
-                                                                                    {{
-                                                                                        this
-                                                                                            .input
-                                                                                            .kind ===
-                                                                                        'files'
-                                                                                            ? 'directory'
-                                                                                            : this
-                                                                                                  .input
-                                                                                                  .kind
-                                                                                    }}
-                                                                                    from
-                                                                                    the
-                                                                                    Data
-                                                                                    Commons
-                                                                                    or
-                                                                                    your
-                                                                                    own
-                                                                                    {{
-                                                                                        this
-                                                                                            .input
-                                                                                            .kind ===
-                                                                                        'files'
-                                                                                            ? 'directory'
-                                                                                            : this
-                                                                                                  .input
-                                                                                                  .kind
-                                                                                    }}
-                                                                                    from
-                                                                                    the
-                                                                                    Data
-                                                                                    Store.
-                                                                                </b>
-                                                                                <b-tabs
-                                                                                    class="mt-2"
-                                                                                    pills
-                                                                                    nav-class="bg-transparent"
-                                                                                    active-nav-item-class="bg-info text-dark"
-                                                                                >
-                                                                                    <b-tab
-                                                                                        active
-                                                                                        title="Personal"
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <b-row
-                                                                                            v-if="
-                                                                                                personalDatasetsLoading
-                                                                                            "
-                                                                                            align-v="center"
-                                                                                            align-h="center"
-                                                                                        >
-                                                                                            <b-col
-                                                                                                align-self="end"
-                                                                                            >
-                                                                                                <b-spinner
-                                                                                                    type="grow"
-                                                                                                    variant="secondary"
-                                                                                                ></b-spinner> </b-col
-                                                                                        ></b-row>
-                                                                                        <b-row
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                <datatree
-                                                                                                    :select="
-                                                                                                        input.kind
-                                                                                                    "
-                                                                                                    :upload="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    :download="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    @selectNode="
-                                                                                                        inputSelected
-                                                                                                    "
-                                                                                                    :node="
-                                                                                                        personalDatasets
-                                                                                                    "
-                                                                                                ></datatree></b-col
-                                                                                        ></b-row>
-                                                                                    </b-tab>
-                                                                                    <b-tab
-                                                                                        title="Shared"
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <b-row
-                                                                                            v-if="
-                                                                                                sharedDatasetsLoading
-                                                                                            "
-                                                                                            align-v="center"
-                                                                                            align-h="center"
-                                                                                        >
-                                                                                            <b-col
-                                                                                                align-self="end"
-                                                                                                ><b-spinner
-                                                                                                    type="grow"
-                                                                                                    variant="secondary"
-                                                                                                ></b-spinner></b-col
-                                                                                        ></b-row>
-                                                                                        <b-row
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                <datatree
-                                                                                                    :select="
-                                                                                                        input.kind
-                                                                                                    "
-                                                                                                    :upload="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    :download="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    @selectNode="
-                                                                                                        inputSelected
-                                                                                                    "
-                                                                                                    :node="
-                                                                                                        sharedDatasets
-                                                                                                    "
-                                                                                                ></datatree> </b-col></b-row
-                                                                                    ></b-tab>
-                                                                                    <b-tab
-                                                                                        title="Public"
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <b-row
-                                                                                            v-if="
-                                                                                                publicDatasetsLoading
-                                                                                            "
-                                                                                            align-v="center"
-                                                                                            align-h="center"
-                                                                                        >
-                                                                                            <b-col
-                                                                                                align-self="end"
-                                                                                            >
-                                                                                                <b-spinner
-                                                                                                    type="grow"
-                                                                                                    variant="secondary"
-                                                                                                ></b-spinner> </b-col
-                                                                                        ></b-row>
-                                                                                        <b-row
-                                                                                            v-else
-                                                                                            ><b-col>
-                                                                                                <datatree
-                                                                                                    :select="
-                                                                                                        input.kind
-                                                                                                    "
-                                                                                                    :upload="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    :download="
-                                                                                                        true
-                                                                                                    "
-                                                                                                    @selectNode="
-                                                                                                        inputSelected
-                                                                                                    "
-                                                                                                    :node="
-                                                                                                        publicDatasets
-                                                                                                    "
-                                                                                                ></datatree></b-col
-                                                                                        ></b-row>
-                                                                                    </b-tab>
-                                                                                </b-tabs>
-                                                                            </div>
-                                                                            <b-row
-                                                                                v-if="
-                                                                                    input
-                                                                                        .filetypes
-                                                                                        .length >
-                                                                                    0
-                                                                                "
-                                                                            >
-                                                                                <b-col>
-                                                                                    <b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Select
-                                                                                        one
-                                                                                        or
-                                                                                        more
-                                                                                        input
-                                                                                        filetypes.
-                                                                                    </b>
-                                                                                    <multiselect
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        :multiple="
-                                                                                            true
-                                                                                        "
-                                                                                        :close-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :clear-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :preserve-search="
-                                                                                            true
-                                                                                        "
-                                                                                        :preselect-first="
-                                                                                            true
-                                                                                        "
-                                                                                        v-model="
-                                                                                            inputSelectedPatterns
-                                                                                        "
-                                                                                        :options="
-                                                                                            input.filetypes
-                                                                                        "
-                                                                                    ></multiselect>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-alert
-                                                                                class="mt-1"
-                                                                                :variant="
-                                                                                    inputFiletypeSelected
-                                                                                        ? 'success'
-                                                                                        : 'danger'
-                                                                                "
-                                                                                :show="
-                                                                                    true
-                                                                                "
-                                                                                >Selected:
-                                                                                {{
-                                                                                    inputFiletypeSelected
-                                                                                        ? '*.' +
-                                                                                          inputSelectedPatterns.join(
-                                                                                              ', *.'
-                                                                                          )
-                                                                                        : 'None'
-                                                                                }}
-                                                                                <i
-                                                                                    v-if="
-                                                                                        inputFiletypeSelected
-                                                                                    "
-                                                                                    class="fas fa-check text-success"
-                                                                                ></i>
-                                                                                <i
-                                                                                    v-else
-                                                                                    class="fas fa-exclamation text-danger"
-                                                                                ></i>
-                                                                            </b-alert>
-                                                                        </b-collapse>
                                                                     </b-col>
                                                                 </b-row>
                                                             </b-card>
@@ -2043,7 +2072,6 @@
                                                                 class="mb-4"
                                                             >
                                                                 <b-row
-                                                                    align-v="center"
                                                                 >
                                                                     <b-col
                                                                         md="auto"
@@ -2637,7 +2665,6 @@
                                                                 "
                                                                 class="mb-4"
                                                                 ><b-row
-                                                                    align-v="center"
                                                                 >
                                                                     <b-col
                                                                         md="auto"
@@ -2911,7 +2938,6 @@
                                                                 class="mb-4"
                                                             >
                                                                 <b-row
-                                                                    align-v="center"
                                                                 >
                                                                     <b-col
                                                                         md="auto"
@@ -4301,8 +4327,13 @@ export default {
         //     this.path = this.defaultPath;
         // }
 
-        if (this.getWorkflow.config.input !== undefined && (this.selectedInput === null || !this.inputValid)) this.inputVisible = true;
-        if (this.selectedOutput === null || !this.outputValid) this.outputVisible = true;
+        if (
+            this.getWorkflow.config.input !== undefined &&
+            (this.selectedInput === null || !this.inputValid)
+        )
+            this.inputVisible = true;
+        if (this.selectedOutput === null || !this.outputValid)
+            this.outputVisible = true;
     },
     methods: {
         setTimeLimitUnits(units) {
@@ -4455,7 +4486,7 @@ export default {
             await this.$store.dispatch('workflows/refresh', {
                 owner: this.$router.currentRoute.params.owner,
                 name: this.$router.currentRoute.params.name,
-                branch: this.$router.currentRoute.params.branch
+                branch: this.$router.currentRoute.params.branch,
             });
         },
         async unbindWorkflow() {
