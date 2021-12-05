@@ -170,15 +170,14 @@
                 </b-card>
             </b-card-group>
             <b-row v-else
-                ><b-col
-                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    >{{
-                        context === ''
-                            ? 'No public workflows have been published yet.'
-                            : context === profile.githubProfile.login
-                            ? "You haven't created any workflow bindings yet."
-                            : 'This organization has no workflow bindings yet.'
-                    }}</b-col
+                ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    ><span v-if="context === ''"
+                        >No public workflows have been published yet.</span
+                    ><span v-else-if="context === profile.githubProfile.login"
+                        >You haven't created any workflow bindings yet. Add a <code>plantit.yaml</code> file to your repository to bind a workflow.</span
+                    ><span v-else
+                        >This organization has no workflow bindings yet.</span
+                    ></b-col
                 ></b-row
             >
         </div>

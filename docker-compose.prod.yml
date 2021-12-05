@@ -6,7 +6,6 @@ services:
     depends_on:
       - beat
       - celery
-      - sandbox
     volumes:
       - .:/code
     environment:
@@ -212,14 +211,6 @@ services:
       - redisdata:/data
     restart: always
     command: ["redis-server"]
-  sandbox:
-    image: computationalplantscience/plantit-cli
-    command: ["/usr/sbin/sshd", "-D"]
-    working_dir: /opt/plantit-cli
-    privileged: true
-    restart: always
-    volumes:
-      - ./opt/plantit-cli/tasks/:/opt/plantit-cli/tasks/
   nginx:
     image: nginx
     ports:

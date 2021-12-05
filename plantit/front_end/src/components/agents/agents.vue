@@ -804,7 +804,7 @@
                             ><h4
                                 :class="
                                     profile.darkMode
-                                        ? 'text-light'
+                                        ? 'text-white'
                                         : 'text-dark'
                                 "
                             >
@@ -816,6 +816,11 @@
                         ><b-col>
                             <b-row
                                 ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
                                     >Configure the
                                     <code>plantit-cli</code> executor for this
                                     agent.</b-col

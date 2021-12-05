@@ -91,6 +91,34 @@
                                     >
                                 </h5>
                             </b-col>
+                            <b-col md="auto">
+                                <b-link
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light ml-2'
+                                            : 'text-dark ml-2'
+                                    "
+                                    :to="{
+                                        name: 'agent',
+                                        params: {
+                                            name: getTask.agent.name,
+                                        },
+                                    }"
+                                    ><b-img
+                                        v-if="getTask.agent.logo"
+                                        rounded
+                                        class="overflow-hidden"
+                                        style="max-height: 1rem"
+                                        :src="getTask.agent.logo"
+                                    ></b-img
+                                    ><i v-else class="fas fa-server fa-fw"></i>
+                                    {{
+                                        getTask.agent
+                                            ? getTask.agent.name
+                                            : '[agent removed]'
+                                    }}</b-link
+                                ></b-col
+                            >
                         </b-row>
                         <!--<b-row v-if="getTask.project !== null"
                             ><b-col md="auto"
@@ -138,35 +166,7 @@
                                         }}</b-badge
                                     >
                                     <small> on </small>-->
-                                    <b-link
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light ml-2'
-                                                : 'text-dark ml-2'
-                                        "
-                                        :to="{
-                                            name: 'agent',
-                                            params: {
-                                                name: getTask.agent.name
-                                            }
-                                        }"
-                                        ><b-img
-                                            v-if="getTask.agent.logo"
-                                            rounded
-                                            class="overflow-hidden"
-                                            style="max-height: 1rem"
-                                            :src="getTask.agent.logo"
-                                        ></b-img
-                                        ><i
-                                            v-else
-                                            class="fas fa-server fa-fw"
-                                        ></i>
-                                        {{
-                                            getTask.agent
-                                                ? getTask.agent.name
-                                                : '[agent removed]'
-                                        }}</b-link
-                                    >
+
                                     <b-link
                                         v-if="getTask.project !== null"
                                         :class="
@@ -178,8 +178,8 @@
                                             name: 'project',
                                             params: {
                                                 owner: getTask.project.owner,
-                                                title: getTask.project.title
-                                            }
+                                                title: getTask.project.title,
+                                            },
                                         }"
                                         ><b-img
                                             class="mb-1 mr-1"
@@ -216,9 +216,7 @@
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
-                                    :title="
-                                        `${getTask.guid} (click to copy to clipboard)`
-                                    "
+                                    :title="`${getTask.guid} (click to copy to clipboard)`"
                                     @click="copyGUID"
                                     ><i class="fas fa-copy fa-fw"></i
                                     >GUID</b-button
@@ -253,7 +251,7 @@
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
                                         "
-                                        style="width: 0.7rem; height: 0.7rem;"
+                                        style="width: 0.7rem; height: 0.7rem"
                                     ></b-spinner>
                                 </b-button>
                             </b-col>
@@ -272,7 +270,7 @@
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
-                                    title="Cancel Run"
+                                    title="Cancel Task"
                                     @click="cancel"
                                 >
                                     <i class="fas fa-times fa-fw"></i>
@@ -302,7 +300,7 @@
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
-                                    title="Refresh Run"
+                                    title="Refresh Task"
                                     @click="refresh"
                                 >
                                     <i class="fas fa-redo"></i>
@@ -349,7 +347,7 @@
                                     :footer-border-variant="
                                         profile.darkMode ? 'dark' : 'white'
                                     "
-                                    style="min-height: 5rem;"
+                                    style="min-height: 5rem"
                                     class="overflow-hidden mt-0"
                                     no-body
                                     :style="
@@ -371,7 +369,11 @@
                                         ></WorkflowBlurb>
                                         <b-row
                                             ><b-col
-                                                style="top: 20px;position: relative; font-size: 15pt"
+                                                style="
+                                                    top: 20px;
+                                                    position: relative;
+                                                    font-size: 15pt;
+                                                "
                                                 align-self="end"
                                                 :class="
                                                     getTask.is_failure ||
@@ -452,7 +454,7 @@
                                         class="m-0 p-0 text-center"
                                         v-if="
                                             getTask.is_complete &&
-                                                getTask.cleanup_time !== null
+                                            getTask.cleanup_time !== null
                                         "
                                         ><small>
                                             <i class="fas fa-broom fa-fw"></i>
@@ -470,7 +472,10 @@
                                 >
                                     <b-col class="m-0 p-1">
                                         <Plotly
-                                            style="position: relative;top: 20px"
+                                            style="
+                                                position: relative;
+                                                top: 20px;
+                                            "
                                             :data="timeseriesData"
                                             :layout="timeseriesLayout"
                                         ></Plotly>
@@ -509,7 +514,9 @@
                                                                 .length > 0
                                                         "
                                                         class="m-0 p-0 pl-3 pr-3"
-                                                        style="white-space: pre-line;"
+                                                        style="
+                                                            white-space: pre-line;
+                                                        "
                                                     >
                                                         <span
                                                             v-for="line in taskLogs"
@@ -517,8 +524,7 @@
                                                             v-show="
                                                                 line !==
                                                                     undefined &&
-                                                                    line !==
-                                                                        null
+                                                                line !== null
                                                             "
                                                             >{{
                                                                 line + '\n'
@@ -648,8 +654,8 @@
                                             class="m-3"
                                             v-if="
                                                 getTask.is_complete &&
-                                                    getTask.output_files !==
-                                                        undefined
+                                                getTask.output_files !==
+                                                    undefined
                                             "
                                         >
                                             <b-row
@@ -712,7 +718,7 @@
                                                                             )
                                                                           : [])
                                                                     : '') +
-                                                                    `, ${getTask.name}.zip`
+                                                                `, ${getTask.name}.zip`
                                                             }}{{
                                                                 getWorkflow
                                                                     .config
@@ -755,7 +761,7 @@
                                                     ><span
                                                         v-else-if="
                                                             !getTask.status ===
-                                                                'running'
+                                                            'running'
                                                         "
                                                         ><b-spinner
                                                             small
@@ -840,20 +846,18 @@
                                                         :disabled="
                                                             getTask.output_files !==
                                                                 undefined &&
-                                                                getTask.output_files !==
-                                                                    null &&
-                                                                getTask
-                                                                    .output_files
-                                                                    .length ===
-                                                                    0
+                                                            getTask.output_files !==
+                                                                null &&
+                                                            getTask.output_files
+                                                                .length === 0
                                                         "
                                                         class="text-right"
                                                         :text="outputPageSize"
                                                         dropleft
                                                         :title="
                                                             'Showing ' +
-                                                                outputPageSize +
-                                                                ' files at once'
+                                                            outputPageSize +
+                                                            ' files at once'
                                                         "
                                                         v-b-tooltip.hover
                                                         :variant="
@@ -973,7 +977,10 @@
                                                     >
                                                         <template
                                                             class="theme-dark"
-                                                            #page="{ page, active }"
+                                                            #page="{
+                                                                page,
+                                                                active,
+                                                            }"
                                                         >
                                                             <b v-if="active">{{
                                                                 page
@@ -1043,7 +1050,16 @@
                                                                 file.name
                                                             "
                                                             class="p-1"
-                                                            style="border-top: 1px solid rgba(211, 211, 211, .5);"
+                                                            style="
+                                                                border-top: 1px
+                                                                    solid
+                                                                    rgba(
+                                                                        211,
+                                                                        211,
+                                                                        211,
+                                                                        0.5
+                                                                    );
+                                                            "
                                                         >
                                                             <b-col
                                                                 align-self="end"
@@ -1054,11 +1070,11 @@
                                                                         .endsWith(
                                                                             'txt'
                                                                         ) ||
-                                                                        file.name
-                                                                            .toLowerCase()
-                                                                            .endsWith(
-                                                                                'log'
-                                                                            )
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .endsWith(
+                                                                            'log'
+                                                                        )
                                                                 "
                                                             >
                                                                 <i
@@ -1134,16 +1150,16 @@
                                                                         .includes(
                                                                             'png'
                                                                         ) ||
-                                                                        file.name
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                'jpg'
-                                                                            ) ||
-                                                                        file.name
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                'jpeg'
-                                                                            )
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            'jpg'
+                                                                        ) ||
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            'jpeg'
+                                                                        )
                                                                 "
                                                             >
                                                                 <i
@@ -1163,13 +1179,17 @@
                                                                 md="auto"
                                                                 align-self="end"
                                                                 class="text-left"
-                                                                style="position: relative; top: -5px; left: -40px"
+                                                                style="
+                                                                    position: relative;
+                                                                    top: -5px;
+                                                                    left: -40px;
+                                                                "
                                                             >
                                                                 <b-spinner
                                                                     class="m-0 p-0"
                                                                     v-if="
                                                                         !file.exists &&
-                                                                            !getTask.is_complete
+                                                                        !getTask.is_complete
                                                                     "
                                                                     type="grow"
                                                                     small
@@ -1178,7 +1198,7 @@
                                                                 <i
                                                                     v-else-if="
                                                                         !file.exists &&
-                                                                            getTask.is_complete
+                                                                        getTask.is_complete
                                                                     "
                                                                     class="far fa-times-circle text-danger fa-fw"
                                                                 ></i>
@@ -1580,7 +1600,7 @@
                                                 >--><b-col
                                                     v-if="
                                                         getTask.is_complete &&
-                                                            getTask.result_transfer
+                                                        getTask.result_transfer
                                                     "
                                                     >{{
                                                         getTask.results_transferred
@@ -1610,9 +1630,8 @@
                                                         "
                                                         :animated="
                                                             getTask.results_transferred !==
-                                                                getTask
-                                                                    .output_files
-                                                                    .length
+                                                            getTask.output_files
+                                                                .length
                                                         "
                                                     ></b-progress></b-col
                                             ></b-row>
@@ -1727,7 +1746,7 @@
                                 <b-card
                                     v-if="
                                         getTask.is_complete &&
-                                            getTask.transferred
+                                        getTask.transferred
                                     "
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -1756,7 +1775,7 @@
                                             <b-img
                                                 class="mr-2"
                                                 rounded
-                                                style="max-height: 1.7rem;"
+                                                style="max-height: 1.7rem"
                                                 left
                                                 :src="
                                                     require('../../assets/logos/cyverse_bright.png')
@@ -1961,9 +1980,7 @@
             hide-footer
         >
             <div v-if="!transferring">
-                <p>
-                    Select a directory to transfer result files to.
-                </p>
+                <p>Select a directory to transfer result files to.</p>
                 <datatree
                     select="directory"
                     :create="true"
@@ -2003,7 +2020,7 @@ export default {
     components: {
         WorkflowBlurb,
         datatree,
-        Plotly
+        Plotly,
     },
     data() {
         return {
@@ -2043,7 +2060,7 @@ export default {
             transferring: false,
             // logs
             schedulerLogs: [],
-            agentLogs: []
+            agentLogs: [],
         };
     },
     methods: {
@@ -2064,23 +2081,23 @@ export default {
         async transferToCyVerse() {
             this.transferring = true;
             let data = {
-                path: this.transferringPath
+                path: this.transferringPath,
             };
             if (this.mustAuthenticate)
                 data['auth'] = {
                     username: this.authenticationUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
                 };
             else
                 data['auth'] = {
-                    username: this.getTask.agent.user
+                    username: this.getTask.agent.user,
                 };
             await axios({
                 method: 'post',
                 data: data,
-                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/transfer/`
+                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/transfer/`,
             })
-                .then(async response => {
+                .then(async (response) => {
                     this.hideTransferToCyVerseModal();
                     this.transferred = true;
                     this.transferring = false;
@@ -2090,18 +2107,18 @@ export default {
                             variant: 'success',
                             message: `Scheduled transfer to CyVerse Data Store (${this.transferringPath})`,
                             guid: guid().toString(),
-                            time: moment().format()
-                        })
+                            time: moment().format(),
+                        }),
                     ]);
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     this.hideTransferToCyVerseModal();
                     this.transferring = false;
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to schedule transfer to CyVerse Data Store (${this.transferringPath})`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     throw error;
                 });
@@ -2116,7 +2133,7 @@ export default {
             this.$bvToast.toast(`Copied task GUID to clipboard`, {
                 autoHideDelay: 3000,
                 appendToast: false,
-                noCloseButton: true
+                noCloseButton: true,
             });
         },
         noPreview(file) {
@@ -2133,7 +2150,7 @@ export default {
             else return this.thumbnailFor(file.path);
         },
         async thumbnailFor(path) {
-            let i = this.getTask.output_files.findIndex(f => f.path === path);
+            let i = this.getTask.output_files.findIndex((f) => f.path === path);
             if (
                 this.viewMode === 'Grid' &&
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
@@ -2143,10 +2160,10 @@ export default {
                 return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
-        prettifyShort: function(date) {
+        prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;
         },
-        prettifyDuration: function(dur) {
+        prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
         },
         duration(task) {
@@ -2156,67 +2173,26 @@ export default {
         },
         fileIsImage(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'png' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpeg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'czi'
+                file.toLowerCase().split('.').pop() === 'png' ||
+                file.toLowerCase().split('.').pop() === 'jpg' ||
+                file.toLowerCase().split('.').pop() === 'jpeg' ||
+                file.toLowerCase().split('.').pop() === 'czi'
             );
         },
         fileIsText(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'txt' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'csv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'tsv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yaml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'log' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'out' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'err'
+                file.toLowerCase().split('.').pop() === 'txt' ||
+                file.toLowerCase().split('.').pop() === 'csv' ||
+                file.toLowerCase().split('.').pop() === 'tsv' ||
+                file.toLowerCase().split('.').pop() === 'yml' ||
+                file.toLowerCase().split('.').pop() === 'yaml' ||
+                file.toLowerCase().split('.').pop() === 'log' ||
+                file.toLowerCase().split('.').pop() === 'out' ||
+                file.toLowerCase().split('.').pop() === 'err'
             );
         },
         fileIs3dModel(file) {
-            return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'ply'
-            );
+            return file.toLowerCase().split('.').pop() === 'ply';
         },
         renderPreview(f) {
             if (!f.name.endsWith('ply')) return;
@@ -2240,7 +2216,7 @@ export default {
             var comp = {};
             loader.load(
                 `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
-                function(geometry) {
+                function (geometry) {
                     geometry.computeVertexNormals();
 
                     // const material = new THREE.MeshStandardMaterial({
@@ -2250,7 +2226,7 @@ export default {
                     const material = new THREE.PointsMaterial({
                         // color: 0x0055ff,
                         size: 0.02,
-                        vertexColors: THREE.VertexColors
+                        vertexColors: THREE.VertexColors,
                     });
                     const mesh = new THREE.Points(geometry, material);
                     //const mesh = new THREE.Mesh(geometry, material);
@@ -2280,7 +2256,7 @@ export default {
 
             scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
-            var addShadowedLight = function(x, y, z, color, intensity) {
+            var addShadowedLight = function (x, y, z, color, intensity) {
                 const directionalLight = new THREE.DirectionalLight(
                     color,
                     intensity
@@ -2305,19 +2281,19 @@ export default {
                 directionalLight.shadow.bias = -0.001;
             };
 
-            var onWindowResize = function() {
+            var onWindowResize = function () {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
 
                 renderer.setSize(window.innerWidth, window.innerHeight);
             };
 
-            var animate = function() {
+            var animate = function () {
                 requestAnimationFrame(animate);
                 render();
             };
 
-            var render = function() {
+            var render = function () {
                 const timer = Date.now() * 0.00005;
 
                 camera.position.x = Math.sin(timer) * 2.5;
@@ -2378,7 +2354,7 @@ export default {
         refresh() {
             this.$store.dispatch('tasks/refresh', {
                 owner: this.$router.currentRoute.params.owner,
-                name: this.$router.currentRoute.params.name
+                name: this.$router.currentRoute.params.name,
             });
         },
         preCancel() {
@@ -2393,18 +2369,18 @@ export default {
             if (this.mustAuthenticate)
                 data['auth'] = {
                     username: this.authenticationUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
                 };
             else
                 data['auth'] = {
-                    username: this.getTask.agent.user
+                    username: this.getTask.agent.user,
                 };
             await axios({
                 method: 'post',
                 url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`,
-                data: data
+                data: data,
             })
-                .then(response => {
+                .then((response) => {
                     this.canceled = false;
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
@@ -2413,7 +2389,7 @@ export default {
                         this.showFailedToCancelAlert = true;
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     this.canceled = false;
                     Sentry.captureException(error);
                     return error;
@@ -2424,20 +2400,20 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
                 )
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'tasks/setAll',
                             response.data.tasks
                         );
                         await router.push({
-                            name: 'tasks'
+                            name: 'tasks',
                         });
                     } else {
                         this.showFailedToDeleteAlert = true;
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2457,27 +2433,27 @@ export default {
                     repo: this.getWorkflow.repo,
                     config: config,
                     type: 'Now',
-                    delete: false
+                    delete: false,
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     this.restarted = false;
                     router.push({
                         name: 'task',
                         params: {
                             owner: response.data.owner,
-                            name: response.data.name
-                        }
+                            name: response.data.name,
+                        },
                     });
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.restarted = false;
                     throw error;
                 });
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return moment(date).fromNow();
             // (${moment(date).format('MMMM Do YYYY, h:mm a')})
         },
@@ -2512,24 +2488,24 @@ export default {
         async downloadFile() {
             this.downloading = true;
             let data = {
-                path: this.fileToDownload
+                path: this.fileToDownload,
             };
             if (this.mustAuthenticate)
                 data['auth'] = {
                     username: this.authenticationUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
                 };
             else
                 data['auth'] = {
-                    username: this.getTask.agent.user
+                    username: this.getTask.agent.user,
                 };
             await axios({
                 method: 'post',
                 data: data,
                 url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/output/`,
-                config: { responseType: 'blob' }
+                config: { responseType: 'blob' },
             })
-                .then(response => {
+                .then((response) => {
                     if (response && response.status === 404) {
                         return;
                     }
@@ -2546,7 +2522,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.downloading = false;
                     this.$bvModal.hide('authenticate-download');
@@ -2558,21 +2534,21 @@ export default {
             if (this.mustAuthenticate)
                 data['auth'] = {
                     username: this.authenticationUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
                 };
             else
                 data['auth'] = {
-                    username: this.getTask.agent.user
+                    username: this.getTask.agent.user,
                 };
             await axios({
                 method: 'post',
                 url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs_content/`,
-                data: data
+                data: data,
             })
-                .then(response => {
+                .then((response) => {
                     this.schedulerLogs = response.data.lines;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2582,21 +2558,21 @@ export default {
             if (this.mustAuthenticate)
                 data['auth'] = {
                     username: this.authenticationUsername,
-                    password: this.authenticationPassword
+                    password: this.authenticationPassword,
                 };
             else
                 data['auth'] = {
-                    username: this.getTask.agent.user
+                    username: this.getTask.agent.user,
                 };
             await axios({
                 method: 'post',
                 url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs_content/`,
-                data: data
+                data: data,
             })
-                .then(response => {
+                .then((response) => {
                     this.agentLogs = response.data.lines;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2606,7 +2582,7 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/orchestrator_logs/`
                 )
-                .then(response => {
+                .then((response) => {
                     if (response && response.status === 404) {
                         return;
                     }
@@ -2621,7 +2597,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2631,7 +2607,7 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs/`
                 )
-                .then(response => {
+                .then((response) => {
                     if (response && response.status === 404) {
                         return;
                     }
@@ -2646,7 +2622,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2656,7 +2632,7 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs/`
                 )
-                .then(response => {
+                .then((response) => {
                     if (response && response.status === 404) {
                         return;
                     }
@@ -2671,7 +2647,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
@@ -2683,16 +2659,16 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
                 )
-                .then(response => {
+                .then((response) => {
                     if (response.status === 200) {
                         this.textContent = response.data.text;
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     return error;
                 });
-        }
+        },
     },
     async mounted() {
         // await this.$store.dispatch('tasks/refresh', {
@@ -2707,11 +2683,11 @@ export default {
         ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
         ...mapGetters('datasets', [
             'personalDatasets',
-            'personalDatasetsLoading'
+            'personalDatasetsLoading',
         ]),
         timeseriesData() {
             var x = [
-                moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss')
+                moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss'),
             ];
             var y = [0];
             if (this.getTask.is_complete) {
@@ -2734,19 +2710,19 @@ export default {
                     hovertemplate: '<br>%{text}<br><extra></extra>',
                     text: [
                         `created ${this.prettify(this.getTask.created)}`,
-                        `completed ${this.prettify(this.getTask.completed)}` // TODO show status instead
+                        `completed ${this.prettify(this.getTask.completed)}`, // TODO show status instead
                     ],
                     type: 'scatter',
                     mode: 'lines+markers',
                     line: {
-                        color: '#d6df5D'
+                        color: '#d6df5D',
                     },
                     marker: {
                         color: [
                             '#e2e3b0',
                             this.getTask.is_success
                                 ? '#d6df5D'
-                                : 'rgb(255, 114, 114)'
+                                : 'rgb(255, 114, 114)',
                         ],
                         // color: this.healthchecks.map(t =>
                         //     t.healthy
@@ -2755,37 +2731,37 @@ export default {
                         // ),
                         line: {
                             color: '#e2e3b0',
-                            width: 1
+                            width: 1,
                         },
                         symbol: 'hourglass',
-                        size: 20
-                    }
-                }
+                        size: 20,
+                    },
+                },
             ];
         },
         timeseriesLayout() {
             return {
                 font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 height: 220,
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 xaxis: {
                     showgrid: false,
-                    lines: false
+                    lines: false,
                 },
                 yaxis: {
                     showticklabels: false,
                     showgrid: false,
-                    lines: false
+                    lines: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         filteredResults() {
@@ -2794,7 +2770,7 @@ export default {
                     (this.outputFilePage - 1) * this.outputPageSize,
                     this.outputFilePage * this.outputPageSize
                 )
-                .filter(file => file.name.includes(this.resultSearchText));
+                .filter((file) => file.name.includes(this.resultSearchText));
         },
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
@@ -2812,22 +2788,26 @@ export default {
             // var firstI = all.findIndex(l => l.includes('PENDING'));
             // if (firstI < 1) firstI = all.findIndex(l => l.includes('RUNNING'));
 
-            var firstI = all.findIndex(l => l.includes('PENDING'));
+            var firstI = all.findIndex((l) => l.includes('PENDING'));
             if (firstI !== -1) {
                 all.reverse();
                 var lastI =
-                    all.length - all.findIndex(l => l.includes('PENDING')) - 1;
+                    all.length -
+                    all.findIndex((l) => l.includes('PENDING')) -
+                    1;
                 all.reverse();
                 if (this.getTask.is_complete)
                     all.splice(firstI, lastI - firstI);
                 else all.splice(firstI, lastI - firstI + 1, all[lastI]);
             }
 
-            firstI = all.findIndex(l => l.includes('RUNNING'));
+            firstI = all.findIndex((l) => l.includes('RUNNING'));
             if (firstI !== -1) {
                 all.reverse();
                 lastI =
-                    all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
+                    all.length -
+                    all.findIndex((l) => l.includes('RUNNING')) -
+                    1;
                 all.reverse();
                 // if (lastI === all.length - 1) return all;
                 if (this.getTask.is_complete)
@@ -2860,13 +2840,13 @@ export default {
                 this.getTask.agent.user !== undefined &&
                 this.getTask.agent.user === this.profile.djangoProfile.username;
             let isGuest = this.getTask.agent.users_authorized.some(
-                user => user.username === this.profile.djangoProfile.username
+                (user) => user.username === this.profile.djangoProfile.username
             );
             return (
                 this.getTask.agent.authentication === 'password' ||
                 (!ownsAgent && !isGuest)
             );
-        }
+        },
     },
     watch: {
         async $route() {
@@ -2896,8 +2876,8 @@ export default {
             //     this.getTask.output_files.length > 0
             // )
             //     this.getTextFile(this.getTask.output_files[0]);
-        }
-    }
+        },
+    },
 };
 </script>
 

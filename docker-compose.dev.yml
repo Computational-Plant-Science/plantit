@@ -63,7 +63,6 @@ services:
       - postgres
       - beat
       - celery
-      - sandbox
     ports:
       - "3000:3000"
     healthcheck:
@@ -250,8 +249,9 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
-  sandbox:
-    image: computationalplantscience/plantit-cli
-    command: ["/usr/sbin/sshd", "-D"]
-    working_dir: /opt/plantit-cli
-    privileged: true
+  # TODO: singularity-in-docker and docker-in-docker containers as test agents
+  # sind:
+  #   image: computationalplantscience/sind
+  #   command: ["/usr/sbin/sshd", "-D"]
+  #   working_dir: /opt/work
+  #   privileged: true
