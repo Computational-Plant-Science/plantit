@@ -70,9 +70,9 @@ if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
 fi
 
-echo "Configuring test environment (sandbox)"
-$compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
-if [ ! -f config/ssh/id_rsa.pub ]; then
-  ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
-fi
-$compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
+# echo "Configuring test environment (sandbox)"
+# $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
+# if [ ! -f config/ssh/id_rsa.pub ]; then
+#   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
+# fi
+# $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
