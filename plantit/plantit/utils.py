@@ -124,7 +124,7 @@ def get_user_bundle(user: User):
             'github_username': user.profile.github_username,
             'github_profile': github_profile,
             'github_organizations': github_organizations
-        } if 'login' in github_profile else  {
+        } if 'login' in github_profile else {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
@@ -132,7 +132,6 @@ def get_user_bundle(user: User):
 
         redis.set(f"users/{user.username}", json.dumps(profile))
         return profile
-
 
 
 @sync_to_async
@@ -168,7 +167,8 @@ def get_user_cyverse_profile(user: User) -> dict:
 
 
 def refresh_user_cyverse_tokens(user: User):
-    access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    access_token, refresh_token = terrain.refresh_tokens(username=user.username,
+                                                         refresh_token=user.profile.cyverse_refresh_token)
     user.profile.cyverse_access_token = access_token
     user.profile.cyverse_refresh_token = refresh_token
     user.profile.save()
@@ -253,14 +253,19 @@ async def calculate_user_statistics(user: User) -> dict:
     total_tasks = len(all_tasks)
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
-    owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for
-                       workflow in list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
+    owned_workflows = [
+        f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}"
+        for
+        workflow in list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
     used_workflows_counter = Counter(used_workflows)
     unique_used_workflows = list(np.unique(used_workflows))
-    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
-    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [agent for agent in await filter_agents(user=user) if agent is not None]]
-    used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
+    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                    [agent for agent in await filter_agents(user=user) if agent is not None]]
+    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                    [agent for agent in await filter_agents(user=user) if agent is not None]]
+    used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                   [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
     used_agents_counter = Counter(used_agents)
     unique_used_agents = list(np.unique(used_agents))
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
@@ -332,14 +337,16 @@ def get_user_public_key_path(username: str) -> Path:
 
 def repopulate_institutions_cache():
     redis = RedisClient.get()
-    institution_counts = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
+    institution_counts = list(
+        Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
 
     for institution_count in institution_counts:
         institution = institution_count['institution']
         count = institution_count['institution__count']
 
         place = quote_plus(institution)
-        response = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
+        response = requests.get(
+            f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
         content = response.json()
         feature = content['features'][0]
         feature['id'] = institution
@@ -371,7 +378,8 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
 
         # otherwise only if stale
         if age_secs > max_secs:
-            logger.info(f"User institution cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
+            logger.info(
+                f"User institution cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
             repopulate_institutions_cache()
 
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match='institutions/*')]
@@ -417,7 +425,6 @@ async def workflow_to_dict(workflow: Workflow, github_token: str, cyverse_token:
     }
 
 
-
 async def refresh_online_users_workflow_cache():
     users = await sync_to_async(User.objects.all)()
     online = filter_online(users)
@@ -443,28 +450,33 @@ async def refresh_personal_workflow_cache(github_username: str):
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
     owned = await list_user_workflows(user=user)
-    bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token) for workflow in owned])
+    bind = asyncio.gather(
+        *[workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token) for workflow in owned])
     tasks = await asyncio.gather(*[
         bind,
         github.list_connectable_repos_by_owner(github_username, profile.github_token)])
-        # github.list_connectable_repos_by_org(github_username, profile.github_token)])
+    # github.list_connectable_repos_by_org(github_username, profile.github_token)])
     bound_wfs = tasks[0]
     bindable_wfs = tasks[1]
     all_wfs = []
 
     # find and filter bindable workflows
     for bindable_wf in bindable_wfs:
-        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] == bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in bound_wfs]):
+        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] ==
+                    bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in
+                    bound_wfs]):
             bindable_wf['public'] = False
             bindable_wf['bound'] = False
             all_wfs.append(bindable_wf)
 
     # find and filter bound workflows
     missing = 0
-    for bound_wf in [b for b in bound_wfs if b['repo']['owner']['login'] == github_username]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
+    for bound_wf in [b for b in bound_wfs if b['repo']['owner'][
+                                                 'login'] == github_username]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
         name = bound_wf['config']['name']
         branch = bound_wf['branch']['name']
-        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in bindable_wfs]):
+        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in
+                    bindable_wfs]):
             missing += 1
             logger.warning(f"Configuration file missing for {github_username}'s workflow {name} (branch {branch})")
             bound_wf['validation'] = {
@@ -476,11 +488,13 @@ async def refresh_personal_workflow_cache(github_username: str):
     # update the cache
     redis = RedisClient.get()
     for workflow in all_wfs:
-        redis.set(f"workflows/{github_username}/{workflow['repo']['name']}/{workflow['branch']['name']}", json.dumps(del_none(workflow)))
+        redis.set(f"workflows/{github_username}/{workflow['repo']['name']}/{workflow['branch']['name']}",
+                  json.dumps(del_none(workflow)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
 
-    logger.info(f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {github_username}'s workflow cache" + (
-        "" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(
+        f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {github_username}'s workflow cache" + (
+            "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_token: str):
@@ -511,17 +525,21 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_t
 
     # find and filter bindable workflows
     for bindable_wf in bindable_wfs:
-        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] == bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in bound_wfs]):
+        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] ==
+                    bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in
+                    bound_wfs]):
             bindable_wf['public'] = False
             bindable_wf['bound'] = False
             all_wfs.append(bindable_wf)
 
     # find and filter bound workflows
     missing = 0
-    for bound_wf in [b for b in bound_wfs if 'owner' in b['repo'] and b['repo']['owner']['login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
+    for bound_wf in [b for b in bound_wfs if 'owner' in b['repo'] and b['repo']['owner'][
+        'login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
         name = bound_wf['config']['name']
         branch = bound_wf['branch']['name']
-        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in bindable_wfs]):
+        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in
+                    bindable_wfs]):
             missing += 1
             logger.warning(f"Configuration file missing for {org_name}'s workflow {name} (branch {branch})")
             bound_wf['validation'] = {
@@ -533,11 +551,13 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_t
     # update the cache
     redis = RedisClient.get()
     for workflow in all_wfs:
-        redis.set(f"workflows/{org_name}/{workflow['repo']['name']}/{workflow['branch']['name']}", json.dumps(del_none(workflow)))
+        redis.set(f"workflows/{org_name}/{workflow['repo']['name']}/{workflow['branch']['name']}",
+                  json.dumps(del_none(workflow)))
     redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
 
-    logger.info(f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {org_name}'s workflow cache" + (
-        "" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(
+        f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {org_name}'s workflow cache" + (
+            "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
 def list_public_workflows(github_token: str = None, cyverse_token: str = None, invalidate: bool = False) -> List[dict]:
@@ -553,7 +573,8 @@ def list_public_workflows(github_token: str = None, cyverse_token: str = None, i
     #     else:
     #         logger.warning(f"No GitHub API token provided, can't refresh cache")
 
-    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if wf['public']]
+    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
+                 wf['public']]
     # return [workflow for workflow in workflows if workflow['public']]
     return workflows
 
@@ -563,19 +584,28 @@ def list_personal_workflows(owner: str) -> List[dict]:
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 
-async def get_workflow(owner: str, name: str, github_token: str, cyverse_token: str, invalidate: bool = False) -> dict:
+async def get_workflow(
+        owner: str,
+        name: str,
+        branch: str,
+        github_token: str,
+        cyverse_token: str,
+        invalidate: bool = False) -> dict:
     redis = RedisClient.get()
     last_updated = redis.get(f"workflows_updated/{owner}")
-    workflow = redis.get(f"workflows/{owner}/{name}")
+    workflow = redis.get(f"workflows/{owner}/{name}/{branch}")
 
     if last_updated is None or workflow is None or invalidate:
-        try: workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
+        try:
+            workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name, repo_branch=branch)
         except:
             logger.error(traceback.format_exc())
-            raise ValueError(f"Workflow {owner}/{name} not found")
+            raise ValueError(f"Workflow {owner}/{name}/{branch} not found")
 
         workflow = await workflow_to_dict(workflow, github_token, cyverse_token)
-        redis.set(f"workflows/{owner}/{name}/{workflow['branch']['name']}", json.dumps(del_none(workflow)))
+        redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
+    else:
+        workflow = json.loads(workflow)
 
     return workflow
 
@@ -750,9 +780,11 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if kind == 'file':
             input = Input(path=path, kind='file')
         elif kind == 'files':
-            input = Input(path=path, kind='files', patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
+            input = Input(path=path, kind='files',
+                          patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
         elif kind == 'directory':
-            input = Input(path=path, kind='directory', patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
+            input = Input(path=path, kind='directory',
+                          patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
         else:
             errors.append('Section \'input.kind\' must be \'file\', \'files\', or \'directory\'')
 
@@ -1100,7 +1132,8 @@ def compose_task_clean_commands(task: Task) -> str:
         docker_username = environ.get('DOCKER_USERNAME', None)
         docker_password = environ.get('DOCKER_PASSWORD', None)
         return f"plantit clean {launcher_script} -p {docker_username} -p {docker_password}"
-    else: return ''
+    else:
+        return ''
 
 
 def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
@@ -1120,14 +1153,18 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'output' in config:
         if 'include' in config['output']:
             if 'patterns' in config['output']['include']:
-                output['include']['patterns'] = list(set(output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']))
+                output['include']['patterns'] = list(
+                    set(output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']))
             if 'names' in config['output']['include']:
-                output['include']['names'] = list(set(output['include']['names'] + task.workflow['config']['output']['include']['names']))
+                output['include']['names'] = list(
+                    set(output['include']['names'] + task.workflow['config']['output']['include']['names']))
         if 'exclude' in config['output']:
             if 'patterns' in config['output']['exclude']:
-                output['exclude']['patterns'] = list(set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']))
+                output['exclude']['patterns'] = list(
+                    set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']))
             if 'names' in config['output']['exclude']:
-                output['exclude']['names'] = list(set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']))
+                output['exclude']['names'] = list(
+                    set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']))
 
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
@@ -1170,12 +1207,15 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
                 patterns.append('.zip')
                 command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
             if 'names' in output['include']:
-                command = command + ' ' + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+                command = command + ' ' + ' '.join(
+                    ['--include_name ' + pattern for pattern in output['include']['names']])
         if 'exclude' in output:
             if 'patterns' in output['exclude']:
-                command = command + ' ' + ' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+                command = command + ' ' + ' '.join(
+                    ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
             if 'names' in output['exclude']:
-                command = command + ' ' + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+                command = command + ' ' + ' '.join(
+                    ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
         command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
@@ -1191,8 +1231,10 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
         kind = options['input']['kind']
         path = options['input']['path']
         cyverse_token = task.user.profile.cyverse_access_token
-        inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path, cyverse_token)
-    else: inputs = []
+        inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path,
+                                                                                                         cyverse_token)
+    else:
+        inputs = []
 
     local = task.agent.executor == AgentExecutor.LOCAL
     resource_requests = [] if local else compose_jobqueue_task_resource_requests(task, options, inputs)
@@ -1223,7 +1265,8 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     commands = []
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
-    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['memory']}")
+    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
+        f"#SBATCH --mem={jobqueue['memory']}")
     if 'walltime' in jobqueue:
         split_time = jobqueue['walltime'].split(':')
         hours = int(split_time[0])
@@ -1274,7 +1317,8 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     lines = []
 
     if 'input' in options:
-        files = list_task_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []
+        files = list_task_input_files(task, options) if (
+                    'input' in options and options['input']['kind'] == 'files') else []
         task.inputs_detected = len(files)
         task.save()
 
@@ -1286,8 +1330,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     image=options['image'],
                     command=options['command'],
                     env=options['env'],
-                    parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)), Parameter(key='GPU_MODE', value=str(gpu))],
-                    bind_mounts=options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
+                    parameters=(options['parameters'] if 'parameters' in options else []) + [
+                        Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
+                        Parameter(key='GPU_MODE', value=str(gpu))],
+                    bind_mounts=options['bind_mounts'] if (
+                                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
                     gpu=gpu,
                     docker_username=docker_username,
@@ -1300,8 +1347,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 image=options['image'],
                 command=options['command'],
                 env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input')), Parameter(key='GPU_MODE', value=str(gpu))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [
+                    Parameter(key='INPUT', value=join(options['workdir'], 'input')),
+                    Parameter(key='GPU_MODE', value=str(gpu))],
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
+                                                                                              list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpu=gpu,
                 docker_username=docker_username,
@@ -1314,8 +1364,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 image=options['image'],
                 command=options['command'],
                 env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)), Parameter(key='GPU_MODE', value=str(gpu))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'], list) else [],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [
+                    Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
+                    Parameter(key='GPU_MODE', value=str(gpu))],
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
+                                                                                              list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpu=gpu,
                 docker_username=docker_username,
@@ -1327,7 +1380,8 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             image=options['image'],
             command=options['command'],
             env=options['env'],
-            parameters=options['parameters'] if 'parameters' in options else [] + [Parameter(key='GPU_MODE', value=str(gpu))],
+            parameters=options['parameters'] if 'parameters' in options else [] + [
+                Parameter(key='GPU_MODE', value=str(gpu))],
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
             gpu=gpu,
@@ -1342,7 +1396,8 @@ def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
         workdir = join(task.agent.workdir, task.workdir)
         sftp.chdir(workdir)
-        template_path = environ.get('TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
+        template_path = environ.get(
+            'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM')
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
             task_commands = compose_task_run_script(task, options, template_path)
@@ -1517,7 +1572,8 @@ def get_task_remote_logs(task: Task, ssh: SSH):
 
 def get_included_by_name(task: Task) -> List[str]:
     included_by_name = (
-        (task.workflow['output']['include']['names'] if 'names' in task.workflow['output']['include'] else [])) if 'output' in task.workflow else []
+        (task.workflow['output']['include']['names'] if 'names' in task.workflow['output'][
+            'include'] else [])) if 'output' in task.workflow else []
     included_by_name.append(f"{task.guid}.zip")  # zip file
     if not task.agent.launcher: included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
     if task.agent.executor != AgentExecutor.LOCAL and task.job_id is not None and task.job_id != '':
@@ -1654,7 +1710,8 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
         included_by_name.append(f"plantit.{task.job_id}.out")
         included_by_name.append(f"plantit.{task.job_id}.err")
     included_by_pattern = (
-        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
+        workflow['output']['include']['patterns'] if 'patterns' in workflow['output'][
+            'include'] else []) if 'output' in workflow else []
 
     ssh = get_task_ssh_client(task, auth)
     workdir = join(task.agent.workdir, task.workdir)
@@ -1909,8 +1966,10 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
         'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
-        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
-        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
+        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
+                                 workflow in workflows_authorized],
+        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
+                              workflow in workflows_blocked]
     }
 
     if agent.user is not None: mapped['user'] = agent.user.username
@@ -1948,7 +2007,8 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
         if agent.authentication == AgentAuthentication.PASSWORD:
             ssh = SSH(host=agent.hostname, port=agent.port, username=auth['username'], password=auth['password'])
         else:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
+            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username,
+                      pkey=str(get_user_private_key_path(agent.user.username)))
 
         try:
             with ssh:
@@ -1969,7 +2029,8 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
                         output.append(line)
                     logger.info(f"Agent {agent.name} healthcheck succeeded")
                     return True, output
-            else: raise e
+            else:
+                raise e
     except:
         msg = f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}"
         logger.warning(msg)

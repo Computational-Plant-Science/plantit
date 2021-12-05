@@ -86,12 +86,13 @@ async def list_org(request, member):
 @sync_to_async
 @login_required
 @async_to_sync
-async def get(request, owner, name):
+async def get(request, owner, name, branch):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
     invalidate = request.GET.get('invalidate', False)
     workflow = await get_workflow(
         owner=owner,
         name=name,
+        branch=branch,
         github_token=profile.github_token,
         cyverse_token=profile.cyverse_access_token,
         invalidate=bool(invalidate))
@@ -102,27 +103,26 @@ async def get(request, owner, name):
 @sync_to_async
 @login_required
 @async_to_sync
-async def search(request, owner, name):
+async def search(request, owner, name, branch):
     profile = await get_user_django_profile(request.user)
-    repository = await get_repo(owner, name, profile.github_token)
+    repository = await get_repo(owner, name, branch, profile.github_token)
     return HttpResponseNotFound() if repository is None else JsonResponse(repository)
 
 
 @sync_to_async
 @login_required
 @async_to_sync
-async def refresh(request, owner, name):
+async def refresh(request, owner, name, branch):
     try:
-        workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
+        profile = await get_user_django_profile(request.user)
+        workflow = await get_workflow(owner, name, branch, profile.github_token, profile.cyverse_access_token)
     except:
         return HttpResponseNotFound()
 
-    redis = RedisClient.get()
-    profile = await get_user_django_profile(request.user)
-    bundle = await workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token)
-    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
-    logger.info(f"Refreshed workflow {owner}/{name}")
-    return JsonResponse(bundle)
+    logger.info(f"Refreshed workflow {owner}/{name}/{branch}")
+    from pprint import pprint
+    pprint(workflow)
+    return JsonResponse(workflow)
 
 
 # @sync_to_async

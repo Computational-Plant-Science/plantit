@@ -280,32 +280,33 @@ def list_task_results(self, guid: str, auth: dict):
 
     redis = RedisClient.get()
     ssh = get_task_ssh_client(task, auth)
-    workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
+    workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}")
 
     if workflow is None:
-        workflow = async_to_sync(get_workflow)(task.workflow_owner, task.workflow_name, task.user.profile.github_token)['config']
+        workflow = async_to_sync(get_workflow)(
+            task.workflow_owner,
+            task.workflow_name,
+            task.workflow_branch,
+            task.user.profile.github_token,
+            task.user.profile.cyverse_access_token)['config']
     else:
         workflow = json.loads(workflow)['config']
 
     log_task_orchestrator_status(task, [f"Retrieving logs"])
     async_to_sync(push_task_event)(task)
-
     get_task_remote_logs(task, ssh)
 
     log_task_orchestrator_status(task, [f"Retrieving results"])
     async_to_sync(push_task_event)(task)
-
     expected = get_task_result_files(task, workflow, auth)
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(found))
-
     task.results_retrieved = True
     task.save()
 
-    log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
+    log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}, verifying data was transferred to CyVerse"])
     async_to_sync(push_task_event)(task)
-
     check_task_cyverse_transfer.s(guid, auth).apply_async()
 
     return guid

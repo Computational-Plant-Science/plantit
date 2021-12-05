@@ -11,7 +11,7 @@ export const workflows = {
         personalLoading: true,
         org: {},
         orgLoading: true,
-        recentlyRun: {}
+        recentlyRun: {},
     }),
     mutations: {
         setPublic(state, workflows) {
@@ -40,7 +40,7 @@ export const workflows = {
         },
         addOrUpdate(state, workflow) {
             let i = state.public.findIndex(
-                wf =>
+                (wf) =>
                     wf.repo.owner.login === workflow.repo.owner.login &&
                     wf.repo.name === workflow.repo.name
             );
@@ -48,16 +48,16 @@ export const workflows = {
             else Vue.set(state.public, i, workflow);
 
             let j = state.personal.findIndex(
-                wf =>
+                (wf) =>
                     wf.repo.owner.login === workflow.repo.owner.login &&
                     wf.repo.name === workflow.repo.name
             );
             if (j === -1) state.personal.unshift(workflow);
             else Vue.set(state.personal, j, workflow);
 
-            Object.keys(state.org).forEach(function(key) {
+            Object.keys(state.org).forEach(function (key) {
                 let k = state.org[key].findIndex(
-                    wf =>
+                    (wf) =>
                         wf.repo.owner.login === workflow.repo.owner.login &&
                         wf.repo.name === workflow.repo.name
                 );
@@ -75,18 +75,19 @@ export const workflows = {
         },
         remove(state, owner, name) {
             let i = state.public.findIndex(
-                wf => wf.repo.owner.login === owner && wf.repo.name === name
+                (wf) => wf.repo.owner.login === owner && wf.repo.name === name
             );
             if (i > -1) state.public.splice(i, 1);
 
             let j = state.personal.findIndex(
-                wf => wf.repo.owner.login === owner && wf.repo.name === name
+                (wf) => wf.repo.owner.login === owner && wf.repo.name === name
             );
             if (j > -1) state.personal.splice(j, 1);
 
-            Object.keys(state.org).forEach(function(key) {
+            Object.keys(state.org).forEach(function (key) {
                 let k = state.org[key].findIndex(
-                    wf => wf.repo.owner.login === owner && wf.repo.name === name
+                    (wf) =>
+                        wf.repo.owner.login === owner && wf.repo.name === name
                 );
                 if (k > -1) state.org[key].splice(k, 1);
             });
@@ -95,18 +96,18 @@ export const workflows = {
             //     wf => wf.repo.owner.login === owner && wf.repo.name === name
             // );
             // if (k > -1) state.org.splice(k, 1);
-        }
+        },
     },
     actions: {
         async loadPublic({ commit }) {
             commit('setPublicLoading', true);
             await axios
                 .get('/apis/v1/workflows/')
-                .then(response => {
+                .then((response) => {
                     commit('setPublic', response.data.workflows);
                     commit('setPublicLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setPublicLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -116,11 +117,11 @@ export const workflows = {
             commit('setPersonalLoading', true);
             await axios
                 .get(`/apis/v1/workflows/${owner}/u/`)
-                .then(response => {
+                .then((response) => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setPersonalLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -130,11 +131,11 @@ export const workflows = {
             commit('setOrgLoading', true);
             await axios
                 .get(`/apis/v1/workflows/${owner}/o/`)
-                .then(response => {
+                .then((response) => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setOrgLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -147,11 +148,11 @@ export const workflows = {
             commit('setPublicLoading', true);
             await axios
                 .get('/apis/v1/workflows/?invalidate=True')
-                .then(response => {
+                .then((response) => {
                     commit('setPublic', response.data.workflows);
                     commit('setPublicLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setPublicLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -161,11 +162,11 @@ export const workflows = {
             commit('setOrgLoading', true);
             await axios
                 .get(`/apis/v1/workflows/${owner}/o/?invalidate=True`)
-                .then(response => {
+                .then((response) => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setOrgLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -175,11 +176,11 @@ export const workflows = {
             commit('setPersonalLoading', true);
             await axios
                 .get(`/apis/v1/workflows/${owner}/u/?invalidate=True`)
-                .then(response => {
+                .then((response) => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setPersonalLoading', false);
                     Sentry.captureException(error);
                     throw error;
@@ -189,17 +190,20 @@ export const workflows = {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${payload.owner}/u/${payload.name}/`, {
-                    headers: {
-                        Authorization: 'Bearer ' + this.githubToken
+                .get(
+                    `/apis/v1/workflows/${payload.owner}/u/${payload.name}/${payload.branch}/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken,
+                        },
                     }
-                })
-                .then(response => {
+                )
+                .then((response) => {
                     commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
@@ -211,19 +215,19 @@ export const workflows = {
             commit('setPublicLoading', true);
             await axios
                 .get(
-                    `/apis/v1/workflows/${payload.owner}/u/${payload.name}/refresh/`,
+                    `/apis/v1/workflows/${payload.owner}/u/${payload.name}/${payload.branch}/refresh/`,
                     {
                         headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
+                            Authorization: 'Bearer ' + this.githubToken,
+                        },
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
@@ -232,19 +236,19 @@ export const workflows = {
         },
         setRecentlyRun({ commit }, workflow) {
             commit('setRecentlyRun', workflow);
-        }
+        },
     },
     getters: {
-        workflow: state => (owner, name, branch) => {
+        workflow: (state) => (owner, name, branch) => {
             var found = state.public.find(
-                repo =>
+                (repo) =>
                     owner === repo.repo.owner.login &&
                     name === repo.repo.name &&
                     branch === repo.branch.name
             );
             if (found !== undefined) return found;
             found = state.personal.find(
-                repo =>
+                (repo) =>
                     owner === repo.repo.owner.login &&
                     name === repo.repo.name &&
                     branch === repo.branch.name
@@ -253,7 +257,7 @@ export const workflows = {
 
             for (let key in state.org) {
                 found = state.org[key].find(
-                    repo =>
+                    (repo) =>
                         owner === repo.repo.owner.login &&
                         name === repo.repo.name &&
                         branch === repo.branch.name
@@ -278,23 +282,23 @@ export const workflows = {
             if (found !== undefined) return found;
             return null;
         },
-        publicWorkflows: state => state.public,
-        publicWorkflowsLoading: state => state.publicLoading,
-        boundWorkflows: state =>
-            state.personal.filter(workflow => workflow.bound),
-        bindableWorkflows: state =>
+        publicWorkflows: (state) => state.public,
+        publicWorkflowsLoading: (state) => state.publicLoading,
+        boundWorkflows: (state) =>
+            state.personal.filter((workflow) => workflow.bound),
+        bindableWorkflows: (state) =>
             state.personal
-                .filter(workflow => !workflow.bound)
-                .sort(function(l, r) {
+                .filter((workflow) => !workflow.bound)
+                .sort(function (l, r) {
                     if (l.validation['is_valid'] && r.validation['is_valid'])
                         return 0;
                     else if (l.validation['is_valid']) return -1;
                     else return 1;
                 }),
         // orgWorkflows: state => state.org.filter(workflow => workflow.bound),
-        orgWorkflows: state => state.org,
-        orgWorkflowsLoading: state => state.orgLoading,
-        personalWorkflowsLoading: state => state.personalLoading,
-        recentlyRunWorkflows: state => state.recentlyRun
-    }
+        orgWorkflows: (state) => state.org,
+        orgWorkflowsLoading: (state) => state.orgLoading,
+        personalWorkflowsLoading: (state) => state.personalLoading,
+        recentlyRunWorkflows: (state) => state.recentlyRun,
+    },
 };

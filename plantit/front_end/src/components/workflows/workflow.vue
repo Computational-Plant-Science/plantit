@@ -4195,8 +4195,8 @@ export default {
             idVisible: false,
             timeLimitVisible: false,
             tagsVisible: false,
-            inputVisible: false || !this.inputValid,
-            outputVisible: false || ! !this.outputValid,
+            inputVisible: false,
+            outputVisible: false,
             parametersVisible: false,
             projectVisible: false,
             agentVisible: false,
@@ -4290,6 +4290,7 @@ export default {
             this.outputSelectedPatterns =
                 this.getWorkflow.config.output.include.patterns;
 
+        // TODO refactor persistent workflow configs
         // if (this.workflowKey in this.recentlyRunWorkflows) {
         //     let config = this.recentlyRunWorkflows[this.workflowKey];
         //     if (config.input !== undefined && config.input.from !== undefined)
@@ -4299,6 +4300,9 @@ export default {
         // if (this.defaultPath !== undefined && this.defaultPath !== null) {
         //     this.path = this.defaultPath;
         // }
+
+        if (this.getWorkflow.config.input !== undefined && (this.selectedInput === null || !this.inputValid)) this.inputVisible = true;
+        if (this.selectedOutput === null || !this.outputValid) this.outputVisible = true;
     },
     methods: {
         setTimeLimitUnits(units) {
@@ -4451,12 +4455,13 @@ export default {
             await this.$store.dispatch('workflows/refresh', {
                 owner: this.$router.currentRoute.params.owner,
                 name: this.$router.currentRoute.params.name,
+                branch: this.$router.currentRoute.params.branch
             });
         },
         async unbindWorkflow() {
             await axios({
                 method: 'delete',
-                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/u/${this.$router.currentRoute.params.name}/unbind/`,
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/u/${this.$router.currentRoute.params.name}/${this.$router.currentRoute.params.branch}/unbind/`,
                 headers: { 'Content-Type': 'application/json' },
             })
                 .then(async (response) => {

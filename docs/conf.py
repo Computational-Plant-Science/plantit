@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'PlantIT'
+project = 'plantit'
 copyright = '2021, Computational Plant Science Lab'
 author = 'Computational Plant Science Lab'
 
@@ -52,7 +52,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
-html_title = 'PlantIT'
+html_title = 'plantit'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -91,12 +91,16 @@
                                     >
                                 </h5>
                             </b-col>
-                            <b-col md="auto">
+                          <b-col md="auto" v-if="!getTask.is_complete" class="mr-0">
+                                <b-spinner class="mr-0" small variant="warning">
+                                </b-spinner>
+                            </b-col>
+                            <b-col md="auto" class="ml-0">
                                 <b-link
                                     :class="
                                         profile.darkMode
-                                            ? 'text-light ml-2'
-                                            : 'text-dark ml-2'
+                                            ? 'text-light'
+                                            : 'text-dark'
                                     "
                                     :to="{
                                         name: 'agent',
@@ -277,10 +281,6 @@
                                         class="ml-2 mb-1"
                                     ></b-spinner>
                                 </b-button>
-                            </b-col>
-                            <b-col md="auto" v-if="!getTask.is_complete">
-                                <b-spinner class="ml-2" small variant="warning">
-                                </b-spinner>
                             </b-col>
                             <b-col
                                 md="auto"
