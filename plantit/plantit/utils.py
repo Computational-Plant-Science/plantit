@@ -237,7 +237,7 @@ def get_user_statistics(user: User) -> dict:
         stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
-        redis.set(f"stats_updated/{user.username}", timezone.now().timestamp())
+        redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
     else:
         stats = redis.get(f"stats/{user.username}")
         stats = json.loads(stats) if stats is not None else None

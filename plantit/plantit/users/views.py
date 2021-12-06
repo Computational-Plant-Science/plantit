@@ -149,7 +149,7 @@ class IDPViewSet(viewsets.ViewSet):
             aggregate_user_usage_stats.s(user.username).apply_async()
         else:
             stats = redis.get(f"stats/{user.username}")
-            stats_age_minutes = (timezone.now() - datetime.fromtimestamp(float(stats_last_updated))).total_seconds() / 60
+            stats_age_minutes = (datetime.now() - datetime.fromtimestamp(float(stats_last_updated))).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(
                     f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
