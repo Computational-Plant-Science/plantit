@@ -505,7 +505,7 @@ def stranded_task_sweep():
         now = timezone.now()
         period = int(environ.get('TASKS_REFRESH_SECONDS'))
         # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded, so we poll it again
-        if (now - task.updated).total_seconds > (2 * period):
+        if (now - task.updated).total_seconds() > (2 * period):
             poll_task_status.s(task.guid).apply_async()
 
 

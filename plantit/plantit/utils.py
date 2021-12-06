@@ -699,8 +699,8 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         config['output']['exclude']['names'] = []
 
     config['output']['exclude']['names'].append(f"{task.guid}.yaml")
-    config['output']['exclude']['names'].append("template_local_run.sh")
-    config['output']['exclude']['names'].append("template_slurm_run.sh")
+    config['output']['exclude']['names'].append("template_task_local.sh")
+    config['output']['exclude']['names'].append("template_task_slurm.sh")
     output = config['output']
 
     # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
@@ -1243,14 +1243,16 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
     cli_zip = compose_task_zip_command(task, options)
     cli_push = compose_task_push_command(task, options)
 
-    return template_header + \
+    cmds = template_header + \
            resource_requests + \
            [task.agent.pre_commands] + \
            [cli_pull] + \
            cli_run + \
-           [cli_clean] + \
            [cli_zip] + \
            [cli_push]
+    from pprint import pprint
+    pprint(cmds)
+    return cmds
 
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
@@ -1393,8 +1395,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
-        workdir = join(task.agent.workdir, task.workdir)
-        sftp.chdir(workdir)
+        sftp.chdir(join(task.agent.workdir, task.workdir))
         template_path = environ.get(
             'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM')
