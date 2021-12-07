@@ -4,7 +4,6 @@ from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 from plantit.feedback.models import Feedback
 from plantit.miappe.models import Investigation, Study
-from plantit.workflows.models import Workflow
 
 
 @admin.register(Agent)
@@ -24,11 +23,6 @@ class DatasetAccessPolicyAdmin(admin.ModelAdmin):
 
 @admin.register(DatasetSession)
 class DatasetSessionAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Workflow)
-class WorkflowAdmin(admin.ModelAdmin):
     pass
 
 

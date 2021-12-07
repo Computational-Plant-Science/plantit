@@ -3,18 +3,20 @@ from django.http import JsonResponse
 
 from plantit.tasks.models import Task, TaskCounter, TaskStatus
 from plantit.utils import list_institutions, filter_online
-from plantit.workflows.models import Workflow
+from plantit.redis import RedisClient
 
 
 def counts(request):
     # count users online by checking their CyVerse token expiry times
     users = list(User.objects.all())
     online = filter_online(users)
+    redis = RedisClient.get()
+    public_workflows = len(list(redis.scan(match='workflows')))
 
     return JsonResponse({
         'users': len(users),
         'online': len(online),
-        'workflows': Workflow.objects.count(),
+        'workflows': public_workflows,
         'tasks': TaskCounter.load().count,
         'running': len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
     })

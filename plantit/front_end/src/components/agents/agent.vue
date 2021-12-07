@@ -5,8 +5,8 @@
                 no-gutters
                 v-if="
                     getAgent.role !== 'admin' &&
-                        getAgent.role !== 'guest' &&
-                        !getAgent.public
+                    getAgent.role !== 'guest' &&
+                    !getAgent.public
                 "
                 ><b-col class="text-center"
                     ><p
@@ -110,7 +110,13 @@
                                     v-if="getAgent.logo"
                                     rounded
                                     class="card-img-right overflow-hidden"
-                                    style="max-height: 3rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                    style="
+                                        max-height: 3rem;
+                                        position: absolute;
+                                        right: 20px;
+                                        top: 20px;
+                                        z-index: 1;
+                                    "
                                     right
                                     :src="getAgent.logo"
                                 ></b-img>
@@ -154,7 +160,7 @@
                                                 <b-badge
                                                     v-if="
                                                         getAgent.role ===
-                                                            'guest'
+                                                        'guest'
                                                     "
                                                     variant="warning"
                                                     >Guest</b-badge
@@ -162,7 +168,7 @@
                                                 <b-badge
                                                     v-else-if="
                                                         getAgent.role ===
-                                                            'admin'
+                                                        'admin'
                                                     "
                                                     variant="success"
                                                     >Owner</b-badge
@@ -180,7 +186,7 @@
                                         <div
                                             v-if="
                                                 !getAgent.is_healthy &&
-                                                    healthcheckOutput.length > 0
+                                                healthcheckOutput.length > 0
                                             "
                                         >
                                             <br />
@@ -193,7 +199,9 @@
                                             >
                                                 <b-col
                                                     class="m-0 p-0 pl-3 pr-3 pt-1 text-danger"
-                                                    style="white-space: pre-line;"
+                                                    style="
+                                                        white-space: pre-line;
+                                                    "
                                                 >
                                                     <span
                                                         v-for="line in healthcheckOutput"
@@ -201,7 +209,7 @@
                                                         v-show="
                                                             line !==
                                                                 undefined &&
-                                                                line !== null
+                                                            line !== null
                                                         "
                                                         >{{ line + '\n' }}</span
                                                     >
@@ -348,7 +356,7 @@
                                                     v-model="getAgent.public"
                                                     :disabled="
                                                         getAgent.authentication ===
-                                                            'password'
+                                                        'password'
                                                     "
                                                     button
                                                     class="mr-0"
@@ -421,8 +429,8 @@
                                             <b-col
                                                 v-if="
                                                     getAgent.role === 'admin' &&
-                                                        getAgent.authentication ===
-                                                            'key'
+                                                    getAgent.authentication ===
+                                                        'key'
                                                 "
                                                 class="m-0"
                                                 align-self="end"
@@ -480,7 +488,7 @@
                                                         ><span
                                                             v-if="
                                                                 getAgent.authentication ===
-                                                                    'password'
+                                                                'password'
                                                             "
                                                             ><i
                                                                 class="fas fa-pen fa-fw fa-1x"
@@ -505,11 +513,11 @@
                                                         "
                                                         :active="
                                                             getAgent.authentication ===
-                                                                'password'
+                                                            'password'
                                                         "
                                                         :disabled="
                                                             getAgent.authentication ===
-                                                                'password'
+                                                            'password'
                                                         "
                                                         @click="
                                                             setAuthStrategy(
@@ -527,11 +535,11 @@
                                                     ><b-dropdown-item-button
                                                         :active="
                                                             getAgent.authentication ===
-                                                                'key'
+                                                            'key'
                                                         "
                                                         :disabled="
                                                             getAgent.authentication ===
-                                                                'key'
+                                                            'key'
                                                         "
                                                         :variant="
                                                             profile.darkMode
@@ -570,12 +578,12 @@
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Verify that PlantIT can connect to ' +
-                                                            getAgent.name
+                                                        getAgent.name
                                                     "
                                                     :disabled="
                                                         getAgent.role ===
                                                             'none' ||
-                                                            checkingConnection
+                                                        checkingConnection
                                                     "
                                                     @click="preCheckConnection"
                                                 >
@@ -649,7 +657,7 @@
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Unbind ' +
-                                                            getAgent.name
+                                                        getAgent.name
                                                     "
                                                     size="sm"
                                                     variant="outline-danger"
@@ -757,8 +765,8 @@
                                     <b-row
                                         v-if="
                                             !agentLoading &&
-                                                getAgent.users_authorized
-                                                    .length === 0
+                                            getAgent.users_authorized.length ===
+                                                0
                                         "
                                         ><b-col
                                             ><small
@@ -777,7 +785,13 @@
                                             ><b-img
                                                 v-if="user.github_profile"
                                                 class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                                                style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                                style="
+                                                    width: 2rem;
+                                                    height: 2rem;
+                                                    left: -3px;
+                                                    top: 1.5px;
+                                                    border: 1px solid #e2e3b0;
+                                                "
                                                 rounded="circle"
                                                 :src="
                                                     user.github_profile
@@ -810,7 +824,7 @@
                                                 v-b-tooltip.hover
                                                 :title="
                                                     'Revoke access from ' +
-                                                        user.username
+                                                    user.username
                                                 "
                                                 @click="unauthorizeUser(user)"
                                             >
@@ -825,7 +839,7 @@
                             </b-row>
                             <hr />
                         </div>
-                        <div v-if="ownsAgent">
+                        <!--<div v-if="ownsAgent">
                             <b-row no-gutters>
                                 <b-col align-self="end" md="auto" class="mr-1"
                                     ><h5
@@ -848,9 +862,7 @@
                                                 : 'white'
                                         "
                                         v-b-tooltip.hover
-                                        :title="
-                                            `Configure workflow policies for ${getAgent.name}`
-                                        "
+                                        :title="`Configure workflow policies for ${getAgent.name}`"
                                         :text="workflowPolicyType"
                                         v-model="workflowPolicyType"
                                     >
@@ -1039,7 +1051,7 @@
                                     </div>
                                 </b-col>
                             </b-row>
-                        </div>
+                        </div>-->
                         <!--<b-col md="auto">
                         <b-row
                             ><b-col align-self="end"
@@ -1125,7 +1137,7 @@
                             </b-row>
                         </div>
                     </b-col>-->
-                        <br/>
+                        <br />
                         <Plotly
                             v-if="healthchecks.length > 0"
                             :data="healthchecksTimeseriesData"
@@ -1196,7 +1208,13 @@
                         <b-img
                             v-if="user.github_profile"
                             class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                            style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                            style="
+                                width: 2rem;
+                                height: 2rem;
+                                left: -3px;
+                                top: 1.5px;
+                                border: 1px solid #e2e3b0;
+                            "
                             rounded="circle"
                             :src="
                                 user.github_profile
@@ -1695,7 +1713,7 @@
             ok-variant="success"
         >
             <b-row
-                ><b-col style="word-wrap: break-word;">
+                ><b-col style="word-wrap: break-word">
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Here is your public key. Copy it into the
                         <code>~/.ssh/authorized_keys</code> file on your agent.
@@ -1843,9 +1861,9 @@ export default {
     components: {
         VueCronEditorBuefy,
         blurb,
-        Plotly
+        Plotly,
     },
-    data: function() {
+    data: function () {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
@@ -1857,7 +1875,7 @@ export default {
                 description: '',
                 command: '',
                 once: '',
-                time: ''
+                time: '',
             },
             sessionSocket: null,
             togglingPublic: false,
@@ -1872,7 +1890,7 @@ export default {
             authorizingUser: false,
             healthcheckOutput: [],
             healthchecks: [],
-            loadingHealthchecks: false
+            loadingHealthchecks: false,
         };
     },
     computed: {
@@ -1883,35 +1901,35 @@ export default {
             'personalWorkflowsLoading',
             'boundWorkflows',
             'publicWorkflowsLoading',
-            'publicWorkflows'
+            'publicWorkflows',
         ]),
         ...mapGetters('agents', [
             'agent',
             'personalAgentsLoading',
             'personalAgents',
             'publicAgentsLoading',
-            'publicAgents'
+            'publicAgents',
         ]),
         authorizedUsers() {
             return this.getAgent.users_authorized.filter(
-                p => p.user !== this.profile.djangoProfile.username
+                (p) => p.user !== this.profile.djangoProfile.username
             );
         },
         otherUsers() {
             return this.allUsers.filter(
-                u =>
+                (u) =>
                     u.username !== this.profile.djangoProfile.username &&
                     u.github_profile !== undefined &&
                     !this.getAgent.users_authorized.some(
-                        ua => ua.username === u.username
+                        (ua) => ua.username === u.username
                     )
             );
         },
         unauthorizedBoundWorkflows() {
             return this.boundWorkflows.filter(
-                wf =>
+                (wf) =>
                     !this.getAgent.workflows_authorized.some(
-                        b =>
+                        (b) =>
                             b.repo.owner.login === wf.repo.owner.login &&
                             b.config.name === wf.config.name
                     )
@@ -1919,9 +1937,9 @@ export default {
         },
         unauthorizedPublicWorkflows() {
             return this.publicWorkflows.filter(
-                wf =>
+                (wf) =>
                     !this.getAgent.workflows_authorized.some(
-                        b =>
+                        (b) =>
                             b.repo.owner.login === wf.repo.owner.login &&
                             b.config.name === wf.config.name
                     )
@@ -1929,9 +1947,9 @@ export default {
         },
         unblockedBoundWorkflows() {
             return this.boundWorkflows.filter(
-                wf =>
+                (wf) =>
                     !this.getAgent.workflows_blocked.some(
-                        b =>
+                        (b) =>
                             b.repo.owner.login === wf.repo.owner.login &&
                             b.config.name === wf.config.name
                     )
@@ -1939,9 +1957,9 @@ export default {
         },
         unblockedPublicWorkflows() {
             return this.publicWorkflows.filter(
-                wf =>
+                (wf) =>
                     !this.getAgent.workflows_blocked.some(
-                        b =>
+                        (b) =>
                             b.repo.owner.login === wf.repo.owner.login &&
                             b.config.name === wf.config.name
                     )
@@ -1968,43 +1986,45 @@ export default {
         healthchecksTimeseriesData() {
             return [
                 {
-                    x: this.healthchecks.map(t => t.timestamp),
-                    y: this.healthchecks.map(t => t.healthy ? 'Healthy' : 'Unhealthy'),
+                    x: this.healthchecks.map((t) => t.timestamp),
+                    y: this.healthchecks.map((t) =>
+                        t.healthy ? 'Healthy' : 'Unhealthy'
+                    ),
                     mode: 'markers',
                     type: 'scatter',
                     marker: {
-                        color: this.healthchecks.map(t =>
+                        color: this.healthchecks.map((t) =>
                             t.healthy
                                 ? 'rgb(214, 223, 93)'
                                 : 'rgb(255, 114, 114)'
                         ),
                         line: {
                             color: 'rgba(156, 165, 196, 1.0)',
-                            width: 1
+                            width: 1,
                         },
                         symbol: 'circle',
-                        size: 16
-                    }
-                }
+                        size: 16,
+                    },
+                },
             ];
         },
         healthchecksTimeseriesLayout() {
             return {
                 font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 height: 250,
                 title: {
                     text: 'Recent Healthchecks',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 xaxis: {
                     showgrid: false,
@@ -2012,22 +2032,22 @@ export default {
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
-                            color: 'rgb(204, 204, 204)'
-                        }
+                            color: 'rgb(204, 204, 204)',
+                        },
                     },
                     tickfont: {
                         font: {
-                            color: 'rgb(102, 102, 102)'
-                        }
-                    }
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
                 },
                 yaxis: {
-                    showticklabels: false
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
-        }
+        },
     },
     async mounted() {
         this.workflowPolicyType =
@@ -2048,7 +2068,7 @@ export default {
         },
         agent() {
             // noop
-        }
+        },
     },
     methods: {
         async loadHealthchecks() {
@@ -2058,15 +2078,15 @@ export default {
                     `/apis/v1/agents/${this.$router.currentRoute.params.name}/checks/`,
                     {
                         headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
+                            Authorization: 'Bearer ' + this.githubToken,
+                        },
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     this.healthchecks = response.data.healthchecks;
                     this.loadingHealthchecks = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.loadingHealthchecks = false;
                     throw error;
@@ -2080,7 +2100,7 @@ export default {
             this.$bvToast.toast(`Copied public key to clipboard`, {
                 autoHideDelay: 3000,
                 appendToast: false,
-                noCloseButton: true
+                noCloseButton: true,
             });
         },
         async refreshWorkflows() {
@@ -2089,7 +2109,7 @@ export default {
                 this.$store.dispatch(
                     'workflows/refreshPersonal',
                     this.profile.githubProfile.login
-                )
+                ),
             ]);
         },
         async refreshUsers() {
@@ -2124,9 +2144,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_user/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2135,24 +2155,24 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Authorized user ${user.username} for agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to authorize user ${user.username} for agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.$bvModal.hide('authorizeUser');
                     this.authorizingUser = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to authorize user ${user.username} for agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.$bvModal.hide('authorizeUser');
                     this.authorizingUser = false;
@@ -2166,9 +2186,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_user/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2177,23 +2197,23 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Revoked user ${user.username}'s access to agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to revoke user ${user.username}'s access to agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.authorizingUser = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to revoke user ${user.username}'s access to agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.authorizingUser = false;
                     throw error;
@@ -2203,15 +2223,15 @@ export default {
             this.authorizingWorkflow = true;
             let data = {
                 owner: workflow.repo.owner.login,
-                name: workflow.repo.name
+                name: workflow.repo.name,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_workflow/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2220,25 +2240,25 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Authorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         this.workflowPolicyType = 'authorized';
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.$bvModal.hide('authorizeWorkflow');
                     this.authorizingWorkflow = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.$bvModal.hide('authorizeWorkflow');
                     this.authorizingWorkflow = false;
@@ -2249,15 +2269,15 @@ export default {
             this.authorizingWorkflow = true;
             let data = {
                 owner: workflow.repo.owner.login,
-                name: workflow.repo.name
+                name: workflow.repo.name,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_workflow/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2266,7 +2286,7 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Unauthorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         if (this.getAgent.workflows_authorized.length === 0)
                             this.workflowPolicyType = 'none';
@@ -2274,17 +2294,17 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.authorizingWorkflow = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.authorizingWorkflow = false;
                     throw error;
@@ -2297,11 +2317,11 @@ export default {
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block_workflow/`,
                 data: {
                     owner: workflow.repo.owner.login,
-                    name: workflow.repo.name
+                    name: workflow.repo.name,
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2310,25 +2330,25 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Blocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         this.workflowPolicyType = 'blocked';
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.$bvModal.hide('blockWorkflow');
                     this.blockingWorkflow = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.gettingKey = false;
                     this.blockingWorkflow = false;
@@ -2342,11 +2362,11 @@ export default {
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock_workflow/`,
                 data: {
                     owner: workflow.repo.owner.login,
-                    name: workflow.repo.name
+                    name: workflow.repo.name,
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/addOrUpdate',
@@ -2355,7 +2375,7 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Unblocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         if (this.getAgent.workflows_authorized.length === 0)
                             this.workflowPolicyType = 'none';
@@ -2363,17 +2383,17 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.blockingWorkflow = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.blockingWorkflow = false;
                     throw error;
@@ -2383,7 +2403,7 @@ export default {
             this.gettingKey = true;
             await axios
                 .get(`/apis/v1/users/get_key/`)
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         this.publicKey = response.data.public_key;
                         this.showKeyModal();
@@ -2396,17 +2416,17 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to retrieve public key`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.gettingKey = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to retrieve public key`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.gettingKey = false;
                     throw error;
@@ -2414,15 +2434,15 @@ export default {
         },
         async setAuthStrategy(strategy) {
             let data = {
-                strategy: strategy
+                strategy: strategy,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/auth/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'agents/setPersonal',
@@ -2431,22 +2451,22 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Configured agent ${this.$router.currentRoute.params.name} for ${this.getAgent.authentication} authentication`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -2458,9 +2478,9 @@ export default {
             await axios({
                 method: 'delete',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     if (response.status === 200) {
                         this.$store.dispatch(
                             'agents/setPersonal',
@@ -2469,25 +2489,25 @@ export default {
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Removed binding for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         router.push({
-                            name: 'agents'
+                            name: 'agents',
                         });
                     } else {
                         this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     throw error;
                 });
@@ -2498,9 +2518,9 @@ export default {
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/disable/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
@@ -2515,8 +2535,8 @@ export default {
                                         : 'Enabled'
                                 } ${this.$router.currentRoute.params.name}`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                         this.togglingDisabled = false;
                     } else {
@@ -2526,12 +2546,12 @@ export default {
                                 !this.getAgent.disabled ? 'disable' : 'enable'
                             } ${this.$router.currentRoute.params.name}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                         this.togglingDisabled = false;
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
@@ -2539,7 +2559,7 @@ export default {
                             !this.getAgent.disabled ? 'disable' : 'enable'
                         } ${this.$router.currentRoute.params.name}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.togglingDisabled = false;
                     throw error;
@@ -2551,9 +2571,9 @@ export default {
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/public/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
@@ -2566,15 +2586,15 @@ export default {
                                     this.$router.currentRoute.params.name
                                 } ${
                                     response.data.agents.find(
-                                        agent =>
+                                        (agent) =>
                                             agent.name === this.getAgent.name
                                     ).public
                                         ? 'public'
                                         : 'private'
                                 }`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                         this.togglingPublic = false;
                     } else {
@@ -2584,12 +2604,12 @@ export default {
                                 this.$router.currentRoute.params.name
                             } ${this.getAgent.public ? 'private' : 'public'}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                         this.togglingPublic = false;
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
@@ -2597,7 +2617,7 @@ export default {
                             this.$router.currentRoute.params.name
                         } ${this.getAgent.public ? 'private' : 'public'}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     throw error;
                 });
@@ -2610,10 +2630,7 @@ export default {
             )
                 return '';
             return moment(
-                parser
-                    .parseExpression(task.crontab)
-                    .next()
-                    .toString()
+                parser.parseExpression(task.crontab).next().toString()
             ).format('MMMM Do YYYY, h:mm a');
         },
         deleteTask(task) {
@@ -2625,7 +2642,7 @@ export default {
                     this.alertEnabled = true;
                     this.checkingConnection = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.alertMessage = `Failed to delete ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
@@ -2643,7 +2660,7 @@ export default {
                     agent: this.getAgent.name,
                     description: this.createTaskForm.description,
                     command: this.createTaskForm.command,
-                    delay: this.createTaskForm.time
+                    delay: this.createTaskForm.time,
                     // delay: moment
                     //     .duration(
                     //         this.createTaskForm.timeIntervalValue,
@@ -2651,9 +2668,9 @@ export default {
                     //     )
                     //     .asSeconds()
                 },
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     this.alertMessage =
                         response.status === 200 && response.data.created
                             ? `Created task ${this.createTaskForm.name} on ${this.getAgent.name}`
@@ -2665,7 +2682,7 @@ export default {
                     this.$bvModal.hide('createTask');
                     this.loadTarget();
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
@@ -2679,10 +2696,10 @@ export default {
                 name: '',
                 description: '',
                 command: '',
-                interval: moment.duration(1, 'days')
+                interval: moment.duration(1, 'days'),
             };
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
@@ -2699,63 +2716,63 @@ export default {
                     ? {
                           auth: {
                               username: this.authenticationUsername,
-                              password: this.authenticationPassword
-                          }
+                              password: this.authenticationPassword,
+                          },
                       }
                     : {
                           auth: {
-                              username: this.authenticationUsername
-                          }
+                              username: this.authenticationUsername,
+                          },
                       };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$route.params.name}/health/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         if (response.data.healthy)
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'success',
                                 message: `Connection to ${this.getAgent.name} succeeded`,
                                 guid: guid().toString(),
-                                time: moment().format()
+                                time: moment().format(),
                             });
                         else
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'danger',
                                 message: `Failed to connect to ${this.getAgent.name}`,
                                 guid: guid().toString(),
-                                time: moment().format()
+                                time: moment().format(),
                             });
                     }
                     this.healthcheckOutput = response.data.output;
                     this.checkingConnection = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to connect to ${this.getAgent.name}`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     this.checkingConnection = false;
                     throw error;
                 });
         },
-        toggleTask: function(task) {
+        toggleTask: function (task) {
             axios
                 .get(`/apis/v1/agents/toggle_task/?name=${task.name}`)
-                .then(response => {
+                .then((response) => {
                     this.loadTarget();
                     this.alertMessage = `${
                         response.data.enabled ? 'Enabled' : 'Disabled'
                     } task ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) {
                         this.alertMessage = `Failed to disable task ${task.name} on ${this.getAgent.name}`;
@@ -2763,8 +2780,8 @@ export default {
                         throw error;
                     }
                 });
-        }
-    }
+        },
+    },
 };
 </script>
 

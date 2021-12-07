@@ -1,18 +1,15 @@
 import asyncio
-import tempfile
-
-import binascii
 import fileinput
 import json
 import logging
 import os
 import subprocess
 import sys
+import tempfile
 import traceback
 import uuid
 from collections import Counter
 from datetime import timedelta, datetime
-from math import ceil
 from os import environ
 from os.path import isdir
 from os.path import join
@@ -20,11 +17,13 @@ from pathlib import Path
 from typing import List
 from urllib.parse import quote_plus
 
+import binascii
+import jwt
 import numpy as np
-import pprint
+import plantit.github as github
+import plantit.terrain as terrain
 import requests
 import yaml
-import jwt
 from asgiref.sync import async_to_sync
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
@@ -34,11 +33,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
+from math import ceil
 from paramiko.ssh_exception import SSHException
-
-import plantit.github as github
-import plantit.terrain as terrain
-from plantit import settings
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
@@ -47,12 +43,13 @@ from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter, Task
+from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter
 from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount, EnvironmentVariable
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
 from plantit.users.models import Profile
-from plantit.workflows.models import Workflow
+
+from plantit import settings
 
 logger = logging.getLogger(__name__)
 
@@ -387,33 +384,9 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
 
 # workflows
 
-@sync_to_async
-def list_user_workflows(user: User, public: bool = None):
-    workflows = Workflow.objects.all()
-    if user is not None: workflows = workflows.filter(user=user)
-    if public is not None: workflows = workflows.filter(public=public)
-    return list(workflows)
 
-
-@sync_to_async
-def list_organization_workflows(organization: str, public: bool = None):
-    workflows = Workflow.objects.all()
-    if organization is not None: workflows = workflows.filter(organization=organization)
-    if public is not None: workflows = workflows.filter(public=public)
-    return list(workflows)
-
-
-@sync_to_async
-def get_workflow_user(workflow: Workflow):
-    return workflow.user
-
-
-async def workflow_to_dict(workflow: Workflow, github_token: str, cyverse_token: str) -> dict:
-    bundle = await github.get_repo_bundle(
-        workflow.repo_owner,
-        workflow.repo_name,
-        github_token,
-        cyverse_token)
+async def workflow_to_dict(owner: str, name: str, github_token: str, cyverse_token: str) -> dict:
+    bundle = await github.get_repo_bundle(owner, name, github_token, cyverse_token)
 
     return {
         'config': bundle['config'],
@@ -449,15 +422,7 @@ async def refresh_personal_workflow_cache(github_username: str):
 
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    owned = await list_user_workflows(user=user)
-    bind = asyncio.gather(
-        *[workflow_to_dict(workflow, profile.github_token, profile.cyverse_access_token) for workflow in owned])
-    tasks = await asyncio.gather(*[
-        bind,
-        github.list_connectable_repos_by_owner(github_username, profile.github_token)])
-    # github.list_connectable_repos_by_org(github_username, profile.github_token)])
-    bound_wfs = tasks[0]
-    bindable_wfs = tasks[1]
+    bindable_wfs = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
     all_wfs = []
 
     # find and filter bindable workflows
@@ -498,29 +463,9 @@ async def refresh_personal_workflow_cache(github_username: str):
 
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_token: str):
-    # redis = RedisClient.get()
-    # public_workflows = await list_user_workflows()
-
-    # for workflow, user in list(zip(public_workflows, [await get_workflow_user(workflow) for workflow in public_workflows])):
-    #     if user is not None: continue
-
-    #     # workflow is not owned by any particular user (e.g., added by admins for shared GitHub group) so explicitly refresh the binding
-    #     logger.info(f"Binding unclaimed workflow {workflow.repo_owner}/{workflow.repo_name}")
-    #     bundle = await workflow_to_dict(workflow, github_token, cyverse_token)
-    #     redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}/{workflow.repo_branch}", json.dumps(del_none(bundle)))
-
-    # redis.set(f"public_workflows_updated", timezone.now().timestamp())
-
     # scrape GitHub to synchronize repos and workflow config
-    owned = await list_organization_workflows(organization=org_name)
     bound_wfs = []
     bindable_wfs = await github.list_connectable_repos_by_org(org_name, github_token)
-    # bind = asyncio.gather(*[workflow_to_dict(workflow, github_token, cyverse_token) for workflow in owned])
-    # tasks = await asyncio.gather(*[
-    #     bind,
-    #     github.list_connectable_repos_by_org(org_name, github_token)])
-    # bound_wfs = tasks[0]
-    # bindable_wfs = tasks[1]
     all_wfs = []
 
     # find and filter bindable workflows
@@ -560,23 +505,9 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_t
             "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-def list_public_workflows(github_token: str = None, cyverse_token: str = None, invalidate: bool = False) -> List[dict]:
+def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
-    # last_updated = redis.get('public_workflows_updated')
-    # num_cached = len(list(redis.scan_iter(match=f"workflows/*")))
-
-    # if public workflow cache is empty or invalidation is requested, (re)populate it before returning
-    # if last_updated is None or num_cached == 0 or invalidate:
-    #     if github_token is not None and cyverse_token is not None:
-    #         logger.info(f"Populating public workflow cache")
-    #         await refresh_org_workflow_cache(github_token, cyverse_token)
-    #     else:
-    #         logger.warning(f"No GitHub API token provided, can't refresh cache")
-
-    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 wf['public']]
-    # return [workflow for workflow in workflows if workflow['public']]
-    return workflows
+    return [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if 'public' in wf['config'] and wf['config']['public']]
 
 
 def list_personal_workflows(owner: str) -> List[dict]:
@@ -596,12 +527,6 @@ async def get_workflow(
     workflow = redis.get(f"workflows/{owner}/{name}/{branch}")
 
     if last_updated is None or workflow is None or invalidate:
-        try:
-            workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name, repo_branch=branch)
-        except:
-            logger.error(traceback.format_exc())
-            raise ValueError(f"Workflow {owner}/{name}/{branch} not found")
-
         workflow = await workflow_to_dict(workflow, github_token, cyverse_token)
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
     else:
@@ -1393,6 +1318,9 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
+    # TODO: if sftp throws an IOError or complains about filesizes, it probably means the remote host's disk is full
+    # we should catch those errors and display a note about this in the UI
+
     with ssh.client.open_sftp() as sftp:
         task_commands = compose_task_run_script(task, options, environ.get(
             'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
@@ -1940,8 +1868,8 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
     tasks = AgentTask.objects.filter(agent=agent)
     redis = RedisClient.get()
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
-    workflows_authorized = agent.workflows_authorized.all() if agent.workflows_authorized is not None else []
-    workflows_blocked = agent.workflows_blocked.all() if agent.workflows_blocked is not None else []
+    # workflows_authorized = agent.workflows_authorized.all() if agent.workflows_authorized is not None else []
+    # workflows_blocked = agent.workflows_blocked.all() if agent.workflows_blocked is not None else []
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
@@ -1966,10 +1894,10 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
         'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
-        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-                                 workflow in workflows_authorized],
-        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-                              workflow in workflows_blocked]
+        # 'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
+        #                          workflow in workflows_authorized],
+        # 'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
+        #                       workflow in workflows_blocked]
     }
 
     if agent.user is not None: mapped['user'] = agent.user.username

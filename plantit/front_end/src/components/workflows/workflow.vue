@@ -95,7 +95,7 @@
                                             max-width: 7rem;
                                             position: absolute;
                                             right: 20px;
-                                            top: 20px;
+                                            top: 80px;
                                             z-index: 1;
                                         "
                                         right
@@ -132,62 +132,17 @@
                                             ><b-col
                                                 md="auto"
                                                 align-self="center"
-                                                class="m-0"
-                                                ><b-button
-                                                    v-if="ownsWorkflow"
-                                                    size="sm"
-                                                    :disabled="togglingPublic"
-                                                    @click="togglePublic"
-                                                    :title="`Make ${
-                                                        getWorkflow.config.name
-                                                    } ${
-                                                        getWorkflow.public
-                                                            ? 'private'
-                                                            : 'public'
-                                                    }`"
-                                                    :variant="
-                                                        getWorkflow.public
-                                                            ? 'success'
-                                                            : 'success'
-                                                    "
-                                                >
-                                                    <b-spinner
-                                                        small
-                                                        v-if="togglingPublic"
-                                                        label="Loading..."
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'light'
-                                                                : 'dark'
-                                                        "
-                                                        class="mr-1"
-                                                    ></b-spinner>
-                                                    <span
-                                                        v-if="
-                                                            getWorkflow.public
-                                                        "
-                                                        ><i
-                                                            class="fas fa-unlock fa-fw"
-                                                        ></i>
-                                                        Public</span
-                                                    ><span v-else
-                                                        ><i
-                                                            class="fas fa-lock fa-fw"
-                                                        ></i>
-                                                        Private</span
-                                                    ></b-button
-                                                >
+                                                class="m-0">
                                                 <b-badge
-                                                    v-else
                                                     class="mr-1"
                                                     :variant="
-                                                        getWorkflow.public
+                                                        getWorkflow.config.public
                                                             ? 'success'
                                                             : 'success'
                                                     "
                                                     ><span
                                                         v-if="
-                                                            getWorkflow.public
+                                                            getWorkflow.config.public
                                                         "
                                                         ><i
                                                             class="fas fa-lock-open fa-fw"
@@ -202,48 +157,6 @@
                                                 ></b-col
                                             >
                                             <b-col
-                                                class="m-0"
-                                                align-self="center"
-                                                md="auto"
-                                                ><b-button
-                                                    id="refresh-workflow"
-                                                    size="sm"
-                                                    :disabled="workflowLoading"
-                                                    :variant="
-                                                        profile.darkMode
-                                                            ? 'outline-light'
-                                                            : 'white'
-                                                    "
-                                                    :title="`Refresh ${getWorkflow.config.name}'s configuration`"
-                                                    @click="refreshWorkflow"
-                                                >
-                                                    <i class="fas fa-redo"></i>
-                                                    Refresh
-                                                    <b-spinner
-                                                        small
-                                                        v-if="workflowLoading"
-                                                        label="Refreshing..."
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'light'
-                                                                : 'dark'
-                                                        "
-                                                        class="ml-2 mb-1"
-                                                    ></b-spinner> </b-button
-                                                ><b-popover
-                                                    :show.sync="profile.hints"
-                                                    triggers="manual"
-                                                    placement="right"
-                                                    target="refresh-workflow"
-                                                    title="Refresh Workflow"
-                                                    >Click here to refresh the
-                                                    workflow. This will retrieve
-                                                    and rebind the associated
-                                                    repository's
-                                                    <code>plantit.yaml</code>
-                                                    file from GitHub.</b-popover
-                                                ></b-col
-                                            ><b-col
                                                 v-if="ownsWorkflow"
                                                 class="m-0"
                                                 align-self="center"
@@ -1045,483 +958,290 @@
                                                     ></template
                                                 >
                                                 <b-row
-                                                    ><b-col
-                                                        ><p
-                                                            :class="
-                                                                profile.darkMode
-                                                                    ? 'text-light'
-                                                                    : 'text-dark'
-                                                            "
+                                                    ><b-col>
+                                                        <!--<b-row
+                                                            ><b-col
+                                                                ><h5
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                >
+                                                                    Saved
+                                                                    Configurations
+                                                                </h5></b-col
+                                                            ></b-row
+                                                        >-->
+                                                        <b-row
+                                                            ><b-col
+                                                                ><p
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                >
+                                                                    Sections
+                                                                    marked with
+                                                                    <i
+                                                                        class="fas fa-exclamation text-danger fa-fw"
+                                                                    ></i>
+                                                                    are
+                                                                    required.
+                                                                </p></b-col
+                                                            ></b-row
                                                         >
-                                                            Sections marked with
-                                                            <i
-                                                                class="fas fa-exclamation text-danger fa-fw"
-                                                            ></i>
-                                                            are required.
-                                                        </p></b-col
-                                                    ></b-row
-                                                >
-                                                <b-row>
-                                                    <b-col>
-                                                        <b-card-group
-                                                            columns
-                                                            deck
-                                                        >
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    nameValid
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                                ><b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                        class="m-0"
+                                                        <b-row>
+                                                            <b-col>
+                                                                <b-card-group
+                                                                    columns
+                                                                    deck
+                                                                >
+                                                                    <b-card
                                                                         style="
-                                                                            border-right: 2px
-                                                                                lightgray;
+                                                                            min-width: 60rem;
                                                                         "
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            class="m-0"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.taskid
-                                                                            ><i
-                                                                                v-if="
-                                                                                    idVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row>
-                                                                            <b-col
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-light'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-hashtag fa-fw"
-                                                                                    ></i>
-                                                                                    ID
-                                                                                </h5>
-                                                                            </b-col>
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            nameValid
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                        ><b-row>
                                                                             <b-col
                                                                                 md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    {{
-                                                                                        taskName !==
-                                                                                        ''
-                                                                                            ? taskName
-                                                                                            : taskGuid
-                                                                                    }}
-                                                                                    <i
-                                                                                        v-if="
-                                                                                            nameValid
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw"
-                                                                                    ></i>
-                                                                                    <span
-                                                                                        class="text-danger"
-                                                                                        v-if="
-                                                                                            taskNameExists
-                                                                                        "
-                                                                                        >Duplicate
-                                                                                        name</span
-                                                                                    >
-                                                                                    <i
-                                                                                        v-if="
-                                                                                            !nameValid
-                                                                                        "
-                                                                                        class="fas fa-exclamation text-danger fa-fw"
-                                                                                    ></i></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="taskid"
-                                                                            v-model="
-                                                                                idVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Enter
-                                                                                        a
-                                                                                        task
-                                                                                        name
-                                                                                        to
-                                                                                        replace
-                                                                                        the
-                                                                                        auto-generated
-                                                                                        GUID.
-                                                                                        (This
-                                                                                        value
-                                                                                        must
-                                                                                        be
-                                                                                        unique.)
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                class="mt-1"
+                                                                                class="m-0"
+                                                                                style="
+                                                                                    border-right: 2px
+                                                                                        lightgray;
+                                                                                "
                                                                             >
-                                                                                <b-col>
-                                                                                    <b-form-input
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        v-model="
-                                                                                            taskName
-                                                                                        "
-                                                                                        :placeholder="
-                                                                                            taskGuid
-                                                                                        "
-                                                                                    ></b-form-input>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    timeLimit !==
-                                                                    0
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            class="m-0"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.time-limit
-                                                                            ><i
-                                                                                v-if="
-                                                                                    timeLimitVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row>
-                                                                            <b-col>
-                                                                                <h5
-                                                                                    :class="
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    class="m-0"
+                                                                                    :variant="
                                                                                         profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
                                                                                     "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-stopwatch fa-fw"
-                                                                                    ></i>
-                                                                                    Time
-                                                                                </h5>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <span
+                                                                                    v-b-toggle.taskid
+                                                                                    ><i
                                                                                         v-if="
-                                                                                            timeLimit !==
-                                                                                            0
+                                                                                            idVisible
                                                                                         "
-                                                                                        >{{
-                                                                                            timeLimit
-                                                                                        }}
-                                                                                        {{
-                                                                                            timeLimitUnits
-                                                                                        }}</span
-                                                                                    >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            timeLimit ===
-                                                                                            0
-                                                                                        "
-                                                                                        >None</span
-                                                                                    ><span
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
                                                                                         v-else
-                                                                                        ><i
-                                                                                            class="fas fa-check fa-fw ml-1 text-success"
-                                                                                        ></i
-                                                                                    ></span></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-
-                                                                        <b-collapse
-                                                                            id="time-limit"
-                                                                            v-model="
-                                                                                timeLimitVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Set
-                                                                                        a
-                                                                                        time
-                                                                                        limit
-                                                                                        for
-                                                                                        this
-                                                                                        task.
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                class="mt-2"
-                                                                                ><b-col
-                                                                                    md="auto"
-                                                                                    ><b-form-spinbutton
-                                                                                        v-model="
-                                                                                            timeLimit
-                                                                                        "
-                                                                                        min="1"
-                                                                                        :max="
-                                                                                            timeLimitUnits ===
-                                                                                            'Minutes'
-                                                                                                ? 60
-                                                                                                : timeLimitUnits ===
-                                                                                                  'Hours'
-                                                                                                ? 24
-                                                                                                : 10
-                                                                                        "
-                                                                                    ></b-form-spinbutton></b-col
-                                                                                ><b-col
-                                                                                    md="auto"
-                                                                                    ><b-dropdown
-                                                                                        dropright
-                                                                                        ><template
-                                                                                            #button-content
-                                                                                            >{{
-                                                                                                timeLimitUnits
-                                                                                            }}</template
-                                                                                        ><b-dropdown-item
-                                                                                            @click="
-                                                                                                setTimeLimitUnits(
-                                                                                                    'Minutes'
-                                                                                                )
-                                                                                            "
-                                                                                            >Minutes</b-dropdown-item
-                                                                                        ><b-dropdown-item
-                                                                                            @click="
-                                                                                                setTimeLimitUnits(
-                                                                                                    'Hours'
-                                                                                                )
-                                                                                            "
-                                                                                            >Hours</b-dropdown-item
-                                                                                        ><b-dropdown-item
-                                                                                            @click="
-                                                                                                setTimeLimitUnits(
-                                                                                                    'Days'
-                                                                                                )
-                                                                                            "
-                                                                                            >Days</b-dropdown-item
-                                                                                        ></b-dropdown
-                                                                                    ></b-col
-                                                                                ></b-row
-                                                                            >
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                v-if="
-                                                                    workflow !==
-                                                                        null &&
-                                                                    getWorkflow
-                                                                        .config
-                                                                        .input !==
-                                                                        undefined &&
-                                                                    input.kind !==
-                                                                        undefined &&
-                                                                    input.kind !==
-                                                                        null
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    inputValid
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.input
-                                                                            ><i
-                                                                                v-if="
-                                                                                    inputVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row>
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
                                                                             <b-col>
-                                                                                <h4
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
+                                                                                <b-row>
+                                                                                    <b-col
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-light'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                class="fas fa-hashtag fa-fw"
+                                                                                            ></i>
+                                                                                            ID
+                                                                                        </h5>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            {{
+                                                                                                taskName !==
+                                                                                                ''
+                                                                                                    ? taskName
+                                                                                                    : taskGuid
+                                                                                            }}
+                                                                                            <i
+                                                                                                v-if="
+                                                                                                    nameValid
+                                                                                                "
+                                                                                                class="fas fa-check text-success fa-fw"
+                                                                                            ></i>
+                                                                                            <span
+                                                                                                class="text-danger"
+                                                                                                v-if="
+                                                                                                    taskNameExists
+                                                                                                "
+                                                                                                >Duplicate
+                                                                                                name</span
+                                                                                            >
+                                                                                            <i
+                                                                                                v-if="
+                                                                                                    !nameValid
+                                                                                                "
+                                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                                            ></i></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="taskid"
+                                                                                    v-model="
+                                                                                        idVisible
                                                                                     "
                                                                                 >
-                                                                                    <i
-                                                                                        class="fas fa-download fa-fw"
-                                                                                    ></i>
-                                                                                    Input
-                                                                                    <!--{{
-                                                                                this.input.kind[0].toUpperCase() +
-                                                                                    this.input.kind.substr(
-                                                                                        1
-                                                                                    )
-                                                                            }}-->
-                                                                                </h4>
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Enter
+                                                                                                a
+                                                                                                task
+                                                                                                name
+                                                                                                to
+                                                                                                replace
+                                                                                                the
+                                                                                                auto-generated
+                                                                                                GUID.
+                                                                                                (This
+                                                                                                value
+                                                                                                must
+                                                                                                be
+                                                                                                unique.)
+                                                                                            </b>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-row
+                                                                                        class="mt-1"
+                                                                                    >
+                                                                                        <b-col>
+                                                                                            <b-form-input
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'input-dark'
+                                                                                                        : 'input-light'
+                                                                                                "
+                                                                                                v-model="
+                                                                                                    taskName
+                                                                                                "
+                                                                                                :placeholder="
+                                                                                                    taskGuid
+                                                                                                "
+                                                                                            ></b-form-input>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                </b-collapse>
                                                                             </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            timeLimit !==
+                                                                            0
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
                                                                             <b-col
                                                                                 md="auto"
                                                                             >
-                                                                                <b-row
-                                                                                    align-v="center"
-                                                                                    ><b-col>
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    class="m-0"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.time-limit
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            timeLimitVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row>
+                                                                                    <b-col>
                                                                                         <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                class="fas fa-stopwatch fa-fw"
+                                                                                            ></i>
+                                                                                            Time
+                                                                                        </h5>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><h5
                                                                                             :class="
                                                                                                 profile.darkMode
                                                                                                     ? 'text-white'
@@ -1530,250 +1250,732 @@
                                                                                         >
                                                                                             <span
                                                                                                 v-if="
-                                                                                                    inputValid
+                                                                                                    timeLimit !==
+                                                                                                    0
                                                                                                 "
-                                                                                                ><i
-                                                                                                    v-if="
-                                                                                                        selectedInput.type ===
-                                                                                                        'file'
-                                                                                                    "
-                                                                                                    class="fas fa-file fa-fw mr-1"
-                                                                                                ></i>
-                                                                                                <i
-                                                                                                    v-else
-                                                                                                    class="fas fa-folder fa-fw mr-1"
-                                                                                                ></i
                                                                                                 >{{
-                                                                                                    selectedInput.path
+                                                                                                    timeLimit
                                                                                                 }}
-                                                                                                <i
-                                                                                                    class="fas fa-check text-success fa-fw"
-                                                                                                ></i>
-                                                                                            </span>
-                                                                                            <i
+                                                                                                {{
+                                                                                                    timeLimitUnits
+                                                                                                }}</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    timeLimit ===
+                                                                                                    0
+                                                                                                "
+                                                                                                >None</span
+                                                                                            ><span
                                                                                                 v-else
-                                                                                                class="fas fa-exclamation text-danger fa-fw"
-                                                                                            ></i></h5
+                                                                                                ><i
+                                                                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                ></i
+                                                                                            ></span></h5
                                                                                     ></b-col>
                                                                                 </b-row>
-                                                                            </b-col>
-                                                                        </b-row>
-                                                                        <b-row>
-                                                                            <b-col>
+
                                                                                 <b-collapse
-                                                                                    id="input"
+                                                                                    id="time-limit"
                                                                                     v-model="
-                                                                                        inputVisible
+                                                                                        timeLimitVisible
                                                                                     "
                                                                                 >
-                                                                                    <div>
-                                                                                        <b
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Set
+                                                                                                a
+                                                                                                time
+                                                                                                limit
+                                                                                                for
+                                                                                                this
+                                                                                                task.
+                                                                                            </b>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-row
+                                                                                        class="mt-2"
+                                                                                        ><b-col
+                                                                                            md="auto"
+                                                                                            ><b-form-spinbutton
+                                                                                                v-model="
+                                                                                                    timeLimit
+                                                                                                "
+                                                                                                min="1"
+                                                                                                :max="
+                                                                                                    timeLimitUnits ===
+                                                                                                    'Minutes'
+                                                                                                        ? 60
+                                                                                                        : timeLimitUnits ===
+                                                                                                          'Hours'
+                                                                                                        ? 24
+                                                                                                        : 10
+                                                                                                "
+                                                                                            ></b-form-spinbutton></b-col
+                                                                                        ><b-col
+                                                                                            md="auto"
+                                                                                            ><b-dropdown
+                                                                                                dropright
+                                                                                                ><template
+                                                                                                    #button-content
+                                                                                                    >{{
+                                                                                                        timeLimitUnits
+                                                                                                    }}</template
+                                                                                                ><b-dropdown-item
+                                                                                                    @click="
+                                                                                                        setTimeLimitUnits(
+                                                                                                            'Minutes'
+                                                                                                        )
+                                                                                                    "
+                                                                                                    >Minutes</b-dropdown-item
+                                                                                                ><b-dropdown-item
+                                                                                                    @click="
+                                                                                                        setTimeLimitUnits(
+                                                                                                            'Hours'
+                                                                                                        )
+                                                                                                    "
+                                                                                                    >Hours</b-dropdown-item
+                                                                                                ><b-dropdown-item
+                                                                                                    @click="
+                                                                                                        setTimeLimitUnits(
+                                                                                                            'Days'
+                                                                                                        )
+                                                                                                    "
+                                                                                                    >Days</b-dropdown-item
+                                                                                                ></b-dropdown
+                                                                                            ></b-col
+                                                                                        ></b-row
+                                                                                    >
+                                                                                </b-collapse>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        v-if="
+                                                                            workflow !==
+                                                                                null &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .input !==
+                                                                                undefined &&
+                                                                            input.kind !==
+                                                                                undefined &&
+                                                                            input.kind !==
+                                                                                null
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            inputValid
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.input
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            inputVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row>
+                                                                                    <b-col>
+                                                                                        <h4
                                                                                             :class="
                                                                                                 profile.darkMode
                                                                                                     ? 'text-white'
                                                                                                     : 'text-dark'
                                                                                             "
                                                                                         >
-                                                                                            Select
-                                                                                            a
-                                                                                            public
-                                                                                            {{
-                                                                                                this
-                                                                                                    .input
-                                                                                                    .kind ===
-                                                                                                'files'
-                                                                                                    ? 'directory'
-                                                                                                    : this
-                                                                                                          .input
-                                                                                                          .kind
-                                                                                            }}
-                                                                                            from
-                                                                                            the
-                                                                                            Data
-                                                                                            Commons
-                                                                                            or
-                                                                                            your
-                                                                                            own
-                                                                                            {{
-                                                                                                this
-                                                                                                    .input
-                                                                                                    .kind ===
-                                                                                                'files'
-                                                                                                    ? 'directory'
-                                                                                                    : this
-                                                                                                          .input
-                                                                                                          .kind
-                                                                                            }}
-                                                                                            from
-                                                                                            the
-                                                                                            Data
-                                                                                            Store.
-                                                                                        </b>
-                                                                                        <b-tabs
-                                                                                            class="mt-2"
-                                                                                            pills
-                                                                                            nav-class="bg-transparent"
-                                                                                            active-nav-item-class="bg-info text-dark"
+                                                                                            <i
+                                                                                                class="fas fa-download fa-fw"
+                                                                                            ></i>
+                                                                                            Input
+                                                                                            <!--{{
+                                                                                this.input.kind[0].toUpperCase() +
+                                                                                    this.input.kind.substr(
+                                                                                        1
+                                                                                    )
+                                                                            }}-->
+                                                                                        </h4>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                    >
+                                                                                        <b-row
+                                                                                            align-v="center"
+                                                                                            ><b-col>
+                                                                                                <h5
+                                                                                                    :class="
+                                                                                                        profile.darkMode
+                                                                                                            ? 'text-white'
+                                                                                                            : 'text-dark'
+                                                                                                    "
+                                                                                                >
+                                                                                                    <span
+                                                                                                        v-if="
+                                                                                                            inputValid
+                                                                                                        "
+                                                                                                        ><i
+                                                                                                            v-if="
+                                                                                                                selectedInput.type ===
+                                                                                                                'file'
+                                                                                                            "
+                                                                                                            class="fas fa-file fa-fw mr-1"
+                                                                                                        ></i>
+                                                                                                        <i
+                                                                                                            v-else
+                                                                                                            class="fas fa-folder fa-fw mr-1"
+                                                                                                        ></i
+                                                                                                        >{{
+                                                                                                            selectedInput.path
+                                                                                                        }}
+                                                                                                        <i
+                                                                                                            class="fas fa-check text-success fa-fw"
+                                                                                                        ></i>
+                                                                                                    </span>
+                                                                                                    <i
+                                                                                                        v-else
+                                                                                                        class="fas fa-exclamation text-danger fa-fw"
+                                                                                                    ></i></h5
+                                                                                            ></b-col>
+                                                                                        </b-row>
+                                                                                    </b-col>
+                                                                                </b-row>
+                                                                                <b-row>
+                                                                                    <b-col>
+                                                                                        <b-collapse
+                                                                                            id="input"
+                                                                                            v-model="
+                                                                                                inputVisible
+                                                                                            "
                                                                                         >
-                                                                                            <b-tab
-                                                                                                active
-                                                                                                title="Personal"
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
-                                                                                                "
-                                                                                            >
-                                                                                                <b-row
-                                                                                                    v-if="
-                                                                                                        personalDatasetsLoading
+                                                                                            <div>
+                                                                                                <b
+                                                                                                    :class="
+                                                                                                        profile.darkMode
+                                                                                                            ? 'text-white'
+                                                                                                            : 'text-dark'
                                                                                                     "
-                                                                                                    align-v="center"
-                                                                                                    align-h="center"
                                                                                                 >
-                                                                                                    <b-col
-                                                                                                        align-self="end"
+                                                                                                    Select
+                                                                                                    a
+                                                                                                    public
+                                                                                                    {{
+                                                                                                        this
+                                                                                                            .input
+                                                                                                            .kind ===
+                                                                                                        'files'
+                                                                                                            ? 'directory'
+                                                                                                            : this
+                                                                                                                  .input
+                                                                                                                  .kind
+                                                                                                    }}
+                                                                                                    from
+                                                                                                    the
+                                                                                                    Data
+                                                                                                    Commons
+                                                                                                    or
+                                                                                                    your
+                                                                                                    own
+                                                                                                    {{
+                                                                                                        this
+                                                                                                            .input
+                                                                                                            .kind ===
+                                                                                                        'files'
+                                                                                                            ? 'directory'
+                                                                                                            : this
+                                                                                                                  .input
+                                                                                                                  .kind
+                                                                                                    }}
+                                                                                                    from
+                                                                                                    the
+                                                                                                    Data
+                                                                                                    Store.
+                                                                                                </b>
+                                                                                                <b-tabs
+                                                                                                    class="mt-2"
+                                                                                                    pills
+                                                                                                    nav-class="bg-transparent"
+                                                                                                    active-nav-item-class="bg-info text-dark"
+                                                                                                >
+                                                                                                    <b-tab
+                                                                                                        active
+                                                                                                        title="Personal"
+                                                                                                        :title-link-class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'text-white'
+                                                                                                                : 'text-dark'
+                                                                                                        "
+                                                                                                        :class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                                : 'theme-light m-0 p-3'
+                                                                                                        "
                                                                                                     >
-                                                                                                        <b-spinner
-                                                                                                            type="grow"
-                                                                                                            variant="secondary"
-                                                                                                        ></b-spinner> </b-col
-                                                                                                ></b-row>
-                                                                                                <b-row
-                                                                                                    v-else
-                                                                                                >
-                                                                                                    <b-col>
-                                                                                                        <datatree
-                                                                                                            :select="
-                                                                                                                input.kind
+                                                                                                        <b-row
+                                                                                                            v-if="
+                                                                                                                personalDatasetsLoading
                                                                                                             "
-                                                                                                            :upload="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            :download="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            @selectNode="
-                                                                                                                inputSelected
-                                                                                                            "
-                                                                                                            :node="
-                                                                                                                personalDatasets
-                                                                                                            "
-                                                                                                        ></datatree></b-col
-                                                                                                ></b-row>
-                                                                                            </b-tab>
-                                                                                            <b-tab
-                                                                                                title="Shared"
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
-                                                                                                "
-                                                                                            >
-                                                                                                <b-row
-                                                                                                    v-if="
-                                                                                                        sharedDatasetsLoading
-                                                                                                    "
-                                                                                                    align-v="center"
-                                                                                                    align-h="center"
-                                                                                                >
-                                                                                                    <b-col
-                                                                                                        align-self="end"
-                                                                                                        ><b-spinner
-                                                                                                            type="grow"
-                                                                                                            variant="secondary"
-                                                                                                        ></b-spinner></b-col
-                                                                                                ></b-row>
-                                                                                                <b-row
-                                                                                                    v-else
-                                                                                                >
-                                                                                                    <b-col>
-                                                                                                        <datatree
-                                                                                                            :select="
-                                                                                                                input.kind
-                                                                                                            "
-                                                                                                            :upload="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            :download="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            @selectNode="
-                                                                                                                inputSelected
-                                                                                                            "
-                                                                                                            :node="
-                                                                                                                sharedDatasets
-                                                                                                            "
-                                                                                                        ></datatree> </b-col></b-row
-                                                                                            ></b-tab>
-                                                                                            <b-tab
-                                                                                                title="Public"
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
-                                                                                                "
-                                                                                            >
-                                                                                                <b-row
-                                                                                                    v-if="
-                                                                                                        publicDatasetsLoading
-                                                                                                    "
-                                                                                                    align-v="center"
-                                                                                                    align-h="center"
-                                                                                                >
-                                                                                                    <b-col
-                                                                                                        align-self="end"
+                                                                                                            align-v="center"
+                                                                                                            align-h="center"
+                                                                                                        >
+                                                                                                            <b-col
+                                                                                                                align-self="end"
+                                                                                                            >
+                                                                                                                <b-spinner
+                                                                                                                    type="grow"
+                                                                                                                    variant="secondary"
+                                                                                                                ></b-spinner> </b-col
+                                                                                                        ></b-row>
+                                                                                                        <b-row
+                                                                                                            v-else
+                                                                                                        >
+                                                                                                            <b-col>
+                                                                                                                <datatree
+                                                                                                                    :select="
+                                                                                                                        input.kind
+                                                                                                                    "
+                                                                                                                    :upload="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    :download="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    @selectNode="
+                                                                                                                        inputSelected
+                                                                                                                    "
+                                                                                                                    :node="
+                                                                                                                        personalDatasets
+                                                                                                                    "
+                                                                                                                ></datatree></b-col
+                                                                                                        ></b-row>
+                                                                                                    </b-tab>
+                                                                                                    <b-tab
+                                                                                                        title="Shared"
+                                                                                                        :title-link-class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'text-white'
+                                                                                                                : 'text-dark'
+                                                                                                        "
+                                                                                                        :class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                                : 'theme-light m-0 p-3'
+                                                                                                        "
                                                                                                     >
-                                                                                                        <b-spinner
-                                                                                                            type="grow"
-                                                                                                            variant="secondary"
-                                                                                                        ></b-spinner> </b-col
-                                                                                                ></b-row>
-                                                                                                <b-row
+                                                                                                        <b-row
+                                                                                                            v-if="
+                                                                                                                sharedDatasetsLoading
+                                                                                                            "
+                                                                                                            align-v="center"
+                                                                                                            align-h="center"
+                                                                                                        >
+                                                                                                            <b-col
+                                                                                                                align-self="end"
+                                                                                                                ><b-spinner
+                                                                                                                    type="grow"
+                                                                                                                    variant="secondary"
+                                                                                                                ></b-spinner></b-col
+                                                                                                        ></b-row>
+                                                                                                        <b-row
+                                                                                                            v-else
+                                                                                                        >
+                                                                                                            <b-col>
+                                                                                                                <datatree
+                                                                                                                    :select="
+                                                                                                                        input.kind
+                                                                                                                    "
+                                                                                                                    :upload="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    :download="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    @selectNode="
+                                                                                                                        inputSelected
+                                                                                                                    "
+                                                                                                                    :node="
+                                                                                                                        sharedDatasets
+                                                                                                                    "
+                                                                                                                ></datatree> </b-col></b-row
+                                                                                                    ></b-tab>
+                                                                                                    <b-tab
+                                                                                                        title="Public"
+                                                                                                        :title-link-class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'text-white'
+                                                                                                                : 'text-dark'
+                                                                                                        "
+                                                                                                        :class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                                : 'theme-light m-0 p-3'
+                                                                                                        "
+                                                                                                    >
+                                                                                                        <b-row
+                                                                                                            v-if="
+                                                                                                                publicDatasetsLoading
+                                                                                                            "
+                                                                                                            align-v="center"
+                                                                                                            align-h="center"
+                                                                                                        >
+                                                                                                            <b-col
+                                                                                                                align-self="end"
+                                                                                                            >
+                                                                                                                <b-spinner
+                                                                                                                    type="grow"
+                                                                                                                    variant="secondary"
+                                                                                                                ></b-spinner> </b-col
+                                                                                                        ></b-row>
+                                                                                                        <b-row
+                                                                                                            v-else
+                                                                                                            ><b-col>
+                                                                                                                <datatree
+                                                                                                                    :select="
+                                                                                                                        input.kind
+                                                                                                                    "
+                                                                                                                    :upload="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    :download="
+                                                                                                                        true
+                                                                                                                    "
+                                                                                                                    @selectNode="
+                                                                                                                        inputSelected
+                                                                                                                    "
+                                                                                                                    :node="
+                                                                                                                        publicDatasets
+                                                                                                                    "
+                                                                                                                ></datatree></b-col
+                                                                                                        ></b-row>
+                                                                                                    </b-tab>
+                                                                                                </b-tabs>
+                                                                                            </div>
+                                                                                            <b-row
+                                                                                                v-if="
+                                                                                                    input
+                                                                                                        .filetypes
+                                                                                                        .length >
+                                                                                                    0
+                                                                                                "
+                                                                                            >
+                                                                                                <b-col>
+                                                                                                    <b
+                                                                                                        :class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'text-white'
+                                                                                                                : 'text-dark'
+                                                                                                        "
+                                                                                                    >
+                                                                                                        Select
+                                                                                                        one
+                                                                                                        or
+                                                                                                        more
+                                                                                                        input
+                                                                                                        filetypes.
+                                                                                                    </b>
+                                                                                                    <multiselect
+                                                                                                        :class="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'input-dark'
+                                                                                                                : 'input-light'
+                                                                                                        "
+                                                                                                        :multiple="
+                                                                                                            true
+                                                                                                        "
+                                                                                                        :close-on-select="
+                                                                                                            false
+                                                                                                        "
+                                                                                                        :clear-on-select="
+                                                                                                            false
+                                                                                                        "
+                                                                                                        :preserve-search="
+                                                                                                            true
+                                                                                                        "
+                                                                                                        :preselect-first="
+                                                                                                            true
+                                                                                                        "
+                                                                                                        v-model="
+                                                                                                            inputSelectedPatterns
+                                                                                                        "
+                                                                                                        :options="
+                                                                                                            input.filetypes
+                                                                                                        "
+                                                                                                    ></multiselect>
+                                                                                                </b-col>
+                                                                                            </b-row>
+                                                                                            <b-alert
+                                                                                                class="mt-1"
+                                                                                                :variant="
+                                                                                                    inputFiletypeSelected
+                                                                                                        ? 'success'
+                                                                                                        : 'danger'
+                                                                                                "
+                                                                                                :show="
+                                                                                                    true
+                                                                                                "
+                                                                                                >Selected:
+                                                                                                {{
+                                                                                                    inputFiletypeSelected
+                                                                                                        ? '*.' +
+                                                                                                          inputSelectedPatterns.join(
+                                                                                                              ', *.'
+                                                                                                          )
+                                                                                                        : 'None'
+                                                                                                }}
+                                                                                                <i
+                                                                                                    v-if="
+                                                                                                        inputFiletypeSelected
+                                                                                                    "
+                                                                                                    class="fas fa-check text-success"
+                                                                                                ></i>
+                                                                                                <i
                                                                                                     v-else
-                                                                                                    ><b-col>
-                                                                                                        <datatree
-                                                                                                            :select="
-                                                                                                                input.kind
-                                                                                                            "
-                                                                                                            :upload="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            :download="
-                                                                                                                true
-                                                                                                            "
-                                                                                                            @selectNode="
-                                                                                                                inputSelected
-                                                                                                            "
-                                                                                                            :node="
-                                                                                                                publicDatasets
-                                                                                                            "
-                                                                                                        ></datatree></b-col
-                                                                                                ></b-row>
-                                                                                            </b-tab>
-                                                                                        </b-tabs>
-                                                                                    </div>
+                                                                                                    class="fas fa-exclamation text-danger"
+                                                                                                ></i>
+                                                                                            </b-alert>
+                                                                                        </b-collapse>
+                                                                                    </b-col>
+                                                                                </b-row>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        v-if="
+                                                                            getWorkflow !==
+                                                                                null &&
+                                                                            getWorkflow.config !==
+                                                                                undefined
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            outputValid
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.output
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            outputVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row
+                                                                                    ><b-col>
+                                                                                        <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                v-if="
+                                                                                                    profile.darkMode
+                                                                                                "
+                                                                                                class="fas fa-upload fa-fw text-white"
+                                                                                            ></i>
+                                                                                            <i
+                                                                                                v-else
+                                                                                                class="fas fa-upload fa-fw text-dark"
+                                                                                            ></i>
+                                                                                            Target
+                                                                                        </h5>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    selectedOutput !==
+                                                                                                        null &&
+                                                                                                    outputValid
+                                                                                                "
+                                                                                            >
+                                                                                                <i
+                                                                                                    class="fas fa-folder fa-fw mr-1"
+                                                                                                ></i
+                                                                                                >{{
+                                                                                                    selectedOutput.path
+                                                                                                }}
+                                                                                                <i
+                                                                                                    class="fas fa-check text-success fa-fw"
+                                                                                                ></i>
+                                                                                            </span>
+                                                                                            <span
+                                                                                                v-else
+                                                                                            >
+                                                                                                <i
+                                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                                ></i
+                                                                                            ></span></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="output"
+                                                                                    v-model="
+                                                                                        outputVisible
+                                                                                    "
+                                                                                >
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b>
+                                                                                                Select
+                                                                                                a
+                                                                                                directory
+                                                                                                in
+                                                                                                the
+                                                                                                CyVerse
+                                                                                                Data
+                                                                                                Store
+                                                                                                to
+                                                                                                transfer
+                                                                                                results
+                                                                                                to.
+                                                                                            </b>
+                                                                                            <datatree
+                                                                                                select="directory"
+                                                                                                :create="
+                                                                                                    true
+                                                                                                "
+                                                                                                :upload="
+                                                                                                    false
+                                                                                                "
+                                                                                                :download="
+                                                                                                    false
+                                                                                                "
+                                                                                                @selectNode="
+                                                                                                    outputSelected
+                                                                                                "
+                                                                                                :node="
+                                                                                                    personalDatasets
+                                                                                                "
+                                                                                            ></datatree></b-col
+                                                                                    ></b-row>
                                                                                     <b-row
                                                                                         v-if="
-                                                                                            input
-                                                                                                .filetypes
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output !==
+                                                                                                undefined &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output !==
+                                                                                                null &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output
+                                                                                                .include !==
+                                                                                                undefined &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output
+                                                                                                .include
+                                                                                                .patterns !==
+                                                                                                undefined &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output
+                                                                                                .include
+                                                                                                .patterns
                                                                                                 .length >
-                                                                                            0
+                                                                                                0
                                                                                         "
                                                                                     >
                                                                                         <b-col>
@@ -1788,8 +1990,8 @@
                                                                                                 one
                                                                                                 or
                                                                                                 more
-                                                                                                input
-                                                                                                filetypes.
+                                                                                                output
+                                                                                                patterns.
                                                                                             </b>
                                                                                             <multiselect
                                                                                                 :class="
@@ -1813,1918 +2015,1653 @@
                                                                                                     true
                                                                                                 "
                                                                                                 v-model="
-                                                                                                    inputSelectedPatterns
+                                                                                                    outputSelectedPatterns
                                                                                                 "
                                                                                                 :options="
-                                                                                                    input.filetypes
+                                                                                                    getWorkflow
+                                                                                                        .config
+                                                                                                        .output
+                                                                                                        .include
+                                                                                                        .patterns
                                                                                                 "
                                                                                             ></multiselect>
                                                                                         </b-col>
                                                                                     </b-row>
-                                                                                    <b-alert
-                                                                                        class="mt-1"
-                                                                                        :variant="
-                                                                                            inputFiletypeSelected
-                                                                                                ? 'success'
-                                                                                                : 'danger'
-                                                                                        "
-                                                                                        :show="
-                                                                                            true
-                                                                                        "
-                                                                                        >Selected:
-                                                                                        {{
-                                                                                            inputFiletypeSelected
-                                                                                                ? '*.' +
-                                                                                                  inputSelectedPatterns.join(
-                                                                                                      ', *.'
-                                                                                                  )
-                                                                                                : 'None'
-                                                                                        }}
-                                                                                        <i
-                                                                                            v-if="
-                                                                                                inputFiletypeSelected
-                                                                                            "
-                                                                                            class="fas fa-check text-success"
-                                                                                        ></i>
-                                                                                        <i
-                                                                                            v-else
-                                                                                            class="fas fa-exclamation text-danger"
-                                                                                        ></i>
-                                                                                    </b-alert>
-                                                                                </b-collapse>
-                                                                            </b-col>
-                                                                        </b-row>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                v-if="
-                                                                    getWorkflow !==
-                                                                        null &&
-                                                                    getWorkflow.config !==
-                                                                        undefined
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    outputValid
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.output
-                                                                            ><i
-                                                                                v-if="
-                                                                                    outputVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row
-                                                                            ><b-col>
-                                                                                <h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
+                                                                                    <b-row
                                                                                         v-if="
-                                                                                            profile.darkMode
-                                                                                        "
-                                                                                        class="fas fa-upload fa-fw text-white"
-                                                                                    ></i>
-                                                                                    <i
-                                                                                        v-else
-                                                                                        class="fas fa-upload fa-fw text-dark"
-                                                                                    ></i>
-                                                                                    Target
-                                                                                </h5>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            selectedOutput !==
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output !==
+                                                                                                undefined &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output !==
                                                                                                 null &&
-                                                                                            outputValid
-                                                                                        "
-                                                                                    >
-                                                                                        <i
-                                                                                            class="fas fa-folder fa-fw mr-1"
-                                                                                        ></i
-                                                                                        >{{
-                                                                                            selectedOutput.path
-                                                                                        }}
-                                                                                        <i
-                                                                                            class="fas fa-check text-success fa-fw"
-                                                                                        ></i>
-                                                                                    </span>
-                                                                                    <span
-                                                                                        v-else
-                                                                                    >
-                                                                                        <i
-                                                                                            class="fas fa-exclamation text-danger fa-fw ml-1"
-                                                                                        ></i
-                                                                                    ></span></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="output"
-                                                                            v-model="
-                                                                                outputVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b>
-                                                                                        Select
-                                                                                        a
-                                                                                        directory
-                                                                                        in
-                                                                                        the
-                                                                                        CyVerse
-                                                                                        Data
-                                                                                        Store
-                                                                                        to
-                                                                                        transfer
-                                                                                        results
-                                                                                        to.
-                                                                                    </b>
-                                                                                    <datatree
-                                                                                        select="directory"
-                                                                                        :create="
-                                                                                            true
-                                                                                        "
-                                                                                        :upload="
-                                                                                            false
-                                                                                        "
-                                                                                        :download="
-                                                                                            false
-                                                                                        "
-                                                                                        @selectNode="
-                                                                                            outputSelected
-                                                                                        "
-                                                                                        :node="
-                                                                                            personalDatasets
-                                                                                        "
-                                                                                    ></datatree></b-col
-                                                                            ></b-row>
-                                                                            <b-row
-                                                                                v-if="
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output !==
-                                                                                        null &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include
-                                                                                        .patterns !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include
-                                                                                        .patterns
-                                                                                        .length >
-                                                                                        0
-                                                                                "
-                                                                            >
-                                                                                <b-col>
-                                                                                    <b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Select
-                                                                                        one
-                                                                                        or
-                                                                                        more
-                                                                                        output
-                                                                                        patterns.
-                                                                                    </b>
-                                                                                    <multiselect
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        :multiple="
-                                                                                            true
-                                                                                        "
-                                                                                        :close-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :clear-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :preserve-search="
-                                                                                            true
-                                                                                        "
-                                                                                        :preselect-first="
-                                                                                            true
-                                                                                        "
-                                                                                        v-model="
-                                                                                            outputSelectedPatterns
-                                                                                        "
-                                                                                        :options="
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .output
+                                                                                                .include !==
+                                                                                                undefined &&
                                                                                             getWorkflow
                                                                                                 .config
                                                                                                 .output
                                                                                                 .include
-                                                                                                .patterns
-                                                                                        "
-                                                                                    ></multiselect>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                v-if="
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output !==
-                                                                                        null &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include
-                                                                                        .names !==
-                                                                                        undefined &&
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .output
-                                                                                        .include
-                                                                                        .names
-                                                                                        .length >
-                                                                                        0
-                                                                                "
-                                                                            >
-                                                                                <b-col>
-                                                                                    <b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Select
-                                                                                        one
-                                                                                        or
-                                                                                        more
-                                                                                        output
-                                                                                        files
-                                                                                        by
-                                                                                        name.
-                                                                                    </b>
-                                                                                    <multiselect
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        :multiple="
-                                                                                            true
-                                                                                        "
-                                                                                        :close-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :clear-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :preserve-search="
-                                                                                            true
-                                                                                        "
-                                                                                        :preselect-first="
-                                                                                            true
-                                                                                        "
-                                                                                        v-model="
-                                                                                            outputSelectedNames
-                                                                                        "
-                                                                                        :options="
+                                                                                                .names !==
+                                                                                                undefined &&
                                                                                             getWorkflow
                                                                                                 .config
                                                                                                 .output
                                                                                                 .include
                                                                                                 .names
-                                                                                        "
-                                                                                    ></multiselect>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    selectedAgent.name !==
-                                                                    ''
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.agent
-                                                                            ><i
-                                                                                v-if="
-                                                                                    agentVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row
-                                                                            ><b-col>
-                                                                                <h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-server fa-fw"
-                                                                                    ></i>
-                                                                                    Agent
-                                                                                </h5>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    {{
-                                                                                        selectedAgent.name !==
-                                                                                        ''
-                                                                                            ? selectedAgent.name
-                                                                                            : ''
-                                                                                    }}<i
-                                                                                        v-if="
-                                                                                            selectedAgent.name !==
-                                                                                            ''
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw ml-1"
-                                                                                    ></i>
-                                                                                    <span
-                                                                                        v-else
-                                                                                        ><i
-                                                                                            class="fas fa-exclamation text-danger fa-fw ml-1"
-                                                                                        ></i>
-                                                                                    </span></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="agent"
-                                                                            v-model="
-                                                                                agentVisible
-                                                                            "
-                                                                        >
-                                                                            <div>
-                                                                                <b
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    Select
-                                                                                    an
-                                                                                    agent
-                                                                                    to
-                                                                                    submit
-                                                                                    this
-                                                                                    task
-                                                                                    to.
-                                                                                </b>
-                                                                                <b-tabs
-                                                                                    class="mt-2"
-                                                                                    nav-class="bg-transparent"
-                                                                                    active-nav-item-class="bg-transparent text-dark"
-                                                                                    pills
-                                                                                    v-model="
-                                                                                        activeAgentTab
-                                                                                    "
-                                                                                >
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="your-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    0
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Your agents"
-                                                                                            >
-                                                                                                Yours
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="bottomleft"
-                                                                                                target="your-agents"
-                                                                                                title="Your agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                your
-                                                                                                own
-                                                                                                agents..</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                personalAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validPersonalAgents.length ===
+                                                                                                .length >
                                                                                                 0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validPersonalAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    >
-
-                                                                                                    <i
-                                                                                                        v-if="
-                                                                                                            agent.is_healthy
-                                                                                                        "
-                                                                                                        title="Healthy"
-                                                                                                        class="fas fa-heartbeat text-success fa-fw"
-                                                                                                    ></i
-                                                                                                    ><i
-                                                                                                        v-else
-                                                                                                        title="Unhealthy"
-                                                                                                        class="fas fa-heart-broken text-danger fa-fw"
-                                                                                                    ></i
-                                                                                                    ><i
-                                                                                                        v-if="
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        title="Disabled"
-                                                                                                        class="fas fa-exclamation-circle text-secondary fa-fw"
-                                                                                                    ></i
-                                                                                                ></b-col>
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                    class="mb-2"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        cores,
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        processes,
-                                                                                                        <span
-                                                                                                            v-if="
-                                                                                                                getWorkflow
-                                                                                                                    .config
-                                                                                                                    .jobqueue !==
-                                                                                                                    undefined &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >=
-                                                                                                                    parseInt(
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue
-                                                                                                                            .memory
-                                                                                                                    ) &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                    0
-                                                                                                            "
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                0
-                                                                                                            "
-                                                                                                            class="text-danger"
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) ===
-                                                                                                                -1
-                                                                                                            "
-                                                                                                            >virtual
-                                                                                                            memory</span
-                                                                                                        ><span
-                                                                                                            v-if="
-                                                                                                                agent.gpu
-                                                                                                            "
-                                                                                                        >
-                                                                                                            ,
-                                                                                                            GPU
-                                                                                                        </span>
-                                                                                                    </small></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="guest-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    1
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Guest agents"
-                                                                                            >
-                                                                                                Guest
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="top"
-                                                                                                target="guest-agents"
-                                                                                                title="Guest Agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                agents
-                                                                                                you've
-                                                                                                been
-                                                                                                granted
-                                                                                                guest
-                                                                                                access
-                                                                                                to.</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                personalAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validGuestAgents.length ===
-                                                                                                0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validGuestAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        core(s),
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        process(es),
-                                                                                                        <span
-                                                                                                            v-if="
-                                                                                                                getWorkflow
-                                                                                                                    .config
-                                                                                                                    .jobqueue !==
-                                                                                                                    undefined &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >=
-                                                                                                                    parseInt(
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue
-                                                                                                                            .memory
-                                                                                                                    ) &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                    0
-                                                                                                            "
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                0
-                                                                                                            "
-                                                                                                            class="text-danger"
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) ===
-                                                                                                                -1
-                                                                                                            "
-                                                                                                            >virtual
-                                                                                                            memory</span
-                                                                                                        ><span
-                                                                                                            v-if="
-                                                                                                                agent.gpu
-                                                                                                            "
-                                                                                                        >
-                                                                                                            ,
-                                                                                                            GPU
-                                                                                                        </span>
-                                                                                                        <span
-                                                                                                            v-else
-                                                                                                            >,
-                                                                                                            No
-                                                                                                            GPU
-                                                                                                        </span></small
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="public-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    2
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Public agents"
-                                                                                            >
-                                                                                                Public
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="right"
-                                                                                                target="public-agents"
-                                                                                                title="Public Agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                public
-                                                                                                agents.</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                publicAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validPublicAgents.length ===
-                                                                                                0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validPublicAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        cores,
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        processes, </small
-                                                                                                    ><span
-                                                                                                        v-if="
-                                                                                                            getWorkflow
-                                                                                                                .config
-                                                                                                                .jobqueue !==
-                                                                                                                undefined &&
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >=
-                                                                                                                parseInt(
-                                                                                                                    getWorkflow
-                                                                                                                        .config
-                                                                                                                        .jobqueue
-                                                                                                                        .memory
-                                                                                                                ) &&
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >
-                                                                                                                0
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.max_mem
-                                                                                                        }}
-                                                                                                        GB
-                                                                                                        memory</span
-                                                                                                    >
-                                                                                                    <span
-                                                                                                        v-else-if="
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >
-                                                                                                            0
-                                                                                                        "
-                                                                                                        class="text-danger"
-                                                                                                        >{{
-                                                                                                            agent.max_mem
-                                                                                                        }}
-                                                                                                        GB
-                                                                                                        memory</span
-                                                                                                    >
-                                                                                                    <span
-                                                                                                        v-else-if="
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) ===
-                                                                                                            -1
-                                                                                                        "
-                                                                                                        >virtual
-                                                                                                        memory</span
-                                                                                                    ><span
-                                                                                                        v-if="
-                                                                                                            agent.gpu
-                                                                                                        "
-                                                                                                    >
-                                                                                                        ,
-                                                                                                        GPU
-                                                                                                    </span>
-                                                                                                    <span
-                                                                                                        v-else
-                                                                                                        >,
-                                                                                                        No
-                                                                                                        GPU
-                                                                                                    </span></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                </b-tabs>
-                                                                            </div>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    tags.length >
-                                                                    0
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.tags
-                                                                            ><i
-                                                                                v-if="
-                                                                                    tagsVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row>
-                                                                            <b-col>
-                                                                                <h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-tags fa-fw"
-                                                                                    ></i>
-                                                                                    Tags
-                                                                                </h5>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    {{
-                                                                                        tags.length
-                                                                                    }}
-                                                                                    <i
-                                                                                        v-if="
-                                                                                            tags.length >
-                                                                                            0
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw"
-                                                                                    ></i></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="tags"
-                                                                            v-model="
-                                                                                tagsVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Attach
-                                                                                        tags
-                                                                                        to
-                                                                                        this
-                                                                                        task.
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                class="mt-2"
-                                                                            >
-                                                                                <b-col>
-                                                                                    <multiselect
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        style="
-                                                                                            z-index: 100;
-                                                                                        "
-                                                                                        v-model="
-                                                                                            tags
-                                                                                        "
-                                                                                        mode="tags"
-                                                                                        :multiple="
-                                                                                            true
-                                                                                        "
-                                                                                        :close-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :clear-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :preserve-search="
-                                                                                            true
-                                                                                        "
-                                                                                        :options="
-                                                                                            tagOptions
-                                                                                        "
-                                                                                        :taggable="
-                                                                                            true
-                                                                                        "
-                                                                                        placeholder="Add tags..."
-                                                                                        :createTag="
-                                                                                            true
-                                                                                        "
-                                                                                        :appendNewTag="
-                                                                                            true
-                                                                                        "
-                                                                                        :searchable="
-                                                                                            true
-                                                                                        "
-                                                                                        @tag="
-                                                                                            addTag
-                                                                                        "
-                                                                                    >
-                                                                                    </multiselect>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                v-if="
-                                                                    workflow !==
-                                                                        null &&
-                                                                    getWorkflow
-                                                                        .config
-                                                                        .params !==
-                                                                        undefined
-                                                                        ? getWorkflow
-                                                                              .config
-                                                                              .params
-                                                                              .length !==
-                                                                          0
-                                                                        : false
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    paramsValid
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.parameters
-                                                                            ><i
-                                                                                v-if="
-                                                                                    parametersVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row
-                                                                            ><b-col>
-                                                                                <h4
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-keyboard fa-fw"
-                                                                                    ></i>
-                                                                                    Parameters
-                                                                                </h4> </b-col
-                                                                            ><b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            paramsValid
-                                                                                        "
-                                                                                        >{{
-                                                                                            params.length
-                                                                                        }}</span
-                                                                                    >
-                                                                                    <i
-                                                                                        v-if="
-                                                                                            paramsValid
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw ml-1"
-                                                                                    ></i>
-                                                                                    <i
-                                                                                        v-else
-                                                                                        class="fas fa-exclamation text-danger fa-fw ml-1"
-                                                                                    ></i></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="parameters"
-                                                                            v-model="
-                                                                                parametersVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Configure
-                                                                                        parameters
-                                                                                        for
-                                                                                        this
-                                                                                        task.
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                class="mt-2"
-                                                                                ><b-col>
-                                                                                    <b-row
-                                                                                        class="mt-1"
-                                                                                        v-for="param in params"
-                                                                                        v-bind:key="
-                                                                                            param.name
                                                                                         "
                                                                                     >
                                                                                         <b-col>
-                                                                                            <i
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'number'
+                                                                                            <b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
                                                                                                 "
-                                                                                                class="fas fa-calculator fa-fw mr-1"
-                                                                                            ></i>
-                                                                                            <i
-                                                                                                v-else-if="
-                                                                                                    param.type ===
-                                                                                                    'boolean'
-                                                                                                "
-                                                                                                class="far fa-flag fa-fw mr-1"
-                                                                                            ></i>
-                                                                                            <i
-                                                                                                v-else-if="
-                                                                                                    param.type ===
-                                                                                                    'string'
-                                                                                                "
-                                                                                                class="fas fa-edit fa-fw mr-1"
-                                                                                            ></i>
-                                                                                            <i
-                                                                                                v-else-if="
-                                                                                                    param.type ===
-                                                                                                    'select'
-                                                                                                "
-                                                                                                class="fas fa-list fa-fw mr-1"
-                                                                                            ></i>
-                                                                                            <i
-                                                                                                v-else-if="
-                                                                                                    param.type ===
-                                                                                                    'multiselect'
-                                                                                                "
-                                                                                                class="fas fa-th-list fa-fw mr-1"
-                                                                                            ></i>
-                                                                                            {{
-                                                                                                param.name.toLowerCase()
-                                                                                            }}</b-col
-                                                                                        ><b-col>
-                                                                                            <b-form-input
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'string'
-                                                                                                "
-                                                                                                size="sm"
-                                                                                                v-model="
-                                                                                                    param.value
-                                                                                                "
-                                                                                                :placeholder="
-                                                                                                    param.value ===
-                                                                                                    ''
-                                                                                                        ? 'Enter a value for \'' +
-                                                                                                          param.name.toLowerCase() +
-                                                                                                          '\''
-                                                                                                        : param.value
-                                                                                                "
-                                                                                            ></b-form-input>
-                                                                                            <b-form-select
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'select'
-                                                                                                "
-                                                                                                size="sm"
-                                                                                                v-model="
-                                                                                                    param.value
-                                                                                                "
-                                                                                                :options="
-                                                                                                    param.options
-                                                                                                "
-                                                                                            ></b-form-select>
-                                                                                            <b-form-checkbox-group
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'multiselect'
-                                                                                                "
-                                                                                                size="sm"
-                                                                                                v-model="
-                                                                                                    param.value
-                                                                                                "
-                                                                                                :options="
-                                                                                                    param.options
-                                                                                                "
-                                                                                            ></b-form-checkbox-group>
-                                                                                            <b-form-spinbutton
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'number'
-                                                                                                "
-                                                                                                size="sm"
-                                                                                                v-model="
-                                                                                                    param.value
-                                                                                                "
-                                                                                                :min="
-                                                                                                    param.min
-                                                                                                "
-                                                                                                :max="
-                                                                                                    param.max
-                                                                                                "
-                                                                                                :step="
-                                                                                                    param.step
-                                                                                                "
-                                                                                            ></b-form-spinbutton>
-                                                                                            <b-form-checkbox
-                                                                                                v-if="
-                                                                                                    param.type ===
-                                                                                                    'boolean'
-                                                                                                "
-                                                                                                size="sm"
-                                                                                                v-model="
-                                                                                                    param.value
-                                                                                                "
-                                                                                                switch
                                                                                             >
-                                                                                                <b>
-                                                                                                    {{
-                                                                                                        param.value
-                                                                                                    }}</b
+                                                                                                Select
+                                                                                                one
+                                                                                                or
+                                                                                                more
+                                                                                                output
+                                                                                                files
+                                                                                                by
+                                                                                                name.
+                                                                                            </b>
+                                                                                            <multiselect
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'input-dark'
+                                                                                                        : 'input-light'
+                                                                                                "
+                                                                                                :multiple="
+                                                                                                    true
+                                                                                                "
+                                                                                                :close-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :clear-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :preserve-search="
+                                                                                                    true
+                                                                                                "
+                                                                                                :preselect-first="
+                                                                                                    true
+                                                                                                "
+                                                                                                v-model="
+                                                                                                    outputSelectedNames
+                                                                                                "
+                                                                                                :options="
+                                                                                                    getWorkflow
+                                                                                                        .config
+                                                                                                        .output
+                                                                                                        .include
+                                                                                                        .names
+                                                                                                "
+                                                                                            ></multiselect>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                </b-collapse>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            selectedAgent.name !==
+                                                                            ''
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.agent
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            agentVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row
+                                                                                    ><b-col>
+                                                                                        <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                class="fas fa-server fa-fw"
+                                                                                            ></i>
+                                                                                            Agent
+                                                                                        </h5>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            {{
+                                                                                                selectedAgent.name !==
+                                                                                                ''
+                                                                                                    ? selectedAgent.name
+                                                                                                    : ''
+                                                                                            }}<i
+                                                                                                v-if="
+                                                                                                    selectedAgent.name !==
+                                                                                                    ''
+                                                                                                "
+                                                                                                class="fas fa-check text-success fa-fw ml-1"
+                                                                                            ></i>
+                                                                                            <span
+                                                                                                v-else
+                                                                                                ><i
+                                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                                ></i>
+                                                                                            </span></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="agent"
+                                                                                    v-model="
+                                                                                        agentVisible
+                                                                                    "
+                                                                                >
+                                                                                    <div>
+                                                                                        <b
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            Select
+                                                                                            an
+                                                                                            agent
+                                                                                            to
+                                                                                            submit
+                                                                                            this
+                                                                                            task
+                                                                                            to.
+                                                                                        </b>
+                                                                                        <b-tabs
+                                                                                            class="mt-2"
+                                                                                            nav-class="bg-transparent"
+                                                                                            active-nav-item-class="bg-transparent text-dark"
+                                                                                            pills
+                                                                                            v-model="
+                                                                                                activeAgentTab
+                                                                                            "
+                                                                                        >
+                                                                                            <b-tab
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <template
+                                                                                                    #title
                                                                                                 >
-                                                                                            </b-form-checkbox>
+                                                                                                    <b-button
+                                                                                                        id="your-agents"
+                                                                                                        :variant="
+                                                                                                            activeAgentTab ===
+                                                                                                            0
+                                                                                                                ? profile.darkMode
+                                                                                                                    ? 'outline-success'
+                                                                                                                    : 'success'
+                                                                                                                : profile.darkMode
+                                                                                                                ? 'outline-light'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        title="Your agents"
+                                                                                                    >
+                                                                                                        Yours
+                                                                                                    </b-button>
+                                                                                                    <b-popover
+                                                                                                        :show.sync="
+                                                                                                            profile.hints
+                                                                                                        "
+                                                                                                        triggers="manual"
+                                                                                                        placement="bottomleft"
+                                                                                                        target="your-agents"
+                                                                                                        title="Your agents"
+                                                                                                        >Click
+                                                                                                        here
+                                                                                                        to
+                                                                                                        browse
+                                                                                                        your
+                                                                                                        own
+                                                                                                        agents..</b-popover
+                                                                                                    ></template
+                                                                                                >
+                                                                                                <b-row
+                                                                                                    align-h="center"
+                                                                                                    v-if="
+                                                                                                        personalAgentsLoading
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-spinner
+                                                                                                        type="grow"
+                                                                                                        label="Loading..."
+                                                                                                        variant="secondary"
+                                                                                                    ></b-spinner>
+                                                                                                </b-row>
+                                                                                                <b-row
+                                                                                                    v-else-if="
+                                                                                                        validPersonalAgents.length ===
+                                                                                                        0
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-col>
+                                                                                                        None
+                                                                                                        to
+                                                                                                        show.
+                                                                                                    </b-col>
+                                                                                                </b-row>
+                                                                                                <div
+                                                                                                    v-else
+                                                                                                >
+                                                                                                    <b-row
+                                                                                                        class="text-right"
+                                                                                                        v-for="agent in validPersonalAgents"
+                                                                                                        v-bind:key="
+                                                                                                            agent.name
+                                                                                                        "
+                                                                                                    >
+                                                                                                        <b-col
+                                                                                                            md="auto"
+                                                                                                            ><b-button
+                                                                                                                size="md"
+                                                                                                                class="text-left pt-2"
+                                                                                                                @click="
+                                                                                                                    agentSelected(
+                                                                                                                        agent
+                                                                                                                    )
+                                                                                                                "
+                                                                                                                :variant="
+                                                                                                                    profile.darkMode
+                                                                                                                        ? 'dark'
+                                                                                                                        : 'white'
+                                                                                                                "
+                                                                                                                :disabled="
+                                                                                                                    agentUnsupported(
+                                                                                                                        agent
+                                                                                                                    ) ||
+                                                                                                                    agent.disabled
+                                                                                                                "
+                                                                                                                >{{
+                                                                                                                    agent.name
+                                                                                                                }}</b-button
+                                                                                                            >
+
+                                                                                                            <i
+                                                                                                                v-if="
+                                                                                                                    agent.is_healthy
+                                                                                                                "
+                                                                                                                title="Healthy"
+                                                                                                                class="fas fa-heartbeat text-success fa-fw"
+                                                                                                            ></i
+                                                                                                            ><i
+                                                                                                                v-else
+                                                                                                                title="Unhealthy"
+                                                                                                                class="fas fa-heart-broken text-danger fa-fw"
+                                                                                                            ></i
+                                                                                                            ><i
+                                                                                                                v-if="
+                                                                                                                    agent.disabled
+                                                                                                                "
+                                                                                                                title="Disabled"
+                                                                                                                class="fas fa-exclamation-circle text-secondary fa-fw"
+                                                                                                            ></i
+                                                                                                        ></b-col>
+                                                                                                        <b-col
+                                                                                                            align-self="end"
+                                                                                                            class="mb-2"
+                                                                                                        >
+                                                                                                            <small
+                                                                                                                >{{
+                                                                                                                    agent.max_cores
+                                                                                                                }}
+                                                                                                                cores,
+                                                                                                                {{
+                                                                                                                    agent.max_processes
+                                                                                                                }}
+                                                                                                                processes,
+                                                                                                                <span
+                                                                                                                    v-if="
+                                                                                                                        getWorkflow
+                                                                                                                            .config
+                                                                                                                            .jobqueue !==
+                                                                                                                            undefined &&
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >=
+                                                                                                                            parseInt(
+                                                                                                                                getWorkflow
+                                                                                                                                    .config
+                                                                                                                                    .jobqueue
+                                                                                                                                    .memory
+                                                                                                                            ) &&
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >
+                                                                                                                            0
+                                                                                                                    "
+                                                                                                                    >{{
+                                                                                                                        agent.max_mem
+                                                                                                                    }}
+                                                                                                                    GB
+                                                                                                                    memory</span
+                                                                                                                >
+                                                                                                                <span
+                                                                                                                    v-else-if="
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >
+                                                                                                                        0
+                                                                                                                    "
+                                                                                                                    class="text-danger"
+                                                                                                                    >{{
+                                                                                                                        agent.max_mem
+                                                                                                                    }}
+                                                                                                                    GB
+                                                                                                                    memory</span
+                                                                                                                >
+                                                                                                                <span
+                                                                                                                    v-else-if="
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) ===
+                                                                                                                        -1
+                                                                                                                    "
+                                                                                                                    >virtual
+                                                                                                                    memory</span
+                                                                                                                ><span
+                                                                                                                    v-if="
+                                                                                                                        agent.gpu
+                                                                                                                    "
+                                                                                                                >
+                                                                                                                    ,
+                                                                                                                    GPU
+                                                                                                                </span>
+                                                                                                            </small></b-col
+                                                                                                        >
+                                                                                                    </b-row>
+                                                                                                </div>
+                                                                                            </b-tab>
+                                                                                            <b-tab
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <template
+                                                                                                    #title
+                                                                                                >
+                                                                                                    <b-button
+                                                                                                        id="guest-agents"
+                                                                                                        :variant="
+                                                                                                            activeAgentTab ===
+                                                                                                            1
+                                                                                                                ? profile.darkMode
+                                                                                                                    ? 'outline-success'
+                                                                                                                    : 'success'
+                                                                                                                : profile.darkMode
+                                                                                                                ? 'outline-light'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        title="Guest agents"
+                                                                                                    >
+                                                                                                        Guest
+                                                                                                    </b-button>
+                                                                                                    <b-popover
+                                                                                                        :show.sync="
+                                                                                                            profile.hints
+                                                                                                        "
+                                                                                                        triggers="manual"
+                                                                                                        placement="top"
+                                                                                                        target="guest-agents"
+                                                                                                        title="Guest Agents"
+                                                                                                        >Click
+                                                                                                        here
+                                                                                                        to
+                                                                                                        browse
+                                                                                                        agents
+                                                                                                        you've
+                                                                                                        been
+                                                                                                        granted
+                                                                                                        guest
+                                                                                                        access
+                                                                                                        to.</b-popover
+                                                                                                    ></template
+                                                                                                >
+                                                                                                <b-row
+                                                                                                    align-h="center"
+                                                                                                    v-if="
+                                                                                                        personalAgentsLoading
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-spinner
+                                                                                                        type="grow"
+                                                                                                        label="Loading..."
+                                                                                                        variant="secondary"
+                                                                                                    ></b-spinner>
+                                                                                                </b-row>
+                                                                                                <b-row
+                                                                                                    v-else-if="
+                                                                                                        validGuestAgents.length ===
+                                                                                                        0
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-col>
+                                                                                                        None
+                                                                                                        to
+                                                                                                        show.
+                                                                                                    </b-col>
+                                                                                                </b-row>
+                                                                                                <div
+                                                                                                    v-else
+                                                                                                >
+                                                                                                    <b-row
+                                                                                                        class="text-right"
+                                                                                                        v-for="agent in validGuestAgents"
+                                                                                                        v-bind:key="
+                                                                                                            agent.name
+                                                                                                        "
+                                                                                                    >
+                                                                                                        <b-col
+                                                                                                            md="auto"
+                                                                                                            ><b-button
+                                                                                                                size="md"
+                                                                                                                class="text-left pt-2"
+                                                                                                                @click="
+                                                                                                                    agentSelected(
+                                                                                                                        agent
+                                                                                                                    )
+                                                                                                                "
+                                                                                                                :variant="
+                                                                                                                    profile.darkMode
+                                                                                                                        ? 'dark'
+                                                                                                                        : 'white'
+                                                                                                                "
+                                                                                                                :disabled="
+                                                                                                                    agentUnsupported(
+                                                                                                                        agent
+                                                                                                                    ) ||
+                                                                                                                    agent.disabled
+                                                                                                                "
+                                                                                                                >{{
+                                                                                                                    agent.name
+                                                                                                                }}</b-button
+                                                                                                            ></b-col
+                                                                                                        >
+                                                                                                        <b-col
+                                                                                                            align-self="end"
+                                                                                                        >
+                                                                                                            <small
+                                                                                                                >{{
+                                                                                                                    agent.max_cores
+                                                                                                                }}
+                                                                                                                core(s),
+                                                                                                                {{
+                                                                                                                    agent.max_processes
+                                                                                                                }}
+                                                                                                                process(es),
+                                                                                                                <span
+                                                                                                                    v-if="
+                                                                                                                        getWorkflow
+                                                                                                                            .config
+                                                                                                                            .jobqueue !==
+                                                                                                                            undefined &&
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >=
+                                                                                                                            parseInt(
+                                                                                                                                getWorkflow
+                                                                                                                                    .config
+                                                                                                                                    .jobqueue
+                                                                                                                                    .memory
+                                                                                                                            ) &&
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >
+                                                                                                                            0
+                                                                                                                    "
+                                                                                                                    >{{
+                                                                                                                        agent.max_mem
+                                                                                                                    }}
+                                                                                                                    GB
+                                                                                                                    memory</span
+                                                                                                                >
+                                                                                                                <span
+                                                                                                                    v-else-if="
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) >
+                                                                                                                        0
+                                                                                                                    "
+                                                                                                                    class="text-danger"
+                                                                                                                    >{{
+                                                                                                                        agent.max_mem
+                                                                                                                    }}
+                                                                                                                    GB
+                                                                                                                    memory</span
+                                                                                                                >
+                                                                                                                <span
+                                                                                                                    v-else-if="
+                                                                                                                        parseInt(
+                                                                                                                            agent.max_mem
+                                                                                                                        ) ===
+                                                                                                                        -1
+                                                                                                                    "
+                                                                                                                    >virtual
+                                                                                                                    memory</span
+                                                                                                                ><span
+                                                                                                                    v-if="
+                                                                                                                        agent.gpu
+                                                                                                                    "
+                                                                                                                >
+                                                                                                                    ,
+                                                                                                                    GPU
+                                                                                                                </span>
+                                                                                                                <span
+                                                                                                                    v-else
+                                                                                                                    >,
+                                                                                                                    No
+                                                                                                                    GPU
+                                                                                                                </span></small
+                                                                                                            ></b-col
+                                                                                                        >
+                                                                                                    </b-row>
+                                                                                                </div>
+                                                                                            </b-tab>
+                                                                                            <b-tab
+                                                                                                :title-link-class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'theme-dark m-0 p-3'
+                                                                                                        : 'theme-light m-0 p-3'
+                                                                                                "
+                                                                                            >
+                                                                                                <template
+                                                                                                    #title
+                                                                                                >
+                                                                                                    <b-button
+                                                                                                        id="public-agents"
+                                                                                                        :variant="
+                                                                                                            activeAgentTab ===
+                                                                                                            2
+                                                                                                                ? profile.darkMode
+                                                                                                                    ? 'outline-success'
+                                                                                                                    : 'success'
+                                                                                                                : profile.darkMode
+                                                                                                                ? 'outline-light'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        title="Public agents"
+                                                                                                    >
+                                                                                                        Public
+                                                                                                    </b-button>
+                                                                                                    <b-popover
+                                                                                                        :show.sync="
+                                                                                                            profile.hints
+                                                                                                        "
+                                                                                                        triggers="manual"
+                                                                                                        placement="right"
+                                                                                                        target="public-agents"
+                                                                                                        title="Public Agents"
+                                                                                                        >Click
+                                                                                                        here
+                                                                                                        to
+                                                                                                        browse
+                                                                                                        public
+                                                                                                        agents.</b-popover
+                                                                                                    ></template
+                                                                                                >
+                                                                                                <b-row
+                                                                                                    align-h="center"
+                                                                                                    v-if="
+                                                                                                        publicAgentsLoading
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-spinner
+                                                                                                        type="grow"
+                                                                                                        label="Loading..."
+                                                                                                        variant="secondary"
+                                                                                                    ></b-spinner>
+                                                                                                </b-row>
+                                                                                                <b-row
+                                                                                                    v-else-if="
+                                                                                                        validPublicAgents.length ===
+                                                                                                        0
+                                                                                                    "
+                                                                                                >
+                                                                                                    <b-col>
+                                                                                                        None
+                                                                                                        to
+                                                                                                        show.
+                                                                                                    </b-col>
+                                                                                                </b-row>
+                                                                                                <div
+                                                                                                    v-else
+                                                                                                >
+                                                                                                    <b-row
+                                                                                                        class="text-right"
+                                                                                                        v-for="agent in validPublicAgents"
+                                                                                                        v-bind:key="
+                                                                                                            agent.name
+                                                                                                        "
+                                                                                                    >
+                                                                                                        <b-col
+                                                                                                            md="auto"
+                                                                                                            ><b-button
+                                                                                                                size="md"
+                                                                                                                class="text-left pt-2"
+                                                                                                                @click="
+                                                                                                                    agentSelected(
+                                                                                                                        agent
+                                                                                                                    )
+                                                                                                                "
+                                                                                                                :variant="
+                                                                                                                    profile.darkMode
+                                                                                                                        ? 'dark'
+                                                                                                                        : 'white'
+                                                                                                                "
+                                                                                                                :disabled="
+                                                                                                                    agentUnsupported(
+                                                                                                                        agent
+                                                                                                                    ) ||
+                                                                                                                    agent.disabled
+                                                                                                                "
+                                                                                                                >{{
+                                                                                                                    agent.name
+                                                                                                                }}</b-button
+                                                                                                            ></b-col
+                                                                                                        >
+                                                                                                        <b-col
+                                                                                                            align-self="end"
+                                                                                                        >
+                                                                                                            <small
+                                                                                                                >{{
+                                                                                                                    agent.max_cores
+                                                                                                                }}
+                                                                                                                cores,
+                                                                                                                {{
+                                                                                                                    agent.max_processes
+                                                                                                                }}
+                                                                                                                processes, </small
+                                                                                                            ><span
+                                                                                                                v-if="
+                                                                                                                    getWorkflow
+                                                                                                                        .config
+                                                                                                                        .jobqueue !==
+                                                                                                                        undefined &&
+                                                                                                                    parseInt(
+                                                                                                                        agent.max_mem
+                                                                                                                    ) >=
+                                                                                                                        parseInt(
+                                                                                                                            getWorkflow
+                                                                                                                                .config
+                                                                                                                                .jobqueue
+                                                                                                                                .memory
+                                                                                                                        ) &&
+                                                                                                                    parseInt(
+                                                                                                                        agent.max_mem
+                                                                                                                    ) >
+                                                                                                                        0
+                                                                                                                "
+                                                                                                                >{{
+                                                                                                                    agent.max_mem
+                                                                                                                }}
+                                                                                                                GB
+                                                                                                                memory</span
+                                                                                                            >
+                                                                                                            <span
+                                                                                                                v-else-if="
+                                                                                                                    parseInt(
+                                                                                                                        agent.max_mem
+                                                                                                                    ) >
+                                                                                                                    0
+                                                                                                                "
+                                                                                                                class="text-danger"
+                                                                                                                >{{
+                                                                                                                    agent.max_mem
+                                                                                                                }}
+                                                                                                                GB
+                                                                                                                memory</span
+                                                                                                            >
+                                                                                                            <span
+                                                                                                                v-else-if="
+                                                                                                                    parseInt(
+                                                                                                                        agent.max_mem
+                                                                                                                    ) ===
+                                                                                                                    -1
+                                                                                                                "
+                                                                                                                >virtual
+                                                                                                                memory</span
+                                                                                                            ><span
+                                                                                                                v-if="
+                                                                                                                    agent.gpu
+                                                                                                                "
+                                                                                                            >
+                                                                                                                ,
+                                                                                                                GPU
+                                                                                                            </span>
+                                                                                                            <span
+                                                                                                                v-else
+                                                                                                                >,
+                                                                                                                No
+                                                                                                                GPU
+                                                                                                            </span></b-col
+                                                                                                        >
+                                                                                                    </b-row>
+                                                                                                </div>
+                                                                                            </b-tab>
+                                                                                        </b-tabs>
+                                                                                    </div>
+                                                                                </b-collapse>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            tags.length >
+                                                                            0
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.tags
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            tagsVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row>
+                                                                                    <b-col>
+                                                                                        <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                class="fas fa-tags fa-fw"
+                                                                                            ></i>
+                                                                                            Tags
+                                                                                        </h5>
+                                                                                    </b-col>
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            {{
+                                                                                                tags.length
+                                                                                            }}
+                                                                                            <i
+                                                                                                v-if="
+                                                                                                    tags.length >
+                                                                                                    0
+                                                                                                "
+                                                                                                class="fas fa-check text-success fa-fw"
+                                                                                            ></i></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="tags"
+                                                                                    v-model="
+                                                                                        tagsVisible
+                                                                                    "
+                                                                                >
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Attach
+                                                                                                tags
+                                                                                                to
+                                                                                                this
+                                                                                                task.
+                                                                                            </b>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-row
+                                                                                        class="mt-2"
+                                                                                    >
+                                                                                        <b-col>
+                                                                                            <multiselect
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'input-dark'
+                                                                                                        : 'input-light'
+                                                                                                "
+                                                                                                style="
+                                                                                                    z-index: 100;
+                                                                                                "
+                                                                                                v-model="
+                                                                                                    tags
+                                                                                                "
+                                                                                                mode="tags"
+                                                                                                :multiple="
+                                                                                                    true
+                                                                                                "
+                                                                                                :close-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :clear-on-select="
+                                                                                                    false
+                                                                                                "
+                                                                                                :preserve-search="
+                                                                                                    true
+                                                                                                "
+                                                                                                :options="
+                                                                                                    tagOptions
+                                                                                                "
+                                                                                                :taggable="
+                                                                                                    true
+                                                                                                "
+                                                                                                placeholder="Add tags..."
+                                                                                                :createTag="
+                                                                                                    true
+                                                                                                "
+                                                                                                :appendNewTag="
+                                                                                                    true
+                                                                                                "
+                                                                                                :searchable="
+                                                                                                    true
+                                                                                                "
+                                                                                                @tag="
+                                                                                                    addTag
+                                                                                                "
+                                                                                            >
+                                                                                            </multiselect>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                </b-collapse>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        v-if="
+                                                                            workflow !==
+                                                                                null &&
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .params !==
+                                                                                undefined
+                                                                                ? getWorkflow
+                                                                                      .config
+                                                                                      .params
+                                                                                      .length !==
+                                                                                  0
+                                                                                : false
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            paramsValid
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                    >
+                                                                        <b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.parameters
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            parametersVisible
+                                                                                        "
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
+                                                                                    ><i
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row
+                                                                                    ><b-col>
+                                                                                        <h4
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <i
+                                                                                                class="fas fa-keyboard fa-fw"
+                                                                                            ></i>
+                                                                                            Parameters
+                                                                                        </h4> </b-col
+                                                                                    ><b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    paramsValid
+                                                                                                "
+                                                                                                >{{
+                                                                                                    params.length
+                                                                                                }}</span
+                                                                                            >
+                                                                                            <i
+                                                                                                v-if="
+                                                                                                    paramsValid
+                                                                                                "
+                                                                                                class="fas fa-check text-success fa-fw ml-1"
+                                                                                            ></i>
+                                                                                            <i
+                                                                                                v-else
+                                                                                                class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                            ></i></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="parameters"
+                                                                                    v-model="
+                                                                                        parametersVisible
+                                                                                    "
+                                                                                >
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Configure
+                                                                                                parameters
+                                                                                                for
+                                                                                                this
+                                                                                                task.
+                                                                                            </b>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-row
+                                                                                        class="mt-2"
+                                                                                        ><b-col>
+                                                                                            <b-row
+                                                                                                class="mt-1"
+                                                                                                v-for="param in params"
+                                                                                                v-bind:key="
+                                                                                                    param.name
+                                                                                                "
+                                                                                            >
+                                                                                                <b-col>
+                                                                                                    <i
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'number'
+                                                                                                        "
+                                                                                                        class="fas fa-calculator fa-fw mr-1"
+                                                                                                    ></i>
+                                                                                                    <i
+                                                                                                        v-else-if="
+                                                                                                            param.type ===
+                                                                                                            'boolean'
+                                                                                                        "
+                                                                                                        class="far fa-flag fa-fw mr-1"
+                                                                                                    ></i>
+                                                                                                    <i
+                                                                                                        v-else-if="
+                                                                                                            param.type ===
+                                                                                                            'string'
+                                                                                                        "
+                                                                                                        class="fas fa-edit fa-fw mr-1"
+                                                                                                    ></i>
+                                                                                                    <i
+                                                                                                        v-else-if="
+                                                                                                            param.type ===
+                                                                                                            'select'
+                                                                                                        "
+                                                                                                        class="fas fa-list fa-fw mr-1"
+                                                                                                    ></i>
+                                                                                                    <i
+                                                                                                        v-else-if="
+                                                                                                            param.type ===
+                                                                                                            'multiselect'
+                                                                                                        "
+                                                                                                        class="fas fa-th-list fa-fw mr-1"
+                                                                                                    ></i>
+                                                                                                    {{
+                                                                                                        param.name.toLowerCase()
+                                                                                                    }}</b-col
+                                                                                                ><b-col>
+                                                                                                    <b-form-input
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'string'
+                                                                                                        "
+                                                                                                        size="sm"
+                                                                                                        v-model="
+                                                                                                            param.value
+                                                                                                        "
+                                                                                                        :placeholder="
+                                                                                                            param.value ===
+                                                                                                            ''
+                                                                                                                ? 'Enter a value for \'' +
+                                                                                                                  param.name.toLowerCase() +
+                                                                                                                  '\''
+                                                                                                                : param.value
+                                                                                                        "
+                                                                                                    ></b-form-input>
+                                                                                                    <b-form-select
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'select'
+                                                                                                        "
+                                                                                                        size="sm"
+                                                                                                        v-model="
+                                                                                                            param.value
+                                                                                                        "
+                                                                                                        :options="
+                                                                                                            param.options
+                                                                                                        "
+                                                                                                    ></b-form-select>
+                                                                                                    <b-form-checkbox-group
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'multiselect'
+                                                                                                        "
+                                                                                                        size="sm"
+                                                                                                        v-model="
+                                                                                                            param.value
+                                                                                                        "
+                                                                                                        :options="
+                                                                                                            param.options
+                                                                                                        "
+                                                                                                    ></b-form-checkbox-group>
+                                                                                                    <b-form-spinbutton
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'number'
+                                                                                                        "
+                                                                                                        size="sm"
+                                                                                                        v-model="
+                                                                                                            param.value
+                                                                                                        "
+                                                                                                        :min="
+                                                                                                            param.min
+                                                                                                        "
+                                                                                                        :max="
+                                                                                                            param.max
+                                                                                                        "
+                                                                                                        :step="
+                                                                                                            param.step
+                                                                                                        "
+                                                                                                    ></b-form-spinbutton>
+                                                                                                    <b-form-checkbox
+                                                                                                        v-if="
+                                                                                                            param.type ===
+                                                                                                            'boolean'
+                                                                                                        "
+                                                                                                        size="sm"
+                                                                                                        v-model="
+                                                                                                            param.value
+                                                                                                        "
+                                                                                                        switch
+                                                                                                    >
+                                                                                                        <b>
+                                                                                                            {{
+                                                                                                                param.value
+                                                                                                            }}</b
+                                                                                                        >
+                                                                                                    </b-form-checkbox>
+                                                                                                </b-col></b-row
+                                                                                            >
                                                                                         </b-col></b-row
                                                                                     >
-                                                                                </b-col></b-row
-                                                                            >
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    selectedProject !==
-                                                                    null
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                                ><b-row>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.project
-                                                                            ><i
-                                                                                v-if="
-                                                                                    projectVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row
-                                                                            ><b-col>
-                                                                                <h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <b-img
-                                                                                        class="mb-1"
-                                                                                        style="
-                                                                                            max-width: 25px;
-                                                                                        "
-                                                                                        :src="
-                                                                                            profile.darkMode
-                                                                                                ? require('../../assets/miappe_icon.png')
-                                                                                                : require('../../assets/miappe_icon_black.png')
-                                                                                        "
-                                                                                    ></b-img>
-                                                                                    Project
-                                                                                </h5> </b-col
-                                                                            ><b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            selectedProject !==
-                                                                                            null
-                                                                                        "
-                                                                                        ><small
-                                                                                            >Project</small
-                                                                                        >
-                                                                                        {{
-                                                                                            selectedProject.title
-                                                                                        }}</span
-                                                                                    >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            selectedStudy !==
-                                                                                            null
-                                                                                        "
-                                                                                        >,
-                                                                                        <small
-                                                                                            >Study</small
-                                                                                        >
-                                                                                        {{
-                                                                                            selectedStudy.title
-                                                                                        }}</span
-                                                                                    >
-                                                                                    <span
-                                                                                        v-if="
-                                                                                            selectedProject ===
-                                                                                            null
-                                                                                        "
-                                                                                    ></span
-                                                                                    ><span
-                                                                                        v-else
-                                                                                        ><i
-                                                                                            class="fas fa-check fa-fw ml-1 text-success"
-                                                                                        ></i
-                                                                                    ></span></h5
-                                                                            ></b-col>
+                                                                                </b-collapse>
+                                                                            </b-col>
                                                                         </b-row>
-                                                                        <b-collapse
-                                                                            id="project"
-                                                                            v-model="
-                                                                                projectVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
+                                                                    </b-card>
+                                                                    <b-card
+                                                                        style="
+                                                                            min-width: 60rem;
+                                                                        "
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :border-variant="
+                                                                            selectedProject !==
+                                                                            null
+                                                                                ? 'success'
+                                                                                : 'secondary'
+                                                                        "
+                                                                        :header-border-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        class="mb-4"
+                                                                        ><b-row>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                            >
+                                                                                <b-button
+                                                                                    size="sm"
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'outline-dark'
+                                                                                    "
+                                                                                    v-b-toggle.project
+                                                                                    ><i
+                                                                                        v-if="
+                                                                                            projectVisible
                                                                                         "
-                                                                                    >
-                                                                                        Associate
-                                                                                        this
-                                                                                        task
-                                                                                        with
-                                                                                        a
-                                                                                        MIAPPE
-                                                                                        project
-                                                                                        or
-                                                                                        study.
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                v-if="
-                                                                                    personalProjects.length >
-                                                                                    0
-                                                                                "
-                                                                                class="mt-2"
-                                                                                ><b-col
-                                                                                    cols="3"
+                                                                                        class="fas fa-minus"
+                                                                                    ></i
                                                                                     ><i
-                                                                                        >Project</i
-                                                                                    ></b-col
-                                                                                ><b-col
-                                                                                    cols="9"
-                                                                                    v-if="
-                                                                                        selectedProject !==
-                                                                                        null
+                                                                                        v-else
+                                                                                        class="fas fa-plus"
+                                                                                    ></i
+                                                                                ></b-button>
+                                                                            </b-col>
+                                                                            <b-col>
+                                                                                <b-row
+                                                                                    ><b-col>
+                                                                                        <h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <b-img
+                                                                                                class="mb-1"
+                                                                                                style="
+                                                                                                    max-width: 25px;
+                                                                                                "
+                                                                                                :src="
+                                                                                                    profile.darkMode
+                                                                                                        ? require('../../assets/miappe_icon.png')
+                                                                                                        : require('../../assets/miappe_icon_black.png')
+                                                                                                "
+                                                                                            ></b-img>
+                                                                                            Project
+                                                                                        </h5> </b-col
+                                                                                    ><b-col
+                                                                                        md="auto"
+                                                                                        ><h5
+                                                                                            :class="
+                                                                                                profile.darkMode
+                                                                                                    ? 'text-white'
+                                                                                                    : 'text-dark'
+                                                                                            "
+                                                                                        >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    selectedProject !==
+                                                                                                    null
+                                                                                                "
+                                                                                                ><small
+                                                                                                    >Project</small
+                                                                                                >
+                                                                                                {{
+                                                                                                    selectedProject.title
+                                                                                                }}</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    selectedStudy !==
+                                                                                                    null
+                                                                                                "
+                                                                                                >,
+                                                                                                <small
+                                                                                                    >Study</small
+                                                                                                >
+                                                                                                {{
+                                                                                                    selectedStudy.title
+                                                                                                }}</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    selectedProject ===
+                                                                                                    null
+                                                                                                "
+                                                                                            ></span
+                                                                                            ><span
+                                                                                                v-else
+                                                                                                ><i
+                                                                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                ></i
+                                                                                            ></span></h5
+                                                                                    ></b-col>
+                                                                                </b-row>
+                                                                                <b-collapse
+                                                                                    id="project"
+                                                                                    v-model="
+                                                                                        projectVisible
                                                                                     "
-                                                                                    ><i
-                                                                                        >Study</i
-                                                                                    ></b-col
-                                                                                ></b-row
-                                                                            >
-                                                                            <b-row
-                                                                                v-else
-                                                                                class="mt-2"
-                                                                                ><b-col
-                                                                                    cols="3"
-                                                                                    ><i
-                                                                                        >You
-                                                                                        haven't
-                                                                                        started
-                                                                                        any
-                                                                                        projects.</i
-                                                                                    ></b-col
-                                                                                ></b-row
-                                                                            >
-                                                                            <b-row
-                                                                                class="mt-1"
-                                                                                v-for="project in personalProjects"
-                                                                                v-bind:key="
-                                                                                    project.title
-                                                                                "
-                                                                                ><b-col
-                                                                                    style="
-                                                                                        border-top: 2px
-                                                                                            solid
-                                                                                            lightgray;
-                                                                                        left: -5px;
-                                                                                    "
-                                                                                    cols="3"
                                                                                 >
-                                                                                    <b-button
-                                                                                        :variant="
-                                                                                            profile.darkMode
-                                                                                                ? 'outline-light'
-                                                                                                : 'white'
-                                                                                        "
-                                                                                        @click="
-                                                                                            selectedProject =
+                                                                                    <b-row
+                                                                                        ><b-col
+                                                                                            ><b
+                                                                                                :class="
+                                                                                                    profile.darkMode
+                                                                                                        ? 'text-white'
+                                                                                                        : 'text-dark'
+                                                                                                "
+                                                                                            >
+                                                                                                Associate
+                                                                                                this
+                                                                                                task
+                                                                                                with
+                                                                                                a
+                                                                                                MIAPPE
                                                                                                 project
+                                                                                                or
+                                                                                                study.
+                                                                                            </b>
+                                                                                        </b-col>
+                                                                                    </b-row>
+                                                                                    <b-row
+                                                                                        v-if="
+                                                                                            personalProjects.length >
+                                                                                            0
                                                                                         "
-                                                                                        >{{
-                                                                                            project.title
-                                                                                        }}<i
+                                                                                        class="mt-2"
+                                                                                        ><b-col
+                                                                                            cols="3"
+                                                                                            ><i
+                                                                                                >Project</i
+                                                                                            ></b-col
+                                                                                        ><b-col
+                                                                                            cols="9"
                                                                                             v-if="
                                                                                                 selectedProject !==
-                                                                                                    null &&
-                                                                                                selectedProject.title ===
-                                                                                                    project.title
+                                                                                                null
                                                                                             "
-                                                                                            class="fas fa-check fa-fw text-success ml-1"
-                                                                                        ></i
-                                                                                    ></b-button> </b-col
-                                                                                ><b-col
-                                                                                    style="
-                                                                                        border-top: 2px
-                                                                                            solid
-                                                                                            lightgray;
-                                                                                        left: -5px;
-                                                                                    "
-                                                                                    cols="9"
-                                                                                    v-if="
-                                                                                        selectedProject !==
-                                                                                        null
-                                                                                    "
-                                                                                    ><b-row
-                                                                                        v-for="study in project.studies"
+                                                                                            ><i
+                                                                                                >Study</i
+                                                                                            ></b-col
+                                                                                        ></b-row
+                                                                                    >
+                                                                                    <b-row
+                                                                                        v-else
+                                                                                        class="mt-2"
+                                                                                        ><b-col
+                                                                                            cols="3"
+                                                                                            ><i
+                                                                                                >You
+                                                                                                haven't
+                                                                                                started
+                                                                                                any
+                                                                                                projects.</i
+                                                                                            ></b-col
+                                                                                        ></b-row
+                                                                                    >
+                                                                                    <b-row
+                                                                                        class="mt-1"
+                                                                                        v-for="project in personalProjects"
                                                                                         v-bind:key="
-                                                                                            study.title
+                                                                                            project.title
                                                                                         "
                                                                                         ><b-col
-                                                                                            ><b-button
-                                                                                                :disabled="
-                                                                                                    project.title !==
-                                                                                                    selectedProject.title
-                                                                                                "
+                                                                                            style="
+                                                                                                border-top: 2px
+                                                                                                    solid
+                                                                                                    lightgray;
+                                                                                                left: -5px;
+                                                                                            "
+                                                                                            cols="3"
+                                                                                        >
+                                                                                            <b-button
                                                                                                 :variant="
                                                                                                     profile.darkMode
                                                                                                         ? 'outline-light'
                                                                                                         : 'white'
                                                                                                 "
                                                                                                 @click="
-                                                                                                    selectedStudy =
-                                                                                                        study
+                                                                                                    selectedProject =
+                                                                                                        project
                                                                                                 "
                                                                                                 >{{
-                                                                                                    study.title
+                                                                                                    project.title
                                                                                                 }}<i
                                                                                                     v-if="
-                                                                                                        selectedStudy !==
+                                                                                                        selectedProject !==
                                                                                                             null &&
-                                                                                                        selectedStudy.title ===
-                                                                                                            study.title &&
-                                                                                                        selectedProject ===
-                                                                                                            project
+                                                                                                        selectedProject.title ===
+                                                                                                            project.title
                                                                                                     "
-                                                                                                    class="fas fa-check fa-fw ml-1 text-success"
-                                                                                                ></i></b-button></b-col></b-row></b-col
-                                                                            ></b-row>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                        </b-card-group>
-                                                    </b-col>
-                                                </b-row>
-                                                <b-row>
-                                                    <b-col
-                                                        md="auto"
-                                                        v-if="
-                                                            submitType ===
-                                                                'After' ||
-                                                            submitType ===
-                                                                'Every'
-                                                        "
-                                                        ><b-input-group>
-                                                            <b-form-spinbutton
-                                                                v-model="
-                                                                    delayValue
+                                                                                                    class="fas fa-check fa-fw text-success ml-1"
+                                                                                                ></i
+                                                                                            ></b-button> </b-col
+                                                                                        ><b-col
+                                                                                            style="
+                                                                                                border-top: 2px
+                                                                                                    solid
+                                                                                                    lightgray;
+                                                                                                left: -5px;
+                                                                                            "
+                                                                                            cols="9"
+                                                                                            v-if="
+                                                                                                selectedProject !==
+                                                                                                null
+                                                                                            "
+                                                                                            ><b-row
+                                                                                                v-for="study in project.studies"
+                                                                                                v-bind:key="
+                                                                                                    study.title
+                                                                                                "
+                                                                                                ><b-col
+                                                                                                    ><b-button
+                                                                                                        :disabled="
+                                                                                                            project.title !==
+                                                                                                            selectedProject.title
+                                                                                                        "
+                                                                                                        :variant="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'outline-light'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        @click="
+                                                                                                            selectedStudy =
+                                                                                                                study
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            study.title
+                                                                                                        }}<i
+                                                                                                            v-if="
+                                                                                                                selectedStudy !==
+                                                                                                                    null &&
+                                                                                                                selectedStudy.title ===
+                                                                                                                    study.title &&
+                                                                                                                selectedProject ===
+                                                                                                                    project
+                                                                                                            "
+                                                                                                            class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                        ></i></b-button></b-col></b-row></b-col
+                                                                                    ></b-row>
+                                                                                </b-collapse>
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </b-card>
+                                                                </b-card-group>
+                                                            </b-col>
+                                                        </b-row>
+                                                        <b-row>
+                                                            <b-col
+                                                                md="auto"
+                                                                v-if="
+                                                                    submitType ===
+                                                                        'After' ||
+                                                                    submitType ===
+                                                                        'Every'
                                                                 "
-                                                                min="1"
-                                                                max="100"
-                                                            ></b-form-spinbutton
-                                                            ><template #append>
-                                                                <b-dropdown
-                                                                    variant="secondary"
-                                                                    :text="
-                                                                        submitType
+                                                                ><b-input-group>
+                                                                    <b-form-spinbutton
+                                                                        v-model="
+                                                                            delayValue
+                                                                        "
+                                                                        min="1"
+                                                                        max="100"
+                                                                    ></b-form-spinbutton
+                                                                    ><template
+                                                                        #append
+                                                                    >
+                                                                        <b-dropdown
+                                                                            variant="secondary"
+                                                                            :text="
+                                                                                submitType
+                                                                            "
+                                                                            v-model="
+                                                                                submitType
+                                                                            "
+                                                                            block
+                                                                        >
+                                                                            <template
+                                                                                #button-content
+                                                                            >
+                                                                                {{
+                                                                                    delayUnits
+                                                                                }}
+                                                                                <i
+                                                                                    class="fas fa-caret-down fa-fw"
+                                                                                ></i>
+                                                                            </template>
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Seconds'
+                                                                                "
+                                                                                >Seconds</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Minutes'
+                                                                                "
+                                                                                >Minutes</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Hours'
+                                                                                "
+                                                                                >Hours</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Days'
+                                                                                "
+                                                                                >Days</b-dropdown-item
+                                                                            >
+                                                                        </b-dropdown>
+                                                                    </template></b-input-group
+                                                                ></b-col
+                                                            >
+                                                            <b-col
+                                                                ><b-button
+                                                                    :disabled="
+                                                                        !canSubmit ||
+                                                                        submitted
                                                                     "
-                                                                    v-model="
-                                                                        submitType
+                                                                    @click="
+                                                                        trySubmit
+                                                                    "
+                                                                    :variant="
+                                                                        profile.darkMode
+                                                                            ? 'outline-success'
+                                                                            : 'success'
                                                                     "
                                                                     block
                                                                 >
-                                                                    <template
-                                                                        #button-content
-                                                                    >
-                                                                        {{
-                                                                            delayUnits
-                                                                        }}
-                                                                        <i
-                                                                            class="fas fa-caret-down fa-fw"
-                                                                        ></i>
-                                                                    </template>
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            delayUnits =
-                                                                                'Seconds'
+                                                                    <b-spinner
+                                                                        small
+                                                                        v-if="
+                                                                            submitted
                                                                         "
-                                                                        >Seconds</b-dropdown-item
-                                                                    >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            delayUnits =
-                                                                                'Minutes'
-                                                                        "
-                                                                        >Minutes</b-dropdown-item
-                                                                    >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            delayUnits =
-                                                                                'Hours'
-                                                                        "
-                                                                        >Hours</b-dropdown-item
-                                                                    >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            delayUnits =
-                                                                                'Days'
-                                                                        "
-                                                                        >Days</b-dropdown-item
-                                                                    >
-                                                                </b-dropdown>
-                                                            </template></b-input-group
-                                                        ></b-col
-                                                    >
-                                                    <b-col
-                                                        ><b-button
-                                                            :disabled="
-                                                                !canSubmit ||
-                                                                submitted
-                                                            "
-                                                            @click="trySubmit"
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
-                                                            "
-                                                            block
-                                                        >
-                                                            <b-spinner
-                                                                small
-                                                                v-if="submitted"
-                                                                label="Loading..."
-                                                                variant="dark"
-                                                                class="mr-2 mb-1"
-                                                            ></b-spinner
-                                                            ><i
-                                                                v-else
-                                                                class="fas fa-chevron-right fa-fw mr-1"
-                                                            ></i>
-                                                            Start</b-button
-                                                        ></b-col
-                                                    >
-                                                    <!--<b-col
+                                                                        label="Loading..."
+                                                                        variant="dark"
+                                                                        class="mr-2 mb-1"
+                                                                    ></b-spinner
+                                                                    ><i
+                                                                        v-else
+                                                                        class="fas fa-chevron-right fa-fw mr-1"
+                                                                    ></i>
+                                                                    Start</b-button
+                                                                ></b-col
+                                                            >
+                                                            <!--<b-col
                                                         md="auto"
                                                         class="mr-0"
                                                         align-self="end"
@@ -3772,7 +3709,9 @@
                                                             <template #append><b-form-spinbutton min="1" max="20" value="1" v-model="iterations"></b-form-spinbutton>{{ iterations }} Time{{ iterations === 1 ? '' : 's' }}</template>
                                                         </b-input-group>
                                                     </b-col>-->
-                                                </b-row>
+                                                        </b-row>
+                                                    </b-col></b-row
+                                                >
                                             </b-tab>
                                             <!--<b-tab
                                                 title="Runs"
@@ -4336,71 +4275,6 @@ export default {
         prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
         },
-        async togglePublic() {
-            if (!this.ownsWorkflow) return;
-            this.togglingPublic = true;
-            await axios({
-                method: 'post',
-                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/u/${this.$router.currentRoute.params.name}/public/`,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await Promise.all([
-                            this.$store.dispatch(
-                                'workflows/setPersonal',
-                                response.data.workflows
-                            ),
-                            this.$store.dispatch('alerts/add', {
-                                variant: 'success',
-                                message: `Made ${
-                                    this.$router.currentRoute.params.owner
-                                }/${this.$router.currentRoute.params.name} ${
-                                    response.data.workflows.find(
-                                        (wf) =>
-                                            wf.config.name ===
-                                                this.getWorkflow.config.name &&
-                                            wf.branch.name ===
-                                                this.getWorkflow.branch.name
-                                    ).public
-                                        ? 'public'
-                                        : 'private'
-                                }`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            }),
-                        ]);
-                        this.togglingPublic = false;
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to make ${
-                                this.$router.currentRoute.params.owner
-                            }/${this.$router.currentRoute.params.name} ${
-                                this.getWorkflow.public ? 'private' : 'public'
-                            }`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                        this.togglingPublic = false;
-                    }
-                })
-                .catch(async (error) => {
-                    Sentry.captureException(error);
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to make ${
-                            this.$router.currentRoute.params.owner
-                        }/${this.$router.currentRoute.params.name} ${
-                            this.getWorkflow.public ? 'private' : 'public'
-                        }`,
-                        guid: guid().toString(),
-                        time: moment().format(),
-                    });
-                    this.togglingPublic = false;
-                    throw error;
-                });
-        },
         showUnbindWorkflowModal() {
             this.$bvModal.show('unbind');
         },
@@ -4944,58 +4818,62 @@ export default {
         ]),
         ...mapGetters('projects', ['personalProjects', 'othersProjects']),
         validGuestAgents() {
-            return this.guestAgents.filter(
-                (a) =>
-                    !a.workflows_blocked.some(
-                        (wf) =>
-                            wf.repo.owner.login ===
-                                this.getWorkflow.repo.owner.login &&
-                            wf.config.name === this.getWorkflow.config.name
-                    ) &&
-                    (a.workflows_authorized.length === 0 ||
-                        a.workflows_authorized.some(
-                            (wf) =>
-                                wf.repo.owner.login ===
-                                    this.getWorkflow.repo.owner.login &&
-                                wf.config.name === this.getWorkflow.config.name
-                        ))
-            );
+            // TODO: reinstate filter after workflow auth is refactored
+            return this.guestAgents;
+            // return this.guestAgents.filter(
+            //     (a) =>
+            //         !a.workflows_blocked.some(
+            //             (wf) =>
+            //                 wf.repo.owner.login ===
+            //                     this.getWorkflow.repo.owner.login &&
+            //                 wf.config.name === this.getWorkflow.config.name
+            //         ) &&
+            //         (a.workflows_authorized.length === 0 ||
+            //             a.workflows_authorized.some(
+            //                 (wf) =>
+            //                     wf.repo.owner.login ===
+            //                         this.getWorkflow.repo.owner.login &&
+            //                     wf.config.name === this.getWorkflow.config.name
+            //             ))
+            // );
         },
         validPersonalAgents() {
-            return this.personalAgents.filter(
-                (a) =>
-                    !a.workflows_blocked.some(
-                        (wf) =>
-                            wf.repo.owner.login ===
-                                this.getWorkflow.repo.owner.login &&
-                            wf.config.name === this.getWorkflow.config.name
-                    ) &&
-                    (a.workflows_authorized.length === 0 ||
-                        a.workflows_authorized.some(
-                            (wf) =>
-                                wf.repo.owner.login ===
-                                    this.getWorkflow.repo.owner.login &&
-                                wf.config.name === this.getWorkflow.config.name
-                        ))
-            );
+            return this.personalAgents;
+            // return this.personalAgents.filter(
+            //     (a) =>
+            //         !a.workflows_blocked.some(
+            //             (wf) =>
+            //                 wf.repo.owner.login ===
+            //                     this.getWorkflow.repo.owner.login &&
+            //                 wf.config.name === this.getWorkflow.config.name
+            //         ) &&
+            //         (a.workflows_authorized.length === 0 ||
+            //             a.workflows_authorized.some(
+            //                 (wf) =>
+            //                     wf.repo.owner.login ===
+            //                         this.getWorkflow.repo.owner.login &&
+            //                     wf.config.name === this.getWorkflow.config.name
+            //             ))
+            // );
         },
         validPublicAgents() {
-            return this.publicAgents.filter(
-                (a) =>
-                    !a.workflows_blocked.some(
-                        (wf) =>
-                            wf.repo.owner.login ===
-                                this.getWorkflow.repo.owner.login &&
-                            wf.config.name === this.getWorkflow.config.name
-                    ) &&
-                    (a.workflows_authorized.length === 0 ||
-                        a.workflows_authorized.some(
-                            (wf) =>
-                                wf.repo.owner.login ===
-                                    this.getWorkflow.repo.owner.login &&
-                                wf.config.name === this.getWorkflow.config.name
-                        ))
-            );
+            return this.publicAgents;
+            //return this.publicAgents.filter(
+            //    (a) =>
+            //        !a.workflows_blocked.some(
+            //            (wf) =>
+            //                wf.repo.owner.login ===
+            //                    this.getWorkflow.repo.owner.login &&
+            //                wf.config.name === this.getWorkflow.config.name
+            //        ) &&
+            //        (a.workflows_authorized.length === 0 ||
+            //            a.workflows_authorized.some(
+            //                (wf) =>
+            //                    wf.repo.owner.login ===
+            //                        this.getWorkflow.repo.owner.login &&
+            //                    wf.config.name === this.getWorkflow.config.name
+            //            ))
+            //);
         },
         taskHistory() {
             return this.$store.getters['tasks/tasksByOwner'](

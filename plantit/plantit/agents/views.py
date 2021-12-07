@@ -16,7 +16,6 @@ from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAuth
 from plantit.notifications.models import Notification
 from plantit.ssh import SSH, execute_command
 from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path, is_healthy
-from plantit.workflows.models import Workflow
 from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
@@ -224,96 +223,97 @@ async def unauthorize_user(request, name):
     return JsonResponse(output)
 
 
-@login_required
-def authorize_workflow(request, name):
-    body = json.loads(request.body.decode('utf-8'))
-    workflow_owner = body.get('owner', None)
-    workflow_name = body.get('name', None)
-    if workflow_name is None or workflow_owner is None or workflow_name is None:
-        return HttpResponseBadRequest()
-
-    try:
-        agent = Agent.objects.get(name=name)
-        workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
-    except:
-        return HttpResponseNotFound()
-
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
-
-    agent.workflows_authorized.add(workflow)
-    agent.save()
-
-    return JsonResponse(agent_to_dict(agent, request.user))
-
-
-@login_required
-def unauthorize_workflow(request, name):
-    body = json.loads(request.body.decode('utf-8'))
-    workflow_owner = body.get('owner', None)
-    workflow_name = body.get('name', None)
-    if workflow_name is None or workflow_owner is None or workflow_name is None:
-        return HttpResponseBadRequest()
-
-    try:
-        agent = Agent.objects.get(name=name)
-        workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
-    except:
-        return HttpResponseNotFound()
-
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
-
-    agent.workflows_authorized.remove(workflow)
-    agent.save()
-
-    return JsonResponse(agent_to_dict(agent, request.user))
+# TODO: reinstate once workflow auth is refactored
+# @login_required
+# def authorize_workflow(request, name):
+#     body = json.loads(request.body.decode('utf-8'))
+#     workflow_owner = body.get('owner', None)
+#     workflow_name = body.get('name', None)
+#     if workflow_name is None or workflow_owner is None or workflow_name is None:
+#         return HttpResponseBadRequest()
+#
+#     try:
+#         agent = Agent.objects.get(name=name)
+#         workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     if agent.user is not None and agent.user.username != request.user.username:
+#         return HttpResponseForbidden()
+#
+#     agent.workflows_authorized.add(workflow)
+#     agent.save()
+#
+#     return JsonResponse(agent_to_dict(agent, request.user))
 
 
-@login_required
-def block_workflow(request, name):
-    body = json.loads(request.body.decode('utf-8'))
-    workflow_owner = body.get('owner', None)
-    workflow_name = body.get('name', None)
-    if workflow_name is None or workflow_owner is None or workflow_name is None:
-        return HttpResponseBadRequest()
+# @login_required
+# def unauthorize_workflow(request, name):
+#     body = json.loads(request.body.decode('utf-8'))
+#     workflow_owner = body.get('owner', None)
+#     workflow_name = body.get('name', None)
+#     if workflow_name is None or workflow_owner is None or workflow_name is None:
+#         return HttpResponseBadRequest()
+#
+#     try:
+#         agent = Agent.objects.get(name=name)
+#         workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     if agent.user is not None and agent.user.username != request.user.username:
+#         return HttpResponseForbidden()
+#
+#     agent.workflows_authorized.remove(workflow)
+#     agent.save()
+#
+#     return JsonResponse(agent_to_dict(agent, request.user))
 
-    try:
-        agent = Agent.objects.get(name=name)
-        workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
-    except:
-        return HttpResponseNotFound()
 
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
+# @login_required
+# def block_workflow(request, name):
+#     body = json.loads(request.body.decode('utf-8'))
+#     workflow_owner = body.get('owner', None)
+#     workflow_name = body.get('name', None)
+#     if workflow_name is None or workflow_owner is None or workflow_name is None:
+#         return HttpResponseBadRequest()
+#
+#     try:
+#         agent = Agent.objects.get(name=name)
+#         workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     if agent.user is not None and agent.user.username != request.user.username:
+#         return HttpResponseForbidden()
+#
+#     agent.workflows_blocked.add(workflow)
+#     agent.save()
+#
+#     return JsonResponse(agent_to_dict(agent, request.user))
 
-    agent.workflows_blocked.add(workflow)
-    agent.save()
 
-    return JsonResponse(agent_to_dict(agent, request.user))
-
-
-@login_required
-def unblock_workflow(request, name):
-    body = json.loads(request.body.decode('utf-8'))
-    workflow_owner = body.get('owner', None)
-    workflow_name = body.get('name', None)
-    if workflow_name is None or workflow_owner is None or workflow_name is None:
-        return HttpResponseBadRequest()
-
-    try:
-        agent = Agent.objects.get(name=name)
-        workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
-    except:
-        return HttpResponseNotFound()
-
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
-
-    agent.workflows_blocked.remove(workflow)
-    agent.save()
-
-    return JsonResponse(agent_to_dict(agent, request.user))
+# @login_required
+# def unblock_workflow(request, name):
+#     body = json.loads(request.body.decode('utf-8'))
+#     workflow_owner = body.get('owner', None)
+#     workflow_name = body.get('name', None)
+#     if workflow_name is None or workflow_owner is None or workflow_name is None:
+#         return HttpResponseBadRequest()
+#
+#     try:
+#         agent = Agent.objects.get(name=name)
+#         workflow = Workflow.objects.get(repo_owner=workflow_owner, repo_name=workflow_name)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     if agent.user is not None and agent.user.username != request.user.username:
+#         return HttpResponseForbidden()
+#
+#     agent.workflows_blocked.remove(workflow)
+#     agent.save()
+#
+#     return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required

@@ -9,8 +9,6 @@ from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
-from plantit.workflows.models import Workflow
-
 
 class AgentExecutor(models.TextChoices):
     LOCAL = 'local', gettext_lazy('Local')
@@ -53,8 +51,9 @@ class Agent(models.Model):
     executor = models.CharField(max_length=10, choices=AgentExecutor.choices, default=AgentExecutor.LOCAL)
     authentication = models.CharField(max_length=10, choices=AgentAuthentication.choices, default=AgentAuthentication.PASSWORD)
     is_healthy = models.BooleanField(default=True, null=True, blank=True)
-    workflows_authorized = models.ManyToManyField(Workflow, related_name='agents_authorized', null=True, blank=True)
-    workflows_blocked = models.ManyToManyField(Workflow, related_name='agents_blocked', null=True, blank=True)
+    # TODO for workflow auth, just store GitHub organization and repo names instead
+    # workflows_authorized = models.ManyToManyField(Workflow, related_name='agents_authorized', null=True, blank=True)
+    # workflows_blocked = models.ManyToManyField(Workflow, related_name='agents_blocked', null=True, blank=True)
     users_authorized = models.ManyToManyField(User, related_name='agents_authorized', null=True, blank=True)
 
     def __str__(self):
