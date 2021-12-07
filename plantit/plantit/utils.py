@@ -1,4 +1,6 @@
 import asyncio
+import tempfile
+
 import binascii
 import fileinput
 import json
@@ -53,9 +55,6 @@ from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
-
-logging.basicConfig()
-logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
 # users
 
@@ -1395,22 +1394,22 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
-        sftp.chdir(join(task.agent.workdir, task.workdir))
-        template_path = environ.get(
+        task_commands = compose_task_run_script(task, options, environ.get(
             'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
-            'TASKS_TEMPLATE_SCRIPT_SLURM')
-        with sftp.open(f"{task.guid}.sh", 'w') as task_script:
-            task_commands = compose_task_run_script(task, options, template_path)
-            for line in task_commands:
-                if line != '':
-                    task_script.write(line + '\n')
+            'TASKS_TEMPLATE_SCRIPT_SLURM'))
+        sftp.chdir(join(task.agent.workdir, task.workdir))
+        with tempfile.NamedTemporaryFile() as task_script:
+            for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
+            task_script.seek(0)
+            sftp.put(task_script.name, f"{task.guid}.sh")
 
         # if the selected agent uses the Launcher, create a parameter sweep script too
         if task.agent.launcher:
-            with sftp.open(os.environ.get('LAUNCHER_SCRIPT_NAME'), 'w') as launcher_script:
+            with tempfile.NamedTemporaryFile() as launcher_script:
                 launcher_commands = compose_jobqueue_task_launcher_script(task, options)
-                for line in launcher_commands:
-                    if line != '': launcher_script.write(line + "\n")
+                for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
+                launcher_script.seek(0)
+                sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
 
 
 def execute_local_task(task: Task, ssh: SSH):
