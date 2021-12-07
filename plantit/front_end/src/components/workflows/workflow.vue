@@ -147,8 +147,8 @@
                                                     }`"
                                                     :variant="
                                                         getWorkflow.public
-                                                            ? 'warning'
-                                                            : 'info'
+                                                            ? 'success'
+                                                            : 'success'
                                                     "
                                                 >
                                                     <b-spinner
@@ -183,7 +183,7 @@
                                                     :variant="
                                                         getWorkflow.public
                                                             ? 'success'
-                                                            : 'warning'
+                                                            : 'success'
                                                     "
                                                     ><span
                                                         v-if="
@@ -1097,8 +1097,7 @@
                                                                         : 'dark'
                                                                 "
                                                                 class="mb-4"
-                                                                ><b-row
-                                                                >
+                                                                ><b-row>
                                                                     <b-col
                                                                         md="auto"
                                                                         class="m-0"
@@ -1131,7 +1130,7 @@
                                                                     <b-col>
                                                                         <b-row>
                                                                             <b-col
-                                                                                ><h4
+                                                                                ><h5
                                                                                     :class="
                                                                                         profile.darkMode
                                                                                             ? 'text-light'
@@ -1141,9 +1140,8 @@
                                                                                     <i
                                                                                         class="fas fa-hashtag fa-fw"
                                                                                     ></i>
-                                                                                    Task
                                                                                     ID
-                                                                                </h4>
+                                                                                </h5>
                                                                             </b-col>
                                                                             <b-col
                                                                                 md="auto"
@@ -1197,19 +1195,20 @@
                                                                                                 : 'text-dark'
                                                                                         "
                                                                                     >
-                                                                                        A
-                                                                                        unique
-                                                                                        ID
-                                                                                        will
+                                                                                        Enter
+                                                                                        a
+                                                                                        task
+                                                                                        name
+                                                                                        to
+                                                                                        replace
+                                                                                        the
+                                                                                        auto-generated
+                                                                                        GUID.
+                                                                                        (This
+                                                                                        value
+                                                                                        must
                                                                                         be
-                                                                                        generated
-                                                                                        automatically,
-                                                                                        or
-                                                                                        you
-                                                                                        can
-                                                                                        assign
-                                                                                        your
-                                                                                        own.
+                                                                                        unique.)
                                                                                     </b>
                                                                                 </b-col>
                                                                             </b-row>
@@ -1268,8 +1267,7 @@
                                                                 "
                                                                 class="mb-4"
                                                             >
-                                                                <b-row
-                                                                >
+                                                                <b-row>
                                                                     <b-col
                                                                         md="auto"
                                                                     >
@@ -1297,7 +1295,7 @@
                                                                     <b-col>
                                                                         <b-row>
                                                                             <b-col>
-                                                                                <h4
+                                                                                <h5
                                                                                     :class="
                                                                                         profile.darkMode
                                                                                             ? 'text-white'
@@ -1308,8 +1306,7 @@
                                                                                         class="fas fa-stopwatch fa-fw"
                                                                                     ></i>
                                                                                     Time
-                                                                                    Limit
-                                                                                </h4>
+                                                                                </h5>
                                                                             </b-col>
                                                                             <b-col
                                                                                 md="auto"
@@ -1425,180 +1422,6 @@
                                                                                     ></b-col
                                                                                 ></b-row
                                                                             >
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    tags.length >
-                                                                    0
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row
-                                                                    align-v="center"
-                                                                >
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.tags
-                                                                            ><i
-                                                                                v-if="
-                                                                                    tagsVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row>
-                                                                            <b-col>
-                                                                                <h4
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-tags fa-fw"
-                                                                                    ></i>
-                                                                                    Tags
-                                                                                </h4>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    {{
-                                                                                        tags.length
-                                                                                    }}
-                                                                                    <i
-                                                                                        v-if="
-                                                                                            tags.length >
-                                                                                            0
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw"
-                                                                                    ></i></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="tags"
-                                                                            v-model="
-                                                                                tagsVisible
-                                                                            "
-                                                                        >
-                                                                            <b-row
-                                                                                ><b-col
-                                                                                    ><b
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                    >
-                                                                                        Attach
-                                                                                        tags
-                                                                                        to
-                                                                                        this
-                                                                                        task.
-                                                                                    </b>
-                                                                                </b-col>
-                                                                            </b-row>
-                                                                            <b-row
-                                                                                class="mt-2"
-                                                                            >
-                                                                                <b-col>
-                                                                                    <multiselect
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'input-dark'
-                                                                                                : 'input-light'
-                                                                                        "
-                                                                                        style="
-                                                                                            z-index: 100;
-                                                                                        "
-                                                                                        v-model="
-                                                                                            tags
-                                                                                        "
-                                                                                        mode="tags"
-                                                                                        :multiple="
-                                                                                            true
-                                                                                        "
-                                                                                        :close-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :clear-on-select="
-                                                                                            false
-                                                                                        "
-                                                                                        :preserve-search="
-                                                                                            true
-                                                                                        "
-                                                                                        :options="
-                                                                                            tagOptions
-                                                                                        "
-                                                                                        :taggable="
-                                                                                            true
-                                                                                        "
-                                                                                        placeholder="Add tags..."
-                                                                                        :createTag="
-                                                                                            true
-                                                                                        "
-                                                                                        :appendNewTag="
-                                                                                            true
-                                                                                        "
-                                                                                        :searchable="
-                                                                                            true
-                                                                                        "
-                                                                                        @tag="
-                                                                                            addTag
-                                                                                        "
-                                                                                    >
-                                                                                    </multiselect>
-                                                                                </b-col>
-                                                                            </b-row>
                                                                         </b-collapse>
                                                                     </b-col>
                                                                 </b-row>
@@ -1733,10 +1556,10 @@
                                                                                             ></i></h5
                                                                                     ></b-col>
                                                                                 </b-row>
-                                                                              </b-col>
+                                                                            </b-col>
                                                                         </b-row>
-                                                                      <b-row>
-                                                                        <b-col>
+                                                                        <b-row>
+                                                                            <b-col>
                                                                                 <b-collapse
                                                                                     id="input"
                                                                                     v-model="
@@ -2029,7 +1852,7 @@
                                                                                         ></i>
                                                                                     </b-alert>
                                                                                 </b-collapse>
-                                                                        </b-col>
+                                                                            </b-col>
                                                                         </b-row>
                                                                     </b-col>
                                                                 </b-row>
@@ -2071,8 +1894,7 @@
                                                                 "
                                                                 class="mb-4"
                                                             >
-                                                                <b-row
-                                                                >
+                                                                <b-row>
                                                                     <b-col
                                                                         md="auto"
                                                                     >
@@ -2099,7 +1921,7 @@
                                                                     <b-col>
                                                                         <b-row
                                                                             ><b-col>
-                                                                                <h4
+                                                                                <h5
                                                                                     :class="
                                                                                         profile.darkMode
                                                                                             ? 'text-white'
@@ -2116,8 +1938,8 @@
                                                                                         v-else
                                                                                         class="fas fa-upload fa-fw text-dark"
                                                                                     ></i>
-                                                                                    Output
-                                                                                </h4>
+                                                                                    Target
+                                                                                </h5>
                                                                             </b-col>
                                                                             <b-col
                                                                                 md="auto"
@@ -2353,6 +2175,898 @@
                                                                                                 .names
                                                                                         "
                                                                                     ></multiselect>
+                                                                                </b-col>
+                                                                            </b-row>
+                                                                        </b-collapse>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-card>
+                                                            <b-card
+                                                                style="
+                                                                    min-width: 60rem;
+                                                                "
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :border-variant="
+                                                                    selectedAgent.name !==
+                                                                    ''
+                                                                        ? 'success'
+                                                                        : 'secondary'
+                                                                "
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                    >
+                                                                        <b-button
+                                                                            size="sm"
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'dark'
+                                                                                    : 'outline-dark'
+                                                                            "
+                                                                            v-b-toggle.agent
+                                                                            ><i
+                                                                                v-if="
+                                                                                    agentVisible
+                                                                                "
+                                                                                class="fas fa-minus"
+                                                                            ></i
+                                                                            ><i
+                                                                                v-else
+                                                                                class="fas fa-plus"
+                                                                            ></i
+                                                                        ></b-button>
+                                                                    </b-col>
+                                                                    <b-col>
+                                                                        <b-row
+                                                                            ><b-col>
+                                                                                <h5
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    <i
+                                                                                        class="fas fa-server fa-fw"
+                                                                                    ></i>
+                                                                                    Agent
+                                                                                </h5>
+                                                                            </b-col>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                                ><h5
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    {{
+                                                                                        selectedAgent.name !==
+                                                                                        ''
+                                                                                            ? selectedAgent.name
+                                                                                            : ''
+                                                                                    }}<i
+                                                                                        v-if="
+                                                                                            selectedAgent.name !==
+                                                                                            ''
+                                                                                        "
+                                                                                        class="fas fa-check text-success fa-fw ml-1"
+                                                                                    ></i>
+                                                                                    <span
+                                                                                        v-else
+                                                                                        ><i
+                                                                                            class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                        ></i>
+                                                                                    </span></h5
+                                                                            ></b-col>
+                                                                        </b-row>
+                                                                        <b-collapse
+                                                                            id="agent"
+                                                                            v-model="
+                                                                                agentVisible
+                                                                            "
+                                                                        >
+                                                                            <div>
+                                                                                <b
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    Select
+                                                                                    an
+                                                                                    agent
+                                                                                    to
+                                                                                    submit
+                                                                                    this
+                                                                                    task
+                                                                                    to.
+                                                                                </b>
+                                                                                <b-tabs
+                                                                                    class="mt-2"
+                                                                                    nav-class="bg-transparent"
+                                                                                    active-nav-item-class="bg-transparent text-dark"
+                                                                                    pills
+                                                                                    v-model="
+                                                                                        activeAgentTab
+                                                                                    "
+                                                                                >
+                                                                                    <b-tab
+                                                                                        :title-link-class="
+                                                                                            profile.darkMode
+                                                                                                ? 'text-white'
+                                                                                                : 'text-dark'
+                                                                                        "
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                : 'theme-light m-0 p-3'
+                                                                                        "
+                                                                                    >
+                                                                                        <template
+                                                                                            #title
+                                                                                        >
+                                                                                            <b-button
+                                                                                                id="your-agents"
+                                                                                                :variant="
+                                                                                                    activeAgentTab ===
+                                                                                                    0
+                                                                                                        ? profile.darkMode
+                                                                                                            ? 'outline-success'
+                                                                                                            : 'success'
+                                                                                                        : profile.darkMode
+                                                                                                        ? 'outline-light'
+                                                                                                        : 'white'
+                                                                                                "
+                                                                                                title="Your agents"
+                                                                                            >
+                                                                                                Yours
+                                                                                            </b-button>
+                                                                                            <b-popover
+                                                                                                :show.sync="
+                                                                                                    profile.hints
+                                                                                                "
+                                                                                                triggers="manual"
+                                                                                                placement="bottomleft"
+                                                                                                target="your-agents"
+                                                                                                title="Your agents"
+                                                                                                >Click
+                                                                                                here
+                                                                                                to
+                                                                                                browse
+                                                                                                your
+                                                                                                own
+                                                                                                agents..</b-popover
+                                                                                            ></template
+                                                                                        >
+                                                                                        <b-row
+                                                                                            align-h="center"
+                                                                                            v-if="
+                                                                                                personalAgentsLoading
+                                                                                            "
+                                                                                        >
+                                                                                            <b-spinner
+                                                                                                type="grow"
+                                                                                                label="Loading..."
+                                                                                                variant="secondary"
+                                                                                            ></b-spinner>
+                                                                                        </b-row>
+                                                                                        <b-row
+                                                                                            v-else-if="
+                                                                                                validPersonalAgents.length ===
+                                                                                                0
+                                                                                            "
+                                                                                        >
+                                                                                            <b-col>
+                                                                                                None
+                                                                                                to
+                                                                                                show.
+                                                                                            </b-col>
+                                                                                        </b-row>
+                                                                                        <div
+                                                                                            v-else
+                                                                                        >
+                                                                                            <b-row
+                                                                                                class="text-right"
+                                                                                                v-for="agent in validPersonalAgents"
+                                                                                                v-bind:key="
+                                                                                                    agent.name
+                                                                                                "
+                                                                                            >
+                                                                                                <b-col
+                                                                                                    md="auto"
+                                                                                                    ><b-button
+                                                                                                        size="md"
+                                                                                                        class="text-left pt-2"
+                                                                                                        @click="
+                                                                                                            agentSelected(
+                                                                                                                agent
+                                                                                                            )
+                                                                                                        "
+                                                                                                        :variant="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'dark'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        :disabled="
+                                                                                                            agentUnsupported(
+                                                                                                                agent
+                                                                                                            ) ||
+                                                                                                            agent.disabled
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            agent.name
+                                                                                                        }}</b-button
+                                                                                                    >
+
+                                                                                                    <i
+                                                                                                        v-if="
+                                                                                                            agent.is_healthy
+                                                                                                        "
+                                                                                                        title="Healthy"
+                                                                                                        class="fas fa-heartbeat text-success fa-fw"
+                                                                                                    ></i
+                                                                                                    ><i
+                                                                                                        v-else
+                                                                                                        title="Unhealthy"
+                                                                                                        class="fas fa-heart-broken text-danger fa-fw"
+                                                                                                    ></i
+                                                                                                    ><i
+                                                                                                        v-if="
+                                                                                                            agent.disabled
+                                                                                                        "
+                                                                                                        title="Disabled"
+                                                                                                        class="fas fa-exclamation-circle text-secondary fa-fw"
+                                                                                                    ></i
+                                                                                                ></b-col>
+                                                                                                <b-col
+                                                                                                    align-self="end"
+                                                                                                    class="mb-2"
+                                                                                                >
+                                                                                                    <small
+                                                                                                        >{{
+                                                                                                            agent.max_cores
+                                                                                                        }}
+                                                                                                        cores,
+                                                                                                        {{
+                                                                                                            agent.max_processes
+                                                                                                        }}
+                                                                                                        processes,
+                                                                                                        <span
+                                                                                                            v-if="
+                                                                                                                getWorkflow
+                                                                                                                    .config
+                                                                                                                    .jobqueue !==
+                                                                                                                    undefined &&
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >=
+                                                                                                                    parseInt(
+                                                                                                                        getWorkflow
+                                                                                                                            .config
+                                                                                                                            .jobqueue
+                                                                                                                            .memory
+                                                                                                                    ) &&
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >
+                                                                                                                    0
+                                                                                                            "
+                                                                                                            >{{
+                                                                                                                agent.max_mem
+                                                                                                            }}
+                                                                                                            GB
+                                                                                                            memory</span
+                                                                                                        >
+                                                                                                        <span
+                                                                                                            v-else-if="
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >
+                                                                                                                0
+                                                                                                            "
+                                                                                                            class="text-danger"
+                                                                                                            >{{
+                                                                                                                agent.max_mem
+                                                                                                            }}
+                                                                                                            GB
+                                                                                                            memory</span
+                                                                                                        >
+                                                                                                        <span
+                                                                                                            v-else-if="
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) ===
+                                                                                                                -1
+                                                                                                            "
+                                                                                                            >virtual
+                                                                                                            memory</span
+                                                                                                        ><span
+                                                                                                            v-if="
+                                                                                                                agent.gpu
+                                                                                                            "
+                                                                                                        >
+                                                                                                            ,
+                                                                                                            GPU
+                                                                                                        </span>
+                                                                                                    </small></b-col
+                                                                                                >
+                                                                                            </b-row>
+                                                                                        </div>
+                                                                                    </b-tab>
+                                                                                    <b-tab
+                                                                                        :title-link-class="
+                                                                                            profile.darkMode
+                                                                                                ? 'text-white'
+                                                                                                : 'text-dark'
+                                                                                        "
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                : 'theme-light m-0 p-3'
+                                                                                        "
+                                                                                    >
+                                                                                        <template
+                                                                                            #title
+                                                                                        >
+                                                                                            <b-button
+                                                                                                id="guest-agents"
+                                                                                                :variant="
+                                                                                                    activeAgentTab ===
+                                                                                                    1
+                                                                                                        ? profile.darkMode
+                                                                                                            ? 'outline-success'
+                                                                                                            : 'success'
+                                                                                                        : profile.darkMode
+                                                                                                        ? 'outline-light'
+                                                                                                        : 'white'
+                                                                                                "
+                                                                                                title="Guest agents"
+                                                                                            >
+                                                                                                Guest
+                                                                                            </b-button>
+                                                                                            <b-popover
+                                                                                                :show.sync="
+                                                                                                    profile.hints
+                                                                                                "
+                                                                                                triggers="manual"
+                                                                                                placement="top"
+                                                                                                target="guest-agents"
+                                                                                                title="Guest Agents"
+                                                                                                >Click
+                                                                                                here
+                                                                                                to
+                                                                                                browse
+                                                                                                agents
+                                                                                                you've
+                                                                                                been
+                                                                                                granted
+                                                                                                guest
+                                                                                                access
+                                                                                                to.</b-popover
+                                                                                            ></template
+                                                                                        >
+                                                                                        <b-row
+                                                                                            align-h="center"
+                                                                                            v-if="
+                                                                                                personalAgentsLoading
+                                                                                            "
+                                                                                        >
+                                                                                            <b-spinner
+                                                                                                type="grow"
+                                                                                                label="Loading..."
+                                                                                                variant="secondary"
+                                                                                            ></b-spinner>
+                                                                                        </b-row>
+                                                                                        <b-row
+                                                                                            v-else-if="
+                                                                                                validGuestAgents.length ===
+                                                                                                0
+                                                                                            "
+                                                                                        >
+                                                                                            <b-col>
+                                                                                                None
+                                                                                                to
+                                                                                                show.
+                                                                                            </b-col>
+                                                                                        </b-row>
+                                                                                        <div
+                                                                                            v-else
+                                                                                        >
+                                                                                            <b-row
+                                                                                                class="text-right"
+                                                                                                v-for="agent in validGuestAgents"
+                                                                                                v-bind:key="
+                                                                                                    agent.name
+                                                                                                "
+                                                                                            >
+                                                                                                <b-col
+                                                                                                    md="auto"
+                                                                                                    ><b-button
+                                                                                                        size="md"
+                                                                                                        class="text-left pt-2"
+                                                                                                        @click="
+                                                                                                            agentSelected(
+                                                                                                                agent
+                                                                                                            )
+                                                                                                        "
+                                                                                                        :variant="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'dark'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        :disabled="
+                                                                                                            agentUnsupported(
+                                                                                                                agent
+                                                                                                            ) ||
+                                                                                                            agent.disabled
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            agent.name
+                                                                                                        }}</b-button
+                                                                                                    ></b-col
+                                                                                                >
+                                                                                                <b-col
+                                                                                                    align-self="end"
+                                                                                                >
+                                                                                                    <small
+                                                                                                        >{{
+                                                                                                            agent.max_cores
+                                                                                                        }}
+                                                                                                        core(s),
+                                                                                                        {{
+                                                                                                            agent.max_processes
+                                                                                                        }}
+                                                                                                        process(es),
+                                                                                                        <span
+                                                                                                            v-if="
+                                                                                                                getWorkflow
+                                                                                                                    .config
+                                                                                                                    .jobqueue !==
+                                                                                                                    undefined &&
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >=
+                                                                                                                    parseInt(
+                                                                                                                        getWorkflow
+                                                                                                                            .config
+                                                                                                                            .jobqueue
+                                                                                                                            .memory
+                                                                                                                    ) &&
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >
+                                                                                                                    0
+                                                                                                            "
+                                                                                                            >{{
+                                                                                                                agent.max_mem
+                                                                                                            }}
+                                                                                                            GB
+                                                                                                            memory</span
+                                                                                                        >
+                                                                                                        <span
+                                                                                                            v-else-if="
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) >
+                                                                                                                0
+                                                                                                            "
+                                                                                                            class="text-danger"
+                                                                                                            >{{
+                                                                                                                agent.max_mem
+                                                                                                            }}
+                                                                                                            GB
+                                                                                                            memory</span
+                                                                                                        >
+                                                                                                        <span
+                                                                                                            v-else-if="
+                                                                                                                parseInt(
+                                                                                                                    agent.max_mem
+                                                                                                                ) ===
+                                                                                                                -1
+                                                                                                            "
+                                                                                                            >virtual
+                                                                                                            memory</span
+                                                                                                        ><span
+                                                                                                            v-if="
+                                                                                                                agent.gpu
+                                                                                                            "
+                                                                                                        >
+                                                                                                            ,
+                                                                                                            GPU
+                                                                                                        </span>
+                                                                                                        <span
+                                                                                                            v-else
+                                                                                                            >,
+                                                                                                            No
+                                                                                                            GPU
+                                                                                                        </span></small
+                                                                                                    ></b-col
+                                                                                                >
+                                                                                            </b-row>
+                                                                                        </div>
+                                                                                    </b-tab>
+                                                                                    <b-tab
+                                                                                        :title-link-class="
+                                                                                            profile.darkMode
+                                                                                                ? 'text-white'
+                                                                                                : 'text-dark'
+                                                                                        "
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'theme-dark m-0 p-3'
+                                                                                                : 'theme-light m-0 p-3'
+                                                                                        "
+                                                                                    >
+                                                                                        <template
+                                                                                            #title
+                                                                                        >
+                                                                                            <b-button
+                                                                                                id="public-agents"
+                                                                                                :variant="
+                                                                                                    activeAgentTab ===
+                                                                                                    2
+                                                                                                        ? profile.darkMode
+                                                                                                            ? 'outline-success'
+                                                                                                            : 'success'
+                                                                                                        : profile.darkMode
+                                                                                                        ? 'outline-light'
+                                                                                                        : 'white'
+                                                                                                "
+                                                                                                title="Public agents"
+                                                                                            >
+                                                                                                Public
+                                                                                            </b-button>
+                                                                                            <b-popover
+                                                                                                :show.sync="
+                                                                                                    profile.hints
+                                                                                                "
+                                                                                                triggers="manual"
+                                                                                                placement="right"
+                                                                                                target="public-agents"
+                                                                                                title="Public Agents"
+                                                                                                >Click
+                                                                                                here
+                                                                                                to
+                                                                                                browse
+                                                                                                public
+                                                                                                agents.</b-popover
+                                                                                            ></template
+                                                                                        >
+                                                                                        <b-row
+                                                                                            align-h="center"
+                                                                                            v-if="
+                                                                                                publicAgentsLoading
+                                                                                            "
+                                                                                        >
+                                                                                            <b-spinner
+                                                                                                type="grow"
+                                                                                                label="Loading..."
+                                                                                                variant="secondary"
+                                                                                            ></b-spinner>
+                                                                                        </b-row>
+                                                                                        <b-row
+                                                                                            v-else-if="
+                                                                                                validPublicAgents.length ===
+                                                                                                0
+                                                                                            "
+                                                                                        >
+                                                                                            <b-col>
+                                                                                                None
+                                                                                                to
+                                                                                                show.
+                                                                                            </b-col>
+                                                                                        </b-row>
+                                                                                        <div
+                                                                                            v-else
+                                                                                        >
+                                                                                            <b-row
+                                                                                                class="text-right"
+                                                                                                v-for="agent in validPublicAgents"
+                                                                                                v-bind:key="
+                                                                                                    agent.name
+                                                                                                "
+                                                                                            >
+                                                                                                <b-col
+                                                                                                    md="auto"
+                                                                                                    ><b-button
+                                                                                                        size="md"
+                                                                                                        class="text-left pt-2"
+                                                                                                        @click="
+                                                                                                            agentSelected(
+                                                                                                                agent
+                                                                                                            )
+                                                                                                        "
+                                                                                                        :variant="
+                                                                                                            profile.darkMode
+                                                                                                                ? 'dark'
+                                                                                                                : 'white'
+                                                                                                        "
+                                                                                                        :disabled="
+                                                                                                            agentUnsupported(
+                                                                                                                agent
+                                                                                                            ) ||
+                                                                                                            agent.disabled
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            agent.name
+                                                                                                        }}</b-button
+                                                                                                    ></b-col
+                                                                                                >
+                                                                                                <b-col
+                                                                                                    align-self="end"
+                                                                                                >
+                                                                                                    <small
+                                                                                                        >{{
+                                                                                                            agent.max_cores
+                                                                                                        }}
+                                                                                                        cores,
+                                                                                                        {{
+                                                                                                            agent.max_processes
+                                                                                                        }}
+                                                                                                        processes, </small
+                                                                                                    ><span
+                                                                                                        v-if="
+                                                                                                            getWorkflow
+                                                                                                                .config
+                                                                                                                .jobqueue !==
+                                                                                                                undefined &&
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >=
+                                                                                                                parseInt(
+                                                                                                                    getWorkflow
+                                                                                                                        .config
+                                                                                                                        .jobqueue
+                                                                                                                        .memory
+                                                                                                                ) &&
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >
+                                                                                                                0
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            agent.max_mem
+                                                                                                        }}
+                                                                                                        GB
+                                                                                                        memory</span
+                                                                                                    >
+                                                                                                    <span
+                                                                                                        v-else-if="
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >
+                                                                                                            0
+                                                                                                        "
+                                                                                                        class="text-danger"
+                                                                                                        >{{
+                                                                                                            agent.max_mem
+                                                                                                        }}
+                                                                                                        GB
+                                                                                                        memory</span
+                                                                                                    >
+                                                                                                    <span
+                                                                                                        v-else-if="
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) ===
+                                                                                                            -1
+                                                                                                        "
+                                                                                                        >virtual
+                                                                                                        memory</span
+                                                                                                    ><span
+                                                                                                        v-if="
+                                                                                                            agent.gpu
+                                                                                                        "
+                                                                                                    >
+                                                                                                        ,
+                                                                                                        GPU
+                                                                                                    </span>
+                                                                                                    <span
+                                                                                                        v-else
+                                                                                                        >,
+                                                                                                        No
+                                                                                                        GPU
+                                                                                                    </span></b-col
+                                                                                                >
+                                                                                            </b-row>
+                                                                                        </div>
+                                                                                    </b-tab>
+                                                                                </b-tabs>
+                                                                            </div>
+                                                                        </b-collapse>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-card>
+                                                            <b-card
+                                                                style="
+                                                                    min-width: 60rem;
+                                                                "
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :border-variant="
+                                                                    tags.length >
+                                                                    0
+                                                                        ? 'success'
+                                                                        : 'secondary'
+                                                                "
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                    >
+                                                                        <b-button
+                                                                            size="sm"
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'dark'
+                                                                                    : 'outline-dark'
+                                                                            "
+                                                                            v-b-toggle.tags
+                                                                            ><i
+                                                                                v-if="
+                                                                                    tagsVisible
+                                                                                "
+                                                                                class="fas fa-minus"
+                                                                            ></i
+                                                                            ><i
+                                                                                v-else
+                                                                                class="fas fa-plus"
+                                                                            ></i
+                                                                        ></b-button>
+                                                                    </b-col>
+                                                                    <b-col>
+                                                                        <b-row>
+                                                                            <b-col>
+                                                                                <h5
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    <i
+                                                                                        class="fas fa-tags fa-fw"
+                                                                                    ></i>
+                                                                                    Tags
+                                                                                </h5>
+                                                                            </b-col>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                                ><h5
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-white'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    {{
+                                                                                        tags.length
+                                                                                    }}
+                                                                                    <i
+                                                                                        v-if="
+                                                                                            tags.length >
+                                                                                            0
+                                                                                        "
+                                                                                        class="fas fa-check text-success fa-fw"
+                                                                                    ></i></h5
+                                                                            ></b-col>
+                                                                        </b-row>
+                                                                        <b-collapse
+                                                                            id="tags"
+                                                                            v-model="
+                                                                                tagsVisible
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                ><b-col
+                                                                                    ><b
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'text-white'
+                                                                                                : 'text-dark'
+                                                                                        "
+                                                                                    >
+                                                                                        Attach
+                                                                                        tags
+                                                                                        to
+                                                                                        this
+                                                                                        task.
+                                                                                    </b>
+                                                                                </b-col>
+                                                                            </b-row>
+                                                                            <b-row
+                                                                                class="mt-2"
+                                                                            >
+                                                                                <b-col>
+                                                                                    <multiselect
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'input-dark'
+                                                                                                : 'input-light'
+                                                                                        "
+                                                                                        style="
+                                                                                            z-index: 100;
+                                                                                        "
+                                                                                        v-model="
+                                                                                            tags
+                                                                                        "
+                                                                                        mode="tags"
+                                                                                        :multiple="
+                                                                                            true
+                                                                                        "
+                                                                                        :close-on-select="
+                                                                                            false
+                                                                                        "
+                                                                                        :clear-on-select="
+                                                                                            false
+                                                                                        "
+                                                                                        :preserve-search="
+                                                                                            true
+                                                                                        "
+                                                                                        :options="
+                                                                                            tagOptions
+                                                                                        "
+                                                                                        :taggable="
+                                                                                            true
+                                                                                        "
+                                                                                        placeholder="Add tags..."
+                                                                                        :createTag="
+                                                                                            true
+                                                                                        "
+                                                                                        :appendNewTag="
+                                                                                            true
+                                                                                        "
+                                                                                        :searchable="
+                                                                                            true
+                                                                                        "
+                                                                                        @tag="
+                                                                                            addTag
+                                                                                        "
+                                                                                    >
+                                                                                    </multiselect>
                                                                                 </b-col>
                                                                             </b-row>
                                                                         </b-collapse>
@@ -2664,8 +3378,7 @@
                                                                         : 'dark'
                                                                 "
                                                                 class="mb-4"
-                                                                ><b-row
-                                                                >
+                                                                ><b-row>
                                                                     <b-col
                                                                         md="auto"
                                                                     >
@@ -2692,7 +3405,7 @@
                                                                     <b-col>
                                                                         <b-row
                                                                             ><b-col>
-                                                                                <h4
+                                                                                <h5
                                                                                     :class="
                                                                                         profile.darkMode
                                                                                             ? 'text-white'
@@ -2711,7 +3424,7 @@
                                                                                         "
                                                                                     ></b-img>
                                                                                     Project
-                                                                                </h4> </b-col
+                                                                                </h5> </b-col
                                                                             ><b-col
                                                                                 md="auto"
                                                                                 ><h5
@@ -2726,7 +3439,10 @@
                                                                                             selectedProject !==
                                                                                             null
                                                                                         "
-                                                                                        >{{
+                                                                                        ><small
+                                                                                            >Project</small
+                                                                                        >
+                                                                                        {{
                                                                                             selectedProject.title
                                                                                         }}</span
                                                                                     >
@@ -2736,6 +3452,9 @@
                                                                                             null
                                                                                         "
                                                                                         >,
+                                                                                        <small
+                                                                                            >Study</small
+                                                                                        >
                                                                                         {{
                                                                                             selectedStudy.title
                                                                                         }}</span
@@ -2769,16 +3488,15 @@
                                                                                                 : 'text-dark'
                                                                                         "
                                                                                     >
-                                                                                        Select
-                                                                                        the
-                                                                                        MIAPPE
-                                                                                        project
-                                                                                        and
-                                                                                        study
+                                                                                        Associate
                                                                                         this
                                                                                         task
-                                                                                        corresponds
-                                                                                        to.
+                                                                                        with
+                                                                                        a
+                                                                                        MIAPPE
+                                                                                        project
+                                                                                        or
+                                                                                        study.
                                                                                     </b>
                                                                                 </b-col>
                                                                             </b-row>
@@ -2901,733 +3619,6 @@
                                                                                                     class="fas fa-check fa-fw ml-1 text-success"
                                                                                                 ></i></b-button></b-col></b-row></b-col
                                                                             ></b-row>
-                                                                        </b-collapse>
-                                                                    </b-col>
-                                                                </b-row>
-                                                            </b-card>
-                                                            <b-card
-                                                                style="
-                                                                    min-width: 60rem;
-                                                                "
-                                                                :bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :header-bg-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :border-variant="
-                                                                    selectedAgent.name !==
-                                                                    ''
-                                                                        ? 'success'
-                                                                        : 'secondary'
-                                                                "
-                                                                :header-border-variant="
-                                                                    profile.darkMode
-                                                                        ? 'dark'
-                                                                        : 'white'
-                                                                "
-                                                                :text-variant="
-                                                                    profile.darkMode
-                                                                        ? 'white'
-                                                                        : 'dark'
-                                                                "
-                                                                class="mb-4"
-                                                            >
-                                                                <b-row
-                                                                >
-                                                                    <b-col
-                                                                        md="auto"
-                                                                    >
-                                                                        <b-button
-                                                                            size="sm"
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'dark'
-                                                                                    : 'outline-dark'
-                                                                            "
-                                                                            v-b-toggle.agent
-                                                                            ><i
-                                                                                v-if="
-                                                                                    agentVisible
-                                                                                "
-                                                                                class="fas fa-minus"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
-                                                                                class="fas fa-plus"
-                                                                            ></i
-                                                                        ></b-button>
-                                                                    </b-col>
-                                                                    <b-col>
-                                                                        <b-row
-                                                                            ><b-col>
-                                                                                <h4
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-server fa-fw"
-                                                                                    ></i>
-                                                                                    Agent
-                                                                                </h4>
-                                                                            </b-col>
-                                                                            <b-col
-                                                                                md="auto"
-                                                                                ><h5
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    {{
-                                                                                        selectedAgent.name !==
-                                                                                        ''
-                                                                                            ? selectedAgent.name
-                                                                                            : ''
-                                                                                    }}<i
-                                                                                        v-if="
-                                                                                            selectedAgent.name !==
-                                                                                            ''
-                                                                                        "
-                                                                                        class="fas fa-check text-success fa-fw ml-1"
-                                                                                    ></i>
-                                                                                    <span
-                                                                                        v-else
-                                                                                        ><i
-                                                                                            class="fas fa-exclamation text-danger fa-fw ml-1"
-                                                                                        ></i>
-                                                                                    </span></h5
-                                                                            ></b-col>
-                                                                        </b-row>
-                                                                        <b-collapse
-                                                                            id="agent"
-                                                                            v-model="
-                                                                                agentVisible
-                                                                            "
-                                                                        >
-                                                                            <div>
-                                                                                <b
-                                                                                    :class="
-                                                                                        profile.darkMode
-                                                                                            ? 'text-white'
-                                                                                            : 'text-dark'
-                                                                                    "
-                                                                                >
-                                                                                    Select
-                                                                                    an
-                                                                                    agent
-                                                                                    to
-                                                                                    submit
-                                                                                    this
-                                                                                    task
-                                                                                    to.
-                                                                                </b>
-                                                                                <b-tabs
-                                                                                    class="mt-2"
-                                                                                    nav-class="bg-transparent"
-                                                                                    active-nav-item-class="bg-transparent text-dark"
-                                                                                    pills
-                                                                                    v-model="
-                                                                                        activeAgentTab
-                                                                                    "
-                                                                                >
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="your-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    0
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Your agents"
-                                                                                            >
-                                                                                                Yours
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="bottomleft"
-                                                                                                target="your-agents"
-                                                                                                title="Your agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                your
-                                                                                                own
-                                                                                                agents..</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                personalAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validPersonalAgents.length ===
-                                                                                                0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validPersonalAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    >
-
-                                                                                                    <i
-                                                                                                        v-if="
-                                                                                                            agent.is_healthy
-                                                                                                        "
-                                                                                                        title="Healthy"
-                                                                                                        class="fas fa-heartbeat text-success fa-fw"
-                                                                                                    ></i
-                                                                                                    ><i
-                                                                                                        v-else
-                                                                                                        title="Unhealthy"
-                                                                                                        class="fas fa-heart-broken text-danger fa-fw"
-                                                                                                    ></i
-                                                                                                    ><i
-                                                                                                        v-if="
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        title="Disabled"
-                                                                                                        class="fas fa-exclamation-circle text-secondary fa-fw"
-                                                                                                    ></i
-                                                                                                ></b-col>
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                    class="mb-2"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        cores,
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        processes,
-                                                                                                        <span
-                                                                                                            v-if="
-                                                                                                                getWorkflow
-                                                                                                                    .config
-                                                                                                                    .jobqueue !==
-                                                                                                                    undefined &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >=
-                                                                                                                    parseInt(
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue
-                                                                                                                            .memory
-                                                                                                                    ) &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                    0
-                                                                                                            "
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                0
-                                                                                                            "
-                                                                                                            class="text-danger"
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) ===
-                                                                                                                -1
-                                                                                                            "
-                                                                                                            >virtual
-                                                                                                            memory</span
-                                                                                                        ><span
-                                                                                                            v-if="
-                                                                                                                agent.gpu
-                                                                                                            "
-                                                                                                        >
-                                                                                                            ,
-                                                                                                            GPU
-                                                                                                        </span>
-                                                                                                        <span
-                                                                                                            v-else
-                                                                                                            >,
-                                                                                                            No
-                                                                                                            GPU
-                                                                                                        </span></small
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="guest-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    1
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Guest agents"
-                                                                                            >
-                                                                                                Guest
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="top"
-                                                                                                target="guest-agents"
-                                                                                                title="Guest Agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                agents
-                                                                                                you've
-                                                                                                been
-                                                                                                granted
-                                                                                                guest
-                                                                                                access
-                                                                                                to.</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                personalAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validGuestAgents.length ===
-                                                                                                0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validGuestAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        cores,
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        processes,
-                                                                                                        <span
-                                                                                                            v-if="
-                                                                                                                getWorkflow
-                                                                                                                    .config
-                                                                                                                    .jobqueue !==
-                                                                                                                    undefined &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >=
-                                                                                                                    parseInt(
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue
-                                                                                                                            .memory
-                                                                                                                    ) &&
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                    0
-                                                                                                            "
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) >
-                                                                                                                0
-                                                                                                            "
-                                                                                                            class="text-danger"
-                                                                                                            >{{
-                                                                                                                agent.max_mem
-                                                                                                            }}
-                                                                                                            GB
-                                                                                                            memory</span
-                                                                                                        >
-                                                                                                        <span
-                                                                                                            v-else-if="
-                                                                                                                parseInt(
-                                                                                                                    agent.max_mem
-                                                                                                                ) ===
-                                                                                                                -1
-                                                                                                            "
-                                                                                                            >virtual
-                                                                                                            memory</span
-                                                                                                        ><span
-                                                                                                            v-if="
-                                                                                                                agent.gpu
-                                                                                                            "
-                                                                                                        >
-                                                                                                            ,
-                                                                                                            GPU
-                                                                                                        </span>
-                                                                                                        <span
-                                                                                                            v-else
-                                                                                                            >,
-                                                                                                            No
-                                                                                                            GPU
-                                                                                                        </span></small
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                    <b-tab
-                                                                                        :title-link-class="
-                                                                                            profile.darkMode
-                                                                                                ? 'text-white'
-                                                                                                : 'text-dark'
-                                                                                        "
-                                                                                        :class="
-                                                                                            profile.darkMode
-                                                                                                ? 'theme-dark m-0 p-3'
-                                                                                                : 'theme-light m-0 p-3'
-                                                                                        "
-                                                                                    >
-                                                                                        <template
-                                                                                            #title
-                                                                                        >
-                                                                                            <b-button
-                                                                                                id="public-agents"
-                                                                                                :variant="
-                                                                                                    activeAgentTab ===
-                                                                                                    2
-                                                                                                        ? profile.darkMode
-                                                                                                            ? 'outline-success'
-                                                                                                            : 'success'
-                                                                                                        : profile.darkMode
-                                                                                                        ? 'outline-light'
-                                                                                                        : 'white'
-                                                                                                "
-                                                                                                title="Public agents"
-                                                                                            >
-                                                                                                Public
-                                                                                            </b-button>
-                                                                                            <b-popover
-                                                                                                :show.sync="
-                                                                                                    profile.hints
-                                                                                                "
-                                                                                                triggers="manual"
-                                                                                                placement="right"
-                                                                                                target="public-agents"
-                                                                                                title="Public Agents"
-                                                                                                >Click
-                                                                                                here
-                                                                                                to
-                                                                                                browse
-                                                                                                public
-                                                                                                agents.</b-popover
-                                                                                            ></template
-                                                                                        >
-                                                                                        <b-row
-                                                                                            align-h="center"
-                                                                                            v-if="
-                                                                                                publicAgentsLoading
-                                                                                            "
-                                                                                        >
-                                                                                            <b-spinner
-                                                                                                type="grow"
-                                                                                                label="Loading..."
-                                                                                                variant="secondary"
-                                                                                            ></b-spinner>
-                                                                                        </b-row>
-                                                                                        <b-row
-                                                                                            v-else-if="
-                                                                                                validPublicAgents.length ===
-                                                                                                0
-                                                                                            "
-                                                                                        >
-                                                                                            <b-col>
-                                                                                                None
-                                                                                                to
-                                                                                                show.
-                                                                                            </b-col>
-                                                                                        </b-row>
-                                                                                        <div
-                                                                                            v-else
-                                                                                        >
-                                                                                            <b-row
-                                                                                                class="text-right"
-                                                                                                v-for="agent in validPublicAgents"
-                                                                                                v-bind:key="
-                                                                                                    agent.name
-                                                                                                "
-                                                                                            >
-                                                                                                <b-col
-                                                                                                    md="auto"
-                                                                                                    ><b-button
-                                                                                                        size="md"
-                                                                                                        class="text-left pt-2"
-                                                                                                        @click="
-                                                                                                            agentSelected(
-                                                                                                                agent
-                                                                                                            )
-                                                                                                        "
-                                                                                                        :variant="
-                                                                                                            profile.darkMode
-                                                                                                                ? 'dark'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        :disabled="
-                                                                                                            agentUnsupported(
-                                                                                                                agent
-                                                                                                            ) ||
-                                                                                                            agent.disabled
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.name
-                                                                                                        }}</b-button
-                                                                                                    ></b-col
-                                                                                                >
-                                                                                                <b-col
-                                                                                                    align-self="end"
-                                                                                                >
-                                                                                                    <small
-                                                                                                        >{{
-                                                                                                            agent.max_cores
-                                                                                                        }}
-                                                                                                        cores,
-                                                                                                        {{
-                                                                                                            agent.max_processes
-                                                                                                        }}
-                                                                                                        processes, </small
-                                                                                                    ><span
-                                                                                                        v-if="
-                                                                                                            getWorkflow
-                                                                                                                .config
-                                                                                                                .jobqueue !==
-                                                                                                                undefined &&
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >=
-                                                                                                                parseInt(
-                                                                                                                    getWorkflow
-                                                                                                                        .config
-                                                                                                                        .jobqueue
-                                                                                                                        .memory
-                                                                                                                ) &&
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >
-                                                                                                                0
-                                                                                                        "
-                                                                                                        >{{
-                                                                                                            agent.max_mem
-                                                                                                        }}
-                                                                                                        GB
-                                                                                                        memory</span
-                                                                                                    >
-                                                                                                    <span
-                                                                                                        v-else-if="
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) >
-                                                                                                            0
-                                                                                                        "
-                                                                                                        class="text-danger"
-                                                                                                        >{{
-                                                                                                            agent.max_mem
-                                                                                                        }}
-                                                                                                        GB
-                                                                                                        memory</span
-                                                                                                    >
-                                                                                                    <span
-                                                                                                        v-else-if="
-                                                                                                            parseInt(
-                                                                                                                agent.max_mem
-                                                                                                            ) ===
-                                                                                                            -1
-                                                                                                        "
-                                                                                                        >virtual
-                                                                                                        memory</span
-                                                                                                    ><span
-                                                                                                        v-if="
-                                                                                                            agent.gpu
-                                                                                                        "
-                                                                                                    >
-                                                                                                        ,
-                                                                                                        GPU
-                                                                                                    </span>
-                                                                                                    <span
-                                                                                                        v-else
-                                                                                                        >,
-                                                                                                        No
-                                                                                                        GPU
-                                                                                                    </span></b-col
-                                                                                                >
-                                                                                            </b-row>
-                                                                                        </div>
-                                                                                    </b-tab>
-                                                                                </b-tabs>
-                                                                            </div>
                                                                         </b-collapse>
                                                                     </b-col>
                                                                 </b-row>
@@ -4332,8 +4323,11 @@ export default {
             (this.selectedInput === null || !this.inputValid)
         )
             this.inputVisible = true;
+
         if (this.selectedOutput === null || !this.outputValid)
             this.outputVisible = true;
+
+        if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
         setTimeLimitUnits(units) {

@@ -54,6 +54,8 @@ from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig()
+logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
 # users
 
@@ -1052,11 +1054,11 @@ def compose_task_singularity_command(
     for parameter in parameters:
         key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
-        print(f"Replacing '{key}' with '{val}'")
+        logger.debug(f"Replacing '{key}' with '{val}'")
         cmd = cmd.replace(f"${key}", val)
         cmd = f"SINGULARITYENV_{key}={val} " + cmd
 
-    print(f"Using command: '{cmd}'")
+    logger.debug(f"Using command: '{cmd}'")
 
     # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
     if docker_username is not None and docker_password is not None:
@@ -1090,7 +1092,7 @@ def compose_task_pull_command(task: Task, options: PlantITCLIOptions) -> str:
         callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
         command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
-    logger.info(f"Using pull command: {command}")
+    logger.debug(f"Using pull command: {command}")
     return command
 
 
@@ -1120,7 +1122,7 @@ def compose_task_run_commands(task: Task, options: PlantITCLIOptions, inputs: Li
         commands.append(command)
 
     newline = '\n'
-    logger.info(f"Using CLI commands: {newline.join(commands)}")
+    logger.debug(f"Using CLI commands: {newline.join(commands)}")
     return commands
 
 
@@ -1180,7 +1182,7 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
         if 'names' in output['exclude']:
             command = f"{command} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
 
-    logger.info(f"Using zip command: {command}")
+    logger.debug(f"Using zip command: {command}")
     return command
 
 
@@ -1218,13 +1220,13 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
 
         command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
-    logger.info(f"Using push command: {command}")
+    logger.debug(f"Using push command: {command}")
     return command
 
 
 def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: str) -> List[str]:
     with open(template, 'r') as template_file:
-        template_header = [line for line in template_file]
+        template_header = [line.strip() for line in template_file if line != '']
 
     if 'input' in options and options['input'] is not None:
         kind = options['input']['kind']
@@ -1243,16 +1245,14 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
     cli_zip = compose_task_zip_command(task, options)
     cli_push = compose_task_push_command(task, options)
 
-    cmds = template_header + \
+    return template_header + \
            resource_requests + \
            [task.agent.pre_commands] + \
            [cli_pull] + \
            cli_run + \
+           [cli_clean] + \
            [cli_zip] + \
            [cli_push]
-    from pprint import pprint
-    pprint(cmds)
-    return cmds
 
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
@@ -1283,7 +1283,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         if len(hours) == 1: hours = f"0{hours}"
         adjusted_str = f"{hours}:00:00"
 
-        logger.info(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+        logger.debug(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
         async_to_sync(push_task_event)(task)
 
         task.job_requested_walltime = adjusted_str
@@ -1307,7 +1307,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     commands.append("#SBATCH --error=plantit.%j.err")
 
     newline = '\n'
-    logger.info(f"Using resource requests: {newline.join(commands)}")
+    logger.debug(f"Using resource requests: {newline.join(commands)}")
     return commands
 
 
@@ -1402,7 +1402,8 @@ def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
             task_commands = compose_task_run_script(task, options, template_path)
             for line in task_commands:
-                if line != '': task_script.write(line + "\n")
+                if line != '':
+                    task_script.write(line + '\n')
 
         # if the selected agent uses the Launcher, create a parameter sweep script too
         if task.agent.launcher:
