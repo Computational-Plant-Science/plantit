@@ -82,6 +82,9 @@ async def get(request, owner, name, branch):
         github_token=profile.github_token,
         cyverse_token=profile.cyverse_access_token,
         invalidate=bool(invalidate))
+    redis = RedisClient.get()
+    last_config = redis.get(f"workflow_configs/{request.user.username}/{owner}/{name}/{branch}")
+    if last_config is not None: workflow['last_config'] = json.loads(last_config)
 
     return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 

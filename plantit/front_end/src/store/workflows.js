@@ -11,7 +11,6 @@ export const workflows = {
         personalLoading: true,
         org: {},
         orgLoading: true,
-        recentlyRun: {},
     }),
     mutations: {
         setPublic(state, workflows) {
@@ -31,9 +30,6 @@ export const workflows = {
         },
         setOrgLoading(state, loading) {
             state.orgLoading = loading;
-        },
-        setRecentlyRun(state, { name, config }) {
-            state.recentlyRun[name] = config;
         },
         add(state, workflow) {
             state.personal.push(workflow);
@@ -234,9 +230,6 @@ export const workflows = {
                     throw error;
                 });
         },
-        setRecentlyRun({ commit }, workflow) {
-            commit('setRecentlyRun', workflow);
-        },
     },
     getters: {
         workflow: (state) => (owner, name, branch) => {
@@ -299,6 +292,5 @@ export const workflows = {
         orgWorkflows: (state) => state.org,
         orgWorkflowsLoading: (state) => state.orgLoading,
         personalWorkflowsLoading: (state) => state.personalLoading,
-        recentlyRunWorkflows: (state) => state.recentlyRun,
     },
 };

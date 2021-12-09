@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from paramiko.message import Message
 
 from plantit import settings
+from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status, list_task_results, check_task_cyverse_transfer, cleanup_task
 from plantit.ssh import execute_command
@@ -40,6 +41,16 @@ def get_all_or_create(request):
         return JsonResponse({'tasks': [task_to_dict(sub) for sub in tasks]})
     elif request.method == 'POST':
         if workflow['type'] == 'Now':
+            repo_owner = workflow['repo']['owner']['login']
+            repo_name = workflow['repo']['name']
+            repo_branch = workflow['branch']['name']
+
+            redis = RedisClient.get()
+            last_config = workflow.copy()
+            del last_config['auth']
+            last_config['timestamp'] = timezone.now().isoformat()
+            redis.set(f"workflow_configs/{request.user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(last_config))
+
             config = workflow['config']
             branch = workflow['branch']
             task_name = config.get('task_name', None)
@@ -68,7 +79,6 @@ def get_all_or_create(request):
                 priority=1)
 
             return JsonResponse(task_to_dict(task))
-            # return JsonResponse({'tasks': [task_to_dict(t) for t in Task.objects.filter(user=user)]})
 
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':

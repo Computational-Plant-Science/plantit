@@ -132,17 +132,20 @@
                                             ><b-col
                                                 md="auto"
                                                 align-self="center"
-                                                class="m-0">
+                                                class="m-0"
+                                            >
                                                 <b-badge
                                                     class="mr-1"
                                                     :variant="
-                                                        getWorkflow.config.public
+                                                        getWorkflow.config
+                                                            .public
                                                             ? 'success'
                                                             : 'success'
                                                     "
                                                     ><span
                                                         v-if="
-                                                            getWorkflow.config.public
+                                                            getWorkflow.config
+                                                                .public
                                                         "
                                                         ><i
                                                             class="fas fa-lock-open fa-fw"
@@ -976,6 +979,20 @@
                                                         <b-row
                                                             ><b-col
                                                                 ><p
+                                                            :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+
+                                                                >
+                                                                    Last run {{
+                                                                        prettify(getWorkflow
+                                                                            .last_config
+                                                                            .timestamp)
+                                                                    }}
+                                                                </p>
+                                                                <p
                                                                     :class="
                                                                         profile.darkMode
                                                                             ? 'text-light'
@@ -2127,8 +2144,10 @@
                                                                                 : 'white'
                                                                         "
                                                                         :border-variant="
+                                                                            selectedAgent !==
+                                                                                null &&
                                                                             selectedAgent.name !==
-                                                                            ''
+                                                                                ''
                                                                                 ? 'success'
                                                                                 : 'secondary'
                                                                         "
@@ -2194,14 +2213,18 @@
                                                                                             "
                                                                                         >
                                                                                             {{
+                                                                                                selectedAgent !==
+                                                                                                    null &&
                                                                                                 selectedAgent.name !==
-                                                                                                ''
+                                                                                                    ''
                                                                                                     ? selectedAgent.name
                                                                                                     : ''
                                                                                             }}<i
                                                                                                 v-if="
+                                                                                                    selectedAgent !==
+                                                                                                        null &&
                                                                                                     selectedAgent.name !==
-                                                                                                    ''
+                                                                                                        ''
                                                                                                 "
                                                                                                 class="fas fa-check text-success fa-fw ml-1"
                                                                                             ></i>
@@ -4056,6 +4079,7 @@
                 </b-col>
             </b-row>
             <b-modal
+                v-if="this.selectedAgent !== null"
                 id="authenticate"
                 :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
@@ -4206,24 +4230,12 @@ export default {
                     names: [],
                 },
             },
-            selectedAgent: {
-                name: '',
-            },
+            selectedAgent: null,
         };
     },
     async mounted() {
+        await this.loadWorkflow();
         this.populateComponents();
-
-        // datasets should already be loaded
-        // if (
-        //     'input' in this.getWorkflow.config &&
-        //     this.getWorkflow.config['input'] !== undefined
-        // )
-        //     await Promise.all([
-        //         this.$store.dispatch('datasets/loadPersonal'),
-        //         this.$store.dispatch('datasets/loadPublic'),
-        //         this.$store.dispatch('datasets/loadShared')
-        //     ]);
 
         if (
             this.getWorkflow.config.jobqueue !== undefined &&
@@ -4245,17 +4257,6 @@ export default {
         )
             this.outputSelectedPatterns =
                 this.getWorkflow.config.output.include.patterns;
-
-        // TODO refactor persistent workflow configs
-        // if (this.workflowKey in this.recentlyRunWorkflows) {
-        //     let config = this.recentlyRunWorkflows[this.workflowKey];
-        //     if (config.input !== undefined && config.input.from !== undefined)
-        //         this.path = config.input.from;
-        //     this.presetPath(this.path);
-        // }
-        // if (this.defaultPath !== undefined && this.defaultPath !== null) {
-        //     this.path = this.defaultPath;
-        // }
 
         if (
             this.getWorkflow.config.input !== undefined &&
@@ -4350,6 +4351,13 @@ export default {
                     throw error;
                 });
         },
+        async loadWorkflow() {
+            await this.$store.dispatch('workflows/load', {
+                owner: this.$router.currentRoute.params.owner,
+                name: this.$router.currentRoute.params.name,
+                branch: this.$router.currentRoute.params.branch,
+            });
+        },
         async refreshWorkflow() {
             await this.$store.dispatch('workflows/refresh', {
                 owner: this.$router.currentRoute.params.owner,
@@ -4397,19 +4405,6 @@ export default {
                     throw error;
                 });
         },
-        // async getWorkflowReadme() {
-        //     return axios
-        //         .get(
-        //             `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/readme/`
-        //         )
-        //         .then(response => {
-        //             return response.data.readme;
-        //         })
-        //         .catch(error => {
-        //             Sentry.captureException(error);
-        //             throw error;
-        //         });
-        // },
         parseCronTime(time) {
             let cron = cronstrue.toString(time);
             return cron.charAt(0).toLowerCase() + cron.slice(1);
@@ -4521,17 +4516,11 @@ export default {
             }
 
             // if we have pre-configured values for this flow, populate them
-            if (
-                `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}` in
-                this.recentlyRunWorkflows
-            ) {
-                let flowConfig =
-                    this.recentlyRunWorkflows[
-                        `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`
-                    ];
+            if ('last_config' in this.getWorkflow) {
+                let flowConfig = this.getWorkflow['last_config']['config'];
                 this.params =
-                    flowConfig.params !== undefined
-                        ? flowConfig.params
+                    flowConfig.parameters !== undefined
+                        ? flowConfig.parameters
                         : this.params;
                 if (flowConfig.input !== undefined)
                     this.input = flowConfig.input;
@@ -4548,6 +4537,14 @@ export default {
                 this.input.path !== ''
             )
                 this.loadSelectedInput(this.input.path);
+
+            if (
+                this.output !== undefined &&
+                this.output.to !== undefined &&
+                this.output.to !== null &&
+                this.output.to !== ''
+            )
+                this.loadSelectedOutput(this.output.to);
         },
         inputSelected(node) {
             this.input.path = node.path;
@@ -4670,12 +4667,6 @@ export default {
             if (this.getWorkflow.config.logo !== null)
                 config.logo = this.getWorkflow.config.logo;
 
-            // save config
-            this.$store.dispatch('workflows/setRecentlyRun', {
-                name: this.workflowKey,
-                config: config,
-            });
-
             let data = {
                 repo: this.getWorkflow.repo,
                 branch: this.getWorkflow.branch,
@@ -4791,7 +4782,6 @@ export default {
             'workflow',
             'publicWorkflowsLoading',
             'personalWorkflowsLoading',
-            'recentlyRunWorkflows',
         ]),
         ...mapGetters('tasks', [
             'tasks',
