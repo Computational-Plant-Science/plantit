@@ -1182,7 +1182,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     task.save()
 
     if 'jobqueue' not in options: return []
-    gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
+    gpus = task.agent.gpus if ('gpu' in options and options['gpu']) else 0
     jobqueue = options['jobqueue']
     commands = []
 
@@ -1210,9 +1210,9 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         task.job_requested_walltime = adjusted_str
         task.save()
         commands.append(f"#SBATCH --time={adjusted_str}")
-    if gpu: commands.append(f"#SBATCH --gres=gpu:1")
+    if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
     if task.agent.queue is not None and task.agent.queue != '': commands.append(
-        f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}")
+        f"#SBATCH --partition={task.agent.gpu_queue if gpus else task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array:
@@ -1885,7 +1885,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'executor': agent.executor,
         'disabled': agent.disabled,
         'public': agent.public,
-        'gpu': agent.gpu,
+        'gpus': agent.gpus,
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'authentication': agent.authentication,
