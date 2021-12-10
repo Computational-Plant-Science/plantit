@@ -1289,7 +1289,6 @@
                 :create="create"
                 :agents="agents"
                 :search="search"
-                title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="waitForDeletion(child.path)"
                 :key="index"

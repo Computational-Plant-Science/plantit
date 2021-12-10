@@ -979,17 +979,25 @@
                                                         <b-row
                                                             ><b-col
                                                                 ><p
-                                                            :class="
+                                                                    v-if="
+                                                                        getWorkflow.last_config !==
+                                                                            undefined &&
+                                                                        getWorkflow.last_config !==
+                                                                            null
+                                                                    "
+                                                                    :class="
                                                                         profile.darkMode
                                                                             ? 'text-light'
                                                                             : 'text-dark'
                                                                     "
-
                                                                 >
-                                                                    Last run {{
-                                                                        prettify(getWorkflow
-                                                                            .last_config
-                                                                            .timestamp)
+                                                                    Last run
+                                                                    {{
+                                                                        prettify(
+                                                                            getWorkflow
+                                                                                .last_config
+                                                                                .timestamp
+                                                                        )
                                                                     }}
                                                                 </p>
                                                                 <p

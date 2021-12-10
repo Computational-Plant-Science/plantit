@@ -45,8 +45,7 @@
                                 >IT</small
                             >
                         </b>
-                        is a web-based workflow automator for computational
-                        plant science. It was preceded by &mdash; grew out of,
+                        is a science gateway for plant phenotyping. It was preceded by &mdash; grew out of,
                         as it were &mdash;
                         <b-link
                             :class="

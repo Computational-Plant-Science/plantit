@@ -947,31 +947,31 @@ def compose_task_singularity_command(
         bind_mounts: List[BindMount] = None,
         parameters: List[Parameter] = None,
         no_cache: bool = False,
-        gpu: bool = False,
+        gpus: int = 0,
         docker_username: str = None,
         docker_password: str = None,
         index: int = None) -> str:
+
+    # build up the command according to the order:
+    # - (non-secret) env vars
+    # - singularity invocation
+    # - bind mounts
+    # - cache & gpu options
+    #
+    # then prepend
+    # - parameters
+    # - secret env vars
+
     cmd = ''
-
     if env is not None:
-        if len(env) > 0:
-            cmd += ' '.join([f"SINGULARITYENV_{var['key'].upper().replace(' ', '_')}={var['value']}" for var in env])
+        if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}={v['value']}" for v in env])
         cmd += ' '
-
     cmd += f"singularity exec --home {work_dir}"
-
-    if bind_mounts is not None:
-        if len(bind_mounts) > 0:
-            cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-
-    if no_cache:
-        cmd += ' --disable-cache'
-
-    if gpu:
-        cmd += ' --nv'
-
+    if bind_mounts is not None and len(bind_mounts) > 0:
+        cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+    if no_cache: cmd += ' --disable-cache'
+    if gpus: cmd += ' --nv'
     cmd += f" {image} {command}"
-
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
@@ -981,10 +981,7 @@ def compose_task_singularity_command(
         logger.debug(f"Replacing '{key}' with '{val}'")
         cmd = cmd.replace(f"${key}", val)
         cmd = f"SINGULARITYENV_{key}={val} " + cmd
-
-    logger.debug(f"Using command: '{cmd}'")
-
-    # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
+    logger.debug(f"Using command: '{cmd}'") # don't want to reveal secrets so log before prepending secret env vars
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
 
@@ -1236,10 +1233,11 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
 
 
 def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]:
+    lines = []
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
-    gpu = options['gpu'] if 'gpu' in options else False
-    lines = []
+    # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+    gpus = task.agent.gpus if 'gpu' in options and options['gpu'] else 0
 
     if 'input' in options:
         files = list_task_input_files(task, options) if (
@@ -1257,11 +1255,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     env=options['env'],
                     parameters=(options['parameters'] if 'parameters' in options else []) + [
                         Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
-                        Parameter(key='GPU_MODE', value=str(gpu))],
+                        Parameter(key='GPUS', value=str(gpus))],
                     bind_mounts=options['bind_mounts'] if (
                                 'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
-                    gpu=gpu,
+                    gpus=gpus,
                     docker_username=docker_username,
                     docker_password=docker_password,
                     index=i)
@@ -1274,11 +1272,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input')),
-                    Parameter(key='GPU_MODE', value=str(gpu))],
+                    Parameter(key='GPUS', value=str(gpus))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
                                                                                               list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
-                gpu=gpu,
+                gpus=gpus,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -1291,11 +1289,11 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
-                    Parameter(key='GPU_MODE', value=str(gpu))],
+                    Parameter(key='GPUS', value=str(gpus))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
                                                                                               list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
-                gpu=gpu,
+                gpus=gpus,
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -1306,10 +1304,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             command=options['command'],
             env=options['env'],
             parameters=options['parameters'] if 'parameters' in options else [] + [
-                Parameter(key='GPU_MODE', value=str(gpu))],
+                Parameter(key='GPUS', value=str(gpus))],
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
-            gpu=gpu,
+            gpus=gpus,
             docker_username=docker_username,
             docker_password=docker_password)
         lines.append(command)

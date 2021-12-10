@@ -39,7 +39,7 @@
                                 center
                             ></b-img>
                             <h4 class="text-white mt-4 ml-4">
-                                a web portal for cloud
+                                a web portal for plant
                                 <span class="text-success"
                                     ><span class="fa-stack mr-0 fa-2x">
                                         <i
