@@ -1926,44 +1926,48 @@ export default {
             );
         },
         unauthorizedBoundWorkflows() {
-            return this.boundWorkflows.filter(
-                (wf) =>
-                    !this.getAgent.workflows_authorized.some(
-                        (b) =>
-                            b.repo.owner.login === wf.repo.owner.login &&
-                            b.config.name === wf.config.name
-                    )
-            );
+            return [];
+            // return this.boundWorkflows.filter(
+            //     (wf) =>
+            //         !this.getAgent.workflows_authorized.some(
+            //             (b) =>
+            //                 b.repo.owner.login === wf.repo.owner.login &&
+            //                 b.config.name === wf.config.name
+            //         )
+            // );
         },
         unauthorizedPublicWorkflows() {
-            return this.publicWorkflows.filter(
-                (wf) =>
-                    !this.getAgent.workflows_authorized.some(
-                        (b) =>
-                            b.repo.owner.login === wf.repo.owner.login &&
-                            b.config.name === wf.config.name
-                    )
-            );
+            return [];
+            // return this.publicWorkflows.filter(
+            //     (wf) =>
+            //         !this.getAgent.workflows_authorized.some(
+            //             (b) =>
+            //                 b.repo.owner.login === wf.repo.owner.login &&
+            //                 b.config.name === wf.config.name
+            //         )
+            // );
         },
         unblockedBoundWorkflows() {
-            return this.boundWorkflows.filter(
-                (wf) =>
-                    !this.getAgent.workflows_blocked.some(
-                        (b) =>
-                            b.repo.owner.login === wf.repo.owner.login &&
-                            b.config.name === wf.config.name
-                    )
-            );
+            return this.boundWorkflows;
+            // return this.boundWorkflows.filter(
+            //     (wf) =>
+            //         !this.getAgent.workflows_blocked.some(
+            //             (b) =>
+            //                 b.repo.owner.login === wf.repo.owner.login &&
+            //                 b.config.name === wf.config.name
+            //         )
+            // );
         },
         unblockedPublicWorkflows() {
-            return this.publicWorkflows.filter(
-                (wf) =>
-                    !this.getAgent.workflows_blocked.some(
-                        (b) =>
-                            b.repo.owner.login === wf.repo.owner.login &&
-                            b.config.name === wf.config.name
-                    )
-            );
+            return this.publicWorkflows;
+            // return this.publicWorkflows.filter(
+            //     (wf) =>
+            //         !this.getAgent.workflows_blocked.some(
+            //             (b) =>
+            //                 b.repo.owner.login === wf.repo.owner.login &&
+            //                 b.config.name === wf.config.name
+            //         )
+            // );
         },
         agentLoading() {
             return this.publicAgentsLoading || this.personalAgentsLoading;
