@@ -48,6 +48,8 @@ from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount, EnvironmentVariable
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
 from plantit.users.models import Profile
+from requests import RequestException, ReadTimeout, Timeout, HTTPError
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import settings
 
@@ -1917,6 +1919,12 @@ def has_virtual_memory(agent: Agent) -> bool:
     return agent.header_skip == '--mem'
 
 
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
 def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
     """
     Checks agent health

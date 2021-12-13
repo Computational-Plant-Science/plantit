@@ -504,9 +504,11 @@ def stranded_task_sweep():
     for task in running:
         now = timezone.now()
         period = int(environ.get('TASKS_REFRESH_SECONDS'))
-        # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded, so we poll it again
+        # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded
         if (now - task.updated).total_seconds() > (2 * period):
-            poll_task_status.s(task.guid).apply_async()
+            logger.warning(f"Found possibly stranded task: {task.guid}")
+            # TODO for now, flag these in the UI for the user to debug manually
+            # it's a bad idea to persist auth info anywhere beyond the task invocation chain, so we can't poll agent status
 
 
 class TerrainToken:

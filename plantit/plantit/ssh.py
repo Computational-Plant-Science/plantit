@@ -29,10 +29,10 @@ class SSH:
         client.set_missing_host_key_policy(paramiko.RejectPolicy())
 
         if self.password is not None:
-            client.connect(self.host, self.port, self.username, self.password)
+            client.connect(self.host, self.port, self.username, self.password, timeout=5)
         elif self.pkey is not None:
             key = paramiko.RSAKey.from_private_key_file(self.pkey)
-            client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key)
+            client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key, timeout=5)
         else:
             raise ValueError(f"No authentication strategy provided")
 
