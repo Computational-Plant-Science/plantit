@@ -1013,14 +1013,17 @@ def compose_task_run_commands(task: Task, options: PlantITCLIOptions, inputs: Li
 
 
 def compose_task_clean_commands(task: Task) -> str:
+    docker_username = environ.get('DOCKER_USERNAME', None)
+    docker_password = environ.get('DOCKER_PASSWORD', None)
+    cmd = f"plantit clean *.out -p {docker_username} -p {docker_password}"
+    cmd += f"\nplantit clean *.err -p {docker_username} -p {docker_password}"
+
     if task.agent.launcher:
         workdir = join(task.agent.workdir, task.workdir)
         launcher_script = join(workdir, os.environ.get('LAUNCHER_SCRIPT_NAME'))
-        docker_username = environ.get('DOCKER_USERNAME', None)
-        docker_password = environ.get('DOCKER_PASSWORD', None)
-        return f"plantit clean {launcher_script} -p {docker_username} -p {docker_password}"
-    else:
-        return ''
+        cmd += f"\nplantit clean {launcher_script} -p {docker_username} -p {docker_password} "
+
+    return cmd
 
 
 def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:

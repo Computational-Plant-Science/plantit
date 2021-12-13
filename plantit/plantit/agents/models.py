@@ -72,6 +72,14 @@ class AgentAccessPolicy(models.Model):
     role = EnumChoiceField(AgentRole, default=AgentRole.guest)
 
 
+class AgentUsagePolicy(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.CASCADE)
+    # TODO: how to define usage policy?
+    # first as number of successful submissions
+    # later as CPU hours? total runtime? normalized by resources used?
+
+
 class AgentAccessRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.CASCADE)
