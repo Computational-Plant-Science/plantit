@@ -40,7 +40,6 @@ class Agent(models.Model):
     queue = models.CharField(max_length=250, null=True, blank=True)
     project = models.CharField(max_length=250, null=True, blank=True)
     header_skip = models.CharField(max_length=1000, null=True, blank=True)
-    gpu = models.BooleanField(null=False, default=False)
     gpus = models.IntegerField(null=False, default=0)
     gpu_queue = models.CharField(max_length=250, null=True, blank=True)
     disabled = models.BooleanField(default=False)

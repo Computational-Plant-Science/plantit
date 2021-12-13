@@ -2468,7 +2468,7 @@
                                                                                                                     memory</span
                                                                                                                 ><span
                                                                                                                     v-if="
-                                                                                                                        agent.gpu
+                                                                                                                        agent.gpus
                                                                                                                     "
                                                                                                                 >
                                                                                                                     ,
@@ -2654,7 +2654,7 @@
                                                                                                                     memory</span
                                                                                                                 ><span
                                                                                                                     v-if="
-                                                                                                                        agent.gpu
+                                                                                                                        agent.gpus
                                                                                                                     "
                                                                                                                 >
                                                                                                                     ,
@@ -2841,7 +2841,7 @@
                                                                                                                 memory</span
                                                                                                             ><span
                                                                                                                 v-if="
-                                                                                                                    agent.gpu
+                                                                                                                    agent.gpus
                                                                                                                 "
                                                                                                             >
                                                                                                                 ,

@@ -39,6 +39,9 @@ assert 'FEEDBACK_FILE' in os.environ, f"{missing_variable} FEEDBACK_FILE"
 assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_MINUTES"
 assert 'AGENTS_HEALTHCHECKS_SAVED' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_SAVED"
 
+# global Celery task timeout
+CELERYD_TASK_SOFT_TIME_LIMIT = 60
+
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
 CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')
