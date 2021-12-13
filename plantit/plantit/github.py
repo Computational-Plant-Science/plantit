@@ -280,7 +280,7 @@ async def get_repo_config(owner: str, name: str, token: str, branch: str = 'mast
         return yaml.load(config)
 
 
-async def get_repo_bundle(owner: str, name: str, github_token: str, cyverse_token: str, branch: str = 'master') -> dict:
+async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str, cyverse_token: str) -> dict:
     tasks = [get_repo(owner, name, github_token), get_repo_config(owner, name, github_token, branch)]
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]

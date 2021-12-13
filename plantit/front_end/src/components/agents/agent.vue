@@ -1472,7 +1472,7 @@
                 >
             </b-tabs>
         </b-modal>
-        <b-modal
+        <!--<b-modal
             id="blockWorkflow"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -1695,7 +1695,7 @@
                     </div></b-tab
                 >
             </b-tabs>
-        </b-modal>
+        </b-modal>-->
         <b-modal
             id="key"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -2054,12 +2054,13 @@ export default {
         },
     },
     async mounted() {
-        this.workflowPolicyType =
-            this.getAgent.workflows_authorized.length > 0
-                ? 'authorized'
-                : this.getAgent.workflows_blocked.length > 0
-                ? 'blocked'
-                : 'none';
+        this.workflowPolicyType = 'none';
+        // this.workflowPolicyType =
+        //     this.getAgent.workflows_authorized.length > 0
+        //         ? 'authorized'
+        //         : this.getAgent.workflows_blocked.length > 0
+        //         ? 'blocked'
+        //         : 'none';
 
         await this.loadHealthchecks();
     },
@@ -2269,140 +2270,140 @@ export default {
                     throw error;
                 });
         },
-        async unauthorizeWorkflow(workflow) {
-            this.authorizingWorkflow = true;
-            let data = {
-                owner: workflow.repo.owner.login,
-                name: workflow.repo.name,
-            };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_workflow/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/addOrUpdate',
-                            response.data
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Unauthorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                        if (this.getAgent.workflows_authorized.length === 0)
-                            this.workflowPolicyType = 'none';
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                    this.authorizingWorkflow = false;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString(),
-                    });
-                    this.authorizingWorkflow = false;
-                    throw error;
-                });
-        },
-        async blockWorkflow(workflow) {
-            this.blockingWorkflow = true;
-            await axios({
-                method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block_workflow/`,
-                data: {
-                    owner: workflow.repo.owner.login,
-                    name: workflow.repo.name,
-                },
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/addOrUpdate',
-                            response.data
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Blocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                        this.workflowPolicyType = 'blocked';
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                    this.$bvModal.hide('blockWorkflow');
-                    this.blockingWorkflow = false;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString(),
-                    });
-                    this.gettingKey = false;
-                    this.blockingWorkflow = false;
-                    throw error;
-                });
-        },
-        async unblockWorkflow(workflow) {
-            this.blockingWorkflow = true;
-            await axios({
-                method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock_workflow/`,
-                data: {
-                    owner: workflow.repo.owner.login,
-                    name: workflow.repo.name,
-                },
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/addOrUpdate',
-                            response.data
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Unblocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                        if (this.getAgent.workflows_authorized.length === 0)
-                            this.workflowPolicyType = 'none';
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                    this.blockingWorkflow = false;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString(),
-                    });
-                    this.blockingWorkflow = false;
-                    throw error;
-                });
-        },
+        // async unauthorizeWorkflow(workflow) {
+        //     this.authorizingWorkflow = true;
+        //     let data = {
+        //         owner: workflow.repo.owner.login,
+        //         name: workflow.repo.name,
+        //     };
+        //     await axios({
+        //         method: 'post',
+        //         url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_workflow/`,
+        //         data: data,
+        //         headers: { 'Content-Type': 'application/json' },
+        //     })
+        //         .then(async (response) => {
+        //             if (response.status === 200) {
+        //                 await this.$store.dispatch(
+        //                     'agents/addOrUpdate',
+        //                     response.data
+        //                 );
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Unauthorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //                 if (this.getAgent.workflows_authorized.length === 0)
+        //                     this.workflowPolicyType = 'none';
+        //             } else {
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'danger',
+        //                     message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //             }
+        //             this.authorizingWorkflow = false;
+        //         })
+        //         .catch((error) => {
+        //             Sentry.captureException(error);
+        //             this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.authorizingWorkflow = false;
+        //             throw error;
+        //         });
+        // },
+        // async blockWorkflow(workflow) {
+        //     this.blockingWorkflow = true;
+        //     await axios({
+        //         method: 'post',
+        //         url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block_workflow/`,
+        //         data: {
+        //             owner: workflow.repo.owner.login,
+        //             name: workflow.repo.name,
+        //         },
+        //         headers: { 'Content-Type': 'application/json' },
+        //     })
+        //         .then(async (response) => {
+        //             if (response.status === 200) {
+        //                 await this.$store.dispatch(
+        //                     'agents/addOrUpdate',
+        //                     response.data
+        //                 );
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Blocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //                 this.workflowPolicyType = 'blocked';
+        //             } else {
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'danger',
+        //                     message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //             }
+        //             this.$bvModal.hide('blockWorkflow');
+        //             this.blockingWorkflow = false;
+        //         })
+        //         .catch((error) => {
+        //             Sentry.captureException(error);
+        //             this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.gettingKey = false;
+        //             this.blockingWorkflow = false;
+        //             throw error;
+        //         });
+        // },
+        // async unblockWorkflow(workflow) {
+        //     this.blockingWorkflow = true;
+        //     await axios({
+        //         method: 'post',
+        //         url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock_workflow/`,
+        //         data: {
+        //             owner: workflow.repo.owner.login,
+        //             name: workflow.repo.name,
+        //         },
+        //         headers: { 'Content-Type': 'application/json' },
+        //     })
+        //         .then(async (response) => {
+        //             if (response.status === 200) {
+        //                 await this.$store.dispatch(
+        //                     'agents/addOrUpdate',
+        //                     response.data
+        //                 );
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Unblocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //                 if (this.getAgent.workflows_authorized.length === 0)
+        //                     this.workflowPolicyType = 'none';
+        //             } else {
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'danger',
+        //                     message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //             }
+        //             this.blockingWorkflow = false;
+        //         })
+        //         .catch((error) => {
+        //             Sentry.captureException(error);
+        //             this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.blockingWorkflow = false;
+        //             throw error;
+        //         });
+        // },
         async getKey() {
             this.gettingKey = true;
             await axios

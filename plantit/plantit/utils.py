@@ -387,19 +387,6 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
 # workflows
 
 
-async def workflow_to_dict(owner: str, name: str, github_token: str, cyverse_token: str) -> dict:
-    bundle = await github.get_repo_bundle(owner, name, github_token, cyverse_token)
-
-    return {
-        'config': bundle['config'],
-        'repo': bundle['repo'],
-        'validation': bundle['validation'],
-        'public': workflow.public,
-        'bound': True,
-        'branch': json.loads(workflow.repo_branch)
-    }
-
-
 async def refresh_online_users_workflow_cache():
     users = await sync_to_async(User.objects.all)()
     online = filter_online(users)
@@ -424,44 +411,15 @@ async def refresh_personal_workflow_cache(github_username: str):
 
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    bindable_wfs = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
-    all_wfs = []
-
-    # find and filter bindable workflows
-    for bindable_wf in bindable_wfs:
-        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] ==
-                    bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in
-                    bound_wfs]):
-            bindable_wf['public'] = False
-            bindable_wf['bound'] = False
-            all_wfs.append(bindable_wf)
-
-    # find and filter bound workflows
-    missing = 0
-    for bound_wf in [b for b in bound_wfs if b['repo']['owner'][
-                                                 'login'] == github_username]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
-        name = bound_wf['config']['name']
-        branch = bound_wf['branch']['name']
-        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in
-                    bindable_wfs]):
-            missing += 1
-            logger.warning(f"Configuration file missing for {github_username}'s workflow {name} (branch {branch})")
-            bound_wf['validation'] = {
-                'is_valid': False,
-                'errors': ["Configuration file missing"]
-            }
-        all_wfs.append(bound_wf)
+    workflows = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
+    for wf in workflows: wf['public'] = False
 
     # update the cache
     redis = RedisClient.get()
-    for workflow in all_wfs:
-        redis.set(f"workflows/{github_username}/{workflow['repo']['name']}/{workflow['branch']['name']}",
-                  json.dumps(del_none(workflow)))
+    for wf in workflows:
+        redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
-
-    logger.info(
-        f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {github_username}'s workflow cache" + (
-            "" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(f"{len(workflows)} workflow(s) in {github_username}'s workflow cache")
 
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_token: str):
@@ -529,12 +487,17 @@ async def get_workflow(
     workflow = redis.get(f"workflows/{owner}/{name}/{branch}")
 
     if last_updated is None or workflow is None or invalidate:
-        workflow = await workflow_to_dict(workflow, github_token, cyverse_token)
+        bundle = await github.get_repo_bundle(owner, name, branch, github_token, cyverse_token)
+        workflow = {
+            'config': bundle['config'],
+            'repo': bundle['repo'],
+            'validation': bundle['validation'],
+            'public': bundle['config']['public'] if 'public' in bundle['config'] else False,
+            'branch': branch
+        }
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
-    else:
-        workflow = json.loads(workflow)
-
-    return workflow
+        return workflow
+    else: return json.loads(workflow)
 
 
 def empty_personal_workflow_cache(owner: str):

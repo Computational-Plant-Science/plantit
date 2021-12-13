@@ -547,7 +547,8 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_all_users_usage_stats.s(), name='aggregate user statistics', priority=2)
 
     # agent healthchecks
-    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)
+    # TODO reenable with better scheduling strategy
+    # sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)
 
     # refresh workflow cache
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh user workflows cache', priority=2)
