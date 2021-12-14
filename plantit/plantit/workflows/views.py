@@ -61,7 +61,7 @@ async def list_org(request, member):
         # if org's workflow cache is empty or invalidation is requested, (re)populate it before returning
         if last_updated is None or num_cached == 0:  # or invalidate:
             logger.info(f"GitHub organization {org_name}'s workflow cache is empty, populating it now")
-            await refresh_org_workflow_cache(org_name, profile.github_token, profile.cyverse_access_token)
+            await refresh_org_workflow_cache(org_name, profile.github_token)
 
         workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
         wfs[org_name] = workflows

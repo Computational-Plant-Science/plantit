@@ -389,10 +389,11 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
 
 async def refresh_online_users_workflow_cache():
     users = await sync_to_async(User.objects.all)()
-    online = filter_online(users)
+    online = await sync_to_async(filter_online)(users)
+    logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        empty_personal_workflow_cache(profile.github_username)
+        # empty_personal_workflow_cache(profile.github_username)
         await refresh_personal_workflow_cache(profile.github_username)
 
 
@@ -416,23 +417,49 @@ async def refresh_personal_workflow_cache(github_username: str):
     # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
     cursor = '0'
+    removed = 0
+    existing = 0
     while cursor != 0:
         cursor, data = redis.scan(cursor, 'workflows/*')
         wf_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
         for key in data:
-            if key not in wf_keys: redis.delete(key)
-    # ...then adding the workflows we just scraped
-    for wf in workflows: redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
+            decoded = key.decode('utf-8')
+            if decoded not in wf_keys:
+                removed += 1
+                redis.delete(decoded)
+            else: existing += 1
+    # ...then adding/updating the workflows we just scraped
+    for wf in workflows:
+        redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
-    logger.info(f"{len(workflows)} workflow(s) in GitHub user's {github_username}'s workflow cache")
+    logger.info(f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {len(workflows) - existing} new, removed {removed}, updated {existing})")
+
+
+async def refresh_all_orgs_workflow_cache():
+    # TODO
+    pass
 
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str):
     # scrape GitHub to synchronize repos and workflow config
     workflows = await github.list_connectable_repos_by_org(org_name, github_token)
 
-    # update the cache
+    # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
+    cursor = '0'
+    removed = 0
+    existing = 0
+    while cursor != 0:
+        cursor, data = redis.scan(cursor, 'workflows/*')
+        wf_keys = [f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
+        for key in data:
+            decoded = key.decode('utf-8')
+            if decoded not in wf_keys:
+                removed += 1
+                redis.delete(decoded)
+            else:
+                existing += 1
+    # ...then adding/updating the workflows we just scraped
     for wf in workflows: redis.set(f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
     logger.info(f"{len(workflows)} workflow(s) in GitHub organization {org_name}'s workflow cache")
@@ -472,13 +499,13 @@ async def get_workflow(
     else: return json.loads(workflow)
 
 
-def empty_personal_workflow_cache(owner: str):
-    redis = RedisClient.get()
-    keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
-    cleaned = len(keys)
-    for key in keys: redis.delete(key)
-    logger.info(f"Emptied {cleaned} workflows from GitHub user {owner}'s cache")
-    return cleaned
+# def empty_personal_workflow_cache(owner: str):
+#     redis = RedisClient.get()
+#     keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
+#     cleaned = len(keys)
+#     for key in keys: redis.delete(key)
+#     logger.info(f"Emptied {cleaned} workflows from GitHub user {owner}'s cache")
+#     return cleaned
 
 
 # tasks
