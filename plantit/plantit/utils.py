@@ -412,57 +412,23 @@ async def refresh_personal_workflow_cache(github_username: str):
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
     workflows = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
-    for wf in workflows: wf['public'] = False
 
     # update the cache
     redis = RedisClient.get()
-    for wf in workflows:
-        redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
+    for wf in workflows: redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
-    logger.info(f"{len(workflows)} workflow(s) in {github_username}'s workflow cache")
+    logger.info(f"{len(workflows)} workflow(s) in GitHub user's {github_username}'s workflow cache")
 
 
-async def refresh_org_workflow_cache(org_name: str, github_token: str, cyverse_token: str):
+async def refresh_org_workflow_cache(org_name: str, github_token: str):
     # scrape GitHub to synchronize repos and workflow config
-    bound_wfs = []
-    bindable_wfs = await github.list_connectable_repos_by_org(org_name, github_token)
-    all_wfs = []
-
-    # find and filter bindable workflows
-    for bindable_wf in bindable_wfs:
-        if not any(['name' in b['config'] and 'name' in bindable_wf['config'] and b['config']['name'] ==
-                    bindable_wf['config']['name'] and b['branch']['name'] == bindable_wf['branch']['name'] for b in
-                    bound_wfs]):
-            bindable_wf['public'] = False
-            bindable_wf['bound'] = False
-            all_wfs.append(bindable_wf)
-
-    # find and filter bound workflows
-    missing = 0
-    for bound_wf in [b for b in bound_wfs if 'owner' in b['repo'] and b['repo']['owner'][
-        'login'] == org_name]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
-        name = bound_wf['config']['name']
-        branch = bound_wf['branch']['name']
-        if not any(['name' in b['config'] and b['config']['name'] == name and b['branch']['name'] == branch for b in
-                    bindable_wfs]):
-            missing += 1
-            logger.warning(f"Configuration file missing for {org_name}'s workflow {name} (branch {branch})")
-            bound_wf['validation'] = {
-                'is_valid': False,
-                'errors': ["Configuration file missing"]
-            }
-        all_wfs.append(bound_wf)
+    workflows = await github.list_connectable_repos_by_org(org_name, github_token)
 
     # update the cache
     redis = RedisClient.get()
-    for workflow in all_wfs:
-        redis.set(f"workflows/{org_name}/{workflow['repo']['name']}/{workflow['branch']['name']}",
-                  json.dumps(del_none(workflow)))
+    for wf in workflows: redis.set(f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
-
-    logger.info(
-        f"Added {len(bound_wfs)} bound, {len(bindable_wfs) - len(bound_wfs)} bindable, {len(all_wfs)} total to {org_name}'s workflow cache" + (
-            "" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(f"{len(workflows)} workflow(s) in GitHub organization {org_name}'s workflow cache")
 
 
 def list_public_workflows() -> List[dict]:
