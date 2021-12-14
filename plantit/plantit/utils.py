@@ -413,8 +413,15 @@ async def refresh_personal_workflow_cache(github_username: str):
     profile = await sync_to_async(Profile.objects.get)(user=user)
     workflows = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
 
-    # update the cache
+    # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
+    cursor = '0'
+    while cursor != 0:
+        cursor, data = redis.scan(cursor, 'workflows/*')
+        wf_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
+        for key in data:
+            if key not in wf_keys: redis.delete(key)
+    # ...then adding the workflows we just scraped
     for wf in workflows: redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
     logger.info(f"{len(workflows)} workflow(s) in GitHub user's {github_username}'s workflow cache")

@@ -1296,7 +1296,7 @@
                             </b-col>
                         </b-row>
                     </div>
-                    <div v-else-if="boundWorkflows.length !== 0">
+                    <div v-else-if="personalWorkflows.length !== 0">
                         <p
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -1524,7 +1524,7 @@
                             </b-col>
                         </b-row>
                     </div>
-                    <div v-else-if="boundWorkflows.length !== 0">
+                    <div v-else-if="personalWorkflows.length !== 0">
                         <p
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -1897,9 +1897,8 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('workflows', [
-            'recentlyRunWorkflows',
             'personalWorkflowsLoading',
-            'boundWorkflows',
+            'personalWorkflows',
             'publicWorkflowsLoading',
             'publicWorkflows',
         ]),
@@ -1925,33 +1924,11 @@ export default {
                     )
             );
         },
-        unauthorizedBoundWorkflows() {
-            return [];
-            // return this.boundWorkflows.filter(
-            //     (wf) =>
-            //         !this.getAgent.workflows_authorized.some(
-            //             (b) =>
-            //                 b.repo.owner.login === wf.repo.owner.login &&
-            //                 b.config.name === wf.config.name
-            //         )
-            // );
-        },
         unauthorizedPublicWorkflows() {
             return [];
             // return this.publicWorkflows.filter(
             //     (wf) =>
             //         !this.getAgent.workflows_authorized.some(
-            //             (b) =>
-            //                 b.repo.owner.login === wf.repo.owner.login &&
-            //                 b.config.name === wf.config.name
-            //         )
-            // );
-        },
-        unblockedBoundWorkflows() {
-            return this.boundWorkflows;
-            // return this.boundWorkflows.filter(
-            //     (wf) =>
-            //         !this.getAgent.workflows_blocked.some(
             //             (b) =>
             //                 b.repo.owner.login === wf.repo.owner.login &&
             //                 b.config.name === wf.config.name

@@ -561,7 +561,7 @@ export default {
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [
-            'boundWorkflows',
+            'personalWorkflows',
             'personalWorkflowsLoading',
         ]),
         ...mapGetters('projects', ['personalProjects', 'othersProjects']),

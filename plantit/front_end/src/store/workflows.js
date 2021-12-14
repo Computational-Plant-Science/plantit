@@ -247,7 +247,6 @@ export const workflows = {
                     branch === repo.branch.name
             );
             if (found !== undefined) return found;
-
             for (let key in state.org) {
                 found = state.org[key].find(
                     (repo) =>
@@ -257,40 +256,13 @@ export const workflows = {
                 );
                 if (found !== null && found !== undefined) break;
             }
-            // Object.keys(state.org).forEach(function(key) {
-            //     found = state.org[key].find(
-            //         repo =>
-            //             owner === repo.repo.organization &&
-            //             name === repo.repo.name &&
-            //             branch === repo.branch.name
-            //     );
-            // });
-
-            // found = state.org.find(
-            //     (repo) =>
-            //         owner === repo.repo.owner.login &&
-            //         name === repo.repo.name &&
-            //         branch === repo.branch.name
-            // );
-            if (found !== undefined) return found;
-            return null;
+            return found !== undefined ? found : null;
         },
         publicWorkflows: (state) => state.public,
         publicWorkflowsLoading: (state) => state.publicLoading,
-        boundWorkflows: (state) =>
-            state.personal.filter((workflow) => workflow.bound),
-        bindableWorkflows: (state) =>
-            state.personal
-                .filter((workflow) => !workflow.bound)
-                .sort(function (l, r) {
-                    if (l.validation['is_valid'] && r.validation['is_valid'])
-                        return 0;
-                    else if (l.validation['is_valid']) return -1;
-                    else return 1;
-                }),
-        // orgWorkflows: state => state.org.filter(workflow => workflow.bound),
+        personalWorkflows: (state) => state.personal,
+        personalWorkflowsLoading: (state) => state.personalLoading,
         orgWorkflows: (state) => state.org,
         orgWorkflowsLoading: (state) => state.orgLoading,
-        personalWorkflowsLoading: (state) => state.personalLoading,
     },
 };

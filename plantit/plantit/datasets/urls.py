@@ -8,6 +8,4 @@ urlpatterns = [
     path(r'share/', views.share),
     path(r'unshare/', views.unshare),
     path(r'create/', views.create),
-    path(r'bind/', views.bind),
-    path(r'unbind/', views.unbind)
 ]
