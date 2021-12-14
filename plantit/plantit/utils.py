@@ -458,7 +458,6 @@ async def get_workflow(
             'config': bundle['config'],
             'repo': bundle['repo'],
             'validation': bundle['validation'],
-            'public': bundle['config']['public'] if 'public' in bundle['config'] else False,
             'branch': branch
         }
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))

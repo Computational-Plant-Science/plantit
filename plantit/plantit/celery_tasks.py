@@ -554,5 +554,5 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh user workflows cache', priority=2)
 
     # stranded task sweeps
-    sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS) * 2, stranded_task_sweep, name='checking for stranded tasks', priority=2)
+    sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), stranded_task_sweep, name='check for stranded tasks', priority=2)
 
