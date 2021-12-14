@@ -6,19 +6,19 @@
             <b-row>
                 <b-col class="text-center"
                     ><b-img
-                        style="max-width: 5rem;transform: translate(0px, 20px);"
+                        style="max-width: 5rem; transform: translate(0px, 20px)"
                         :src="require('../assets/logo.png')"
                         center
                         class="m-0 p-0 mb-1"
                     ></b-img>
-                    <h1
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline;"
-                    >
-                        <small class="mr-1">about</small>plant<small
+                    <h1 class="text-dark" style="text-decoration: underline">
+                        plant<small
                             class="mb-3 text-success"
-                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
-                            >IT</small
+                            style="
+                                text-decoration: underline;
+                                text-shadow: 1px 1px 2px black;
+                            "
+                            >it</small
                         >
                     </h1>
                 </b-col>
@@ -29,7 +29,7 @@
                     <b-img
                         :src="require('../assets/about/summary.png')"
                         center
-                        style="max-width: 69rem;"
+                        style="max-width: 69rem"
                     ></b-img>
                     <br />
                     <p>
@@ -37,16 +37,20 @@
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                        0 1px 0 #000, -1px 0 0 #000;
+                                "
                                 >IT</small
                             >
                         </b>
-                        is a science gateway for plant phenotyping. It was preceded by &mdash; grew out of,
-                        as it were &mdash;
+                        is a science gateway for plant phenotyping. It was
+                        preceded by &mdash; grew out of, as it were &mdash;
                         <b-link
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -64,7 +68,7 @@
                     <b-img
                         :src="require('../assets/about/features.png')"
                         center
-                        style="max-width: 69rem;"
+                        style="max-width: 69rem"
                     ></b-img>
                     <br />
                     <p>
@@ -72,11 +76,15 @@
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                        0 1px 0 #000, -1px 0 0 #000;
+                                "
                                 >IT</small
                             >
                         </b>
@@ -91,7 +99,7 @@
                     <b-img
                         :src="require('../assets/about/examples.png')"
                         center
-                        style="max-width: 69rem;"
+                        style="max-width: 69rem"
                     ></b-img>
                     <br />
                     <p>
@@ -99,11 +107,15 @@
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                        0 1px 0 #000, -1px 0 0 #000;
+                                "
                                 >IT</small
                             >
                         </b>
@@ -118,7 +130,7 @@
                     <b-img
                         :src="require('../assets/about/configuring.png')"
                         center
-                        style="max-width: 69rem;"
+                        style="max-width: 69rem"
                     ></b-img>
                     <br />
                     <p>
@@ -126,11 +138,15 @@
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                        0 1px 0 #000, -1px 0 0 #000;
+                                "
                                 >IT</small
                             >
                         </b>
@@ -222,11 +238,15 @@
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                            style="text-decoration: underline;"
+                            style="text-decoration: underline"
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                        0 1px 0 #000, -1px 0 0 #000;
+                                "
                                 >IT</small
                             >
                         </b>
@@ -265,7 +285,10 @@
                 <b-col
                     ><b-img
                         center
-                        style="max-width: 15rem;transform: translate(0px, 20px);"
+                        style="
+                            max-width: 15rem;
+                            transform: translate(0px, 20px);
+                        "
                         href="https://www.computational-plant-science.org/joomla30/"
                         :src="
                             profile.darkMode
@@ -399,7 +422,7 @@
                             border-variant="white"
                             title="Chris Cotter"
                             sub-title="Developer"
-                            style="min-width: 10rem;"
+                            style="min-width: 10rem"
                         >
                             <template
                                 v-slot:footer
@@ -522,8 +545,8 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'about',
     computed: {
-        ...mapGetters('user', ['profile'])
-    }
+        ...mapGetters('user', ['profile']),
+    },
 };
 </script>
 

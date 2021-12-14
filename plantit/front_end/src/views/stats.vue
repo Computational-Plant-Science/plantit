@@ -6,20 +6,20 @@
             <b-row>
                 <b-col class="text-center">
                     <b-img
-                        style="max-width: 5rem;transform: translate(0px, 20px);"
+                        style="max-width: 5rem; transform: translate(0px, 20px)"
                         :src="require('../assets/logo.png')"
                         center
                         class="m-0 p-0"
                     ></b-img>
-                    <h1
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline;"
-                    >
+                    <h1 class="text-dark" style="text-decoration: underline">
                         plant<small
                             class="mb-3 text-success"
-                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
-                            >IT</small
-                        ><small class="ml-1">stats</small>
+                            style="
+                                text-decoration: underline;
+                                text-shadow: 1px 1px 2px black;
+                            "
+                            >it</small
+                        >stats
                     </h1>
                 </b-col>
             </b-row>
@@ -205,9 +205,7 @@
                                                         ? 'text-light'
                                                         : 'text-dark'
                                                 "
-                                                :href="
-                                                    `https://github.com/${user}`
-                                                "
+                                                :href="`https://github.com/${user}`"
                                                 ><i
                                                     class="fab fa-github fa-fw"
                                                 ></i>
@@ -215,7 +213,7 @@
                                             ></b-col
                                         ><b-col md="auto">{{
                                             publicWorkflows.filter(
-                                                wf =>
+                                                (wf) =>
                                                     wf.repo.owner.login === user
                                             ).length
                                         }}</b-col></b-row
@@ -306,9 +304,9 @@ export default {
     name: 'stats',
     components: {
         blurb,
-        Plotly
+        Plotly,
     },
-    data: function() {
+    data: function () {
         return {
             map: {},
             mapCenter: [0, 0],
@@ -322,7 +320,7 @@ export default {
             taskCount: -1,
             runningCount: -1,
             institutions: [],
-            activeTab: 0
+            activeTab: 0,
         };
     },
     async mounted() {
@@ -346,18 +344,18 @@ export default {
                     this.profile.darkMode ? 'dark-v10' : 'light-v10'
                 }`,
                 center: this.mapCenter,
-                zoom: 1
+                zoom: 1,
             });
 
             this.mapPopup = new mapboxgl.Popup({
                 closeButton: false,
-                closeOnClick: false
+                closeOnClick: false,
             });
 
             var map = this.map;
             var popup = this.mapPopup;
 
-            this.map.on('mouseenter', 'institutions', function(e) {
+            this.map.on('mouseenter', 'institutions', function (e) {
                 // Change the cursor style as a UI indicator.
                 map.getCanvas().style.cursor = 'pointer';
 
@@ -375,13 +373,10 @@ export default {
 
                 // Populate the popup and set its coordinates
                 // based on the feature found.
-                popup
-                    .setLngLat(coordinates)
-                    .setHTML(html)
-                    .addTo(map);
+                popup.setLngLat(coordinates).setHTML(html).addTo(map);
             });
 
-            this.map.on('mouseleave', 'institutions', function() {
+            this.map.on('mouseleave', 'institutions', function () {
                 map.getCanvas().style.cursor = '';
                 popup.remove();
             });
@@ -389,14 +384,14 @@ export default {
         async loadCounts() {
             await axios
                 .get('/apis/v1/stats/counts/')
-                .then(response => {
+                .then((response) => {
                     this.userCount = response.data.users;
                     this.onlineCount = response.data.online;
                     this.workflowCount = response.data.workflows;
                     this.taskCount = response.data.tasks;
                     this.runningCount = response.data.running;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
@@ -404,11 +399,11 @@ export default {
         async loadInstitutions() {
             await axios
                 .get('/apis/v1/stats/institutions/')
-                .then(response => {
+                .then((response) => {
                     this.institutions = response.data.institutions;
                     if (this.map) this.paintInstitutions();
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
@@ -416,11 +411,11 @@ export default {
         async loadTimeseries() {
             await axios
                 .get('/apis/v1/stats/timeseries/')
-                .then(response => {
+                .then((response) => {
                     this.timeseriesUsers = [response.data.users];
                     this.timeseriesTasks = [response.data.tasks];
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
@@ -434,8 +429,8 @@ export default {
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
-                    features: this.institutions.map(i => i.geocode)
-                }
+                    features: this.institutions.map((i) => i.geocode),
+                },
             });
             this.map.addLayer({
                 id: 'institutions',
@@ -445,10 +440,10 @@ export default {
                     'circle-color': '#4264fb',
                     'circle-radius': 6,
                     'circle-stroke-width': 2,
-                    'circle-stroke-color': '#ffffff'
-                }
+                    'circle-stroke-color': '#ffffff',
+                },
             });
-        }
+        },
     },
     // watch: {
     //     darkMode() {
@@ -465,11 +460,11 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
             'publicWorkflows',
-            'publicWorkflowsLoading'
+            'publicWorkflowsLoading',
         ]),
         publicWorkflowDevelopers() {
             return Array.from(
-                new Set(this.publicWorkflows.map(wf => wf.repo.owner.login))
+                new Set(this.publicWorkflows.map((wf) => wf.repo.owner.login))
             );
         },
         darkMode() {
@@ -480,8 +475,8 @@ export default {
                 {
                     x: Object.keys(this.institutions),
                     y: Object.values(this.institutions),
-                    type: 'markers'
-                }
+                    type: 'markers',
+                },
             ];
         },
         institutionPlotLayout() {
@@ -489,17 +484,17 @@ export default {
                 title: {
                     text: 'User Institutions',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         usersPlotData() {
@@ -508,21 +503,21 @@ export default {
         usersPlotLayout() {
             return {
                 font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
                 height: 350,
                 title: {
                     text: 'Total Users',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 xaxis: {
                     showgrid: false,
@@ -530,20 +525,20 @@ export default {
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
-                            color: 'rgb(204, 204, 204)'
-                        }
+                            color: 'rgb(204, 204, 204)',
+                        },
                     },
                     tickfont: {
                         font: {
-                            color: 'rgb(102, 102, 102)'
-                        }
-                    }
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
                 },
                 yaxis: {
-                    showticklabels: false
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
         tasksPlotData() {
@@ -552,20 +547,20 @@ export default {
         tasksPlotLayout() {
             return {
                 font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
                 title: {
                     text: 'Total Tasks',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 legend: {
                     orientation: 'h',
                     font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
-                    }
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
                 },
                 xaxis: {
                     showgrid: false,
@@ -573,23 +568,23 @@ export default {
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
-                            color: 'rgb(204, 204, 204)'
-                        }
+                            color: 'rgb(204, 204, 204)',
+                        },
                     },
                     tickfont: {
                         font: {
-                            color: 'rgb(102, 102, 102)'
-                        }
-                    }
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
                 },
                 yaxis: {
-                    showticklabels: false
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff'
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
-        }
-    }
+        },
+    },
 };
 </script>
 
