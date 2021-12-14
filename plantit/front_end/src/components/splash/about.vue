@@ -29,7 +29,7 @@
                                 plant<small
                                     class="mb-3 text-success"
                                     style="text-decoration: underline;"
-                                    >IT</small
+                                    >it</small
                                 >
                             </h1>
                             <b-img

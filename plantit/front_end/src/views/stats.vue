@@ -11,7 +11,10 @@
                         center
                         class="m-0 p-0"
                     ></b-img>
-                    <h1 class="text-dark" style="text-decoration: underline">
+                    <h1
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        style="text-decoration: underline"
+                    >
                         plant<small
                             class="mb-3 text-success"
                             style="
@@ -19,7 +22,7 @@
                                 text-shadow: 1px 1px 2px black;
                             "
                             >it</small
-                        >stats
+                        ><small><small>stats</small></small>
                     </h1>
                 </b-col>
             </b-row>

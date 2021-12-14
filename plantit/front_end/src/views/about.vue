@@ -11,8 +11,11 @@
                         center
                         class="m-0 p-0 mb-1"
                     ></b-img>
-                    <h1 class="text-dark" style="text-decoration: underline">
-                        plant<small
+                    <h1
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        style="text-decoration: underline"
+                    >
+                        <small><small>about</small></small>plant<small
                             class="mb-3 text-success"
                             style="
                                 text-decoration: underline;
