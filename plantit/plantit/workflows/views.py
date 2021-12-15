@@ -50,7 +50,7 @@ async def list_personal(request, owner):
 async def list_org(request, member):
     profile = await get_user_django_profile(request.user)
     redis = RedisClient.get()
-    orgs = await list_user_organizations(member, profile.github_token)  # TODO cache organization memberships so don't have to look up each time
+    orgs = await list_user_organizations(profile.github_username, profile.github_token)  # TODO cache organization memberships so don't have to look up each time
     wfs = dict()
 
     for org in orgs:

@@ -420,7 +420,7 @@ async def refresh_personal_workflow_cache(github_username: str):
     removed = 0
     existing = 0
     while cursor != 0:
-        cursor, data = redis.scan(cursor, 'workflows/*')
+        cursor, data = redis.scan(cursor, f"workflows/{github_username}")
         wf_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
         for key in data:
             decoded = key.decode('utf-8')
@@ -450,7 +450,7 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
     removed = 0
     existing = 0
     while cursor != 0:
-        cursor, data = redis.scan(cursor, 'workflows/*')
+        cursor, data = redis.scan(cursor, f"workflows/{org_name}")
         wf_keys = [f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
         for key in data:
             decoded = key.decode('utf-8')
@@ -467,7 +467,9 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 
 def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
-    return [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if 'public' in wf['config'] and wf['config']['public']]
+    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if 'public' in wf['config'] and wf['config']['public']]
+    print(len(workflows))
+    return workflows
 
 
 def list_personal_workflows(owner: str) -> List[dict]:
