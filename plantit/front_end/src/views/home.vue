@@ -283,14 +283,6 @@
                                                 }}</b>
                                                 guest
                                             </b-col>
-                                            <!--<b-col md="auto"><b-col md="auto"><Plotly
-                                            v-if="
-                                                profile.stats.used_datasets
-                                                    .length > 0
-                                            "
-                                            :data="workflowPlotData"
-                                            :layout="workflowPlotLayout"
-                                        ></Plotly></b-col></b-col>-->
                                             <b-col
                                                 md="auto"
                                                 class="mt-3"
@@ -661,7 +653,7 @@ export default {
         taskTimeseriesData() {
             return [
                 {
-                    x: this.tasks.map((t) => t.created),
+                    x: this.tasks.map((t) => moment(t.created).format('YYYY-MM-DD HH:mm:ss')),
                     y: this.tasks.map(
                         (t) => `${t.workflow_owner}/${t.workflow_name}`
                     ),
