@@ -109,10 +109,10 @@
                             "
                             ><template #title
                                 ><h1
-                                    v-if="workflowCount >= 0"
+                                    v-if="publicWorkflows.length >= 0"
                                     class="text-success text-center"
                                 >
-                                    {{ workflowCount }}
+                                    {{ publicWorkflows.length }}
                                 </h1>
                                 <b-spinner
                                     v-else
