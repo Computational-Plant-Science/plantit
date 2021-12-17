@@ -1244,7 +1244,7 @@
                 </p>
             </div>
         </b-modal>
-        <b-modal
+        <!--<b-modal
             id="authorizeWorkflow"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -1471,7 +1471,7 @@
                     </div></b-tab
                 >
             </b-tabs>
-        </b-modal>
+        </b-modal>-->
         <!--<b-modal
             id="blockWorkflow"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -1853,14 +1853,14 @@ import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
 import { guid } from '@/utils';
 import router from '@/router';
-import blurb from '@/components/workflows/workflow-blurb.vue';
+// import blurb from '@/components/workflows/workflow-blurb.vue';
 import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'agent',
     components: {
         VueCronEditorBuefy,
-        blurb,
+        // blurb,
         Plotly,
     },
     data: function () {
@@ -2201,52 +2201,52 @@ export default {
                     throw error;
                 });
         },
-        async authorizeWorkflow(workflow) {
-            this.authorizingWorkflow = true;
-            let data = {
-                owner: workflow.repo.owner.login,
-                name: workflow.repo.name,
-            };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_workflow/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/addOrUpdate',
-                            response.data
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Authorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                        this.workflowPolicyType = 'authorized';
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                    this.$bvModal.hide('authorizeWorkflow');
-                    this.authorizingWorkflow = false;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
-                        guid: guid().toString(),
-                    });
-                    this.$bvModal.hide('authorizeWorkflow');
-                    this.authorizingWorkflow = false;
-                    throw error;
-                });
-        },
+        // async authorizeWorkflow(workflow) {
+        //     this.authorizingWorkflow = true;
+        //     let data = {
+        //         owner: workflow.repo.owner.login,
+        //         name: workflow.repo.name,
+        //     };
+        //     await axios({
+        //         method: 'post',
+        //         url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_workflow/`,
+        //         data: data,
+        //         headers: { 'Content-Type': 'application/json' },
+        //     })
+        //         .then(async (response) => {
+        //             if (response.status === 200) {
+        //                 await this.$store.dispatch(
+        //                     'agents/addOrUpdate',
+        //                     response.data
+        //                 );
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Authorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //                 this.workflowPolicyType = 'authorized';
+        //             } else {
+        //                 await this.$store.dispatch('alerts/add', {
+        //                     variant: 'danger',
+        //                     message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                     guid: guid().toString(),
+        //                 });
+        //             }
+        //             this.$bvModal.hide('authorizeWorkflow');
+        //             this.authorizingWorkflow = false;
+        //         })
+        //         .catch((error) => {
+        //             Sentry.captureException(error);
+        //             this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.$bvModal.hide('authorizeWorkflow');
+        //             this.authorizingWorkflow = false;
+        //             throw error;
+        //         });
+        // },
         // async unauthorizeWorkflow(workflow) {
         //     this.authorizingWorkflow = true;
         //     let data = {
