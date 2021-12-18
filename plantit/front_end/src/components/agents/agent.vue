@@ -375,11 +375,7 @@
                                                                       : 'public'
                                                               }`
                                                     "
-                                                    :button-variant="
-                                                        getAgent.public
-                                                            ? 'success'
-                                                            : 'warning'
-                                                    "
+                                                    button-variant="success"
                                                     @change="togglePublic"
                                                 >
                                                     <i
@@ -2714,14 +2710,21 @@ export default {
             })
                 .then(async (response) => {
                     if (response.status === 200) {
-                        if (response.data.healthy)
+                        if (response.data.healthy) {
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'success',
                                 message: `Connection to ${this.getAgent.name} succeeded`,
                                 guid: guid().toString(),
                                 time: moment().format(),
                             });
-                        else
+                            this.healthchecks.push(response.data);
+                            var agent = this.getAgent;
+                            agent.is_healthy = true;
+                            await this.$store.dispatch(
+                                'agents/addOrUpdate',
+                                agent
+                            );
+                        } else
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'danger',
                                 message: `Failed to connect to ${this.getAgent.name}`,
