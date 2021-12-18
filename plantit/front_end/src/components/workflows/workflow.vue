@@ -3107,7 +3107,7 @@
                                                                             <b-col>
                                                                                 <b-row
                                                                                     ><b-col>
-                                                                                        <h4
+                                                                                        <h5
                                                                                             :class="
                                                                                                 profile.darkMode
                                                                                                     ? 'text-white'
@@ -3118,7 +3118,7 @@
                                                                                                 class="fas fa-keyboard fa-fw"
                                                                                             ></i>
                                                                                             Parameters
-                                                                                        </h4> </b-col
+                                                                                        </h5> </b-col
                                                                                     ><b-col
                                                                                         md="auto"
                                                                                         ><h5
