@@ -358,6 +358,9 @@ def healthcheck(request, name):
     body = json.loads(request.body.decode('utf-8'))
     healthy, output = is_healthy(agent, body['auth'])
 
+    agent.is_healthy = healthy
+    agent.save()
+
     # update cache
     redis = RedisClient.get()
     length = redis.llen(f"healthchecks/{agent.name}")
