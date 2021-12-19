@@ -2062,6 +2062,7 @@ export default {
                 )
                 .then((response) => {
                     this.healthchecks = response.data.healthchecks;
+                    console.log('%o', response.data.healthchecks);
                     this.loadingHealthchecks = false;
                 })
                 .catch((error) => {
