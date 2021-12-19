@@ -1300,7 +1300,7 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
         logger.info(os.stat(task_script.name))
-        subprocess.run(f"scp -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
+        subprocess.run(f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
         # with SCPClient(ssh.client.get_transport()) as scp:
         #     scp.put(task_script.name, join(work_dir, f"{task.guid}.sh"))
         # with ssh.client.open_sftp() as sftp:
@@ -1320,7 +1320,7 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
             logger.info(os.stat(launcher_script.name))
-            subprocess.run(f"scp -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}", shell=True)
+            subprocess.run(f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}", shell=True)
             # with SCPClient(ssh.client.get_transport()) as scp:
             #     scp.put(launcher_script.name, join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME')))
             # with ssh.client.open_sftp() as sftp:
