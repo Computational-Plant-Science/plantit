@@ -55,7 +55,7 @@ def prepare_task_environment(self, guid: str, auth: dict):
 
             local = task.agent.executor == AgentExecutor.LOCAL
             if local: configure_local_task_environment(task, ssh)
-            else: configure_jobqueue_task_environment(task, ssh)
+            else: configure_jobqueue_task_environment(task, ssh, auth)
         return guid
     except Exception:
         task.status = TaskStatus.FAILURE

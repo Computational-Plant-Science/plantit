@@ -43,6 +43,7 @@ from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
+from plantit.scp import SCPClient
 from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, TaskCounter
 from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount, EnvironmentVariable
@@ -872,7 +873,7 @@ def configure_local_task_environment(task: Task, ssh: SSH):
         if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
 
-def configure_jobqueue_task_environment(task: Task, ssh: SSH):
+def configure_jobqueue_task_environment(task: Task, ssh: SSH, auth: dict):
     log_task_orchestrator_status(task, [f"Verifying configuration"])
     async_to_sync(push_task_event)(task)
 
@@ -887,25 +888,8 @@ def configure_jobqueue_task_environment(task: Task, ssh: SSH):
     list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
     log_task_orchestrator_status(task, [f"Uploading task"])
-    upload_task_executables(task, ssh, cli_options)
+    upload_task_files(task, ssh, cli_options, auth)
     async_to_sync(push_task_event)(task)
-
-    with ssh.client.open_sftp() as sftp:
-        # TODO remove this utter hack
-        if 'input' in cli_options:
-            kind = cli_options['input']['kind']
-            path = cli_options['input']['path']
-            if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
-                cli_options['input']['path'] = 'input'
-            else:
-                cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
-
-        cli_options['jobqueue'] = {'slurm': cli_options['jobqueue']}
-
-        sftp.chdir(work_dir)
-        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
-            yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
-        if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
 
 def compose_task_singularity_command(
@@ -946,7 +930,7 @@ def compose_task_singularity_command(
     for parameter in parameters:
         key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
-        cmd += ' '.join(f"SINGULARITYENV_{key}={val}")
+        cmd += f" SINGULARITYENV_{key}={val}"
         # logger.debug(f"Replacing '{key}' with '{val}'")
         # cmd = cmd.replace(f"${key}", val)
         # cmd = f"SINGULARITYENV_{key}={val} " + cmd
@@ -1291,36 +1275,79 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     return lines
 
 
-def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
+def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: dict):
     # TODO: if sftp throws an IOError or complains about filesizes, it probably means the remote host's disk is full
     # we should catch the error and show an alert in the UI
     # issue ref:
 
-    with ssh.client.open_sftp() as sftp:
-        task_commands = compose_task_run_script(task, options, environ.get(
-            'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
-            'TASKS_TEMPLATE_SCRIPT_SLURM'))
-        # sftp.chdir(join(task.agent.workdir, task.workdir))
-        with tempfile.NamedTemporaryFile() as task_script:
-            for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
-            task_script.seek(0)
-            # sftp.put(task_script.name, f"{task.guid}.sh")
-            with sftp.open(f"{task.guid}.sh", 'w') as file:
-                for line in task_script.readlines():
-                    file.write(line)
-                    # execute_command(ssh, '', f"echo '{line}' >> {task.guid}.sh")
+    work_dir = join(task.agent.workdir, task.workdir)
+    logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
-        # if the selected agent uses the TACC Launcher, create a parameter sweep script too
-        if task.agent.launcher:
-            with tempfile.NamedTemporaryFile() as launcher_script:
-                launcher_commands = compose_jobqueue_task_launcher_script(task, options)
-                for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
-                launcher_script.seek(0)
-                # sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
-                with sftp.open(os.environ.get('LAUNCHER_SCRIPT_NAME'), 'w') as file:
-                    for line in launcher_script.readlines():
-                        file.write(line)
-                        # execute_command(ssh, '', f"echo '{line}' >> {os.environ.get('LAUNCHER_SCRIPT_NAME')}")
+    # if this workflow has input files, create a directory for them
+    if 'input' in options:
+        logger.info(f"Creating input directory for task {task.guid}")
+        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}"))
+        # with ssh.client.open_sftp() as sftp:
+        #     sftp.chdir(work_dir)
+        #     sftp.mkdir(join(work_dir, 'input'))
+
+    # compose and upload the task script
+    logger.info(f"Uploading job script for task {task.guid}")
+    task_commands = compose_task_run_script(task, options, environ.get(
+        'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
+        'TASKS_TEMPLATE_SCRIPT_SLURM'))
+    with tempfile.NamedTemporaryFile() as task_script:
+        for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
+        task_script.seek(0)
+        logger.info(os.stat(task_script.name))
+        subprocess.run(f"scp -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
+        # with SCPClient(ssh.client.get_transport()) as scp:
+        #     scp.put(task_script.name, join(work_dir, f"{task.guid}.sh"))
+        # with ssh.client.open_sftp() as sftp:
+        #     sftp.chdir(work_dir)
+        #     sftp.put(task_script.name, f"{task.guid}.sh")
+            # with sftp.open(f"{task.guid}.sh", 'w') as script_file:
+            #     for line in task_script.readlines():
+            #         script_file.write(line)
+        # for line in task_commands:
+        #     list(execute_command(ssh, ':', f"echo '{line}\n' >> {task.guid}.sh", work_dir))
+
+    # if the selected agent uses the TACC Launcher, create and upload a parameter sweep script too
+    if task.agent.launcher:
+        logger.info(f"Uploading launcher script for task {task.guid}")
+        with tempfile.NamedTemporaryFile() as launcher_script:
+            launcher_commands = compose_jobqueue_task_launcher_script(task, options)
+            for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
+            launcher_script.seek(0)
+            logger.info(os.stat(launcher_script.name))
+            subprocess.run(f"scp -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}", shell=True)
+            # with SCPClient(ssh.client.get_transport()) as scp:
+            #     scp.put(launcher_script.name, join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME')))
+            # with ssh.client.open_sftp() as sftp:
+            #     sftp.chdir(work_dir)
+            #     sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
+                # with sftp.open("launch.sh", 'w') as launcher_file:
+                #     for line in launcher_script.readlines():
+                #         launcher_file.write(line)
+            # for line in launcher_commands:
+            #     list(execute_command(ssh, ':', f"echo '{line}\n' >> {os.environ.get('LAUNCHER_SCRIPT_NAME')}", work_dir))
+    else:
+        # TODO remove this utter hack
+        if 'input' in options:
+            kind = options['input']['kind']
+            path = options['input']['path']
+            if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
+                options['input']['path'] = 'input'
+            else:
+                options['input']['path'] = f"input/{path.rpartition('/')[2]}"
+        options['jobqueue'] = {'slurm': options['jobqueue']}
+
+        # upload the config file for the CLI
+        logger.info(f"Uploading CLI config file for task {task.guid}")
+        with ssh.client.open_sftp() as sftp:
+            sftp.chdir(work_dir)
+            with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
+                yaml.dump(del_none(options), cli_file, default_flow_style=False)
 
 
 def execute_local_task(task: Task, ssh: SSH):
