@@ -55,6 +55,7 @@ from plantit import settings
 
 logger = logging.getLogger(__name__)
 
+
 # users
 
 def list_users(invalidate: bool = False) -> List[dict]:
@@ -427,12 +428,14 @@ async def refresh_personal_workflow_cache(github_username: str):
             if decoded not in wf_keys:
                 removed += 1
                 redis.delete(decoded)
-            else: existing += 1
+            else:
+                existing += 1
     # ...then adding/updating the workflows we just scraped
     for wf in workflows:
         redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
-    logger.info(f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {len(workflows) - existing} new, removed {removed}, updated {existing})")
+    logger.info(
+        f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {len(workflows) - existing} new, removed {removed}, updated {existing})")
 
 
 async def refresh_all_orgs_workflow_cache():
@@ -467,7 +470,8 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 
 def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
-    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if 'public' in wf['config'] and wf['config']['public']]
+    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
+                 'public' in wf['config'] and wf['config']['public']]
     print(len(workflows))
     return workflows
 
@@ -498,7 +502,8 @@ async def get_workflow(
         }
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
         return workflow
-    else: return json.loads(workflow)
+    else:
+        return json.loads(workflow)
 
 
 # def empty_personal_workflow_cache(owner: str):
@@ -565,40 +570,38 @@ def parse_task_eta(data: dict) -> (datetime, int):
 
 
 def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
-    # update config before uploading
     config = task.workflow['config']
     config['workdir'] = join(task.agent.workdir, task.guid)
     config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
-    if 'output' in config and 'from' in config['output']:
-        if config['output']['from'] is not None and config['output']['from'] != '':
-            config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
 
-    # make sure we don't push configuration or job scripts
-    if 'output' not in config:
+    # set the output directory (if none is set, use the task working dir)
+    default_from = join(task.agent.workdir, task.workdir)
+    if 'output' in config:
+        if 'from' in config['output']:
+            if config['output']['from'] is not None and config['output']['from'] != '':
+                config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
+            else: config['output']['from'] = default_from
+        else: config['output']['from'] = default_from
+    else:
         config['output'] = dict()
-    if 'include' not in config['output']:
-        config['output']['include'] = dict()
-    if 'patterns' not in config['output']['include']:
-        config['output']['exclude']['patterns'] = []
+        config['output']['from'] = default_from
 
+    if 'include' not in config['output']: config['output']['include'] = dict()
+    if 'patterns' not in config['output']['include']: config['output']['exclude']['patterns'] = []
+
+    # include task configuration file and scheduler logs
+    config['output']['include']['names'].append(f"{task.guid}.yaml")
     config['output']['include']['patterns'].append("out")
     config['output']['include']['patterns'].append("err")
     config['output']['include']['patterns'].append("log")
 
-    if 'exclude' not in config['output']:
-        config['output']['exclude'] = dict()
-    if 'names' not in config['output']['exclude']:
-        config['output']['exclude']['names'] = []
+    if 'exclude' not in config['output']: config['output']['exclude'] = dict()
+    if 'names' not in config['output']['exclude']: config['output']['exclude']['names'] = []
 
-    config['output']['exclude']['names'].append(f"{task.guid}.yaml")
+    # exclude template scripts
     config['output']['exclude']['names'].append("template_task_local.sh")
     config['output']['exclude']['names'].append("template_task_slurm.sh")
     output = config['output']
-
-    # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
-    # new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
-    # launcher = task.agent.launcher  # whether to use TACC launcher
-    # if task.agent.launcher: del new_flow['jobqueue']
 
     errors = []
     image = None
@@ -917,7 +920,6 @@ def compose_task_singularity_command(
         docker_username: str = None,
         docker_password: str = None,
         index: int = None) -> str:
-
     # build up the command according to the order:
     # - (non-secret) env vars
     # - singularity invocation
@@ -944,10 +946,11 @@ def compose_task_singularity_command(
     for parameter in parameters:
         key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
-        logger.debug(f"Replacing '{key}' with '{val}'")
-        cmd = cmd.replace(f"${key}", val)
-        cmd = f"SINGULARITYENV_{key}={val} " + cmd
-    logger.debug(f"Using command: '{cmd}'") # don't want to reveal secrets so log before prepending secret env vars
+        cmd += ' '.join(f"SINGULARITYENV_{key}={val}")
+        # logger.debug(f"Replacing '{key}' with '{val}'")
+        # cmd = cmd.replace(f"${key}", val)
+        # cmd = f"SINGULARITYENV_{key}={val} " + cmd
+    logger.debug(f"Using command: '{cmd}'")  # don't want to reveal secrets so log before prepending secret env vars
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
 
@@ -1210,7 +1213,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
     if 'input' in options:
         files = list_task_input_files(task, options) if (
-                    'input' in options and options['input']['kind'] == 'files') else []
+                'input' in options and options['input']['kind'] == 'files') else []
         task.inputs_detected = len(files)
         task.save()
 
@@ -1224,9 +1227,10 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                     env=options['env'],
                     parameters=(options['parameters'] if 'parameters' in options else []) + [
                         Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
+                        Parameter(key='OUTPUT', value=options['output']['from']),
                         Parameter(key='GPUS', value=str(gpus))],
                     bind_mounts=options['bind_mounts'] if (
-                                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
+                            'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
                     gpus=gpus,
                     docker_username=docker_username,
@@ -1241,6 +1245,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input')),
+                    Parameter(key='OUTPUT', value=options['output']['from']),
                     Parameter(key='GPUS', value=str(gpus))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
                                                                                               list) else [],
@@ -1258,6 +1263,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
                 env=options['env'],
                 parameters=(options['parameters'] if 'parameters' in options else []) + [
                     Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
+                    Parameter(key='OUTPUT', value=options['output']['from']),
                     Parameter(key='GPUS', value=str(gpus))],
                 bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
                                                                                               list) else [],
@@ -1273,6 +1279,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
             command=options['command'],
             env=options['env'],
             parameters=options['parameters'] if 'parameters' in options else [] + [
+                Parameter(key='OUTPUT', value=options['output']['from']),
                 Parameter(key='GPUS', value=str(gpus))],
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
@@ -1286,7 +1293,8 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     # TODO: if sftp throws an IOError or complains about filesizes, it probably means the remote host's disk is full
-    # we should catch those errors and display a note about this in the UI
+    # we should catch the error and show an alert in the UI
+    # issue ref:
 
     with ssh.client.open_sftp() as sftp:
         task_commands = compose_task_run_script(task, options, environ.get(

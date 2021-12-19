@@ -357,7 +357,13 @@ def healthcheck(request, name):
 
     body = json.loads(request.body.decode('utf-8'))
     healthy, output = is_healthy(agent, body['auth'])
+    check = {
+        'timestamp': timezone.now().isoformat(),
+        'healthy': healthy,
+        'output': output
+    }
 
+    # update agent health status
     agent.is_healthy = healthy
     agent.save()
 
@@ -366,15 +372,8 @@ def healthcheck(request, name):
     length = redis.llen(f"healthchecks/{agent.name}")
     checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
     if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
-    redis.lpush(
-        f"healthchecks/{agent.name}",
-        json.dumps({
-            'timestamp': timezone.now().isoformat(),
-            'healthy': healthy,
-            'output': output
-        }))
-
-    return JsonResponse({'healthy': healthy, 'output': output})
+    redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
+    return JsonResponse(check)
 
 
 @login_required
