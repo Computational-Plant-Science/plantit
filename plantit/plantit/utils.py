@@ -1292,19 +1292,27 @@ def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
         task_commands = compose_task_run_script(task, options, environ.get(
             'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'TASKS_TEMPLATE_SCRIPT_SLURM'))
-        sftp.chdir(join(task.agent.workdir, task.workdir))
+        # sftp.chdir(join(task.agent.workdir, task.workdir))
         with tempfile.NamedTemporaryFile() as task_script:
             for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
             task_script.seek(0)
-            sftp.put(task_script.name, f"{task.guid}.sh")
+            # sftp.put(task_script.name, f"{task.guid}.sh")
+            with sftp.open(f"{task.guid}.sh", 'w') as file:
+                for line in task_script.readlines():
+                    file.write(line)
+                    # execute_command(ssh, '', f"echo '{line}' >> {task.guid}.sh")
 
-        # if the selected agent uses the Launcher, create a parameter sweep script too
+        # if the selected agent uses the TACC Launcher, create a parameter sweep script too
         if task.agent.launcher:
             with tempfile.NamedTemporaryFile() as launcher_script:
                 launcher_commands = compose_jobqueue_task_launcher_script(task, options)
                 for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
                 launcher_script.seek(0)
-                sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
+                # sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
+                with sftp.open(os.environ.get('LAUNCHER_SCRIPT_NAME'), 'w') as file:
+                    for line in launcher_script.readlines():
+                        file.write(line)
+                        # execute_command(ssh, '', f"echo '{line}' >> {os.environ.get('LAUNCHER_SCRIPT_NAME')}")
 
 
 def execute_local_task(task: Task, ssh: SSH):
