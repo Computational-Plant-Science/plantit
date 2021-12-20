@@ -4850,19 +4850,20 @@ export default {
             );
         },
         mustAuthenticate() {
-            let ownsAgent =
-                this.selectedAgent.user !== undefined &&
-                this.selectedAgent.user === this.profile.djangoProfile.username;
-            let isGuest = this.selectedAgent.users_authorized.some(
-                (user) => user.username === this.profile.djangoProfile.username
-            );
-            return (
-                this.selectedAgent.authentication === 'password' ||
-                (this.selectedAgent.authentication === 'key' &&
-                    !ownsAgent &&
-                    !isGuest &&
-                    !this.selectedAgent.public) // this last clause makes key-protected public agents effectively available to all users
-            );
+          return this.selectedAgent.authentication === 'password';
+            // let ownsAgent =
+            //     this.selectedAgent.user !== undefined &&
+            //     this.selectedAgent.user === this.profile.djangoProfile.username;
+            // let isGuest = this.selectedAgent.users_authorized.some(
+            //     (user) => user.username === this.profile.djangoProfile.username
+            // );
+            // return (
+            //     this.selectedAgent.authentication === 'password' ||
+            //     (this.selectedAgent.authentication === 'key' &&
+            //         !ownsAgent &&
+            //         !isGuest &&
+            //         !this.selectedAgent.public) // this last clause makes key-protected public agents effectively available to all users
+            // );
         },
         getWorkflow() {
             return this.workflow(this.owner, this.name, this.branch);

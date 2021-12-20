@@ -48,6 +48,7 @@ def prepare_task_environment(self, guid: str, auth: dict):
         return
 
     try:
+        print(auth)
         ssh = get_task_ssh_client(task, auth)
         with ssh:
             log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.name} on {task.agent.name}"])

@@ -1298,7 +1298,7 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
         logger.info(os.stat(task_script.name))
-        cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh"
+        cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh"
         logger.info(f"Uploading job script for task {task.guid} using command: {cmd}")
         subprocess.run(cmd, shell=True)
         # with SCPClient(ssh.client.get_transport()) as scp:
@@ -1319,7 +1319,7 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
             logger.info(os.stat(launcher_script.name))
-            cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}"
+            cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}"
             logger.info(f"Uploading launcher script for task {task.guid} using command: {cmd}")
             subprocess.run(cmd, shell=True)
             # with SCPClient(ssh.client.get_transport()) as scp:
@@ -1708,11 +1708,14 @@ def get_task_ssh_client(task: Task, auth: dict) -> SSH:
     return client
 
 
-def parse_task_auth_options(user: User, auth: dict) -> dict:
+def parse_task_auth_options(task: Task, auth: dict) -> dict:
     if 'password' in auth:
         return PasswordTaskAuth(username=auth['username'], password=auth['password'])
     else:
-        return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(user.username)))
+        # use the agent owner's key credentials
+        # (assuming that if we're already here,
+        # submitter has valid access to agent)
+        return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(task.agent.user.username)))
 
 
 def get_agent_log_file_contents(task: Task) -> List[str]:

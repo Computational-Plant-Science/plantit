@@ -61,7 +61,6 @@ def get_all_or_create(request):
             task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
             step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
             agent = Agent.objects.get(name=config['agent']['name'])
-            auth = parse_task_auth_options(user, workflow['auth'])
             task = create_task(
                 username=user.username,
                 agent_name=agent.name,
@@ -71,6 +70,8 @@ def get_all_or_create(request):
                 guid=task_guid,
                 investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
+            auth = parse_task_auth_options(task, workflow['auth'])
+            logger.warning(auth)
 
             (prepare_task_environment.s(task.guid, auth) |\
              submit_task.s(auth) |\
@@ -172,13 +173,13 @@ def get_by_owner_and_name(request, owner, name):
 @login_required
 def transfer_to_cyverse(request, owner, name):
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(request.user, body['auth'])
     transfer_path = body['path']
 
     # find the task
     try:
         user = User.objects.get(username=owner)
         task = Task.objects.get(user=user, name=name)
+        auth = parse_task_auth_options(task, body['auth'])
     except:
         return HttpResponseNotFound()
     if not task.is_complete: return HttpResponseBadRequest('task incomplete')
@@ -235,17 +236,15 @@ def get_output_file(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    print(body)
     path = body['path']
-    auth = parse_task_auth_options(request.user, body['auth'])
-
+    auth = parse_task_auth_options(task, body['auth'])
     ssh = get_task_ssh_client(task, auth)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:
         with ssh.client.open_sftp() as sftp:
             file_path = join(workdir, path)
-            print(f"Downloading {file_path}")
+            logger.info(f"Downloading {file_path}")
 
             stdin, stdout, stderr = ssh.client.exec_command('test -e {0} && echo exists'.format(file_path))
             if not stdout.read().decode().strip() == 'exists':
@@ -301,7 +300,7 @@ def get_scheduler_logs(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(request.user, body['auth'])
+    auth = parse_task_auth_options(task, body['auth'])
 
     with open(get_task_scheduler_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -335,7 +334,7 @@ def get_scheduler_logs_content(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(request.user, body['auth'])
+    auth = parse_task_auth_options(task, body['auth'])
 
     with open(get_task_scheduler_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -370,7 +369,7 @@ def get_agent_logs(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(request.user, body['auth'])
+    auth = parse_task_auth_options(task, body['auth'])
 
     with open(get_task_agent_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -404,7 +403,7 @@ def get_agent_logs_content(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(request.user, body['auth'])
+    auth = parse_task_auth_options(task, body['auth'])
 
     with open(get_task_agent_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -440,7 +439,7 @@ def get_agent_logs_content(request, owner, name):
 #         return HttpResponseNotFound()
 #
 #     body = json.loads(request.body.decode('utf-8'))
-#     auth = parse_task_auth_options(body['auth'])
+#     auth = parse_task_auth_options(task, body['auth'])
 #
 #     ssh = get_task_ssh_client(task, auth)
 #     workdir = join(task.agent.workdir, task.workdir)
@@ -474,7 +473,7 @@ def cancel(request, owner, name):
     if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
-        auth = parse_task_auth_options(user, json.loads(request.body.decode('utf-8'))['auth'])
+        auth = parse_task_auth_options(task, json.loads(request.body.decode('utf-8'))['auth'])
         cancel_task(task, auth)
 
     now = timezone.now()

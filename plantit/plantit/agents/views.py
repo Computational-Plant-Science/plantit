@@ -15,7 +15,7 @@ from django.utils import timezone
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAuthentication
 from plantit.notifications.models import Notification
 from plantit.ssh import SSH, execute_command
-from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path, is_healthy
+from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path, get_or_create_user_keypair, is_healthy
 from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
@@ -406,6 +406,10 @@ def set_authentication_strategy(request, name):
 
     agent.authentication = authentication
     agent.save()
+
+    if authentication == AgentAuthentication.KEY:
+        get_or_create_user_keypair(username=request.user.username, overwrite=False)
+
     logger.info(f"Agent {name} is now using {authentication} authentication")
 
     return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in list(Agent.objects.filter(user=request.user))]})
