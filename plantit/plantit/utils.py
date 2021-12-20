@@ -1292,7 +1292,6 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         #     sftp.mkdir(join(work_dir, 'input'))
 
     # compose and upload the task script
-    logger.info(f"Uploading job script for task {task.guid}")
     task_commands = compose_task_run_script(task, options, environ.get(
         'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
         'TASKS_TEMPLATE_SCRIPT_SLURM'))
@@ -1300,7 +1299,9 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         for line in task_commands: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
         logger.info(os.stat(task_script.name))
-        subprocess.run(f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
+        cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {task_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh"
+        logger.info(f"Uploading job script for task {task.guid} using command: {cmd}")
+        subprocess.run(cmd, shell=True)
         # with SCPClient(ssh.client.get_transport()) as scp:
         #     scp.put(task_script.name, join(work_dir, f"{task.guid}.sh"))
         # with ssh.client.open_sftp() as sftp:
@@ -1314,13 +1315,14 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
 
     # if the selected agent uses the TACC Launcher, create and upload a parameter sweep script too
     if task.agent.launcher:
-        logger.info(f"Uploading launcher script for task {task.guid}")
         with tempfile.NamedTemporaryFile() as launcher_script:
             launcher_commands = compose_jobqueue_task_launcher_script(task, options)
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
             logger.info(os.stat(launcher_script.name))
-            subprocess.run(f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}", shell=True)
+            cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.user.username))} {launcher_script.name} {auth['username']}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}"
+            logger.info(f"Uploading launcher script for task {task.guid} using command: {cmd}")
+            subprocess.run(cmd, shell=True)
             # with SCPClient(ssh.client.get_transport()) as scp:
             #     scp.put(launcher_script.name, join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME')))
             # with ssh.client.open_sftp() as sftp:
