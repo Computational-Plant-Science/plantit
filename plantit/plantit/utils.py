@@ -1887,6 +1887,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'role': AgentRole.admin if user is not None and agent.user == user else AgentRole.guest,
         'description': agent.description,
         'hostname': agent.hostname,
+        'username': agent.username,
         'pre_commands': agent.pre_commands,
         'max_walltime': agent.max_walltime,
         'max_mem': agent.max_mem,
