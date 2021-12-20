@@ -159,24 +159,6 @@
                                                     ></b-badge
                                                 ></b-col
                                             >
-                                            <b-col
-                                                v-if="ownsWorkflow"
-                                                class="m-0"
-                                                align-self="center"
-                                                md="auto"
-                                                ><b-button
-                                                    @click="
-                                                        showUnbindWorkflowModal
-                                                    "
-                                                    :title="`Unbind ${getWorkflow.config.name}`"
-                                                    size="sm"
-                                                    variant="outline-danger"
-                                                    ><i
-                                                        class="fas fa-times-circle fa-fw fa-1x"
-                                                    ></i>
-                                                    Unbind</b-button
-                                                ></b-col
-                                            >
                                         </b-row>
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
@@ -4119,27 +4101,6 @@
                     ></b-form-input>
                 </b-form-group>
             </b-modal>
-            <b-modal
-                id="unbind"
-                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                centered
-                close
-                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="`Unbind ${this.getWorkflow.config.name}?`"
-                @ok="unbindWorkflow"
-                ok-variant="danger"
-            >
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    You {{ getWorkflow.public ? 'and others' : '' }} will no
-                    longer be able to use this workflow (although you can
-                    re-bind it anytime).
-                </p>
-            </b-modal>
         </b-container>
     </div>
 </template>
@@ -4283,9 +4244,6 @@ export default {
         },
         prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
-        },
-        showUnbindWorkflowModal() {
-            this.$bvModal.show('unbind');
         },
         async loadSelectedInput(path) {
             this.selectedInputLoading = true;
