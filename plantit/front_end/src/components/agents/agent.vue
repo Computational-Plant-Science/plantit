@@ -583,10 +583,7 @@
                                                     "
                                                     @click="preCheckConnection"
                                                 >
-                                                    <i
-                                                        class="fas fa-wave-square fa-fw"
-                                                    ></i>
-                                                    Check Connection<b-spinner
+                                                    <b-spinner
                                                         small
                                                         v-if="
                                                             checkingConnection
@@ -598,8 +595,14 @@
                                                                 : 'dark'
                                                         "
                                                         class="ml-2 mb-1"
-                                                    ></b-spinner> </b-button
-                                            ></b-col>
+                                                    ></b-spinner>
+                                                    <i
+                                                        v-else
+                                                        class="fas fa-wave-square fa-fw"
+                                                    ></i>
+                                                    Check Connection</b-button
+                                                ></b-col
+                                            >
                                             <b-col></b-col>
                                             <b-col
                                                 v-if="getAgent.role === 'admin'"

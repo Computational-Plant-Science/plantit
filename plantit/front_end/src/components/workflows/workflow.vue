@@ -4663,7 +4663,7 @@ export default {
                 };
             else
                 data['auth'] = {
-                    username: this.selectedAgent.user,
+                    username: this.selectedAgent.username,
                 };
 
             this.submitted = true;

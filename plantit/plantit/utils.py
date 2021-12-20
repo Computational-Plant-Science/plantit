@@ -1281,7 +1281,6 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
     # issue ref:
 
     work_dir = join(task.agent.workdir, task.workdir)
-    logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
     # if this workflow has input files, create a directory for them
     if 'input' in options:
