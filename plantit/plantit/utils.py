@@ -1708,11 +1708,11 @@ def get_task_ssh_client(task: Task, auth: dict) -> SSH:
     return client
 
 
-def parse_task_auth_options(auth: dict) -> dict:
+def parse_task_auth_options(user: User, auth: dict) -> dict:
     if 'password' in auth:
         return PasswordTaskAuth(username=auth['username'], password=auth['password'])
     else:
-        return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(auth['username'])))
+        return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(user.username)))
 
 
 def get_agent_log_file_contents(task: Task) -> List[str]:

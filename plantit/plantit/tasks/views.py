@@ -61,7 +61,7 @@ def get_all_or_create(request):
             task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
             step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
             agent = Agent.objects.get(name=config['agent']['name'])
-            auth = parse_task_auth_options(workflow['auth'])
+            auth = parse_task_auth_options(user, workflow['auth'])
             task = create_task(
                 username=user.username,
                 agent_name=agent.name,
@@ -172,7 +172,7 @@ def get_by_owner_and_name(request, owner, name):
 @login_required
 def transfer_to_cyverse(request, owner, name):
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
     transfer_path = body['path']
 
     # find the task
@@ -208,7 +208,7 @@ def transfer_to_cyverse(request, owner, name):
 #     body = json.loads(request.body.decode('utf-8'))
 #     path = body['path']
 #     file = path.rpartition('/')[2]
-#     auth = parse_task_auth_options(body['auth'])
+#     auth = parse_task_auth_options(request.user, body['auth'])
 #
 #     try:
 #         task = Task.objects.get(guid=guid)
@@ -237,7 +237,7 @@ def get_output_file(request, owner, name):
     body = json.loads(request.body.decode('utf-8'))
     print(body)
     path = body['path']
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
 
     ssh = get_task_ssh_client(task, auth)
     workdir = join(task.agent.workdir, task.workdir)
@@ -301,7 +301,7 @@ def get_scheduler_logs(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
 
     with open(get_task_scheduler_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -335,7 +335,7 @@ def get_scheduler_logs_content(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
 
     with open(get_task_scheduler_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -370,7 +370,7 @@ def get_agent_logs(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
 
     with open(get_task_agent_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -404,7 +404,7 @@ def get_agent_logs_content(request, owner, name):
         return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(body['auth'])
+    auth = parse_task_auth_options(request.user, body['auth'])
 
     with open(get_task_agent_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
@@ -474,7 +474,7 @@ def cancel(request, owner, name):
     if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
-        auth = parse_task_auth_options(json.loads(request.body.decode('utf-8'))['auth'])
+        auth = parse_task_auth_options(user, json.loads(request.body.decode('utf-8'))['auth'])
         cancel_task(task, auth)
 
     now = timezone.now()
