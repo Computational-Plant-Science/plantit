@@ -13,22 +13,40 @@
                             params: {
                                 owner: workflow['repo']['owner']['login'],
                                 name: workflow['repo']['name'],
-                                branch: workflow['branch']['name']
-                            }
+                                branch: workflow['branch']['name'],
+                            },
                         }"
                     >
                         {{ workflow.config.name }}
                     </b-link>
                 </h2>
-                <h2 v-else class="text-danger">
-                    <i class="fas fa-exclamation-circle text-danger mr-2"></i>
-                    <small>(name not provided)</small>
+                <h2 v-else>
+                    <b-link
+                        class="text-danger"
+                        :to="{
+                            name: 'workflow',
+                            params: {
+                                owner: workflow['repo']['owner']['login'],
+                                name: workflow['repo']['name'],
+                                branch: workflow['branch']['name'],
+                            },
+                        }"
+                    >
+                        <i
+                            class="fas fa-exclamation-circle text-danger mr-2"
+                        ></i>
+                        <small>(name not provided)</small>
+                    </b-link>
                 </h2>
-              <h5><b-badge variant="secondary">{{ workflow.branch.name }}</b-badge></h5>
+                <h5>
+                    <b-badge variant="secondary">{{
+                        workflow.branch.name
+                    }}</b-badge>
+                </h5>
                 <div
                     v-if="
                         workflow.repo.topics !== undefined &&
-                            workflow.repo.topics.length > 0
+                        workflow.repo.topics.length > 0
                     "
                 >
                     <b-badge
@@ -68,11 +86,15 @@
             v-if="workflow.config.logo !== undefined"
             rounded
             class="card-img-right"
-            style="max-width: 6rem;position: absolute;right: -15px;top: -25px;z-index:1;"
-            right
-            :src="
-                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
+            style="
+                max-width: 6rem;
+                position: absolute;
+                right: -15px;
+                top: -25px;
+                z-index: 1;
             "
+            right
+            :src="`https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`"
         ></b-img>
     </div>
 </template>
@@ -85,19 +107,19 @@ export default {
     props: {
         workflow: {
             type: Object,
-            required: true
+            required: true,
         },
         linkable: {
             type: Boolean,
-            required: true
-        }
+            required: true,
+        },
     },
     methods: {
         openRepo(url) {
             window.open(url);
-        }
+        },
     },
-    computed: mapGetters('user', ['profile'])
+    computed: mapGetters('user', ['profile']),
 };
 </script>
 <style scoped lang="sass">

@@ -116,6 +116,10 @@
                                                 align-self="end"
                                             >
                                                 <h2
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .name !== undefined
+                                                    "
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-white'
@@ -128,7 +132,16 @@
                                                     {{
                                                         getWorkflow.config.name
                                                     }}
-                                                </h2> </b-col
+                                                </h2>
+                                                <h2 v-else class="text-danger">
+                                                    <i
+                                                        class="fas fa-exclamation-circle text-danger mr-2"
+                                                    ></i>
+                                                    <small
+                                                        >(name not
+                                                        provided)</small
+                                                    >
+                                                </h2></b-col
                                             ><b-col
                                                 md="auto"
                                                 align-self="center"
