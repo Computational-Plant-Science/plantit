@@ -939,7 +939,7 @@ def compose_task_singularity_command(
         cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
     if no_cache: cmd += ' --disable-cache'
     if gpus: cmd += ' --nv'
-    cmd += f" {image} {command}"
+    cmd += f" {image} sh -c '{command}'"       # is `sh -c '[the command to run]'` always available/safe?
     logger.debug(f"Using command: '{cmd}'")  # don't want to reveal secrets so log before prepending secret env vars
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
