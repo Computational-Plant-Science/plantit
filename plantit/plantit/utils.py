@@ -441,11 +441,10 @@ async def refresh_personal_workflow_cache(github_username: str):
 async def refresh_online_user_orgs_workflow_cache():
     users = await sync_to_async(User.objects.all)()
     online = await sync_to_async(filter_online)(users)
-    logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        github_profile = async_to_sync(get_user_github_profile)(user)
-        github_organizations = async_to_sync(get_user_github_organizations)(user)
+        github_organizations = await get_user_github_organizations(user)
+        logger.info(f"Refreshing workflow cache for online user {user.username}'s {len(online)} organizations")
         for org in github_organizations:
             await refresh_org_workflow_cache(org['login'], profile.github_token)
 
