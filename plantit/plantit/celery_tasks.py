@@ -308,7 +308,7 @@ def list_task_results(self, guid: str, auth: dict):
 
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}, verifying data was transferred to CyVerse"])
     async_to_sync(push_task_event)(task)
-    check_task_cyverse_transfer.s(guid, auth).apply_async()
+    check_task_cyverse_transfer.s(guid=guid, auth=auth).apply_async()
 
     return guid
 
@@ -330,7 +330,7 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         logger.warning(f"Expected {len(expected)} results but found {len(actual)}")
         if iteration < 5:
             logger.warning(f"Checking again in 30 seconds (iteration {iteration})")
-            check_task_cyverse_transfer.s(guid, iteration + 1).apply_async(countdown=30)
+            check_task_cyverse_transfer.s(guid, iteration=iteration + 1).apply_async(countdown=30)
     else:
         msg = f"Transfer to CyVerse directory {path} completed"
         logger.info(msg)
