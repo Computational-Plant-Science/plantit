@@ -918,12 +918,6 @@ def compose_task_singularity_command(
     if env is not None:
         if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}={v['value']}" for v in env])
         cmd += ' '
-    cmd += f"singularity exec --home {work_dir}"
-    if bind_mounts is not None and len(bind_mounts) > 0:
-        cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-    if no_cache: cmd += ' --disable-cache'
-    if gpus: cmd += ' --nv'
-    cmd += f" {image} {command}"
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
@@ -934,6 +928,12 @@ def compose_task_singularity_command(
         # logger.debug(f"Replacing '{key}' with '{val}'")
         # cmd = cmd.replace(f"${key}", val)
         # cmd = f"SINGULARITYENV_{key}={val} " + cmd
+    cmd += f"singularity exec --home {work_dir}"
+    if bind_mounts is not None and len(bind_mounts) > 0:
+        cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+    if no_cache: cmd += ' --disable-cache'
+    if gpus: cmd += ' --nv'
+    cmd += f" {image} {command}"
     logger.debug(f"Using command: '{cmd}'")  # don't want to reveal secrets so log before prepending secret env vars
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
