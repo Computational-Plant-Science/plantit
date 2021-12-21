@@ -1810,7 +1810,6 @@ export default {
                     project: this.agentProject,
                     header_skip: this.agentHeaderSkip,
                     // gpu: this.agentGPU,
-                    // gpu_queue: this.agentGPUQueue,
                     job_array: this.agentJobArray,
                     launcher: this.agentLauncher,
                 },

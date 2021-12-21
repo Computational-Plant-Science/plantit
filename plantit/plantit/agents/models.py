@@ -41,7 +41,6 @@ class Agent(models.Model):
     project = models.CharField(max_length=250, null=True, blank=True)
     header_skip = models.CharField(max_length=1000, null=True, blank=True)
     gpus = models.IntegerField(null=False, default=0)
-    gpu_queue = models.CharField(max_length=250, null=True, blank=True)
     disabled = models.BooleanField(default=False)
     public = models.BooleanField(default=False)
     logo = models.URLField(null=True, blank=True)

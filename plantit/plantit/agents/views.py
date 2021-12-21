@@ -96,7 +96,6 @@ def list_or_bind(request):
                 agent.header_skip = config['header_skip']
                 if int(config['max_mem']) == -1: agent.header_skip += ' --mem'
                 # agent.gpu = bool(config['gpu'])
-                # agent.gpu_queue = config['gpu_queue']
                 agent.job_array = bool(config['job_array'])
                 agent.launcher = bool(config['launcher'])
                 agent.save()

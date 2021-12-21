@@ -1172,12 +1172,10 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         task.save()
         commands.append(f"#SBATCH --time={adjusted_str}")
     if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.queue is not None and task.agent.queue != '': commands.append(
-        f"#SBATCH --partition={task.agent.gpu_queue if gpus else task.agent.queue}")
+    if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
-        if task.agent.job_array:
-            commands.append(f"#SBATCH --array=1-{len(inputs)}")
+        if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
         commands.append(f"#SBATCH -N {nodes}")
         commands.append(f"#SBATCH --ntasks={nodes}")
     else:
