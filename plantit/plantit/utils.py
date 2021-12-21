@@ -395,7 +395,6 @@ async def refresh_online_users_workflow_cache():
     logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        # empty_personal_workflow_cache(profile.github_username)
         await refresh_personal_workflow_cache(profile.github_username)
 
 
@@ -439,9 +438,16 @@ async def refresh_personal_workflow_cache(github_username: str):
         f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {len(workflows) - existing} new, removed {removed}, updated {existing})")
 
 
-async def refresh_all_orgs_workflow_cache():
-    # TODO
-    pass
+async def refresh_online_user_orgs_workflow_cache():
+    users = await sync_to_async(User.objects.all)()
+    online = await sync_to_async(filter_online)(users)
+    logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
+    for user in online:
+        profile = await sync_to_async(Profile.objects.get)(user=user)
+        github_profile = async_to_sync(get_user_github_profile)(user)
+        github_organizations = async_to_sync(get_user_github_organizations)(user)
+        for org in github_organizations:
+            await refresh_org_workflow_cache(org['login'], profile.github_token)
 
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str):

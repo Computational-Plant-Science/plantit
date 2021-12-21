@@ -24,7 +24,7 @@ from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
-    refresh_personal_workflow_cache, refresh_org_workflow_cache, refresh_all_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
+    refresh_personal_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
     configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache
 
 logger = get_task_logger(__name__)
@@ -446,7 +446,7 @@ def refresh_personal_workflows(owner: str):
 @app.task()
 def refresh_all_workflows():
     async_to_sync(refresh_online_users_workflow_cache)()
-    async_to_sync(refresh_all_orgs_workflow_cache)()
+    async_to_sync(refresh_online_user_orgs_workflow_cache)()
 
 
 @app.task()
@@ -552,7 +552,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections', priority=1)
 
     # refresh workflow cache
-    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh user workflows cache', priority=2)
+    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache', priority=2)
 
     # stranded task sweeps
     sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), stranded_task_sweep, name='check for stranded tasks', priority=2)
