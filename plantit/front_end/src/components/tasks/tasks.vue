@@ -3,9 +3,9 @@
         <div v-if="isRootPath">
             <b-row
                 ><b-col
-                    ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Tasks
-                    </h2></b-col
+                    </h4></b-col
                 ><!--<b-col md="auto" align-self="center" class="mb-1"
                     ><small
                         >{{ tasks.length }} shown,

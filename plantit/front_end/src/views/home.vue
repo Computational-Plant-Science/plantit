@@ -572,7 +572,7 @@ export default {
         workflowPlotLayout() {
             return {
                 title: {
-                    text: 'Workflows Used',
+                    text: 'Workflow Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -599,7 +599,7 @@ export default {
         agentPlotLayout() {
             return {
                 title: {
-                    text: 'Agents Used',
+                    text: 'Agent Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },

@@ -2,7 +2,7 @@
     <div>
         <b-row style="z-index: 10">
             <b-col cols="10">
-                <h2 v-if="workflow.config.name !== undefined">
+                <h5 v-if="workflow.config.name !== undefined">
                     <b-link
                         :disabled="!linkable"
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -19,7 +19,7 @@
                     >
                         {{ workflow.config.name }}
                     </b-link>
-                </h2>
+                </h5>
                 <h2 v-else>
                     <b-link
                         class="text-danger"

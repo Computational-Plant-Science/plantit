@@ -115,7 +115,7 @@
                                                 class="mr-0"
                                                 align-self="end"
                                             >
-                                                <h2
+                                                <h4
                                                     v-if="
                                                         getWorkflow.config
                                                             .name !== undefined
@@ -132,8 +132,8 @@
                                                     {{
                                                         getWorkflow.config.name
                                                     }}
-                                                </h2>
-                                                <h2 v-else class="text-danger">
+                                                </h4>
+                                                <h4 v-else class="text-danger">
                                                     <i
                                                         class="fas fa-exclamation-circle text-danger mr-2"
                                                     ></i>
@@ -141,7 +141,7 @@
                                                         >(name not
                                                         provided)</small
                                                     >
-                                                </h2></b-col
+                                                </h4></b-col
                                             ><b-col
                                                 md="auto"
                                                 align-self="center"
@@ -1033,7 +1033,8 @@
                                                                                 : 'white'
                                                                         "
                                                                         :border-variant="
-                                                                            nameValid
+                                                                            timeLimit !==
+                                                                            0
                                                                                 ? 'success'
                                                                                 : 'secondary'
                                                                         "
@@ -1051,7 +1052,6 @@
                                                                         ><b-row>
                                                                             <b-col
                                                                                 md="auto"
-                                                                                class="m-0"
                                                                                 style="
                                                                                     border-right: 2px
                                                                                         lightgray;
@@ -1447,7 +1447,7 @@
                                                                             <b-col>
                                                                                 <b-row>
                                                                                     <b-col>
-                                                                                        <h4
+                                                                                        <h5
                                                                                             :class="
                                                                                                 profile.darkMode
                                                                                                     ? 'text-white'
@@ -1464,7 +1464,7 @@
                                                                                         1
                                                                                     )
                                                                             }}-->
-                                                                                        </h4>
+                                                                                        </h5>
                                                                                     </b-col>
                                                                                     <b-col
                                                                                         md="auto"

@@ -124,7 +124,7 @@
                                     <b-col>
                                         <b-row>
                                             <b-col md="auto">
-                                                <h1
+                                                <h4
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-white'
@@ -156,7 +156,7 @@
                                                             class="fas fa-exclamation-circle text-secondary fa-fw"
                                                         ></i>
                                                     </small>
-                                                </h1>
+                                                </h4>
                                                 <b-badge
                                                     v-if="
                                                         getAgent.role ===

@@ -8,7 +8,7 @@
             <div v-if="isRootPath">
                 <b-row
                     ><b-col
-                        ><h2
+                        ><h4
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -23,7 +23,7 @@
                                 "
                             ></b-img>
                             MIAPPE Projects
-                        </h2>
+                        </h4>
                     </b-col>
                     <b-col align-self="center" class="mb-1" md="auto">
                         <b-dropdown

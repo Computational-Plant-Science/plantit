@@ -3,10 +3,10 @@
         <div v-if="isRootPath">
             <b-row
                 ><b-col
-                    ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-server fa-fw"></i>
                         Agents
-                    </h2></b-col
+                    </h4></b-col
                 >
                 <b-col align-self="center" class="mb-1" md="auto">
                     <b-dropdown

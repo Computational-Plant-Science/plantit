@@ -4,14 +4,14 @@
             ><b-col
                 ><b-row
                     ><b-col
-                        ><h2
+                        ><h4
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
                             <i class="fas fa-database fa-fw"></i>
                             Datasets
-                        </h2></b-col
+                        </h4></b-col
                     ><b-col align-self="center" class="mb-1" md="auto">
                         <b-dropdown
                             dropleft

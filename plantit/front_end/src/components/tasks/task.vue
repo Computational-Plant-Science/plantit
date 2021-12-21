@@ -70,7 +70,7 @@
                         </b-row>
                         <b-row class="m-0 p-0">
                             <b-col md="auto" align-self="end" class="m-0 p-0">
-                                <h3
+                                <h4
                                     :class="
                                         profile.darkMode
                                             ? 'text-light'
@@ -79,7 +79,7 @@
                                 >
                                     <i class="fas fa-tasks fa-fw"></i>
                                     {{ getTask.name }}
-                                </h3></b-col
+                                </h4></b-col
                             ><b-col class="m-0 ml-2 p-0">
                                 <h5>
                                     <b-badge
