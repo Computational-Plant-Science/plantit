@@ -928,7 +928,7 @@ def compose_task_singularity_command(
         # logger.debug(f"Replacing '{key}' with '{val}'")
         # cmd = cmd.replace(f"${key}", val)
         # cmd = f"SINGULARITYENV_{key}={val} " + cmd
-    cmd += f"singularity exec --home {work_dir}"
+    cmd += f" singularity exec --home {work_dir}"
     if bind_mounts is not None and len(bind_mounts) > 0:
         cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
     if no_cache: cmd += ' --disable-cache'
