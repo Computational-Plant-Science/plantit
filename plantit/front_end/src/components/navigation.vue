@@ -1112,6 +1112,7 @@
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
             close
+            size="xl"
             :header-text-variant="profile.darkMode ? 'white' : 'dark'"
             :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
