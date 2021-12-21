@@ -761,7 +761,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     if log_file is not None: options['log_file'] = log_file
     if jobqueue is not None: options['jobqueue'] = jobqueue
     if no_cache is not None: options['no_cache'] = no_cache
-    if gpu is not None: options['gpu'] = gpu
+    if gpu is not None: options['gpus'] = task.agent.gpus
 
     return errors, options
 
@@ -1143,7 +1143,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     task.save()
 
     if 'jobqueue' not in options: return []
-    gpus = task.agent.gpus if ('gpu' in options and options['gpu']) else 0
+    gpus = options['gpus'] if 'gpus' in options else 0
     jobqueue = options['jobqueue']
     commands = []
 
@@ -1198,7 +1198,7 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
     # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
-    gpus = task.agent.gpus if 'gpu' in options and options['gpu'] else 0
+    gpus = options['gpus'] if 'gpus' in options else 0
 
     if 'input' in options:
         files = list_task_input_files(task, options) if (
