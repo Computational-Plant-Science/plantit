@@ -330,7 +330,7 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         logger.warning(f"Expected {len(expected)} results but found {len(actual)}")
         if iteration < 5:
             logger.warning(f"Checking again in 30 seconds (iteration {iteration})")
-            check_task_cyverse_transfer.s(guid, iteration=iteration + 1).apply_async(countdown=30)
+            check_task_cyverse_transfer.s(guid, auth, iteration + 1).apply_async(countdown=30)
     else:
         msg = f"Transfer to CyVerse directory {path} completed"
         logger.info(msg)
