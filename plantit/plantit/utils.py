@@ -1684,6 +1684,7 @@ def get_task_result_files(task: Task, workflow: dict, auth: dict) -> List[dict]:
                             'exists': True
                         })
 
+    logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
     return outputs
 
 
