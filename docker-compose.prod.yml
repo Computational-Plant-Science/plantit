@@ -140,7 +140,7 @@ services:
     restart: always
   celery:
     image: computationalplantscience/plantit
-    command: ["celery", "-A", "plantit", "worker", "-n", "celery"]
+    command: [ "celery", "-A", "plantit", "worker", "-n", "celery", "--loglevel", "INFO", "--concurrency=2" ]
     volumes:
       - .:/code
     working_dir: /code/plantit
