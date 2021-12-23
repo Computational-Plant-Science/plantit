@@ -287,7 +287,7 @@
                                         ? 'text-light'
                                         : 'text-dark'
                                 "
-                                >A name for this agent.</span
+                                >A name for this agent (must not contain spaces).</span
                             ></template
                         >
                         <b-form-input
@@ -1393,7 +1393,11 @@ export default {
                 : this.personalAgentsLoading;
         },
         agentNameValid() {
-            return this.agentName !== '' && !this.agentNameExists;
+            return (
+                this.agentName !== '' &&
+                !this.agentNameExists &&
+                !this.agentName.includes(' ')  // no spaces in agent name
+            );
         },
         agentDescriptionValid() {
             return this.agentDescription !== '';
