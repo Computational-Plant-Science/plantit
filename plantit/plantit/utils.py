@@ -1367,7 +1367,8 @@ def execute_local_task(task: Task, ssh: SSH):
             lines.append(stripped)
             count += 1
         else:
-            log_task_orchestrator_status(task, [f"[{task.agent.name}] {line}" for line in lines])
+            for l in lines: logger.info(f"[{task.agent.name}] {l}")
+            # log_task_orchestrator_status(task, [f"[{task.agent.name}] {line}" for line in lines])
             lines = []
             count = 0
 
@@ -1387,7 +1388,8 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     for line in execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True):
         stripped = line.strip()
         if stripped:
-            log_task_orchestrator_status(task, [f"[{task.agent.name}] {stripped}"])
+            logger.info(f"[{task.agent.name}] {stripped}")
+            # log_task_orchestrator_status(task, [f"[{task.agent.name}] {stripped}"])
             lines.append(stripped)
 
     job_id = parse_task_job_id(lines[-1])
@@ -1395,8 +1397,7 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     task.updated = timezone.now()
     task.save()
 
-    logger.info(f"Set task job ID: {task.job_id}")
-
+    logger.info(f"Set task {task.guid} job ID: {task.job_id}")
     return job_id
 
 
@@ -1884,10 +1885,7 @@ def agent_to_dict_async(agent: Agent, user: User = None):
 
 def agent_to_dict(agent: Agent, user: User = None) -> dict:
     tasks = AgentTask.objects.filter(agent=agent)
-    redis = RedisClient.get()
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
-    # workflows_authorized = agent.workflows_authorized.all() if agent.workflows_authorized is not None else []
-    # workflows_blocked = agent.workflows_blocked.all() if agent.workflows_blocked is not None else []
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
@@ -1909,14 +1907,9 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'gpus': agent.gpus,
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
-        'authentication': agent.authentication,
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
         'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
-        # 'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-        #                          workflow in workflows_authorized],
-        # 'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-        #                       workflow in workflows_blocked]
     }
 
     if agent.user is not None: mapped['user'] = agent.user.username
@@ -1935,7 +1928,7 @@ def agent_task_to_dict(task: AgentTask) -> dict:
 
 
 def has_virtual_memory(agent: Agent) -> bool:
-    return agent.header_skip == '--mem'
+    return '--mem' in agent.header_skip
 
 
 @retry(
@@ -1957,11 +1950,7 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
 
     output = []
     try:
-        if agent.authentication == AgentAuthentication.PASSWORD:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=auth['username'], password=auth['password'])
-        else:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username,
-                      pkey=str(get_user_private_key_path(agent.user.username)))
+        ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
 
         try:
             with ssh:

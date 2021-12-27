@@ -1292,15 +1292,7 @@ export default {
                 'workflows/loadOrg',
                 this.profile.githubProfile.login
             ),
-            this.$store.dispatch('agents/loadPublic'),
-            this.$store.dispatch(
-                'agents/loadPersonal',
-                this.profile.djangoProfile.username
-            ),
-            this.$store.dispatch(
-                'agents/loadGuest',
-                this.profile.djangoProfile.username
-            ),
+            this.$store.dispatch('agents/loadAll'),
             this.$store.dispatch('datasets/loadPublic'),
             this.$store.dispatch('datasets/loadPersonal'),
             this.$store.dispatch('datasets/loadShared'),

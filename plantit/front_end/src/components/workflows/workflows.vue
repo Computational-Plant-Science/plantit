@@ -2,12 +2,29 @@
     <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <div v-if="isRootPath">
             <b-row
-                ><b-col
+                ><b-col md="auto"
                     ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-stream fa-fw"></i>
                         Workflows
                     </h4></b-col
                 >
+                <b-col md="auto" align-self="center" class="mb-1"
+                    ><small
+                        >powered by
+                        <i class="fab fa-github fa-fw fa-1x"></i></small
+                    ><b-img
+                        class="mt-1"
+                        rounded
+                        style="max-height: 1.2rem"
+                        right
+                        :src="
+                            profile.darkMode
+                                ? require('../../assets/logos/github_white.png')
+                                : require('../../assets/logos/github_black.png')
+                        "
+                    ></b-img
+                ></b-col>
+                <b-col></b-col>
                 <b-col align-self="center" class="mb-1" md="auto">
                     <b-dropdown
                         dropleft
@@ -89,22 +106,7 @@
                         <code>plantit.yaml</code> file).</b-popover
                     ></b-col
                 >
-                <b-col md="auto" align-self="center" class="mb-1"
-                    ><small
-                        >powered by
-                        <i class="fab fa-github fa-fw fa-1x"></i></small
-                    ><b-img
-                        class="mt-1"
-                        rounded
-                        style="max-height: 1.2rem"
-                        right
-                        :src="
-                            profile.darkMode
-                                ? require('../../assets/logos/github_white.png')
-                                : require('../../assets/logos/github_black.png')
-                        "
-                    ></b-img></b-col
-            ></b-row>
+            </b-row>
             <b-row v-if="workflowsLoading" class="mt-2">
                 <b-col>
                     <b-spinner
@@ -141,7 +143,9 @@
                     ><span v-if="context === ''"
                         >No public workflows have been published yet.</span
                     ><span v-else-if="context === profile.githubProfile.login"
-                        >You haven't created any workflow bindings yet. Add a <code>plantit.yaml</code> file to your repository to bind a workflow.</span
+                        >You haven't created any workflow bindings yet. Add a
+                        <code>plantit.yaml</code> file to your repository to
+                        bind a workflow.</span
                     ><span v-else
                         >This organization has no workflow bindings yet.</span
                     ></b-col

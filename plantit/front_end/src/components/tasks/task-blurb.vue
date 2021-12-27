@@ -119,7 +119,7 @@
                 ><b-col
                     style="top: 27px;position: relative; font-size: 22pt"
                     align-self="end"
-                    :class="mt - 0"
+                    class="mt-0"
                     ><b
                         :class="
                             task.is_failure

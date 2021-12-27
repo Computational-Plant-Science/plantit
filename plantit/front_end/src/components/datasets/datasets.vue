@@ -3,7 +3,7 @@
         <b-row
             ><b-col
                 ><b-row
-                    ><b-col
+                    ><b-col md="auto"
                         ><h4
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -12,7 +12,18 @@
                             <i class="fas fa-database fa-fw"></i>
                             Datasets
                         </h4></b-col
-                    ><b-col align-self="center" class="mb-1" md="auto">
+                    ><b-col md="auto" align-self="center" class="mb-1"
+                        ><small>powered by</small
+                        ><b-img
+                            class="ml-2 mt-1"
+                            rounded
+                            style="max-height: 1.1rem"
+                            right
+                            :src="
+                                require('../../assets/logos/cyverse_bright.png')
+                            "
+                        ></b-img></b-col
+                ><b-col></b-col><b-col align-self="center" class="mb-1" md="auto">
                         <b-dropdown
                             dropleft
                             id="switch-dataset-context"
@@ -45,7 +56,7 @@
                             placement="topleft"
                             target="switch-dataset-context"
                             title="Dataset Context"
-                            >Click here to toggle between public workflows and
+                            >Click here to toggle between public datasets and
                             your own.</b-popover
                         >
                     </b-col>
@@ -79,18 +90,7 @@
                             >Click here to refresh your view of the data store.</b-popover
                         ></b-col
                     >
-                    <b-col md="auto" align-self="center" class="mb-1"
-                        ><small>powered by</small
-                        ><b-img
-                            class="ml-2 mt-1"
-                            rounded
-                            style="max-height: 1.1rem"
-                            right
-                            :src="
-                                require('../../assets/logos/cyverse_bright.png')
-                            "
-                        ></b-img></b-col
-                ></b-row>
+                    </b-row>
                 <b-row v-if="publicContext">
                     <b-col
                         ><b-row v-if="publicDatasetsLoading" class="text-center"
@@ -263,7 +263,7 @@
                                                             Shared with you
                                                         "
                             >
-                                Shared with you
+                                Shared
                             </b-button></template
                         >
                         <!--<b-row class="mb-2"
@@ -356,7 +356,7 @@
                                                             Shared by you
                                                         "
                             >
-                                Shared by you
+                                Sharing
                             </b-button></template
                         >
                         <!--<b-row class="mb-2"
