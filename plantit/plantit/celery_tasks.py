@@ -480,8 +480,7 @@ def refresh_all_user_cyverse_tokens():
 
 @app.task()
 def agents_healthchecks():
-    agents = Agent.objects.filter(authentication=AgentAuthentication.KEY)
-    for agent in agents:
+    for agent in Agent.objects.all():
         healthy, output = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
         agent.is_healthy = healthy
         agent.save()
@@ -490,13 +489,12 @@ def agents_healthchecks():
         length = redis.llen(f"healthchecks/{agent.name}")
         checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
         if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
-        redis.lpush(
-            f"healthchecks/{agent.name}",
-            json.dumps({
+        check = {
                 'timestamp': timezone.now().isoformat(),
                 'healthy': healthy,
                 'output': output
-            }))
+            }
+        redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
 
 
 @app.task()

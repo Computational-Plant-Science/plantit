@@ -1884,10 +1884,7 @@ def agent_to_dict_async(agent: Agent, user: User = None):
 
 def agent_to_dict(agent: Agent, user: User = None) -> dict:
     tasks = AgentTask.objects.filter(agent=agent)
-    redis = RedisClient.get()
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
-    # workflows_authorized = agent.workflows_authorized.all() if agent.workflows_authorized is not None else []
-    # workflows_blocked = agent.workflows_blocked.all() if agent.workflows_blocked is not None else []
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
@@ -1909,14 +1906,9 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'gpus': agent.gpus,
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
-        'authentication': agent.authentication,
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
         'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
-        # 'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-        #                          workflow in workflows_authorized],
-        # 'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for
-        #                       workflow in workflows_blocked]
     }
 
     if agent.user is not None: mapped['user'] = agent.user.username
@@ -1935,7 +1927,7 @@ def agent_task_to_dict(task: AgentTask) -> dict:
 
 
 def has_virtual_memory(agent: Agent) -> bool:
-    return agent.header_skip == '--mem'
+    return '--mem' in agent.header_skip
 
 
 @retry(
@@ -1957,11 +1949,7 @@ def is_healthy(agent: Agent, auth: dict) -> (bool, List[str]):
 
     output = []
     try:
-        if agent.authentication == AgentAuthentication.PASSWORD:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=auth['username'], password=auth['password'])
-        else:
-            ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username,
-                      pkey=str(get_user_private_key_path(agent.user.username)))
+        ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
 
         try:
             with ssh:

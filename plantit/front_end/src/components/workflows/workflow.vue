@@ -2262,597 +2262,144 @@
                                                                                             task
                                                                                             to.
                                                                                         </b>
-                                                                                        <b-tabs
-                                                                                            class="mt-2"
-                                                                                            nav-class="bg-transparent"
-                                                                                            active-nav-item-class="bg-transparent text-dark"
-                                                                                            pills
-                                                                                            v-model="
-                                                                                                activeAgentTab
+                                                                                        <b-row
+                                                                                            align-h="center"
+                                                                                            v-if="
+                                                                                                agentsLoading
                                                                                             "
                                                                                         >
-                                                                                            <b-tab
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
-                                                                                                "
-                                                                                            >
-                                                                                                <template
-                                                                                                    #title
-                                                                                                >
-                                                                                                    <b-button
-                                                                                                        id="your-agents"
-                                                                                                        :variant="
-                                                                                                            activeAgentTab ===
-                                                                                                            0
-                                                                                                                ? profile.darkMode
-                                                                                                                    ? 'outline-success'
-                                                                                                                    : 'success'
-                                                                                                                : profile.darkMode
-                                                                                                                ? 'outline-light'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        title="Your agents"
-                                                                                                    >
-                                                                                                        Yours
-                                                                                                    </b-button>
-                                                                                                    <b-popover
-                                                                                                        :show.sync="
-                                                                                                            profile.hints
-                                                                                                        "
-                                                                                                        triggers="manual"
-                                                                                                        placement="bottomleft"
-                                                                                                        target="your-agents"
-                                                                                                        title="Your agents"
-                                                                                                        >Click
-                                                                                                        here
-                                                                                                        to
-                                                                                                        browse
-                                                                                                        your
-                                                                                                        own
-                                                                                                        agents..</b-popover
-                                                                                                    ></template
-                                                                                                >
-                                                                                                <b-row
-                                                                                                    align-h="center"
-                                                                                                    v-if="
-                                                                                                        personalAgentsLoading
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-spinner
-                                                                                                        type="grow"
-                                                                                                        label="Loading..."
-                                                                                                        variant="secondary"
-                                                                                                    ></b-spinner>
-                                                                                                </b-row>
-                                                                                                <b-row
-                                                                                                    v-else-if="
-                                                                                                        validPersonalAgents.length ===
-                                                                                                        0
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-col>
-                                                                                                        None
-                                                                                                        to
-                                                                                                        show.
-                                                                                                    </b-col>
-                                                                                                </b-row>
-                                                                                                <div
-                                                                                                    v-else
-                                                                                                >
-                                                                                                    <b-row
-                                                                                                        class="text-right"
-                                                                                                        v-for="agent in validPersonalAgents"
-                                                                                                        v-bind:key="
-                                                                                                            agent.name
-                                                                                                        "
-                                                                                                    >
-                                                                                                        <b-col
-                                                                                                            md="auto"
-                                                                                                            ><b-button
-                                                                                                                size="md"
-                                                                                                                class="text-left pt-2"
-                                                                                                                @click="
-                                                                                                                    agentSelected(
-                                                                                                                        agent
-                                                                                                                    )
-                                                                                                                "
-                                                                                                                :variant="
-                                                                                                                    profile.darkMode
-                                                                                                                        ? 'dark'
-                                                                                                                        : 'white'
-                                                                                                                "
-                                                                                                                :disabled="
-                                                                                                                    agentUnsupported(
-                                                                                                                        agent
-                                                                                                                    ) ||
-                                                                                                                    agent.disabled
-                                                                                                                "
-                                                                                                                >{{
-                                                                                                                    agent.name
-                                                                                                                }}</b-button
-                                                                                                            >
-
-                                                                                                            <i
-                                                                                                                v-if="
-                                                                                                                    agent.is_healthy
-                                                                                                                "
-                                                                                                                title="Healthy"
-                                                                                                                class="fas fa-heartbeat text-success fa-fw"
-                                                                                                            ></i
-                                                                                                            ><i
-                                                                                                                v-else
-                                                                                                                title="Unhealthy"
-                                                                                                                class="fas fa-heart-broken text-danger fa-fw"
-                                                                                                            ></i
-                                                                                                            ><i
-                                                                                                                v-if="
-                                                                                                                    agent.disabled
-                                                                                                                "
-                                                                                                                title="Disabled"
-                                                                                                                class="fas fa-exclamation-circle text-secondary fa-fw"
-                                                                                                            ></i
-                                                                                                        ></b-col>
-                                                                                                        <b-col
-                                                                                                            align-self="end"
-                                                                                                            class="mb-2"
-                                                                                                        >
-                                                                                                            <small
-                                                                                                                >{{
-                                                                                                                    agent.max_cores
-                                                                                                                }}
-                                                                                                                cores,
-                                                                                                                {{
-                                                                                                                    agent.max_processes
-                                                                                                                }}
-                                                                                                                processes,
-                                                                                                                <span
-                                                                                                                    v-if="
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue !==
-                                                                                                                            undefined &&
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >=
-                                                                                                                            parseInt(
-                                                                                                                                getWorkflow
-                                                                                                                                    .config
-                                                                                                                                    .jobqueue
-                                                                                                                                    .memory
-                                                                                                                            ) &&
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >
-                                                                                                                            0
-                                                                                                                    "
-                                                                                                                    >{{
-                                                                                                                        agent.max_mem
-                                                                                                                    }}
-                                                                                                                    GB
-                                                                                                                    memory</span
-                                                                                                                >
-                                                                                                                <span
-                                                                                                                    v-else-if="
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >
-                                                                                                                        0
-                                                                                                                    "
-                                                                                                                    class="text-danger"
-                                                                                                                    >{{
-                                                                                                                        agent.max_mem
-                                                                                                                    }}
-                                                                                                                    GB
-                                                                                                                    memory</span
-                                                                                                                >
-                                                                                                                <span
-                                                                                                                    v-else-if="
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) ===
-                                                                                                                        -1
-                                                                                                                    "
-                                                                                                                    >virtual
-                                                                                                                    memory</span
-                                                                                                                ><span
-                                                                                                                    v-if="
-                                                                                                                        agent.gpus
-                                                                                                                    "
-                                                                                                                >
-                                                                                                                    ,
-                                                                                                                    GPU
-                                                                                                                </span>
-                                                                                                            </small></b-col
-                                                                                                        >
-                                                                                                    </b-row>
-                                                                                                </div>
-                                                                                            </b-tab>
-                                                                                            <b-tab
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
+                                                                                            <b-spinner
+                                                                                                type="grow"
+                                                                                                label="Loading..."
+                                                                                                variant="secondary"
+                                                                                            ></b-spinner>
+                                                                                        </b-row>
+                                                                                        <b-row
+                                                                                            v-else-if="
+                                                                                                getAgents.length ===
+                                                                                                0
+                                                                                            "
+                                                                                        >
+                                                                                            <b-col>
+                                                                                                None
+                                                                                                to
+                                                                                                show.
+                                                                                            </b-col>
+                                                                                        </b-row>
+                                                                                        <div
+                                                                                            v-else
+                                                                                        >
+                                                                                            <b-row
+                                                                                                class="text-right"
+                                                                                                v-for="agent in getAgents"
+                                                                                                v-bind:key="
+                                                                                                    agent.name
                                                                                                 "
                                                                                             >
-                                                                                                <template
-                                                                                                    #title
-                                                                                                >
-                                                                                                    <b-button
-                                                                                                        id="guest-agents"
+                                                                                                <b-col
+                                                                                                    md="auto"
+                                                                                                    ><b-button
+                                                                                                        size="md"
+                                                                                                        class="text-left pt-2"
+                                                                                                        @click="
+                                                                                                            agentSelected(
+                                                                                                                agent
+                                                                                                            )
+                                                                                                        "
                                                                                                         :variant="
-                                                                                                            activeAgentTab ===
-                                                                                                            1
-                                                                                                                ? profile.darkMode
-                                                                                                                    ? 'outline-success'
-                                                                                                                    : 'success'
-                                                                                                                : profile.darkMode
-                                                                                                                ? 'outline-light'
+                                                                                                            profile.darkMode
+                                                                                                                ? 'dark'
                                                                                                                 : 'white'
                                                                                                         "
-                                                                                                        title="Guest agents"
-                                                                                                    >
-                                                                                                        Guest
-                                                                                                    </b-button>
-                                                                                                    <b-popover
-                                                                                                        :show.sync="
-                                                                                                            profile.hints
+                                                                                                        :disabled="
+                                                                                                            agentUnsupported(
+                                                                                                                agent
+                                                                                                            ) ||
+                                                                                                            agent.disabled
                                                                                                         "
-                                                                                                        triggers="manual"
-                                                                                                        placement="top"
-                                                                                                        target="guest-agents"
-                                                                                                        title="Guest Agents"
-                                                                                                        >Click
-                                                                                                        here
-                                                                                                        to
-                                                                                                        browse
-                                                                                                        agents
-                                                                                                        you've
-                                                                                                        been
-                                                                                                        granted
-                                                                                                        guest
-                                                                                                        access
-                                                                                                        to.</b-popover
-                                                                                                    ></template
-                                                                                                >
-                                                                                                <b-row
-                                                                                                    align-h="center"
-                                                                                                    v-if="
-                                                                                                        personalAgentsLoading
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-spinner
-                                                                                                        type="grow"
-                                                                                                        label="Loading..."
-                                                                                                        variant="secondary"
-                                                                                                    ></b-spinner>
-                                                                                                </b-row>
-                                                                                                <b-row
-                                                                                                    v-else-if="
-                                                                                                        validGuestAgents.length ===
-                                                                                                        0
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-col>
-                                                                                                        None
-                                                                                                        to
-                                                                                                        show.
-                                                                                                    </b-col>
-                                                                                                </b-row>
-                                                                                                <div
-                                                                                                    v-else
-                                                                                                >
-                                                                                                    <b-row
-                                                                                                        class="text-right"
-                                                                                                        v-for="agent in validGuestAgents"
-                                                                                                        v-bind:key="
+                                                                                                        >{{
                                                                                                             agent.name
-                                                                                                        "
-                                                                                                    >
-                                                                                                        <b-col
-                                                                                                            md="auto"
-                                                                                                            ><b-button
-                                                                                                                size="md"
-                                                                                                                class="text-left pt-2"
-                                                                                                                @click="
-                                                                                                                    agentSelected(
-                                                                                                                        agent
-                                                                                                                    )
-                                                                                                                "
-                                                                                                                :variant="
-                                                                                                                    profile.darkMode
-                                                                                                                        ? 'dark'
-                                                                                                                        : 'white'
-                                                                                                                "
-                                                                                                                :disabled="
-                                                                                                                    agentUnsupported(
-                                                                                                                        agent
-                                                                                                                    ) ||
-                                                                                                                    agent.disabled
-                                                                                                                "
-                                                                                                                >{{
-                                                                                                                    agent.name
-                                                                                                                }}</b-button
-                                                                                                            ></b-col
-                                                                                                        >
-                                                                                                        <b-col
-                                                                                                            align-self="end"
-                                                                                                        >
-                                                                                                            <small
-                                                                                                                >{{
-                                                                                                                    agent.max_cores
-                                                                                                                }}
-                                                                                                                core(s),
-                                                                                                                {{
-                                                                                                                    agent.max_processes
-                                                                                                                }}
-                                                                                                                process(es),
-                                                                                                                <span
-                                                                                                                    v-if="
-                                                                                                                        getWorkflow
-                                                                                                                            .config
-                                                                                                                            .jobqueue !==
-                                                                                                                            undefined &&
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >=
-                                                                                                                            parseInt(
-                                                                                                                                getWorkflow
-                                                                                                                                    .config
-                                                                                                                                    .jobqueue
-                                                                                                                                    .memory
-                                                                                                                            ) &&
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >
-                                                                                                                            0
-                                                                                                                    "
-                                                                                                                    >{{
-                                                                                                                        agent.max_mem
-                                                                                                                    }}
-                                                                                                                    GB
-                                                                                                                    memory</span
-                                                                                                                >
-                                                                                                                <span
-                                                                                                                    v-else-if="
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) >
-                                                                                                                        0
-                                                                                                                    "
-                                                                                                                    class="text-danger"
-                                                                                                                    >{{
-                                                                                                                        agent.max_mem
-                                                                                                                    }}
-                                                                                                                    GB
-                                                                                                                    memory</span
-                                                                                                                >
-                                                                                                                <span
-                                                                                                                    v-else-if="
-                                                                                                                        parseInt(
-                                                                                                                            agent.max_mem
-                                                                                                                        ) ===
-                                                                                                                        -1
-                                                                                                                    "
-                                                                                                                    >virtual
-                                                                                                                    memory</span
-                                                                                                                ><span
-                                                                                                                    v-if="
-                                                                                                                        agent.gpus
-                                                                                                                    "
-                                                                                                                >
-                                                                                                                    ,
-                                                                                                                    GPU
-                                                                                                                </span>
-                                                                                                                <span
-                                                                                                                    v-else
-                                                                                                                    >,
-                                                                                                                    No
-                                                                                                                    GPU
-                                                                                                                </span></small
-                                                                                                            ></b-col
-                                                                                                        >
-                                                                                                    </b-row>
-                                                                                                </div>
-                                                                                            </b-tab>
-                                                                                            <b-tab
-                                                                                                :title-link-class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'text-white'
-                                                                                                        : 'text-dark'
-                                                                                                "
-                                                                                                :class="
-                                                                                                    profile.darkMode
-                                                                                                        ? 'theme-dark m-0 p-3'
-                                                                                                        : 'theme-light m-0 p-3'
-                                                                                                "
-                                                                                            >
-                                                                                                <template
-                                                                                                    #title
+                                                                                                        }}</b-button
+                                                                                                    ></b-col
                                                                                                 >
-                                                                                                    <b-button
-                                                                                                        id="public-agents"
-                                                                                                        :variant="
-                                                                                                            activeAgentTab ===
-                                                                                                            2
-                                                                                                                ? profile.darkMode
-                                                                                                                    ? 'outline-success'
-                                                                                                                    : 'success'
-                                                                                                                : profile.darkMode
-                                                                                                                ? 'outline-light'
-                                                                                                                : 'white'
-                                                                                                        "
-                                                                                                        title="Public agents"
-                                                                                                    >
-                                                                                                        Public
-                                                                                                    </b-button>
-                                                                                                    <b-popover
-                                                                                                        :show.sync="
-                                                                                                            profile.hints
-                                                                                                        "
-                                                                                                        triggers="manual"
-                                                                                                        placement="right"
-                                                                                                        target="public-agents"
-                                                                                                        title="Public Agents"
-                                                                                                        >Click
-                                                                                                        here
-                                                                                                        to
-                                                                                                        browse
-                                                                                                        public
-                                                                                                        agents.</b-popover
-                                                                                                    ></template
+                                                                                                <b-col
+                                                                                                    align-self="end"
                                                                                                 >
-                                                                                                <b-row
-                                                                                                    align-h="center"
-                                                                                                    v-if="
-                                                                                                        publicAgentsLoading
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-spinner
-                                                                                                        type="grow"
-                                                                                                        label="Loading..."
-                                                                                                        variant="secondary"
-                                                                                                    ></b-spinner>
-                                                                                                </b-row>
-                                                                                                <b-row
-                                                                                                    v-else-if="
-                                                                                                        validPublicAgents.length ===
-                                                                                                        0
-                                                                                                    "
-                                                                                                >
-                                                                                                    <b-col>
-                                                                                                        None
-                                                                                                        to
-                                                                                                        show.
-                                                                                                    </b-col>
-                                                                                                </b-row>
-                                                                                                <div
-                                                                                                    v-else
-                                                                                                >
-                                                                                                    <b-row
-                                                                                                        class="text-right"
-                                                                                                        v-for="agent in validPublicAgents"
-                                                                                                        v-bind:key="
-                                                                                                            agent.name
-                                                                                                        "
-                                                                                                    >
-                                                                                                        <b-col
-                                                                                                            md="auto"
-                                                                                                            ><b-button
-                                                                                                                size="md"
-                                                                                                                class="text-left pt-2"
-                                                                                                                @click="
-                                                                                                                    agentSelected(
-                                                                                                                        agent
-                                                                                                                    )
-                                                                                                                "
-                                                                                                                :variant="
-                                                                                                                    profile.darkMode
-                                                                                                                        ? 'dark'
-                                                                                                                        : 'white'
-                                                                                                                "
-                                                                                                                :disabled="
-                                                                                                                    agentUnsupported(
-                                                                                                                        agent
-                                                                                                                    ) ||
-                                                                                                                    agent.disabled
-                                                                                                                "
-                                                                                                                >{{
-                                                                                                                    agent.name
-                                                                                                                }}</b-button
-                                                                                                            ></b-col
-                                                                                                        >
-                                                                                                        <b-col
-                                                                                                            align-self="end"
-                                                                                                        >
-                                                                                                            <small
-                                                                                                                >{{
-                                                                                                                    agent.max_cores
-                                                                                                                }}
-                                                                                                                cores,
-                                                                                                                {{
-                                                                                                                    agent.max_processes
-                                                                                                                }}
-                                                                                                                processes, </small
-                                                                                                            ><span
-                                                                                                                v-if="
+                                                                                                    <small
+                                                                                                        >{{
+                                                                                                            agent.max_cores
+                                                                                                        }}
+                                                                                                        cores,
+                                                                                                        {{
+                                                                                                            agent.max_processes
+                                                                                                        }}
+                                                                                                        processes, </small
+                                                                                                    ><span
+                                                                                                        v-if="
+                                                                                                            getWorkflow
+                                                                                                                .config
+                                                                                                                .jobqueue !==
+                                                                                                                undefined &&
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >=
+                                                                                                                parseInt(
                                                                                                                     getWorkflow
                                                                                                                         .config
-                                                                                                                        .jobqueue !==
-                                                                                                                        undefined &&
-                                                                                                                    parseInt(
-                                                                                                                        agent.max_mem
-                                                                                                                    ) >=
-                                                                                                                        parseInt(
-                                                                                                                            getWorkflow
-                                                                                                                                .config
-                                                                                                                                .jobqueue
-                                                                                                                                .memory
-                                                                                                                        ) &&
-                                                                                                                    parseInt(
-                                                                                                                        agent.max_mem
-                                                                                                                    ) >
-                                                                                                                        0
-                                                                                                                "
-                                                                                                                >{{
-                                                                                                                    agent.max_mem
-                                                                                                                }}
-                                                                                                                GB
-                                                                                                                memory</span
-                                                                                                            >
-                                                                                                            <span
-                                                                                                                v-else-if="
-                                                                                                                    parseInt(
-                                                                                                                        agent.max_mem
-                                                                                                                    ) >
-                                                                                                                    0
-                                                                                                                "
-                                                                                                                class="text-danger"
-                                                                                                                >{{
-                                                                                                                    agent.max_mem
-                                                                                                                }}
-                                                                                                                GB
-                                                                                                                memory</span
-                                                                                                            >
-                                                                                                            <span
-                                                                                                                v-else-if="
-                                                                                                                    parseInt(
-                                                                                                                        agent.max_mem
-                                                                                                                    ) ===
-                                                                                                                    -1
-                                                                                                                "
-                                                                                                                >virtual
-                                                                                                                memory</span
-                                                                                                            ><span
-                                                                                                                v-if="
-                                                                                                                    agent.gpus
-                                                                                                                "
-                                                                                                            >
-                                                                                                                ,
-                                                                                                                GPU
-                                                                                                            </span>
-                                                                                                            <span
-                                                                                                                v-else
-                                                                                                                >,
-                                                                                                                No
-                                                                                                                GPU
-                                                                                                            </span></b-col
-                                                                                                        >
-                                                                                                    </b-row>
-                                                                                                </div>
-                                                                                            </b-tab>
-                                                                                        </b-tabs>
+                                                                                                                        .jobqueue
+                                                                                                                        .memory
+                                                                                                                ) &&
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >
+                                                                                                                0
+                                                                                                        "
+                                                                                                        >{{
+                                                                                                            agent.max_mem
+                                                                                                        }}
+                                                                                                        GB
+                                                                                                        memory</span
+                                                                                                    >
+                                                                                                    <span
+                                                                                                        v-else-if="
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) >
+                                                                                                            0
+                                                                                                        "
+                                                                                                        class="text-danger"
+                                                                                                        >{{
+                                                                                                            agent.max_mem
+                                                                                                        }}
+                                                                                                        GB
+                                                                                                        memory</span
+                                                                                                    >
+                                                                                                    <span
+                                                                                                        v-else-if="
+                                                                                                            parseInt(
+                                                                                                                agent.max_mem
+                                                                                                            ) ===
+                                                                                                            -1
+                                                                                                        "
+                                                                                                        >virtual
+                                                                                                        memory</span
+                                                                                                    ><span
+                                                                                                        v-if="
+                                                                                                            agent.gpus
+                                                                                                        "
+                                                                                                    >
+                                                                                                        ,
+                                                                                                        GPU
+                                                                                                    </span>
+                                                                                                    <span
+                                                                                                        v-else
+                                                                                                        >,
+                                                                                                        No
+                                                                                                        GPU
+                                                                                                    </span></b-col
+                                                                                                >
+                                                                                            </b-row>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </b-collapse>
                                                                             </b-col>
@@ -4557,16 +4104,6 @@ export default {
             this.$bvModal.show('authenticate');
         },
         async onStart() {
-            // if (
-            //     this.getWorkflow.config.jobqueue === undefined &&
-            //     this.selectedAgent.executor !== 'Local'
-            // ) {
-            //     alert(
-            //         'This workflow configuration lacks a section specifying job-queue scheduler resource requests. It can only be submitted to agents configured for in-process execution.'
-            //     );
-            //     return;
-            // }
-
             // prepare configuration
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/tasks/status/';
@@ -4768,13 +4305,7 @@ export default {
             'task',
             'tasksLoading',
         ]),
-        ...mapGetters('agents', [
-            'publicAgentsLoading',
-            'publicAgents',
-            'personalAgentsLoading',
-            'personalAgents',
-            'guestAgents',
-        ]),
+        ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
         ...mapGetters('datasets', [
             'personalDatasets',
             'publicDatasets',
@@ -4786,84 +4317,13 @@ export default {
             'sharingDatasetsLoading',
         ]),
         ...mapGetters('projects', ['personalProjects', 'othersProjects']),
-        validGuestAgents() {
-            // TODO: reinstate filter after workflow auth is refactored
-            return this.guestAgents;
-            // return this.guestAgents.filter(
-            //     (a) =>
-            //         !a.workflows_blocked.some(
-            //             (wf) =>
-            //                 wf.repo.owner.login ===
-            //                     this.getWorkflow.repo.owner.login &&
-            //                 wf.config.name === this.getWorkflow.config.name
-            //         ) &&
-            //         (a.workflows_authorized.length === 0 ||
-            //             a.workflows_authorized.some(
-            //                 (wf) =>
-            //                     wf.repo.owner.login ===
-            //                         this.getWorkflow.repo.owner.login &&
-            //                     wf.config.name === this.getWorkflow.config.name
-            //             ))
-            // );
-        },
-        validPersonalAgents() {
-            return this.personalAgents;
-            // return this.personalAgents.filter(
-            //     (a) =>
-            //         !a.workflows_blocked.some(
-            //             (wf) =>
-            //                 wf.repo.owner.login ===
-            //                     this.getWorkflow.repo.owner.login &&
-            //                 wf.config.name === this.getWorkflow.config.name
-            //         ) &&
-            //         (a.workflows_authorized.length === 0 ||
-            //             a.workflows_authorized.some(
-            //                 (wf) =>
-            //                     wf.repo.owner.login ===
-            //                         this.getWorkflow.repo.owner.login &&
-            //                     wf.config.name === this.getWorkflow.config.name
-            //             ))
-            // );
-        },
-        validPublicAgents() {
-            return this.publicAgents;
-            //return this.publicAgents.filter(
-            //    (a) =>
-            //        !a.workflows_blocked.some(
-            //            (wf) =>
-            //                wf.repo.owner.login ===
-            //                    this.getWorkflow.repo.owner.login &&
-            //                wf.config.name === this.getWorkflow.config.name
-            //        ) &&
-            //        (a.workflows_authorized.length === 0 ||
-            //            a.workflows_authorized.some(
-            //                (wf) =>
-            //                    wf.repo.owner.login ===
-            //                        this.getWorkflow.repo.owner.login &&
-            //                    wf.config.name === this.getWorkflow.config.name
-            //            ))
-            //);
+        getAgents() {
+            return this.agentsPermitted(this.profile.djangoProfile.username);
         },
         taskHistory() {
             return this.$store.getters['tasks/tasksByOwner'](
                 this.profile.djangoProfile.username
             );
-        },
-        mustAuthenticate() {
-          return this.selectedAgent.authentication === 'password';
-            // let ownsAgent =
-            //     this.selectedAgent.user !== undefined &&
-            //     this.selectedAgent.user === this.profile.djangoProfile.username;
-            // let isGuest = this.selectedAgent.users_authorized.some(
-            //     (user) => user.username === this.profile.djangoProfile.username
-            // );
-            // return (
-            //     this.selectedAgent.authentication === 'password' ||
-            //     (this.selectedAgent.authentication === 'key' &&
-            //         !ownsAgent &&
-            //         !isGuest &&
-            //         !this.selectedAgent.public) // this last clause makes key-protected public agents effectively available to all users
-            // );
         },
         getWorkflow() {
             return this.workflow(this.owner, this.name, this.branch);
