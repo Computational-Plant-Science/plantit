@@ -112,7 +112,7 @@ def submit_task(self, guid: str, auth: dict):
 
                 job_id = submit_jobqueue_task(task, ssh)
 
-                log_task_orchestrator_status(task, [f"Scheduled job (ID {job_id})"])
+                log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
                 async_to_sync(push_task_event)(task)
 
             return guid
@@ -212,7 +212,7 @@ def poll_task_status(self, guid: str, auth: dict):
         task.save()
         if task.is_complete:
             list_task_results.s(guid, auth).apply_async()
-            final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
+            final_message = f"Job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
             async_to_sync(push_task_event)(task)
 
@@ -226,10 +226,8 @@ def poll_task_status(self, guid: str, auth: dict):
             poll_task_status.s(guid, auth).apply_async(countdown=refresh_delay)
     except StopIteration as e:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
-            # task.status = TaskStatus.FAILURE
             now = timezone.now()
             task.updated = now
-            # task.completed = now
             task.save()
 
             retry_seconds = 10
@@ -237,7 +235,6 @@ def poll_task_status(self, guid: str, auth: dict):
             async_to_sync(push_task_event)(task)
             poll_task_status.s(guid, auth).apply_async(countdown=retry_seconds)
             return
-            # raise self.retry(exc=e, countdown=retry_seconds, max_retries=3)
         else:
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
@@ -301,7 +298,6 @@ def list_task_results(self, guid: str, auth: dict):
     async_to_sync(push_task_event)(task)
     expected = get_task_result_files(task, workflow, auth)
     found = [e for e in expected if e['exists']]
-    workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(found))
     task.results_retrieved = True
     task.save()
@@ -416,7 +412,7 @@ def cleanup_task(self, guid: str, auth: dict):
 def aggregate_all_users_usage_stats():
     users = User.objects.all()
     for user in users:
-        logger.info(f"Aggregating usage statistics for {user.username}")
+        logger.info(f"Aggregating statistics for {user.username}")
         stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
@@ -431,7 +427,7 @@ def aggregate_user_usage_stats(username: str):
         logger.warning(f"User {username} not found: {traceback.format_exc()}")
         return
 
-    logger.info(f"Aggregating usage statistics for {user.username}")
+    logger.info(f"Aggregating statistics for {user.username}")
     stats = async_to_sync(calculate_user_statistics)(user)
     redis = RedisClient.get()
     redis.set(f"stats/{user.username}", json.dumps(stats))

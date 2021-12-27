@@ -1367,7 +1367,8 @@ def execute_local_task(task: Task, ssh: SSH):
             lines.append(stripped)
             count += 1
         else:
-            log_task_orchestrator_status(task, [f"[{task.agent.name}] {line}" for line in lines])
+            for l in lines: logger.info(f"[{task.agent.name}] {l}")
+            # log_task_orchestrator_status(task, [f"[{task.agent.name}] {line}" for line in lines])
             lines = []
             count = 0
 
@@ -1387,7 +1388,8 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     for line in execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True):
         stripped = line.strip()
         if stripped:
-            log_task_orchestrator_status(task, [f"[{task.agent.name}] {stripped}"])
+            logger.info(f"[{task.agent.name}] {stripped}")
+            # log_task_orchestrator_status(task, [f"[{task.agent.name}] {stripped}"])
             lines.append(stripped)
 
     job_id = parse_task_job_id(lines[-1])
@@ -1395,8 +1397,7 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     task.updated = timezone.now()
     task.save()
 
-    logger.info(f"Set task job ID: {task.job_id}")
-
+    logger.info(f"Set task {task.guid} job ID: {task.job_id}")
     return job_id
 
 
