@@ -1928,7 +1928,7 @@ def agent_task_to_dict(task: AgentTask) -> dict:
 
 
 def has_virtual_memory(agent: Agent) -> bool:
-    return '--mem' in agent.header_skip
+    return agent.header_skip is not None and '--mem' in agent.header_skip
 
 
 @retry(
