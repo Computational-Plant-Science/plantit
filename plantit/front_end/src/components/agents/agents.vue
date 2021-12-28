@@ -98,12 +98,12 @@
                                     ><i
                                         v-if="agent.public"
                                         title="Public"
-                                        class="fas fa-unlock text-secondary fa-fw"
+                                        class="fas fa-unlock-alt text-success fa-fw"
                                     ></i>
                                     <i
                                         v-else
                                         title="Protected"
-                                        class="fas fa-lock text-secondary fa-fw"
+                                        class="fas fa-lock text-warning fa-fw"
                                     ></i>
                                     <i
                                         v-if="agent.disabled"
@@ -124,7 +124,7 @@
                         rounded
                         class="card-img-right overflow-hidden"
                         style="
-                            max-height: 4rem;
+                            max-height: 2rem;
                             position: absolute;
                             right: 20px;
                             top: 20px;
