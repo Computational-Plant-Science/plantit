@@ -54,24 +54,24 @@ class BiologicalMaterialAdmin(admin.ModelAdmin):
     form = BiologicalMaterialForm
 
 
-# class EnvironmentParameterForm(ModelForm):
-#     class Meta:
-#         model = EnvironmentParameter
-#         fields = '__all__'
-#
-#
-# class EnvironmentParameterAdmin(admin.ModelAdmin):
-#     form = EnvironmentParameterForm
+class EnvironmentParameterForm(ModelForm):
+    class Meta:
+        model = EnvironmentParameter
+        fields = '__all__'
 
 
-# class ExperimentalFactorForm(ModelForm):
-#     class Meta:
-#         model = ExperimentalFactor
-#         fields = '__all__'
-#
-#
-# class ExperimentalFactorAdmin(admin.ModelAdmin):
-#     form = ExperimentalFactorForm
+class EnvironmentParameterAdmin(admin.ModelAdmin):
+    form = EnvironmentParameterForm
+
+
+class ExperimentalFactorForm(ModelForm):
+    class Meta:
+        model = ExperimentalFactor
+        fields = '__all__'
+
+
+class ExperimentalFactorAdmin(admin.ModelAdmin):
+    form = ExperimentalFactorForm
 
 
 class EventForm(ModelForm):
@@ -119,8 +119,8 @@ admin.site.register(Study, StudyAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(DataFile, FileAdmin)
 admin.site.register(BiologicalMaterial, BiologicalMaterialAdmin)
-# admin.site.register(EnvironmentParameter, EnvironmentParameterAdmin)
-# admin.site.register(ExperimentalFactor, ExperimentalFactorAdmin)
+admin.site.register(EnvironmentParameter, EnvironmentParameterAdmin)
+admin.site.register(ExperimentalFactor, ExperimentalFactorAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(ObservationUnit, ObservationUnitAdmin)
 admin.site.register(Sample, SampleAdmin)
