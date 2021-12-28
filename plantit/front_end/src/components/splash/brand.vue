@@ -22,7 +22,7 @@
                     <b-col>
                         <b-img
                             style="
-                                max-width: 5rem;
+                                max-width: 2rem;
                                 transform: translate(0px, 20px);
                                 position: relative;
                                 top: 15px;
@@ -37,7 +37,7 @@
                             ><span v-if="version !== 0">{{ version }}</span
                             ><i class="fas fa-spinner" v-else></i
                         ></b-badge>
-                        <h1
+                        <h4
                             class="text-dark"
                             style="text-decoration: underline"
                         >
@@ -47,9 +47,9 @@
                                     text-decoration: underline;
                                     text-shadow: 1px 1px 2px black;
                                 "
-                                >it</small
+                                ><small>IT</small></small
                             >
-                        </h1>
+                        </h4>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm" class="m-0 p-0">

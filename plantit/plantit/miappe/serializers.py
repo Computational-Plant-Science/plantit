@@ -27,16 +27,16 @@ class BiologicalMaterialSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EnvironmentParameterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnvironmentParameter
-        fields = '__all__'
+# class EnvironmentParameterSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EnvironmentParameter
+#         fields = '__all__'
 
 
-class ExperimentalFactorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ExperimentalFactor
-        fields = '__all__'
+# class ExperimentalFactorSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ExperimentalFactor
+#         fields = '__all__'
 
 
 class EventSerializer(serializers.ModelSerializer):

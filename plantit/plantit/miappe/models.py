@@ -79,15 +79,16 @@ class BiologicalMaterial(models.Model):
     source_description = models.TextField(blank=True)
 
 
-class EnvironmentParameter(models.Model):
-    name = models.TextField(blank=True)
-    value = models.TextField(blank=True)
-
-
-class ExperimentalFactor(models.Model):
-    type = models.CharField(max_length=255, blank=True)
-    description = models.TextField(blank=True)
-    values = models.TextField(blank=True)
+# class EnvironmentParameter(models.Model):
+#     name = models.TextField(blank=True)
+#     value = models.TextField(blank=True)
+#     study = models.ForeignKey(Study, null=False, blank=False, on_delete=models.CASCADE)
+#
+#
+# class ExperimentalFactor(models.Model):
+#     name = models.TextField(blank=True)
+#     value = models.TextField(blank=True)
+#     study = models.ForeignKey(Study, null=False, blank=False, on_delete=models.CASCADE)
 
 
 class Event(models.Model):

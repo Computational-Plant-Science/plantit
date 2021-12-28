@@ -12,8 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 
-from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, ExperimentalFactor, \
-    EnvironmentParameter, BiologicalMaterial, Study, Investigation, Event, DataFile
+from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, BiologicalMaterial, Study, Investigation, Event, DataFile
 from plantit.utils import project_to_dict
 
 
