@@ -5,25 +5,20 @@
         <b-container fluid>
             <b-row>
                 <b-col class="text-center">
-                    <b-img
-                        style="max-width: 5rem; transform: translate(0px, 20px)"
-                        :src="require('../assets/logo.png')"
-                        center
-                        class="m-0 p-0"
-                    ></b-img>
-                    <h1
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline"
+                    <h4
+                        :class="profile.darkMode ? 'text-white' : 'text-theme'"
+                        style="text-decoration: underline; z-index: 100"
                     >
                         plant<small
                             class="mb-3 text-success"
                             style="
                                 text-decoration: underline;
                                 text-shadow: 1px 1px 2px black;
+                                z-index: 100;
                             "
-                            >it</small
-                        ><small><small>stats</small></small>
-                    </h1>
+                            ><small>IT</small></small
+                        >stats
+                    </h4>
                 </b-col>
             </b-row>
             <b-row>
@@ -267,6 +262,11 @@
                                 :data="tasksPlotData"
                                 :layout="tasksPlotLayout"
                             ></Plotly>
+                            <Plotly
+                                v-if="timeseriesTasksRunning !== null"
+                                :data="tasksRunningPlotData"
+                                :layout="tasksRunningPlotLayout"
+                            ></Plotly>
                             <br />
                             <h1 v-if="runningCount >= 0" class="text-success">
                                 {{ runningCount }}
@@ -302,6 +302,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import mapboxgl from 'mapbox-gl';
 import { Plotly } from 'vue-plotly';
+import moment from "moment";
 
 export default {
     name: 'stats',
@@ -318,7 +319,7 @@ export default {
             userCount: -1,
             timeseriesUsers: [],
             timeseriesTasks: [],
-            timeseriesTasksRunning: [],
+            timeseriesTasksRunning: null,
             onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
@@ -549,6 +550,16 @@ export default {
         tasksPlotData() {
             return this.timeseriesTasks;
         },
+        tasksRunningPlotData() {
+          if (this.timeseriesTasksRunning === null) return {x: [], y: [], type: 'scatter'}
+            return [
+              {
+                x: this.timeseriesTasksRunning[0].x.map((t) => moment(t).format('YYYY-MM-DD HH:mm:ss')),
+                    y: this.timeseriesTasksRunning[0].y,
+                    type: 'scatter',
+              }
+            ]
+        },
         tasksPlotLayout() {
             return {
                 font: {
@@ -584,6 +595,46 @@ export default {
                 },
                 yaxis: {
                     showticklabels: false,
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+        tasksRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Tasks Running',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',

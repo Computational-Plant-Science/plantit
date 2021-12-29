@@ -5,54 +5,27 @@
         <b-container>
             <b-row>
                 <b-col class="text-center"
-                    ><b-img
-                        style="max-width: 5rem; transform: translate(0px, 20px)"
-                        :src="require('../assets/logo.png')"
-                        center
-                        class="m-0 p-0 mb-1"
-                    ></b-img>
-                    <h1
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline"
+                    ><h4
+                        :class="profile.darkMode ? 'text-white' : 'text-theme'"
+                        style="text-decoration: underline; z-index: 100"
                     >
-                        <small><small>about</small></small>plant<small
+                        <small>about</small>plant<small
                             class="mb-3 text-success"
                             style="
                                 text-decoration: underline;
                                 text-shadow: 1px 1px 2px black;
+                                z-index: 100;
                             "
-                            >it</small
+                            ><small>IT</small></small
                         >
-                    </h1>
+                    </h4>
                 </b-col>
             </b-row>
             <br />
             <b-row
                 ><b-col>
-                    <b-img
-                        :src="require('../assets/about/summary.png')"
-                        center
-                        style="max-width: 69rem"
-                    ></b-img>
-                    <br />
                     <p>
-                        <b
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            style="text-decoration: underline"
-                        >
-                            plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
-                                        0 1px 0 #000, -1px 0 0 #000;
-                                "
-                                >IT</small
-                            >
-                        </b>
-                        is a science gateway for plant phenotyping. It was
+                        plantIT is a science gateway for plant phenotyping. It was
                         preceded by &mdash; grew out of, as it were &mdash;
                         <b-link
                             :class="
@@ -67,97 +40,27 @@
                         high-throughput grid computing available via a web
                         portal.
                     </p>
-                    <br />
-                    <b-img
-                        :src="require('../assets/about/features.png')"
-                        center
-                        style="max-width: 69rem"
-                    ></b-img>
-                    <br />
                     <p>
-                        <b
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            style="text-decoration: underline"
-                        >
-                            plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
-                                        0 1px 0 #000, -1px 0 0 #000;
-                                "
-                                >IT</small
-                            >
-                        </b>
-                        is software-as-a-service for farmers, biologists,
+                        plantIT is software-as-a-service for farmers, biologists,
                         breeders, and anyone else aiming to automate the
                         collection and analysis of phenotype data. Store,
                         publish, and access data with CyVerse, and run
                         simulations and analyses on clusters from a browser, no
                         programming experience required.
                     </p>
-                    <br />
-                    <b-img
-                        :src="require('../assets/about/examples.png')"
-                        center
-                        style="max-width: 69rem"
-                    ></b-img>
-                    <br />
                     <p>
-                        <b
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            style="text-decoration: underline"
-                        >
-                            plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
-                                        0 1px 0 #000, -1px 0 0 #000;
-                                "
-                                >IT</small
-                            >
-                        </b>
-                        is also a platform-as-a-service for programmers and
+                        plantIT is also a platform-as-a-service for programmers and
                         software developers, tightly integrated with GitHub and
                         Docker. Just add a <code>plantit.yaml</code> file to
                         your repository, then anyone can deploy a container with
                         your code to a cluster or supercomputer with a few
                         clicks.
                     </p>
-                    <br />
-                    <b-img
-                        :src="require('../assets/about/configuring.png')"
-                        center
-                        style="max-width: 69rem"
-                    ></b-img>
-                    <br />
                     <p>
-                        <b
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            style="text-decoration: underline"
-                        >
-                            plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
-                                        0 1px 0 #000, -1px 0 0 #000;
-                                "
-                                >IT</small
-                            >
-                        </b>
-                        is like glue. It sits between things and binds them
+                        plantIT is like glue. It sits between things and binds them
                         together. It is <i class="text-danger">not</i> itself
                         any of these things, however:
                     </p>
-
                     <b-list-group
                         ><b-list-group-item
                             :variant="profile.darkMode ? 'dark' : 'light'"
@@ -237,23 +140,7 @@
                     >
                     <br />
                     <p>
-                        <b
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            style="text-decoration: underline"
-                        >
-                            plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
-                                        0 1px 0 #000, -1px 0 0 #000;
-                                "
-                                >IT</small
-                            >
-                        </b>
-                        is flexible enough to run most container-friendly
+                        plantIT is flexible enough to run most container-friendly
                         workflows, but if you want to do genomics, a tool like
                         <b-link
                             :class="
@@ -308,15 +195,16 @@
             <b-row class="text-center">
                 <b-col>
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Development Team
+                        Current Staff
                     </h5>
                 </b-col></b-row
             >
             <br />
             <b-row class="justify-content-md-center mb-4">
-                <b-col>
+                <b-col class="justify-content-md-center">
                     <b-card-group deck columns>
                         <b-card
+                            class="text-center"
                             bg-variant="white"
                             footer-bg-variant="white"
                             footer-border-variant="white"
@@ -359,6 +247,7 @@
                             </template>
                         </b-card>
                         <b-card
+                            class="text-center"
                             sub-title-text-variant="dark"
                             text-variant="dark"
                             bg-variant="white"
@@ -417,6 +306,7 @@
                 <b-col>
                     <b-card-group deck columns>
                         <b-card
+                            class="text-center"
                             bg-variant="white"
                             sub-title-text-variant="dark"
                             footer-bg-variant="white"
@@ -450,6 +340,7 @@
                             </template>
                         </b-card>
                         <b-card
+                            class="text-center"
                             bg-variant="white"
                             footer-bg-variant="white"
                             footer-border-variant="white"
@@ -476,6 +367,7 @@
                             </template>
                         </b-card>
                         <b-card
+                            class="text-center"
                             bg-variant="white"
                             footer-bg-variant="white"
                             footer-border-variant="white"
@@ -509,6 +401,7 @@
                             </template>
                         </b-card>
                         <b-card
+                            class="text-center"
                             bg-variant="white"
                             footer-bg-variant="white"
                             footer-border-variant="white"

@@ -14,44 +14,37 @@
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
-                        <b-img
-                            style="max-width: 5rem;transform: translate(0px, 20px);"
-                            :src="require('../../assets/logo.png')"
-                            center
-                            class="m-0 p-0"
-                        ></b-img>
-                        <div
-                        >
-                            <h1
-                                class="text-white mb-0"
-                                style="text-decoration: underline; z-index: 10"
+                        <div>
+                            <h4
+                                class="text-white"
+                                style="text-decoration: underline; z-index: 100"
                             >
                                 plant<small
                                     class="mb-3 text-success"
-                                    style="text-decoration: underline;"
-                                    >it</small
-                                >
-                            </h1>
-                            <b-img
-                                class="mt-0 pt-0"
-                                :src="require('../../assets/coil.png')"
-                                style="max-width: 3rem; overflow: hidden; position: absolute; left: 48.6%; z-index: 1; opacity: 0.2"
-                                center
-                            ></b-img>
-                            <h4 class="text-white mt-4 ml-4">
-                                a web portal for plant
-                                <span class="text-success"
-                                    ><span class="fa-stack mr-0 fa-2x">
-                                        <i
-                                            class="fas fa-seedling fa-stack-2x"
-                                        ></i>
-                                        <i
-                                            class="text-dark fas fa-camera-retro fa-stack-1x"
-                                            style="opacity: 0.4;"
-                                        ></i><i class="fas fa-cloud fa-stack-2x" style="opacity: 0.3;position: relative;top:-10px;left:-3px;color: #d9edfe"></i></span
-                                    >phenotyping automation</span
+                                    style="
+                                        text-decoration: underline;
+                                        text-shadow: 1px 1px 2px black;
+                                        z-index: 100;
+                                    "
+                                    ><small>IT</small></small
                                 >
                             </h4>
+                            <b-img
+                                style="
+                                    max-width: 3rem;
+                                    position: absolute;
+                                    left: 50%;
+                                    transform: translate(-50%, 5px);
+                                "
+                                :src="require('../../assets/logo.png')"
+                                center
+                                class="m-0 p-0"
+                            ></b-img>
+                            <h5 class="text-white mt-4 ml-4" style="transform: translate(-9px, 0px)">
+                              <span class="mr-4">a browser gateway for</span><span class="text-success ml-2"
+                                    >HPC plant phenotyping </span
+                                >
+                            </h5>
                         </div>
                     </b-col>
                 </b-row>
@@ -146,7 +139,7 @@
                         ><b-col md="auto"
                             ><b-img
                                 rounded
-                                style="max-height: 5rem;"
+                                style="max-height: 5rem"
                                 center
                                 :src="
                                     require('../../assets/logos/cyverse_bright.png')
@@ -160,7 +153,7 @@
                     <b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem;"
+                            style="max-height: 6rem"
                             center
                             :src="
                                 require('../../assets/logos/github_white.png')
@@ -185,23 +178,23 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Cultivate open source science
+                                    Open source phenomics tools
                                 </h4>
-                                Explore F/OSS phenotyping tools or bind your own
+                                Explore phenotyping software or bind your own
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
                                     >Github</b-link
                                 >
                                 repository
-                                <br/>
-                                Develop software with
+                                <br />
+                                Deploy container workflows to clusters with
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
                                     >Docker</b-link
                                 >
-                                and deploy anywhere with
+                                and
                                 <b-link
                                     class="text-white"
                                     href="https://sylabs.io/docs/"
@@ -235,21 +228,22 @@
                                 High-throughput phenotyping on the web, no
                                 programming necessary
                                 <br />
-                                Transparently reproducible container workflows on the command line
+                                Transparently reproducible container workflows
+                                on the command line
                             </b-card-text>
                         </b-card>
                     </b-col>
                     <b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem;"
+                            style="max-height: 6rem"
                             center
                             :src="require('../../assets/logos/docker.png')"
                         ></b-img></b-col
                     ><b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem;"
+                            style="max-height: 6rem"
                             center
                             :src="require('../../assets/logos/singularity.png')"
                         ></b-img
@@ -271,28 +265,28 @@ export default {
     async mounted() {
         await this.loadCounts();
     },
-    data: function() {
+    data: function () {
         return {
             userCount: -1,
             workflowCount: -1,
-            taskCount: -1
+            taskCount: -1,
         };
     },
     methods: {
         loadCounts() {
             axios
                 .get('/apis/v1/stats/counts/')
-                .then(response => {
+                .then((response) => {
                     this.userCount = response.data.users;
                     this.workflowCount = response.data.workflows;
                     this.taskCount = response.data.tasks;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
-        }
-    }
+        },
+    },
 };
 </script>
 

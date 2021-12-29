@@ -247,6 +247,22 @@ def get_user_statistics(user: User) -> dict:
     return stats
 
 
+def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    start_end_times = dict()
+    timestamps = dict()
+    for task in tasks:
+        start_end_times[task.guid] = (task.created, task.completed)
+
+    start = min([v[0] for v in start_end_times.values()])
+    end = max(v[1] for v in start_end_times.values())
+
+    for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
+        timestamps[datetime.fromtimestamp(t).isoformat()] = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
+
+    return timestamps
+
+
 async def calculate_user_statistics(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
     all_tasks = await filter_tasks(user=user)
@@ -271,6 +287,7 @@ async def calculate_user_statistics(user: User) -> dict:
     unique_used_agents = list(np.unique(used_agents))
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
     # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
+    tasks_running = await sync_to_async(get_tasks_running_timeseries)(600, user)
 
     return {
         'total_tasks': total_tasks,
@@ -291,7 +308,8 @@ async def calculate_user_statistics(user: User) -> dict:
         },
         'owned_agents': owned_agents,
         'guest_agents': guest_agents,
-        'institution': profile.institution
+        'institution': profile.institution,
+        'tasks_running': tasks_running
     }
 
 

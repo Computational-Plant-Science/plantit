@@ -1009,6 +1009,7 @@
             </b-collapse>
         </b-navbar>
         <b-navbar
+            v-if="profile.loggedIn"
             toggleable="md"
             class="p-0 pt-1 pb-2"
             style="height: 0px; z-index: 1000"

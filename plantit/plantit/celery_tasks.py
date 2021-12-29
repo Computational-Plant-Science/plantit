@@ -25,7 +25,7 @@ from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     refresh_personal_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_tasks_running_timeseries
 
 logger = get_task_logger(__name__)
 
@@ -417,6 +417,11 @@ def aggregate_all_users_usage_stats():
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
         redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
+
+    tasks_running = get_tasks_running_timeseries(600)
+    redis = RedisClient.get()
+    redis.set(f"tasks_running", json.dumps(tasks_running))
+    redis.set(f"tasks_running_updated", datetime.now().timestamp())
 
 
 @app.task()

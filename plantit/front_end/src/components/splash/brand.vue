@@ -3,7 +3,7 @@
         <b-container id="main">
             <b-card
                 align="center"
-                class="p-3 text-white"
+                class="p-1 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
                 border-variant="default"
@@ -19,7 +19,7 @@
                     opacity: 0.95;
                 "
             >
-                <b-row
+                <b-row class="p-1"
                     ><b-col md="auto" align-self="center">
                         <h4
                             :class="
@@ -51,14 +51,15 @@
                         </h4>
                     </b-col>
                     <b-col md="auto" align-self="center"
-                        ><span
+                        ><b-link
+                            to="/about"
                             :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
                             ><i class="fas fa-question-circle fa-1x fa-fw"></i
-                            >About</span
+                            >About</b-link
                         ></b-col
                     >
                     <!--<b-nav-item
@@ -81,14 +82,15 @@
                             ></b-nav-item
                         >-->
                     <b-col md="auto" align-self="center"
-                        ><span
+                        ><b-link
+                            to="/stats"
                             :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
                             ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                            >Stats</span
+                            >Stats</b-link
                         ></b-col
                     >
                     <b-col md="auto" align-self="center">
@@ -114,6 +116,36 @@
                             >Github</b-link
                         >
                     </b-col>
+                    <b-col></b-col>
+                    <b-col align-self="center" md="auto">
+                        <b-button
+                            v-if="!profile.loggedIn"
+                            variant="white"
+                            class="text-center"
+                            href="/apis/v1/idp/cyverse_login/"
+                        >
+                            Log in with
+                            <b-img
+                                :src="
+                                    require('@/assets/sponsors/cyversebw-notext.png')
+                                "
+                                height="18px"
+                                alt="Cyverse"
+                            ></b-img>
+                            <b>CyVerse</b>
+                        </b-button>
+                        <b-button
+                            v-else
+                            variant="white"
+                            class="text-right"
+                            href="/apis/v1/idp/cyverse_login/"
+                        >
+                            <span class="text-success">
+                                <i class="fas fa-arrow-circle-right fa-fw"></i>
+                                Log In</span
+                            >
+                        </b-button>
+                    </b-col>
                     <!--<b-nav-item
                             href="#"
                             class="mt-2"
@@ -135,40 +167,14 @@
                             >
                         </b-nav-item>-->
                 </b-row>
-                <b-row></b-row>
-                <b-row class="m-0 p-0">
-                    <b-col class="m-0 p-0">
-                        <b-button
-                            v-if="!profile.loggedIn"
-                            variant="white"
-                            block
-                            class="text-center"
-                            href="/apis/v1/idp/cyverse_login/"
-                        >
-                            Log in with
-                            <b-img
-                                :src="
-                                    require('@/assets/sponsors/cyversebw-notext.png')
-                                "
-                                height="18px"
-                                alt="Cyverse"
-                            ></b-img>
-                            <b>CyVerse</b>
-                        </b-button>
-                        <b-button
-                            v-else
-                            variant="white"
-                            block
-                            class="text-right"
-                            href="/apis/v1/idp/cyverse_login/"
-                        >
-                            <span class="text-success">
-                                <i class="fas fa-arrow-circle-right fa-fw"></i>
-                                Enter</span
-                            >
-                        </b-button>
-                    </b-col>
-                </b-row>
+                <b-row class="m-0 mt-2 mb-2"
+                    ><b-col
+                        ><Plotly
+                            v-if="timeseriesTasksRunning !== null"
+                            :data="tasksRunningPlotData"
+                            :layout="tasksRunningPlotLayout"
+                        ></Plotly></b-col
+                ></b-row>
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
@@ -184,18 +190,80 @@
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import moment from 'moment';
+import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'home-splash',
+    components: {
+        Plotly,
+    },
     data: function () {
         return {
             version: 0,
+            timeseriesTasksRunning: null,
         };
     },
-    computed: mapGetters('user', ['profile']),
+    computed: {
+        ...mapGetters('user', ['profile']),
+        tasksRunningPlotData() {
+            if (this.timeseriesTasksRunning === null)
+                return { x: [], y: [], type: 'scatter' };
+            return [
+                {
+                    x: this.timeseriesTasksRunning[0].x.map((t) =>
+                        moment(t).format('YYYY-MM-DD HH:mm:ss')
+                    ),
+                    y: this.timeseriesTasksRunning[0].y,
+                    text: this.timeseriesTasksRunning[0].y.map((c) => `running tasks`),
+                    type: 'scatter',
+                },
+            ];
+        },
+        tasksRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    // text: 'Tasks Running',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+    },
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
-        await this.getVersion();
+        await Promise.all([this.getVersion(), this.loadTimeseries()]);
         // this.$store.dispatch('user/loadProfile');
     },
     methods: {
@@ -211,6 +279,19 @@ export default {
                 .catch((error) => {
                     Sentry.captureException(error);
                     return error;
+                });
+        },
+        async loadTimeseries() {
+            await axios
+                .get('/apis/v1/stats/timeseries/')
+                .then((response) => {
+                    this.timeseriesUsers = [response.data.users];
+                    this.timeseriesTasks = [response.data.tasks];
+                    this.timeseriesTasksRunning = [response.data.tasks_running];
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
                 });
         },
     },
