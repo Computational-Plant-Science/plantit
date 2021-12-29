@@ -1,8 +1,10 @@
+import json
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 
 from plantit.tasks.models import Task, TaskCounter, TaskStatus
-from plantit.utils import list_institutions, filter_online
+from plantit.utils import list_institutions, filter_online, get_tasks_running_timeseries
 from plantit.redis import RedisClient
 
 
@@ -39,6 +41,13 @@ def timeseries(request):
         tasks_x.append(task.created)
         tasks_y.append(i + 1)
 
+    redis = RedisClient.get()
+    tasks_running = redis.get('tasks_running')
+    if tasks_running is not None: tasks_running = json.loads(tasks_running)
+    else: tasks_running = dict()
+    tasks_running_x = list(tasks_running.keys())
+    tasks_running_y = list(tasks_running.values())
+
     return JsonResponse({
         'users': {
             'x': users_x,
@@ -48,6 +57,11 @@ def timeseries(request):
         'tasks': {
             'x': tasks_x,
             'y': tasks_y,
+            'type': 'scatter'
+        },
+        'tasks_running': {
+            'x': tasks_running_x,
+            'y': tasks_running_y,
             'type': 'scatter'
         }
     })

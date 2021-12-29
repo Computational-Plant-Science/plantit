@@ -190,10 +190,26 @@ def edit_study(request, owner, title):
     study_growth_facility_description = body['growth_facility_description'] if 'growth_facility_description' in body else None
     study_growth_facility_type = body['growth_facility_type'] if 'growth_facility_type' in body else None
     study_cultural_practices = body['cultural_practices'] if 'cultural_practices' in body else None
+    study_environment_parameters = body['environment_parameters'] if 'environment_parameters' in body else None
+    study_experimental_factors = body['experimental_factors'] if 'experimental_factors' in body else None
 
     try:
         project = Investigation.objects.get(owner=request.user, title=title)
         study = Study.objects.get(investigation=project, title=study_title)
+        environment_parameters = list(EnvironmentParameter.objects.filter(study=study))
+        experimental_factors = list(ExperimentalFactor.objects.filter(study=study))
+
+        for ep in study_environment_parameters:
+            print(ep['name'], ep['value'])  # debugging
+            if any(p.name == ep['name'] for p in environment_parameters):
+                # TODO update existing value
+                pass
+
+        for ef in study_experimental_factors:
+            print(ef['name'], ef['value'])  # debugging
+            if any(f.name == ep['name'] for f in experimental_factors):
+                # TODO update existing value
+                pass
     except:
         return HttpResponseNotFound()
 

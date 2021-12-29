@@ -3,14 +3,15 @@
         <b-container id="main">
             <b-card
                 align="center"
-                class="p-3 text-white"
+                class="p-1 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
                 border-variant="default"
                 text-variant="white"
-                bg-variant="white"
+                :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="
-                    max-width: 430px;
+                    width: 90%;
+                    height: 90%;
                     padding: 0;
                     margin: 0 auto;
                     float: none;
@@ -18,147 +19,108 @@
                     opacity: 0.95;
                 "
             >
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b-img
-                            style="
-                                max-width: 2rem;
-                                transform: translate(0px, 20px);
-                                position: relative;
-                                top: 15px;
-                            "
-                            :src="require('../../assets/logo.png')"
-                            center
-                            class="m-0 p-0"
-                        ></b-img>
-                        <b-badge
-                            variant="success"
-                            style="top: 14px; position: relative"
-                            ><span v-if="version !== 0">{{ version }}</span
-                            ><i class="fas fa-spinner" v-else></i
-                        ></b-badge>
+                <b-row class="p-1"
+                    ><b-col md="auto" align-self="center">
                         <h4
-                            class="text-dark"
-                            style="text-decoration: underline"
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-theme'
+                            "
+                            style="text-decoration: underline; z-index: 100"
                         >
                             plant<small
                                 class="mb-3 text-success"
                                 style="
                                     text-decoration: underline;
                                     text-shadow: 1px 1px 2px black;
+                                    z-index: 100;
                                 "
                                 ><small>IT</small></small
                             >
+                            <small
+                                ><small
+                                    ><small
+                                        ><b-badge variant="success"
+                                            ><span v-if="version !== 0">{{
+                                                version
+                                            }}</span
+                                            ><i
+                                                class="fas fa-spinner"
+                                                v-else
+                                            ></i></b-badge></small></small
+                            ></small>
                         </h4>
                     </b-col>
-                </b-row>
-                <b-navbar toggleable="sm" class="m-0 p-0">
-                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
-                        <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item
-                                to="/about"
-                                title="About PlantIT"
-                                class="m-0 p-0"
-                            >
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-question-circle fa-2x"></i>
-                                    <br />
-                                    About
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item
-                                title="Stats"
-                                to="/stats"
-                                class="m-0 p-0"
-                                :link-class="
+                    <b-col md="auto" align-self="center"
+                        ><b-link
+                            to="/about"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-question-circle fa-1x fa-fw"></i
+                            >About</b-link
+                        ></b-col
+                    >
+                    <!--<b-nav-item
+                            to="/beta"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Beta Test"
+                            ><span
+                                :class="
                                     profile.darkMode
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><b-button variant="outline-dark"
-                                    ><i class="fas fa-chart-bar fa-2x"></i
-                                    ><br />Stats</b-button
-                                ></b-nav-item
-                            >
-                            <b-nav-item
-                                href="https://plantit.readthedocs.io/en/latest"
-                                title="PlantIT Docs"
-                                class="m-0 p-0"
-                            >
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-book fa-2x"></i>
-                                    <br />
-                                    Docs
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item
-                                class="m-0 p-0"
-                                title="PlantIT on GitHub"
-                                href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
-                            >
-                                <b-button variant="outline-dark" title="GitHub">
-                                    <i class="fab fa-github fa-2x"></i>
-                                    <br />
-                                    Github
-                                </b-button>
-                            </b-nav-item>
-                            <!--<b-nav-item href="#" class="m-0 p-0" title="Slack">
-                                <b-button
-                                    variant="outline-dark"
-                                    title="GitHub"
-                                >
-                                    <i class="fab fa-slack fa-2x"></i>
-                                    <br />
-                                    Slack
-                                </b-button>
-                            </b-nav-item>-->
-                            <!--<b-nav-item class="m-0 p-0" title="Slack">
-                                <b-button
-                                    variant="outline-dark"
-                                    title="Slack"
-                                >
-                                    <i class="fab fa-slack fa-2x"></i>
-                                    <br />
-                                    Slack
-                                </b-button>
-                            </b-nav-item>-->
-
-                            <!--<b-nav-item
-                                v-if="profile.loggedIn"
-                                title="Enter PlantIT"
-                                class="m-0 p-0"
-                                :to="'/home/'"
-                            >
-                                <b-button
-                                    variant="white"
-                                >
-                                    <b-img
-                                        v-if="profile.githubProfile"
-                                        class="avatar"
-                                        rounded="circle"
-                                        center
-                                        :src="
-                                            profile.githubProfile
-                                                ? profile.githubProfile
-                                                      .avatar_url
-                                                : ''
-                                        "
-                                    ></b-img>
-                                    <i
-                                        v-else
-                                        class="far fa-user fa-fw fa-2x"
-                                    ></i>
-                                    Enter
-                                </b-button>
-                            </b-nav-item> -->
-                        </b-navbar-nav>
-                    </b-collapse>
-                </b-navbar>
-                <b-row class="m-0 p-0">
-                    <b-col class="m-0 p-0">
+                                ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
+                                Testing</span
+                            ></b-nav-item
+                        >-->
+                    <b-col md="auto" align-self="center"
+                        ><b-link
+                            to="/stats"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-chart-bar fa-1x fa-fw"></i
+                            >Stats</b-link
+                        ></b-col
+                    >
+                    <b-col md="auto" align-self="center">
+                        <b-link
+                            href="https://plantit.readthedocs.io/en/latest"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-book fa-1x fa-fw"></i>Docs</b-link
+                        >
+                    </b-col>
+                    <b-col md="auto" align-self="center">
+                        <b-link
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fab fa-github fa-1x fa-fw"></i
+                            >Github</b-link
+                        >
+                    </b-col>
+                    <b-col></b-col>
+                    <b-col align-self="center" md="auto">
                         <b-button
+                            v-if="!profile.loggedIn"
                             variant="white"
-                            block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"
                         >
@@ -172,8 +134,47 @@
                             ></b-img>
                             <b>CyVerse</b>
                         </b-button>
+                        <b-button
+                            v-else
+                            variant="white"
+                            class="text-right"
+                            href="/apis/v1/idp/cyverse_login/"
+                        >
+                            <span class="text-success">
+                                <i class="fas fa-arrow-circle-right fa-fw"></i>
+                                Log In</span
+                            >
+                        </b-button>
                     </b-col>
+                    <!--<b-nav-item
+                            href="#"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Slack"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-slack fa-1x fa-fw"></i>
+                                Slack</span
+                            >
+                        </b-nav-item>-->
                 </b-row>
+                <b-row class="m-0 mt-2 mb-2"
+                    ><b-col
+                        ><Plotly
+                            v-if="timeseriesTasksRunning !== null"
+                            :data="tasksRunningPlotData"
+                            :layout="tasksRunningPlotLayout"
+                        ></Plotly></b-col
+                ></b-row>
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
@@ -189,18 +190,80 @@
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import moment from 'moment';
+import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'home-splash',
+    components: {
+        Plotly,
+    },
     data: function () {
         return {
             version: 0,
+            timeseriesTasksRunning: null,
         };
     },
-    computed: mapGetters('user', ['profile']),
+    computed: {
+        ...mapGetters('user', ['profile']),
+        tasksRunningPlotData() {
+            if (this.timeseriesTasksRunning === null)
+                return { x: [], y: [], type: 'scatter' };
+            return [
+                {
+                    x: this.timeseriesTasksRunning[0].x.map((t) =>
+                        moment(t).format('YYYY-MM-DD HH:mm:ss')
+                    ),
+                    y: this.timeseriesTasksRunning[0].y,
+                    text: this.timeseriesTasksRunning[0].y.map((c) => `running tasks`),
+                    type: 'scatter',
+                },
+            ];
+        },
+        tasksRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    // text: 'Tasks Running',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+    },
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
-        await this.getVersion();
+        await Promise.all([this.getVersion(), this.loadTimeseries()]);
         // this.$store.dispatch('user/loadProfile');
     },
     methods: {
@@ -216,6 +279,19 @@ export default {
                 .catch((error) => {
                     Sentry.captureException(error);
                     return error;
+                });
+        },
+        async loadTimeseries() {
+            await axios
+                .get('/apis/v1/stats/timeseries/')
+                .then((response) => {
+                    this.timeseriesUsers = [response.data.users];
+                    this.timeseriesTasks = [response.data.tasks];
+                    this.timeseriesTasksRunning = [response.data.tasks_running];
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
                 });
         },
     },

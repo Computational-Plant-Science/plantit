@@ -558,115 +558,61 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0 pt-1 pb-1"
-            style="min-height: 40px; max-height: 40px; z-index: 1000"
+            class="logo p-0 pt-2 pb-1"
+            style="min-height: 35px; max-height: 35px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
-                <b-navbar-nav class="m-0 p-0 pl-3 mr-1">
-                    <b-nav-item class="m-0 p-0" @click="showTasksSidebar">
-                        <b-button
+                <b-navbar-nav class="m-0 p-0 overflow-hidden" align="center"
+                    ><b-nav-item class="overflow-hidden" href="/">
+                        <h4
                             :class="
-                                profile.loggedIn
-                                    ? 'brand-img m-0 p-0'
-                                    : 'brand-img-nl m-0 p-0'
+                                profile.darkMode ? 'text-white' : 'text-theme'
                             "
-                            variant="outline-white"
-                            @mouseenter="brandEnter"
-                            @mouseleave="brandLeave"
+                            style="text-decoration: underline; z-index: 100"
                         >
-                            <b-img
-                                class="m-0 p-0 mb-3"
-                                center
-                                width="30px"
-                                :src="require('../assets/logo.png')"
-                                alt="Plant IT"
-                            ></b-img>
-                        </b-button>
-                    </b-nav-item>
-                </b-navbar-nav>
-                <transition name="component-fade" mode="out-in">
-                    <b-breadcrumb
-                        class="m-o p-0 mt-1"
-                        style="background-color: transparent"
-                        v-if="titleContent === 'sidebar'"
-                    >
-                        <b-breadcrumb-item
-                            disabled
-                            class="ml-4 mt-1"
-                            :class="
-                                profile.darkMode ? 'crumb-dark' : 'crumb-light'
-                            "
-                        >
-                            <b
-                                :class="
-                                    profile.darkMode
-                                        ? 'crumb-dark'
-                                        : 'crumb-light'
+                            plant<small
+                                class="mb-3 text-success"
+                                style="
+                                    text-decoration: underline;
+                                    text-shadow: 1px 1px 2px black;
+                                    z-index: 100;
                                 "
+                                ><small>IT</small></small
                             >
-                                View your tasks ({{
-                                    tasksRunning.length
-                                }}
-                                running, {{ profile.stats.total_tasks }} total)
-                            </b>
-                        </b-breadcrumb-item>
-                    </b-breadcrumb>
-                    <b-navbar-nav class="m-0 p-0" align="center"
-                        ><b-nav-item class="mt-1" href="/"
-                            ><h4
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-white'
-                                        : 'text-dark'
-                                "
-                                style="text-decoration: underline"
-                            >
-                                plant<small
-                                    class="mb-3 text-success"
-                                    style="
-                                        text-decoration: underline;
-                                        text-shadow: 1px 1px 2px black;
-                                    "
-                                    >it</small
-                                >
-                                <small
+                            <small
+                                ><small
                                     ><small
-                                        ><small
-                                            ><b-badge variant="success"
-                                                ><span v-if="version !== 0">{{
-                                                    version
-                                                }}</span
-                                                ><i
-                                                    class="fas fa-spinner"
-                                                    v-else
-                                                ></i></b-badge></small></small
-                                ></small></h4
-                        ></b-nav-item>
-                        <b-nav-item
-                            title="about"
-                            to="/about"
-                            class="mt-1"
-                            :link-class="
+                                        ><b-badge variant="success"
+                                            ><span v-if="version !== 0">{{
+                                                version
+                                            }}</span
+                                            ><i
+                                                class="fas fa-spinner"
+                                                v-else
+                                            ></i></b-badge></small></small
+                            ></small></h4
+                    ></b-nav-item>
+                    <b-nav-item
+                        title="about"
+                        to="/about"
+                        class="mt-1 navtext"
+                        :link-class="
+                            profile.darkMode ? 'text-secondary' : 'text-dark'
+                        "
+                        ><span
+                            :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i
-                                    class="fas fa-question-circle fa-1x fa-fw"
-                                ></i
-                                >About</span
-                            ></b-nav-item
-                        >
-                        <!--<b-nav-item
+                            ><i class="fas fa-question-circle fa-1x fa-fw"></i
+                            >About</span
+                        ></b-nav-item
+                    >
+                    <!--<b-nav-item
                             to="/beta"
                             class="mt-2"
                             :link-class="
@@ -685,65 +631,58 @@
                                 Testing</span
                             ></b-nav-item
                         >-->
-                        <b-nav-item
-                            title="stats"
-                            to="/stats"
-                            class="mt-1"
-                            :link-class="
+                    <b-nav-item
+                        title="stats"
+                        to="/stats"
+                        class="mt-1"
+                        :link-class="
+                            profile.darkMode ? 'text-secondary' : 'text-dark'
+                        "
+                        ><span
+                            :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                >Stats</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
-                            title="docs"
-                            href="https://plantit.readthedocs.io/en/latest"
-                            class="mt-1"
-                            :link-class="
+                            ><i class="fas fa-chart-bar fa-1x fa-fw"></i
+                            >Stats</span
+                        ></b-nav-item
+                    >
+                    <b-nav-item
+                        title="docs"
+                        href="https://plantit.readthedocs.io/en/latest"
+                        class="mt-1"
+                        :link-class="
+                            profile.darkMode ? 'text-secondary' : 'text-dark'
+                        "
+                        ><span
+                            :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-book fa-1x fa-fw"></i
-                                >Docs</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
-                            href="https://github.com/Computational-Plant-Science/plantit"
-                            class="mt-1"
-                            :link-class="
+                            ><i class="fas fa-book fa-1x fa-fw"></i>Docs</span
+                        ></b-nav-item
+                    >
+                    <b-nav-item
+                        href="https://github.com/Computational-Plant-Science/plantit"
+                        class="mt-1"
+                        :link-class="
+                            profile.darkMode ? 'text-secondary' : 'text-dark'
+                        "
+                        title="github"
+                    >
+                        <span
+                            :class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            title="github"
+                            ><i class="fab fa-github fa-1x fa-fw"></i
+                            >Github</span
                         >
-                            <span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fab fa-github fa-1x fa-fw"></i
-                                >Github</span
-                            >
-                        </b-nav-item>
-                        <!--<b-nav-item
+                    </b-nav-item>
+                    <!--<b-nav-item
                             href="#"
                             class="mt-2"
                             :link-class="
@@ -763,8 +702,7 @@
                                 Slack</span
                             >
                         </b-nav-item>-->
-                    </b-navbar-nav>
-                </transition>
+                </b-navbar-nav>
                 <b-navbar-nav class="ml-auto p-0 m-0">
                     <b-nav-item
                         v-if="
@@ -846,11 +784,11 @@
                         right
                         v-if="profile.loggedIn"
                         :title="profile.djangoProfile.username"
-                        class="p-1 m-2 mr-0 ml-0"
+                        class="p-0 mr-0 ml-0"
                         :menu-class="
                             profile.darkMode ? 'theme-dark' : 'theme-light'
                         "
-                        style="font-size: 14pt"
+                        style="font-size: 13pt"
                     >
                         <template #button-content>
                             <b-button
@@ -894,11 +832,11 @@
                                     v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
                                     style="
-                                        min-width: 22px;
-                                        min-height: 22px;
+                                        min-width: 20px;
+                                        min-height: 20px;
                                         position: relative;
                                         left: -3px;
-                                        top: 1.5px;
+                                        top: 0.5px;
                                         border: 1px solid #e2e3b0;
                                     "
                                     rounded="circle"
@@ -1071,6 +1009,7 @@
             </b-collapse>
         </b-navbar>
         <b-navbar
+            v-if="profile.loggedIn"
             toggleable="md"
             class="p-0 pt-1 pb-2"
             style="height: 0px; z-index: 1000"
@@ -1078,12 +1017,54 @@
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
-            <b-container fluid>
-                <b-row
-                    v-if="alerts.length > 0"
-                    style="position: relative; top: -10px"
-                >
-                    <b-col>
+            <b-container fluid class="p-0 m-0">
+                <b-row style="position: relative; top: -10px">
+                    <b-col md="auto"
+                        ><b-navbar-nav class="m-0 p-0 mr-1">
+                            <b-nav-item
+                                class="m-0 p-0"
+                                @click="showTasksSidebar"
+                            >
+                                <b-button
+                                    :class="
+                                        profile.loggedIn
+                                            ? 'brand-img m-0 p-0'
+                                            : 'brand-img-nl m-0 p-0'
+                                    "
+                                    variant="outline-white"
+                                    @click="showTasksSidebar"
+                                    @mouseenter="brandEnter"
+                                    @mouseleave="brandLeave"
+                                >
+                                    <b-img
+                                        class="m-0 p-0 mb-3"
+                                        center
+                                        width="30px"
+                                        :src="require('../assets/logo.png')"
+                                        alt="Plant IT"
+                                    ></b-img>
+                                </b-button>
+                            </b-nav-item> </b-navbar-nav
+                    ></b-col>
+                    <b-col
+                        v-if="titleContent === 'sidebar'"
+                        md="auto"
+                        align-self="center"
+                    >
+                        <b-alert
+                            class="m-0"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            :show="true"
+                        >
+                            <b
+                            >
+                                View your tasks ({{ tasksRunning.length }}
+                                running,
+                                {{ profile.stats.total_tasks }} total)
+                            </b>
+                        </b-alert>
+                    </b-col>
+                    <b-col v-if="alerts.length > 0">
                         <b-alert
                             class="m-0"
                             :show="dismissCountDown"
