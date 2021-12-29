@@ -39,6 +39,12 @@ def timeseries(request):
         tasks_x.append(task.created)
         tasks_y.append(i + 1)
 
+    tasks_running_x = []
+    tasks_running_y = []
+    # TODO get running tasks timeseries
+    # probably want to aggregate in background and store in cache
+    # rather then recomputing it every time here
+
     return JsonResponse({
         'users': {
             'x': users_x,
@@ -48,6 +54,11 @@ def timeseries(request):
         'tasks': {
             'x': tasks_x,
             'y': tasks_y,
+            'type': 'scatter'
+        },
+        'tasks_running': {
+            'x': tasks_running_x,
+            'y': tasks_running_y,
             'type': 'scatter'
         }
     })

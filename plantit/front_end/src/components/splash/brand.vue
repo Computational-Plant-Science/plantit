@@ -8,9 +8,10 @@
                 footer-border-variant="white"
                 border-variant="default"
                 text-variant="white"
-                bg-variant="white"
+                :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="
-                    max-width: 430px;
+                    width: 90%;
+                    height: 90%;
                     padding: 0;
                     margin: 0 auto;
                     float: none;
@@ -18,145 +19,127 @@
                     opacity: 0.95;
                 "
             >
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b-img
-                            style="
-                                max-width: 2rem;
-                                transform: translate(0px, 20px);
-                                position: relative;
-                                top: 15px;
-                            "
-                            :src="require('../../assets/logo.png')"
-                            center
-                            class="m-0 p-0"
-                        ></b-img>
-                        <b-badge
-                            variant="success"
-                            style="top: 14px; position: relative"
-                            ><span v-if="version !== 0">{{ version }}</span
-                            ><i class="fas fa-spinner" v-else></i
-                        ></b-badge>
+                <b-row
+                    ><b-col md="auto" align-self="center">
                         <h4
-                            class="text-dark"
-                            style="text-decoration: underline"
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-theme'
+                            "
+                            style="text-decoration: underline; z-index: 100"
                         >
                             plant<small
                                 class="mb-3 text-success"
                                 style="
                                     text-decoration: underline;
                                     text-shadow: 1px 1px 2px black;
+                                    z-index: 100;
                                 "
                                 ><small>IT</small></small
                             >
+                            <small
+                                ><small
+                                    ><small
+                                        ><b-badge variant="success"
+                                            ><span v-if="version !== 0">{{
+                                                version
+                                            }}</span
+                                            ><i
+                                                class="fas fa-spinner"
+                                                v-else
+                                            ></i></b-badge></small></small
+                            ></small>
                         </h4>
                     </b-col>
-                </b-row>
-                <b-navbar toggleable="sm" class="m-0 p-0">
-                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
-                        <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item
-                                to="/about"
-                                title="About PlantIT"
-                                class="m-0 p-0"
-                            >
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-question-circle fa-2x"></i>
-                                    <br />
-                                    About
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item
-                                title="Stats"
-                                to="/stats"
-                                class="m-0 p-0"
-                                :link-class="
+                    <b-col md="auto" align-self="center"
+                        ><span
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-question-circle fa-1x fa-fw"></i
+                            >About</span
+                        ></b-col
+                    >
+                    <!--<b-nav-item
+                            to="/beta"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Beta Test"
+                            ><span
+                                :class="
                                     profile.darkMode
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><b-button variant="outline-dark"
-                                    ><i class="fas fa-chart-bar fa-2x"></i
-                                    ><br />Stats</b-button
-                                ></b-nav-item
+                                ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
+                                Testing</span
+                            ></b-nav-item
+                        >-->
+                    <b-col md="auto" align-self="center"
+                        ><span
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-chart-bar fa-1x fa-fw"></i
+                            >Stats</span
+                        ></b-col
+                    >
+                    <b-col md="auto" align-self="center">
+                        <b-link
+                            href="https://plantit.readthedocs.io/en/latest"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-book fa-1x fa-fw"></i>Docs</b-link
+                        >
+                    </b-col>
+                    <b-col md="auto" align-self="center">
+                        <b-link
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fab fa-github fa-1x fa-fw"></i
+                            >Github</b-link
+                        >
+                    </b-col>
+                    <!--<b-nav-item
+                            href="#"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Slack"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-slack fa-1x fa-fw"></i>
+                                Slack</span
                             >
-                            <b-nav-item
-                                href="https://plantit.readthedocs.io/en/latest"
-                                title="PlantIT Docs"
-                                class="m-0 p-0"
-                            >
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-book fa-2x"></i>
-                                    <br />
-                                    Docs
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item
-                                class="m-0 p-0"
-                                title="PlantIT on GitHub"
-                                href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
-                            >
-                                <b-button variant="outline-dark" title="GitHub">
-                                    <i class="fab fa-github fa-2x"></i>
-                                    <br />
-                                    Github
-                                </b-button>
-                            </b-nav-item>
-                            <!--<b-nav-item href="#" class="m-0 p-0" title="Slack">
-                                <b-button
-                                    variant="outline-dark"
-                                    title="GitHub"
-                                >
-                                    <i class="fab fa-slack fa-2x"></i>
-                                    <br />
-                                    Slack
-                                </b-button>
-                            </b-nav-item>-->
-                            <!--<b-nav-item class="m-0 p-0" title="Slack">
-                                <b-button
-                                    variant="outline-dark"
-                                    title="Slack"
-                                >
-                                    <i class="fab fa-slack fa-2x"></i>
-                                    <br />
-                                    Slack
-                                </b-button>
-                            </b-nav-item>-->
-
-                            <!--<b-nav-item
-                                v-if="profile.loggedIn"
-                                title="Enter PlantIT"
-                                class="m-0 p-0"
-                                :to="'/home/'"
-                            >
-                                <b-button
-                                    variant="white"
-                                >
-                                    <b-img
-                                        v-if="profile.githubProfile"
-                                        class="avatar"
-                                        rounded="circle"
-                                        center
-                                        :src="
-                                            profile.githubProfile
-                                                ? profile.githubProfile
-                                                      .avatar_url
-                                                : ''
-                                        "
-                                    ></b-img>
-                                    <i
-                                        v-else
-                                        class="far fa-user fa-fw fa-2x"
-                                    ></i>
-                                    Enter
-                                </b-button>
-                            </b-nav-item> -->
-                        </b-navbar-nav>
-                    </b-collapse>
-                </b-navbar>
+                        </b-nav-item>-->
+                </b-row>
+                <b-row></b-row>
                 <b-row class="m-0 p-0">
                     <b-col class="m-0 p-0">
                         <b-button
+                            v-if="!profile.loggedIn"
                             variant="white"
                             block
                             class="text-center"
@@ -171,6 +154,18 @@
                                 alt="Cyverse"
                             ></b-img>
                             <b>CyVerse</b>
+                        </b-button>
+                        <b-button
+                            v-else
+                            variant="white"
+                            block
+                            class="text-right"
+                            href="/apis/v1/idp/cyverse_login/"
+                        >
+                            <span class="text-success">
+                                <i class="fas fa-arrow-circle-right fa-fw"></i>
+                                Enter</span
+                            >
                         </b-button>
                     </b-col>
                 </b-row>

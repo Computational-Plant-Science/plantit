@@ -318,6 +318,7 @@ export default {
             userCount: -1,
             timeseriesUsers: [],
             timeseriesTasks: [],
+            timeseriesTasksRunning: [],
             onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
@@ -417,6 +418,7 @@ export default {
                 .then((response) => {
                     this.timeseriesUsers = [response.data.users];
                     this.timeseriesTasks = [response.data.tasks];
+                    this.timeseriesTasksRunning = [response.data.tasks_running];
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
