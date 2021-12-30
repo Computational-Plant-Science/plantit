@@ -114,22 +114,38 @@
                         <li>
                             a pipeline framework (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://snakemake.readthedocs.io/en/stable/"
                                 >Snakemake</b-link
                             >,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://www.nextflow.io/"
                                 >NextFlow</b-link
                             >,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://github.com/spotify/luigi"
                                 >Luigi</b-link
                             >,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://airflow.apache.org/"
                                 >AirFlow</b-link
                             >)
@@ -137,7 +153,11 @@
                         <li>
                             a machine learning automation platform (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://metaflow.org/"
                                 >MetaFlow</b-link
                             >)
@@ -145,11 +165,21 @@
                         <li>
                             a distributed queue or task scheduler (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://docs.celeryproject.org/en/stable/index.html"
                                 >Celery</b-link
                             >,
-                            <b-link class="text-dark" href="https://dask.org/"
+                            <b-link
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
+                                href="https://dask.org/"
                                 >Dask</b-link
                             >)
                         </li>
@@ -157,7 +187,11 @@
                             a batch-processing, streaming, or analytics platform
                             (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://spark.apache.org/"
                                 >Spark</b-link
                             >)
@@ -166,7 +200,11 @@
                             a container orchestrator or infrastructure-as-code
                             system (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://kubernetes.io/"
                                 >Kubernetes</b-link
                             >)
@@ -174,12 +212,20 @@
                         <li>
                             a cluster scheduler (e.g.,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://adaptivecomputing.com/cherry-services/torque-resource-manager/"
                                 >Torque/Moab</b-link
                             >,
                             <b-link
-                                class="text-dark"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
                                 href="https://slurm.schedmd.com/overview.html"
                                 >SLURM</b-link
                             >)
@@ -189,12 +235,13 @@
             </b-row>
             <br />
             <br />
+            <hr :style="profile.darkMode ? 'border-top: 1px solid #d6df5D' : 'border-top: 1px solid #212529'" />
             <br />
             <br />
             <b-row class="text-center">
                 <b-col>
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Development Team
+                        Project Team
                     </h5>
                 </b-col></b-row
             >
@@ -204,16 +251,33 @@
                     <b-card-group deck columns>
                         <b-card
                             class="text-center"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            sub-title-text-variant="dark"
-                            text-variant="dark"
-                            title="Alexander Bucksch"
-                            sub-title="Principal Investigator"
                             style="min-width: 20rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                            <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Alexander Bucksch
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Principal Investigator</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -247,16 +311,32 @@
                         </b-card>
                         <b-card
                             class="text-center"
-                            sub-title-text-variant="dark"
-                            text-variant="dark"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            title="Suxing Liu"
-                            sub-title="Algorithm Developer"
                             style="min-width: 20rem"
-                        >
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
+                            ><template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Suxing Liu
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Algorithm Developer</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -281,16 +361,33 @@
                         </b-card>
                         <b-card
                             class="text-center"
-                            sub-title-text-variant="dark"
-                            text-variant="dark"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            title="Wes Bonelli"
-                            sub-title="Platform Developer"
                             style="min-width: 20rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                            <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Wes Bonelli
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Platform Developer</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -340,16 +437,33 @@
                     <b-card-group deck columns>
                         <b-card
                             class="text-center"
-                            bg-variant="white"
-                            sub-title-text-variant="dark"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            text-variant="dark"
-                            border-variant="white"
-                            title="Chris Cotter"
-                            sub-title="Developer"
                             style="min-width: 10rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                          <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Chris Cotter
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Platform Developer</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -374,16 +488,33 @@
                         </b-card>
                         <b-card
                             class="text-center"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            text-variant="dark"
-                            sub-title-text-variant="dark"
-                            title="Abhiram Das"
-                            sub-title="Developer (DIRT)"
                             style="min-width: 10rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                          <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Abhiram Das
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Platform Developer (DIRT)</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -401,16 +532,33 @@
                         </b-card>
                         <b-card
                             class="text-center"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            text-variant="dark"
-                            sub-title-text-variant="dark"
-                            title="Megan Flory"
-                            sub-title="Designer"
                             style="min-width: 10rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                          <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Megan Flory
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Graphic Design</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -435,16 +583,33 @@
                         </b-card>
                         <b-card
                             class="text-center"
-                            bg-variant="white"
-                            footer-bg-variant="white"
-                            footer-border-variant="white"
-                            border-variant="white"
-                            text-variant="dark"
-                            sub-title-text-variant="dark"
-                            title="Maria Luck"
-                            sub-title="Developer"
                             style="min-width: 10rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'success' : 'white'
+                            "
+                            footer-border-variant="white"
                         >
+                          <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Maria Luck
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Graphic Design</b
+                                >
+                            </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
@@ -464,7 +629,7 @@
                 </b-col>
             </b-row>
             <br />
-          <br/>
+            <br />
             <b-row align-v="center" class="justify-content-md-center">
                 <b-col
                     ><b-img
@@ -483,7 +648,9 @@
                     ></b-img
                 ></b-col>
             </b-row>
-          <br/>
+            <br />
+            <br />
+            <br />
         </b-container>
     </div>
 </template>
