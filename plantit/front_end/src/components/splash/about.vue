@@ -11,45 +11,6 @@
         >
             <template slot="header" style="border: none">
                 <br />
-                <br />
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <div>
-                            <h4
-                                class="text-white"
-                                style="text-decoration: underline; z-index: 100"
-                            >
-                                plant<small
-                                    class="mb-3 text-success"
-                                    style="
-                                        text-decoration: underline;
-                                        text-shadow: 1px 1px 2px black;
-                                        z-index: 100;
-                                    "
-                                    ><small>IT</small></small
-                                >
-                            </h4>
-                            <b-img
-                                style="
-                                    max-width: 3rem;
-                                    position: absolute;
-                                    left: 50%;
-                                    transform: translate(-50%, 5px);
-                                "
-                                :src="require('../../assets/logo.png')"
-                                center
-                                class="m-0 p-0"
-                            ></b-img>
-                            <h6 class="text-white mt-4 ml-4" style="transform: translate(-9px, 0px)">
-                              <span class="mr-4">a browser gateway for</span><span class="text-success ml-2"
-                                    >HPC plant phenotyping </span
-                                >
-                            </h6>
-                        </div>
-                    </b-col>
-                </b-row>
-                <br />
-                <br />
                 <b-container>
                     <b-row>
                         <!--
@@ -99,7 +60,7 @@
                             bg-variant="dark"
                             no-body
                             text-variant="white"
-                            img-width="120px"
+                            img-width="100px"
                             :img-src="
                                 require('../../assets/frontpage/icons/algorithm.png')
                             "
@@ -139,7 +100,7 @@
                         ><b-col md="auto"
                             ><b-img
                                 rounded
-                                style="max-height: 5rem"
+                                style="max-height: 3rem"
                                 center
                                 :src="
                                     require('../../assets/logos/cyverse_bright.png')
@@ -153,7 +114,7 @@
                     <b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem"
+                            style="max-height: 4rem"
                             center
                             :src="
                                 require('../../assets/logos/github_white.png')
@@ -167,7 +128,7 @@
                             bg-variant="dark"
                             text-variant="white"
                             no-body
-                            img-width="120px"
+                            img-width="100px"
                             :img-src="
                                 require('../../assets/frontpage/icons/code.png')
                             "
@@ -212,7 +173,7 @@
                             sub-title-text-variant="success"
                             class="text-left text-white rounded-0 overflow-hidden"
                             no-body
-                            img-width="120px"
+                            img-width="100px"
                             bg-variant="dark"
                             text-variant="white"
                             :img-src="
@@ -236,14 +197,14 @@
                     <b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem"
+                            style="max-height: 4rem"
                             center
                             :src="require('../../assets/logos/docker.png')"
                         ></b-img></b-col
                     ><b-col md="auto"
                         ><b-img
                             rounded
-                            style="max-height: 6rem"
+                            style="max-height: 4rem"
                             center
                             :src="require('../../assets/logos/singularity.png')"
                         ></b-img

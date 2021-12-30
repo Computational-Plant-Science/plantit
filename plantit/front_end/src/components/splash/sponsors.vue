@@ -58,7 +58,6 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-
               <b-card
                   class="mt-1"
                     align="center"
@@ -69,22 +68,8 @@
                     <b-link href="http://arpa-e.energy.gov/">
                         <b-img
                             :src="require('@/assets/sponsors/arpa_e.png')"
-                            height="47px"
+                            height="40px"
                             alt="ARPA-E"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.uga.edu/">
-                        <b-img
-                            :src="require('@/assets/sponsors/uga.png')"
-                            height="47px"
-                            alt="University Of Georgia"
                         ></b-img>
                     </b-link>
                 </b-card>
@@ -108,10 +93,25 @@
                     border-variant="white"
                     style="border: none; box-shadow: none"
                 >
+                    <b-link href="http://www.uga.edu/">
+                        <b-img
+                            :src="require('@/assets/sponsors/uga.png')"
+                            height="47px"
+                            alt="University Of Georgia"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                    style="border: none; box-shadow: none"
+                >
                     <b-link href="http://gacra.uga.edu/">
                         <b-img
                             :src="require('@/assets/sponsors/gacrc.png')"
-                            height="47px"
+                            height="40px"
                             alt="Georgia Advanced Computing Resource Center"
                         ></b-img>
                     </b-link>
