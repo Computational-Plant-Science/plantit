@@ -252,7 +252,7 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     start_end_times = dict()
     timestamps = dict()
     for task in tasks:
-        start_end_times[task.guid] = (task.created, task.completed)
+        start_end_times[task.guid] = (task.created, task.completed if task.completed is not None else timezone.now())
 
     start = min([v[0] for v in start_end_times.values()])
     end = max(v[1] for v in start_end_times.values())
