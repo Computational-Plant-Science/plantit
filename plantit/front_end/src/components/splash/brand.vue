@@ -167,6 +167,20 @@
                             >
                         </b-nav-item>-->
                 </b-row>
+                <b-row>
+                    <b-col md="auto"
+                        >
+                        <i
+                            class="text-theme mt-4 ml-1 text-left"
+                        >
+                            <span>a browser gateway for </span
+                            ><span class="text-theme" style="text-decoration: underline; text-decoration-color: #d6df5D"
+                                >HPC plant phenotyping
+                            </span>
+                        </i></b-col
+                    >
+                  <b-col></b-col>
+                </b-row>
                 <b-row class="m-0 mt-2 mb-2"
                     ><b-col
                         ><Plotly
@@ -215,8 +229,11 @@ export default {
                         moment(t).format('YYYY-MM-DD HH:mm:ss')
                     ),
                     y: this.timeseriesTasksRunning[0].y,
-                    text: this.timeseriesTasksRunning[0].y.map((c) => `running tasks`),
+                    text: this.timeseriesTasksRunning[0].y.map(
+                        () => `running tasks`
+                    ),
                     type: 'scatter',
+                    line: {color: '#d6df5D'}
                 },
             ];
         },
@@ -226,6 +243,18 @@ export default {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
+                images: [
+                    {
+                        x: 0.385,
+                        y: 0.2,
+                        sizex: 1.2,
+                        sizey: 1.2,
+                        source: require('../../assets/logo.png'),
+                        xanchor: 'middle',
+                        yanchor: 'bottom',
+                        opacity: 0.25,
+                    },
+                ],
                 title: {
                     // text: 'Tasks Running',
                     font: {
