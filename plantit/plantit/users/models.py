@@ -19,3 +19,4 @@ class Profile(models.Model):
     hints = models.BooleanField(default=False)
     created = models.DateField(null=True, blank=True)
     first_login = models.BooleanField(default=True)
+    collaborators = models.ManyToManyField(User, related_name='user_collaborators', null=True, blank=True)

@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseNotFound
 from plantit.github import get_repo_readme, get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
-    check_user_authentication
+    check_user_authentication, get_profile_collaborators_async
 from plantit.users.models import Profile
 from plantit.celery_tasks import refresh_personal_workflows
 
@@ -26,14 +26,11 @@ def list_public(request):
 async def list_personal(request, owner):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
     if owner != profile.github_username:
-        try:
-            await sync_to_async(Profile.objects.get)(github_username=owner)
-        except:
-            return HttpResponseNotFound()
-
-    redis = RedisClient.get()
+        try: await sync_to_async(Profile.objects.get)(github_username=owner)
+        except: return HttpResponseNotFound()
 
     # if user's workflow cache is empty (re)populate it
+    redis = RedisClient.get()
     last_updated = redis.get(f"workflows_updated/{owner}")
     num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
     if last_updated is None or num_cached == 0:
@@ -42,6 +39,35 @@ async def list_personal(request, owner):
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
     return JsonResponse({'workflows': workflows})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def list_collaborator(request, owner):
+    profile = await sync_to_async(Profile.objects.get)(user=request.user)
+    if owner != profile.github_username:
+        try: await sync_to_async(Profile.objects.get)(github_username=owner)
+        except: return HttpResponseNotFound()
+
+    collaborators = await get_profile_collaborators_async(profile)
+    redis = RedisClient.get()
+    wfs = dict()
+
+    for col in collaborators:
+        p = await get_user_django_profile(col)
+
+        # if user's workflow cache is empty (re)populate it
+        last_updated = redis.get(f"workflows_updated/{p.github_username}")
+        num_cached = len(list(redis.scan_iter(match=f"workflows/{p.github_username}/*")))
+        if last_updated is None or num_cached == 0:
+            logger.info(f"GitHub user {p.github_username}'s workflow cache is empty, populating it now")
+            refresh_personal_workflows.s(p.github_username).apply_async()
+
+        workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{p.github_username}/*")]
+        wfs[p.github_username] = workflows
+
+    return JsonResponse({'workflows': wfs})
 
 
 @sync_to_async

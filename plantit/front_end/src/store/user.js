@@ -15,6 +15,7 @@ export const user = {
             cyverseProfile: null,
             githubProfile: null,
             githubOrganizations: [],
+            collaborators: [],
             hints: false,
             stats: null
         },
@@ -44,6 +45,9 @@ export const user = {
         },
         setGithubOrganizations(state, organizations) {
             state.profile.githubOrganizations = organizations;
+        },
+        setCollaborators(state, collaborators) {
+            state.profile.collaborators = collaborators;
         },
         setHints(state, show) {
             state.profile.hints = show;
@@ -100,49 +104,26 @@ export const user = {
         },
         async loadProfile({ commit }) {
             commit('setProfileLoading', true);
-
-            // fetch user profile
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then(response => {
+                    // determine whether user is logged in
+                    let decoded = jwtDecode(response.data.django_profile.cyverse_token);
+                    let now = Math.floor(Date.now() / 1000);
+                    if (now > decoded.exp) commit('setLoggedIn', false);
+                    else commit('setLoggedIn', true);
+
                     // set profile info
                     commit('setDjangoProfile', response.data.django_profile);
                     commit('setCyverseProfile', response.data.cyverse_profile);
                     commit('setGithubProfile', response.data.github_profile);
                     commit('setGithubOrganizations', response.data.github_organizations);
-
-                    // set first login
+                    commit('setCollaborators', response.data.collaborators);
                     commit('setFirst', response.data.django_profile.first);
-
-                    // set dark mode
-                    commit(
-                        'setDarkMode',
-                        response.data.django_profile.dark_mode
-                    );
-
-                    // set tutorials
-                    commit(
-                        'setHints',
-                        response.data.django_profile.hints
-                    );
-
-                    // set push notifications
-                    commit(
-                        'setPushNotifications',
-                        response.data.django_profile.push_notifications
-                    );
-
-                    // set usage statistics
+                    commit('setDarkMode', response.data.django_profile.dark_mode);
+                    commit('setHints', response.data.django_profile.hints);
+                    commit('setPushNotifications', response.data.django_profile.push_notifications);
                     commit('setStats', response.data.stats);
-
-                    // determine whether user is logged in
-                    let decoded = jwtDecode(
-                        response.data.django_profile.cyverse_token
-                    );
-                    let now = Math.floor(Date.now() / 1000);
-                    if (now > decoded.exp) commit('setLoggedIn', false);
-                    else commit('setLoggedIn', true);
-
                     commit('setProfileLoading', false);
                 })
                 .catch(error => {

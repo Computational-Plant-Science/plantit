@@ -39,6 +39,34 @@
                                 ><i class="fas fa-user"></i> Yours</span
                             ><span v-else-if="context === ''"
                                 ><i class="fas fa-users"></i> Public</span
+                            ><span
+                                v-else-if="
+                                    profile.collaborators
+                                        .map((c) => c.github_username)
+                                        .includes(context)
+                                "
+                            >
+                                <b-img
+                                    v-if="
+                                        profile.collaborators.filter(
+                                            (c) => c.github_username
+                                        )[0].github_profile.avatar_url
+                                    "
+                                    class="avatar m-0 mb-1 p-0 github-hover logo"
+                                    style="
+                                        width: 20px;
+                                        height: 20px;
+                                        position: relative;
+                                        border: 1px solid #e2e3b0;
+                                    "
+                                    rounded="circle"
+                                    :src="
+                                        profile.collaborators.filter(
+                                            (c) => c.github_username
+                                        )[0].github_profile.avatar_url
+                                    "
+                                ></b-img>
+                                {{ context }}</span
                             ><span v-else
                                 ><i class="fas fa-building"></i>
                                 {{ context }}</span
@@ -63,6 +91,38 @@
                             v-bind:key="org.login"
                             ><i class="fas fa-building fa-fw"></i>
                             {{ org.login }}</b-dropdown-item
+                        ><b-dropdown-text
+                            v-if="profile.githubOrganizations.length === 0"
+                            ><i>None to show</i></b-dropdown-text
+                        >
+                        <b-dropdown-divider></b-dropdown-divider>
+                        <b-dropdown-header
+                            >Your Collaborators</b-dropdown-header
+                        >
+                        <b-dropdown-item
+                            @click="switchContext(col.github_username)"
+                            v-for="col in profile.collaborators"
+                            v-bind:key="col.github_username"
+                            ><b-img
+                                id="avatar"
+                                v-if="col.github_profile.avatar_url"
+                                class="avatar m-0 mb-1 p-0 github-hover logo"
+                                style="
+                                    width: 20px;
+                                    height: 20px;
+                                    position: relative;
+                                    left: -3px;
+                                    top: 0.5px;
+                                    border: 1px solid #e2e3b0;
+                                "
+                                rounded="circle"
+                                :src="col.github_profile.avatar_url"
+                            ></b-img>
+                            {{ col.github_username }}</b-dropdown-item
+                        >
+                        <b-dropdown-text
+                            v-if="profile.collaborators.length === 0"
+                            ><i>None to show</i></b-dropdown-text
                         >
                     </b-dropdown>
                     <b-popover
@@ -144,8 +204,15 @@
                         >No public workflows have been published yet.</span
                     ><span v-else-if="context === profile.githubProfile.login"
                         >You haven't created any workflow bindings yet. Add a
-                        <code>plantit.yaml</code> file to your repository to
-                        bind a workflow.</span
+                        <code>plantit.yaml</code> file to any public repository
+                        to bind a workflow.</span
+                    ><span
+                        v-else-if="
+                            profile.collaborators
+                                .map((c) => c.github_username)
+                                .includes(context)
+                        "
+                        >This user has no workflow bindings yet.</span
                     ><span v-else
                         >This organization has no workflow bindings yet.</span
                     ></b-col
@@ -231,6 +298,8 @@ export default {
             'orgWorkflowsLoading',
             'personalWorkflows',
             'personalWorkflowsLoading',
+            'collaboratorWorkflows',
+            'collaboratorWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
         ]),
@@ -243,6 +312,14 @@ export default {
                     ? this.publicWorkflows
                     : this.context === this.profile.githubProfile.login
                     ? this.personalWorkflows
+                    : this.profile.collaborators
+                          .map((c) => c.github_username)
+                          .includes(this.context)
+                    ? this.collaboratorWorkflows[
+                          this.profile.collaborators.filter(
+                              (c) => c.github_username
+                          )[0].github_username
+                      ]
                     : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },

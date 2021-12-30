@@ -292,7 +292,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'hints': user.profile.hints,
                 'first': user.profile.first_login
             },
-            'stats': stats
+            'stats': stats,
+            'collaborators': [get_user_bundle(c) for c in user.profile.collaborators.all()]
         }
 
         if request.user.profile.cyverse_access_token != '':
@@ -311,6 +312,11 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             response['github_organizations'] = bundle['github_organizations']
 
         return JsonResponse(response)
+
+    @action(detail=False, methods=['get'])
+    def list_collaborators(self, request):
+        collaborators = [get_user_bundle(user) for user in request.user.profile.collaborators.all()]
+        return JsonResponse(collaborators)
 
     @action(detail=False, methods=['get'])
     def get_by_username(self, request):

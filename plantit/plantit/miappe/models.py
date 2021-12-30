@@ -82,13 +82,13 @@ class BiologicalMaterial(models.Model):
 class EnvironmentParameter(models.Model):
     name = models.TextField(blank=True)
     value = models.TextField(blank=True)
-    study = models.ForeignKey(Study, null=False, blank=False, on_delete=models.CASCADE)
+    study = models.ForeignKey(Study, null=True, blank=True, on_delete=models.CASCADE)
 
 
 class ExperimentalFactor(models.Model):
     name = models.TextField(blank=True)
     value = models.TextField(blank=True)
-    study = models.ForeignKey(Study, null=False, blank=False, on_delete=models.CASCADE)
+    study = models.ForeignKey(Study, null=True, blank=True, on_delete=models.CASCADE)
 
 
 class Event(models.Model):

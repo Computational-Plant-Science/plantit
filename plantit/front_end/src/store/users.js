@@ -5,7 +5,7 @@ export const users = {
     namespaced: true,
     state: () => ({
         users: [],
-        usersLoading: true
+        usersLoading: true,
     }),
     mutations: {
         set(state, users) {
@@ -13,27 +13,27 @@ export const users = {
         },
         setLoading(state, loading) {
             state.usersLoading = loading;
-        }
+        },
     },
     actions: {
         async loadAll({ commit }) {
             commit('setLoading', true);
             await axios
                 .get('/apis/v1/users/get_all/')
-                .then(response => {
+                .then((response) => {
                     commit('set', response.data.users);
                     commit('setLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     commit('setLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
-        }
+        },
     },
     getters: {
-        allUsers: state => state.users,
-        usersLoading: state => state.usersLoading
+        allUsers: (state) => state.users,
+        usersLoading: (state) => state.usersLoading,
         // TODO add 'developers' (users who've contributed workflows)
-    }
+    },
 };

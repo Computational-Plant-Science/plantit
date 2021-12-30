@@ -84,6 +84,11 @@ def refresh_user_cache():
     RedisClient.get().set(f"users_updated", timezone.now().timestamp())
 
 
+@sync_to_async
+def get_profile_collaborators_async(profile: Profile):
+    return list(profile.collaborators.all())
+
+
 def get_user_bundle(user: User):
     redis = RedisClient.get()
     if not user.profile.github_username:
