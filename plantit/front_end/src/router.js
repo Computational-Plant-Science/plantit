@@ -30,7 +30,7 @@ let router = new Router({
             name: 'splash',
             component: splash,
             meta: {
-                title: 'plantit',
+                title: 'plantIT',
                 crumb: [],
                 requiresAuth: false
             }
@@ -40,7 +40,7 @@ let router = new Router({
             name: 'about',
             component: about,
             meta: {
-                title: 'About PlantIT',
+                title: 'About plantIT',
                 crumb: [],
                 requiresAuth: false
             }
@@ -50,7 +50,7 @@ let router = new Router({
             name: 'stats',
             component: stats,
             meta: {
-                title: 'PlantIT Stats',
+                title: 'plantIT stats',
                 crumb: [],
                 requiresAuth: false
             }
@@ -70,7 +70,7 @@ let router = new Router({
             name: 'home',
             component: home,
             meta: {
-                title: 'Home',
+                title: 'Dashboard',
                 crumb: [
                     {
                         text: 'Home',
