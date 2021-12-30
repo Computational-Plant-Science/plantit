@@ -13,7 +13,6 @@
                 <br />
                 <b-container>
                     <b-row>
-
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="userCount >= 0" class="text-success">
                                 {{ userCount }}
@@ -34,8 +33,8 @@
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="taskCount >= 0" class="text-success">
-                          {{ taskCount }}
-                        </h1>
+                                {{ taskCount }}
+                            </h1>
                             <b-spinner
                                 v-else
                                 type="grow"
@@ -141,7 +140,8 @@
                                 <h4 class="text-success">
                                     Open source phenomics tools
                                 </h4>
-                                Explore phenotyping software or integrate your own
+                                Explore phenotyping software or integrate your
+                                own
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
