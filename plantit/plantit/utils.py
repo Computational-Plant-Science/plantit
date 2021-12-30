@@ -611,8 +611,10 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if 'from' in config['output']:
             if config['output']['from'] is not None and config['output']['from'] != '':
                 config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
-            else: config['output']['from'] = default_from
-        else: config['output']['from'] = default_from
+            else:
+                config['output']['from'] = default_from
+        else:
+            config['output']['from'] = default_from
     else:
         config['output'] = dict()
         config['output']['from'] = default_from
@@ -963,7 +965,7 @@ def compose_task_singularity_command(
         cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
     if no_cache: cmd += ' --disable-cache'
     if gpus: cmd += ' --nv'
-    cmd += f" {image} sh -c '{command}'"       # is `sh -c '[the command to run]'` always available/safe?
+    cmd += f" {image} sh -c '{command}'"  # is `sh -c '[the command to run]'` always available/safe?
     logger.debug(f"Using command: '{cmd}'")  # don't want to reveal secrets so log before prepending secret env vars
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
@@ -1304,11 +1306,18 @@ def compose_jobqueue_task_launcher_script(task: Task, options: PlantITCLIOptions
 
 
 def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: dict):
-    # TODO: if sftp throws an IOError or complains about filesizes, it probably means the remote host's disk is full
-    # we should catch the error and show an alert in the UI
-    # issue ref:
-
     work_dir = join(task.agent.workdir, task.workdir)
+
+    # NOTE: paramiko is finicky about connecting to certain hosts.
+    # the equivalent paramiko implementation is commented below,
+    # but for now we just perform each step manually.
+    #
+    # issues #239: https://github.com/Computational-Plant-Science/plantit/issues/239
+    #
+    # misc:
+    # - if sftp throws an IOError or complains about filesizes,
+    #   it probably means the remote host's disk is full.
+    #   could catch the error and show an alert in the UI.
 
     # if this workflow has input files, create a directory for them
     if 'input' in options:
@@ -1318,7 +1327,7 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         #     sftp.chdir(work_dir)
         #     sftp.mkdir(join(work_dir, 'input'))
 
-    # compose and upload the task script
+    # compose and upload the executable
     task_commands = compose_task_run_script(task, options, environ.get(
         'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
         'TASKS_TEMPLATE_SCRIPT_SLURM'))
@@ -1334,9 +1343,9 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
         # with ssh.client.open_sftp() as sftp:
         #     sftp.chdir(work_dir)
         #     sftp.put(task_script.name, f"{task.guid}.sh")
-            # with sftp.open(f"{task.guid}.sh", 'w') as script_file:
-            #     for line in task_script.readlines():
-            #         script_file.write(line)
+        #     with sftp.open(f"{task.guid}.sh", 'w') as script_file:
+        #         for line in task_script.readlines():
+        #             script_file.write(line)
         # for line in task_commands:
         #     list(execute_command(ssh, ':', f"echo '{line}\n' >> {task.guid}.sh", work_dir))
 
@@ -1355,24 +1364,21 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
             # with ssh.client.open_sftp() as sftp:
             #     sftp.chdir(work_dir)
             #     sftp.put(launcher_script.name, os.environ.get('LAUNCHER_SCRIPT_NAME'))
-                # with sftp.open("launch.sh", 'w') as launcher_file:
-                #     for line in launcher_script.readlines():
-                #         launcher_file.write(line)
+            #     with sftp.open("launch.sh", 'w') as launcher_file:
+            #         for line in launcher_script.readlines():
+            #             launcher_file.write(line)
             # for line in launcher_commands:
             #     list(execute_command(ssh, ':', f"echo '{line}\n' >> {os.environ.get('LAUNCHER_SCRIPT_NAME')}", work_dir))
     else:
-        # TODO remove this utter hack
         if 'input' in options:
             kind = options['input']['kind']
-            path = options['input']['path']
-            if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
-                options['input']['path'] = 'input'
-            else:
-                options['input']['path'] = f"input/{path.rpartition('/')[2]}"
+            options['input']['path'] = 'input' if (kind == InputKind.DIRECTORY or kind == InputKind.FILES) else f"input/{options['input']['path'].rpartition('/')[2]}"
+
+        # TODO support for various schedulers
         options['jobqueue'] = {'slurm': options['jobqueue']}
 
         # upload the config file for the CLI
-        logger.info(f"Uploading CLI config file for task {task.guid}")
+        logger.info(f"Uploading config for task {task.guid}")
         with ssh.client.open_sftp() as sftp:
             sftp.chdir(work_dir)
             with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:

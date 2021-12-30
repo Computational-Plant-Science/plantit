@@ -252,7 +252,7 @@ export default {
                         source: require('../../assets/logo.png'),
                         xanchor: 'middle',
                         yanchor: 'bottom',
-                        opacity: 0.25,
+                        opacity: 0.15,
                     },
                 ],
                 title: {
@@ -284,6 +284,7 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
