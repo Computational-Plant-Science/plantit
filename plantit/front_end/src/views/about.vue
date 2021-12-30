@@ -45,7 +45,7 @@
                         plantIT is free software-as-a-service for HPC/HTC
                         phenotyping in the browser. Registered users can access
                         and annotate data stored in the CyVerse cloud and submit
-                        (possibly highly parallel) simulations and analyses to
+                        (possibly highly parallel) trait extraction pipelines, simulations, or other tasks to
                         clusters and supercomputers, no programming experience
                         required.
                     </p>
@@ -59,15 +59,21 @@
                     </p>
                     <p>
                         plantIT makes a number of algorithms available by
-                        default, including
+                        default, including the original DIRT as well as
+                        <b-link
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            href="https://github.com/Computational-Plant-Science/3D_model_reconstruction_demo"
+                            >DIRT3D</b-link
+                        >, a 3D root system reconstruction and analysis pipeline
                         <b-link
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                             href="https://academic.oup.com/plphys/article/187/2/739/6317839"
-                            >DIRT3D</b-link
-                        >, a 3D root system reconstruction and analysis pipeline
-                        (Liu et al 2021) and other trait analysis workflows.
+                            >(Liu et al 2021)</b-link
+                        > and other trait analysis workflows.
                     </p>
                     <p>
                         plantIT is flexible enough to run most
