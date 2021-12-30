@@ -249,18 +249,25 @@ def get_user_statistics(user: User) -> dict:
 
 def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
     tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    series = dict()
+
+    # if user has no tasks, return here
+    if len(tasks) == 0:
+        return series
+
+    # find the running interval for each task
     start_end_times = dict()
-    timestamps = dict()
     for task in tasks:
         start_end_times[task.guid] = (task.created, task.completed)
 
+    # count the number of running tasks for each value in the time domain
     start = min([v[0] for v in start_end_times.values()])
     end = max(v[1] for v in start_end_times.values())
-
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
-        timestamps[datetime.fromtimestamp(t).isoformat()] = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
+        running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
+        series[datetime.fromtimestamp(t).isoformat()] = running
 
-    return timestamps
+    return series
 
 
 async def calculate_user_statistics(user: User) -> dict:

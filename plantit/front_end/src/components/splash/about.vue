@@ -40,11 +40,11 @@
                                 center
                                 class="m-0 p-0"
                             ></b-img>
-                            <h5 class="text-white mt-4 ml-4" style="transform: translate(-9px, 0px)">
+                            <h6 class="text-white mt-4 ml-4" style="transform: translate(-9px, 0px)">
                               <span class="mr-4">a browser gateway for</span><span class="text-success ml-2"
                                     >HPC plant phenotyping </span
                                 >
-                            </h5>
+                            </h6>
                         </div>
                     </b-col>
                 </b-row>
@@ -180,7 +180,7 @@
                                 <h4 class="text-success">
                                     Open source phenomics tools
                                 </h4>
-                                Explore phenotyping software or bind your own
+                                Explore phenotyping software or integrate your own
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
