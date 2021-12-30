@@ -1827,6 +1827,8 @@ def task_to_dict(task: Task) -> dict:
         'workflow_name': task.workflow_name,
         'workflow_branch': task.workflow_branch,
         'workflow_image_url': task.workflow_image_url,
+        'input_path': task.workflow['config']['input']['path'] if 'input' in task.workflow['config'] else None,
+        'output_path': task.workflow['config']['output']['to'] if ('output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,
         'is_success': task.is_success,

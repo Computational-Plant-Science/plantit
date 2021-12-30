@@ -9,14 +9,33 @@
         no-body
     >
         <b-card-body>
+            <b
+                :class="
+                    task.is_failure
+                        ? 'text-danger'
+                        : task.is_cancelled || task.is_timeout
+                        ? 'text-secondary'
+                        : task.is_complete
+                        ? 'text-success'
+                        : 'text-warning'
+                "
+                >{{
+                    !task.agent.is_local &&
+                    !task.is_complete &&
+                    task.job_status !== null
+                        ? task.job_status.toUpperCase()
+                        : task.status.toUpperCase()
+                }}</b
+            >
+            <br />
             <b-link
                 :class="profile.darkMode ? 'text-light' : 'text-dark'"
                 :to="{
                     name: 'task',
                     params: {
                         owner: task.owner,
-                        name: task.name
-                    }
+                        name: task.name,
+                    },
                 }"
                 replace
                 >{{ task.name }}</b-link
@@ -29,8 +48,8 @@
                         name: 'project',
                         params: {
                             owner: task.project.owner,
-                            title: task.project.title
-                        }
+                            title: task.project.title,
+                        },
                     }"
                     ><b-img
                         class="mb-1 mr-1"
@@ -62,7 +81,7 @@
             <span v-if="!task.is_complete"
                 ><b-spinner
                     class="mb-1 mr-1"
-                    style="width: 0.7rem; height: 0.7rem;"
+                    style="width: 0.7rem; height: 0.7rem"
                     variant="warning"
                 >
                 </b-spinner>
@@ -75,14 +94,14 @@
                     :to="{
                         name: 'agent',
                         params: {
-                            name: task.agent.name
-                        }
+                            name: task.agent.name,
+                        },
                     }"
                     ><b-img
                         v-if="task.agent.logo"
                         rounded
                         class="overflow-hidden"
-                        style="max-height: 1rem;"
+                        style="max-height: 1rem"
                         :src="task.agent.logo"
                     ></b-img
                     ><i v-else class="fas fa-server fa-fw"></i>
@@ -97,49 +116,38 @@
             <b-img
                 v-if="
                     task.workflow_image_url !== undefined &&
-                        task.workflow_image_url !== null
+                    task.workflow_image_url !== null
                 "
                 rounded
                 class="card-img-right"
-                style="max-width: 5rem;position: absolute;right: -15px;top: -20px;z-index:1;"
+                style="
+                    max-width: 5rem;
+                    position: absolute;
+                    right: -15px;
+                    top: -20px;
+                    z-index: 1;
+                "
                 right
                 :src="task.workflow_image_url"
             ></b-img>
             <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
                 ><a
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    :href="
-                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
-                    "
+                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
                     ><i class="fab fa-github fa-fw"></i>
                     {{ task.workflow_owner }}/{{ task.workflow_name }}</a
                 >
             </small>
-            <b-row class="mt-0"
-                ><b-col
-                    style="top: 27px;position: relative; font-size: 22pt"
-                    align-self="end"
-                    class="mt-0"
-                    ><b
-                        :class="
-                            task.is_failure
-                                ? 'text-danger'
-                                : task.is_cancelled || task.is_timeout
-                                ? 'text-secondary'
-                                : task.is_complete
-                                ? 'text-success'
-                                : 'text-warning'
-                        "
-                        >{{
-                            !task.agent.is_local &&
-                            !task.is_complete &&
-                            task.job_status !== null
-                                ? task.job_status.toUpperCase()
-                                : task.status.toUpperCase()
-                        }}</b
-                    ></b-col
-                ></b-row
-            >
+            <br />
+            <small v-if="task.input_path !== null"><i class="far fa-folder fa-fw mr-1"></i>{{ task.input_path }}</small>
+            <small
+                ><i
+                    class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
+                ></i
+            ></small>
+            <small v-if="task.output_path !== null"><i class="far fa-folder fa-fw mr-1"></i>{{
+                task.output_path
+            }}</small>
         </b-card-body>
     </b-card>
 </template>
@@ -153,23 +161,23 @@ export default {
     props: {
         task: {
             type: Object,
-            required: true
+            required: true,
         },
         project: {
             type: Boolean,
-            required: false
-        }
+            required: false,
+        },
     },
     methods: {
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
-        }
+        },
     },
     computed: {
-        ...mapGetters('user', ['profile', 'profileLoading'])
-    }
+        ...mapGetters('user', ['profile', 'profileLoading']),
+    },
 };
 </script>
 
