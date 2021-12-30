@@ -9,7 +9,14 @@
         no-body
     >
         <b-card-body>
-            <b
+            <span v-if="!task.is_complete"
+                ><b-spinner
+                    class="mb-1 mr-1"
+                    style="width: 0.7rem; height: 0.7rem"
+                    variant="warning"
+                >
+                </b-spinner> </span
+            ><b
                 :class="
                     task.is_failure
                         ? 'text-danger'
@@ -27,6 +34,32 @@
                         : task.status.toUpperCase()
                 }}</b
             >
+            <small class="ml-1 mr-1">on</small>
+            <small>
+                <b-link
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    :to="{
+                        name: 'agent',
+                        params: {
+                            name: task.agent.name,
+                        },
+                    }"
+                    ><b-img
+                        v-if="task.agent.logo"
+                        rounded
+                        class="overflow-hidden"
+                        style="max-height: 1rem"
+                        :src="task.agent.logo"
+                    ></b-img
+                    ><i v-else class="fas fa-server fa-fw"></i>
+                    {{
+                        task.agent ? task.agent.name : '[agent removed]'
+                    }}</b-link
+                >
+
+                {{ prettify(task.updated) }}</small
+            >
+
             <br />
             <b-link
                 :class="profile.darkMode ? 'text-light' : 'text-dark'"
@@ -78,41 +111,6 @@
                 </b-badge>
             </span>
             <br />
-            <span v-if="!task.is_complete"
-                ><b-spinner
-                    class="mb-1 mr-1"
-                    style="width: 0.7rem; height: 0.7rem"
-                    variant="warning"
-                >
-                </b-spinner>
-                <small>Running on </small></span
-            >
-            <small v-else>Ran on </small>
-            <small>
-                <b-link
-                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    :to="{
-                        name: 'agent',
-                        params: {
-                            name: task.agent.name,
-                        },
-                    }"
-                    ><b-img
-                        v-if="task.agent.logo"
-                        rounded
-                        class="overflow-hidden"
-                        style="max-height: 1rem"
-                        :src="task.agent.logo"
-                    ></b-img
-                    ><i v-else class="fas fa-server fa-fw"></i>
-                    {{
-                        task.agent ? task.agent.name : '[agent removed]'
-                    }}</b-link
-                >
-
-                {{ prettify(task.updated) }}</small
-            >
-            <br />
             <b-img
                 v-if="
                     task.workflow_image_url !== undefined &&
@@ -130,24 +128,32 @@
                 right
                 :src="task.workflow_image_url"
             ></b-img>
-            <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
-                ><a
-                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
-                    ><i class="fab fa-github fa-fw"></i>
-                    {{ task.workflow_owner }}/{{ task.workflow_name }}</a
+                <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
+                    ><a
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
+                        ><i class="fab fa-github fa-fw"></i>
+                        {{ task.workflow_owner }}/{{ task.workflow_name }}</a
+                    >
+                </small>
+                <br />
+          <span v-if="task.output_path !== null && task.output_path !== ''">
+                <small v-if="task.input_path !== null"
+                    ><i class="far fa-folder fa-fw mr-1"></i
+                    >{{ task.input_path }}</small
+                ><small v-else
+                    ><i class="far fa-circle text-secondary fa-fw"></i
+                ></small>
+                <small
+                    ><i
+                        class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
+                    ></i
+                ></small>
+                <small v-if="task.output_path !== null"
+                    ><i class="far fa-folder fa-fw mr-1"></i
+                    >{{ task.output_path }}</small
                 >
-            </small>
-            <br />
-            <small v-if="task.input_path !== null"><i class="far fa-folder fa-fw mr-1"></i>{{ task.input_path }}</small>
-            <small
-                ><i
-                    class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
-                ></i
-            ></small>
-            <small v-if="task.output_path !== null"><i class="far fa-folder fa-fw mr-1"></i>{{
-                task.output_path
-            }}</small>
+            </span>
         </b-card-body>
     </b-card>
 </template>

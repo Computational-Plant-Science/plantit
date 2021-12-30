@@ -91,11 +91,33 @@
                                     >
                                 </h5>
                             </b-col>
-                          <b-col md="auto" v-if="!getTask.is_complete" class="mr-0">
-                                <b-spinner class="mr-0" small variant="warning">
+                            <b-col md="auto">
+                                <b-spinner
+                                    v-if="!getTask.is_complete"
+                                    class="mr-1"
+                                    small
+                                    variant="warning"
+                                >
                                 </b-spinner>
-                            </b-col>
-                            <b-col md="auto" class="ml-0">
+                                <b
+                                    :class="
+                                        getTask.is_failure || getTask.is_timeout
+                                            ? 'text-danger'
+                                            : getTask.is_cancelled
+                                            ? 'text-secondary'
+                                            : getTask.is_complete
+                                            ? 'text-success'
+                                            : 'text-warning'
+                                    "
+                                    >{{
+                                        !getTask.agent.is_local &&
+                                        !getTask.is_complete &&
+                                        getTask.job_status !== null
+                                            ? getTask.job_status.toUpperCase()
+                                            : getTask.status.toUpperCase()
+                                    }}</b
+                                >
+                                <small class="ml-1 mr-1">on</small>
                                 <b-link
                                     :class="
                                         profile.darkMode
@@ -124,6 +146,34 @@
                                 ></b-col
                             >
                         </b-row>
+                        <b-row
+                            ><b-col
+                                ><span
+                                    v-if="
+                                        getTask.output_path !== null &&
+                                        getTask.output_path !== ''
+                                    "
+                                >
+                                    <small v-if="getTask.input_path !== null"
+                                        ><i class="far fa-folder fa-fw mr-1"></i
+                                        >{{ getTask.input_path }}</small
+                                    ><small v-else
+                                        ><i
+                                            class="far fa-circle text-secondary fa-fw"
+                                        ></i
+                                    ></small>
+                                    <small
+                                        ><i
+                                            class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
+                                        ></i
+                                    ></small>
+                                    <small v-if="getTask.output_path !== null"
+                                        ><i class="far fa-folder fa-fw mr-1"></i
+                                        >{{ getTask.output_path }}</small
+                                    >
+                                </span></b-col
+                            ></b-row
+                        >
                         <!--<b-row v-if="getTask.project !== null"
                             ><b-col md="auto"
                                 ><h5>
@@ -364,33 +414,6 @@
                                             :linkable="true"
                                             :workflow="getWorkflow"
                                         ></WorkflowBlurb>
-                                        <b-row
-                                            ><b-col
-                                                style="
-                                                    top: 20px;
-                                                    position: relative;
-                                                    font-size: 15pt;
-                                                "
-                                                align-self="end"
-                                                :class="
-                                                    getTask.is_failure ||
-                                                    getTask.is_timeout
-                                                        ? 'text-danger'
-                                                        : getTask.is_cancelled
-                                                        ? 'text-secondary'
-                                                        : getTask.is_complete
-                                                        ? 'text-success'
-                                                        : 'text-warning'
-                                                "
-                                                ><b>{{
-                                                    !getTask.agent.is_local &&
-                                                    !getTask.is_complete &&
-                                                    getTask.job_status !== null
-                                                        ? getTask.job_status.toUpperCase()
-                                                        : getTask.status.toUpperCase()
-                                                }}</b></b-col
-                                            ></b-row
-                                        >
                                     </b-card-body>
                                 </b-card>
                                 <b-row class="m-0 p-0 mt-1">
