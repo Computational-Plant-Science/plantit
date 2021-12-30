@@ -17,7 +17,7 @@
                                 z-index: 100;
                             "
                             ><small>IT</small></small
-                        >stats
+                        ><small>stats</small>
                     </h4>
                 </b-col>
             </b-row>
@@ -104,10 +104,10 @@
                             "
                             ><template #title
                                 ><h1
-                                    v-if="publicWorkflows.length >= 0"
+                                    v-if="workflowCount >= 0"
                                     class="text-success text-center"
                                 >
-                                    {{ publicWorkflows.length }}
+                                    {{ workflowCount }}
                                 </h1>
                                 <b-spinner
                                     v-else
@@ -451,17 +451,6 @@ export default {
             });
         },
     },
-    // watch: {
-    //     darkMode() {
-    //         this.map.setStyle(
-    //             `mapbox://styles/mapbox/${
-    //                 this.profile.darkMode ? 'dark-v10' : 'light-v10'
-    //             }`
-    //         );
-    //         this.unpaintInstitutions();
-    //         this.paintInstitutions();
-    //     }
-    // },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [

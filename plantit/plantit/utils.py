@@ -1165,7 +1165,7 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
 
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
-    nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
+    nodes = 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
     task.inputs_detected = len(inputs)
     task.save()
 
@@ -1204,7 +1204,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
         commands.append(f"#SBATCH -N {nodes}")
-        commands.append(f"#SBATCH --ntasks={nodes}")
+        commands.append(f"#SBATCH --ntasks={min(len(inputs), task.agent.max_cores) if inputs is not None and not task.agent.job_array else 1}")
     else:
         commands.append(f"#SBATCH -N 1")
         commands.append("#SBATCH --ntasks=1")

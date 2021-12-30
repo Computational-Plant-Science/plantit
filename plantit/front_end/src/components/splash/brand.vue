@@ -140,7 +140,7 @@
                             class="text-right"
                             href="/apis/v1/idp/cyverse_login/"
                         >
-                            <span class="text-success">
+                            <span :class="profile.darkMode ? 'text-success' : 'text-dark'">
                                 <i class="fas fa-arrow-circle-right fa-fw"></i>
                                 Log In</span
                             >
@@ -183,11 +183,7 @@
                 </b-row>
                 <b-row class="m-0 mt-2 mb-2"
                     ><b-col
-                        ><Plotly
-                            v-if="timeseriesTasksRunning !== null"
-                            :data="tasksRunningPlotData"
-                            :layout="tasksRunningPlotLayout"
-                        ></Plotly></b-col
+                        ></b-col
                 ></b-row>
             </b-card>
         </b-container>
@@ -205,13 +201,9 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
-import { Plotly } from 'vue-plotly';
 
 export default {
-    name: 'home-splash',
-    components: {
-        Plotly,
-    },
+    name: 'home-brand',
     data: function () {
         return {
             version: 0,

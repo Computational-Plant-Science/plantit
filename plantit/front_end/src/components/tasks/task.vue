@@ -96,7 +96,7 @@
                                     v-if="!getTask.is_complete"
                                     class="mr-1"
                                     small
-                                    variant="warning"
+                                    :variant="profile.darkMode ? 'text-white' : 'text-dark'"
                                 >
                                 </b-spinner>
                                 <b
@@ -107,7 +107,7 @@
                                             ? 'text-secondary'
                                             : getTask.is_complete
                                             ? 'text-success'
-                                            : 'text-warning'
+                                            : (profile.darkMode ? 'text-white' : 'text-dark')
                                     "
                                     >{{
                                         !getTask.agent.is_local &&
@@ -163,8 +163,11 @@
                                         ></i
                                     ></small>
                                     <small
-                                        ><i
-                                            class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
+                                        ><i v-if="profile.darkMode"
+                                            class="fas fa-arrow-right text-white fa-fw mr-1 ml-1"
+                                        ></i
+                                    ><i v-else
+                                            class="fas fa-arrow-right text-dark fa-fw mr-1 ml-1"
                                         ></i
                                     ></small>
                                     <small v-if="getTask.output_path !== null"

@@ -241,13 +241,13 @@
             </b-row>
             <br />
             <br />
-            <hr :style="profile.darkMode ? 'border-top: 1px solid #d6df5D' : 'border-top: 1px solid #212529'" />
+            <hr :style="profile.darkMode ? 'border-top: 1px solid #dee2e6' : 'border-top: 1px solid #212529'" />
             <br />
             <br />
             <b-row class="text-center">
                 <b-col>
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Project Team
+                        Project Staff
                     </h5>
                 </b-col></b-row
             >

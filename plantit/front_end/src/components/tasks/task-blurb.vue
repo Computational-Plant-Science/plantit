@@ -13,7 +13,7 @@
                 ><b-spinner
                     class="mb-1 mr-1"
                     style="width: 0.7rem; height: 0.7rem"
-                    variant="warning"
+                    :variant="profile.darkMode ? 'text-white' : 'text-dark'"
                 >
                 </b-spinner> </span
             ><b
@@ -24,7 +24,9 @@
                         ? 'text-secondary'
                         : task.is_complete
                         ? 'text-success'
-                        : 'text-warning'
+                        : profile.darkMode
+                        ? 'text-white'
+                        : 'text-dark'
                 "
                 >{{
                     !task.agent.is_local &&
@@ -128,25 +130,34 @@
                 right
                 :src="task.workflow_image_url"
             ></b-img>
-                <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
-                    ><a
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
-                        ><i class="fab fa-github fa-fw"></i>
-                        {{ task.workflow_owner }}/{{ task.workflow_name }}</a
-                    >
-                </small>
-                <br />
-          <span v-if="task.output_path !== null && task.output_path !== ''">
+            <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
+                ><a
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
+                    ><i class="fab fa-github fa-fw"></i>
+                    {{ task.workflow_owner }}/{{ task.workflow_name }}</a
+                >
+            </small>
+            <br />
+            <span v-if="task.output_path !== null && task.output_path !== ''">
                 <small v-if="task.input_path !== null"
                     ><i class="far fa-folder fa-fw mr-1"></i
                     >{{ task.input_path }}</small
                 ><small v-else
-                    ><i class="far fa-circle text-secondary fa-fw"></i
+                    ><i
+                        v-if="profile.darkMode"
+                        class="far fa-circle text-white fa-fw"
+                    ></i
+                    ><i v-else class="far fa-circle text-dark fa-fw"></i
                 ></small>
                 <small
                     ><i
-                        class="fas fa-arrow-right text-secondary fa-fw mr-1 ml-1"
+                        v-if="profile.darkMode"
+                        class="fas fa-arrow-right text-white fa-fw mr-1 ml-1"
+                    ></i
+                    ><i
+                        v-else
+                        class="fas fa-arrow-right text-dark fa-fw mr-1 ml-1"
                     ></i
                 ></small>
                 <small v-if="task.output_path !== null"

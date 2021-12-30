@@ -13,12 +13,12 @@ def counts(request):
     users = list(User.objects.all())
     online = filter_online(users)
     redis = RedisClient.get()
-    public_workflows = len(list(redis.scan(match='workflows')))
+    workflows = len(list(redis.scan_iter('workflows/*')))
 
     return JsonResponse({
         'users': len(users),
         'online': len(online),
-        'workflows': public_workflows,
+        'workflows': workflows,
         'tasks': TaskCounter.load().count,
         'running': len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
     })
