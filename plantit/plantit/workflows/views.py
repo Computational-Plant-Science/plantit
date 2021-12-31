@@ -79,12 +79,12 @@ async def list_project(request):
 
     # load workflows for each project
     for proj in projects:
-        cached = redis.get(f"projects/{proj.unique_id}")
+        cached = redis.get(f"projects/{proj.guid}")
         if cached is None: refresh_project_cache(proj)
 
-        keys = json.loads(redis.get(f"projects/{proj.unique_id}"))['workflows']
+        keys = json.loads(redis.get(f"projects/{proj.guid}"))['workflows']
         workflows = [json.loads(redis.get(key)) for key in [f"workflows/{k}" for k in keys]]
-        wfs[proj.unique_id] = workflows
+        wfs[proj.guid] = workflows
 
     return JsonResponse({'workflows': wfs})
 

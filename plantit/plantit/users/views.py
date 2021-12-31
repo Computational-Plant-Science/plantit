@@ -297,7 +297,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first': user.profile.first_login,
             },
             'stats': stats,
-            'projects': [p.unique_id for p in user.projects.all()]
+            'projects': [p.guid for p in user.projects.all()]
         }
 
         if request.user.profile.cyverse_access_token != '':
