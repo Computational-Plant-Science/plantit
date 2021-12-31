@@ -193,7 +193,7 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row v-if="personalDatasetsLoading"
+                        <b-row v-if="userDatasetsLoading"
                             ><b-col
                                 ><b-spinner
                                     small
@@ -209,14 +209,14 @@
                                             ? 'text-white'
                                             : 'text-dark'
                                     "
-                                    >Loading your personal datasets...</span
+                                    >Loading your datasets...</span
                                 ></b-col
                             ></b-row
                         >
                         <b-row v-else>
                             <b-col>
                                 <datatree
-                                    :node="personalDatasets"
+                                    :node="userDatasets"
                                     select="directory"
                                     :upload="true"
                                     :download="true"
@@ -502,11 +502,11 @@ export default {
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('datasets', [
-            'personalDatasets',
+            'userDatasets',
             'publicDatasets',
             'sharedDatasets',
             'sharingDatasets',
-            'personalDatasetsLoading',
+            'userDatasetsLoading',
             'publicDatasetsLoading',
             'sharedDatasetsLoading',
             'sharingDatasetsLoading',
@@ -519,7 +519,7 @@ export default {
             } else {
                 switch (this.activeTab) {
                     case 0:
-                        return this.personalDatasetsLoading;
+                        return this.userDatasetsLoading;
                     case 1:
                         return this.sharedDatasetsLoading;
                     case 2:
@@ -535,7 +535,7 @@ export default {
             } else {
                 switch (this.activeTab) {
                     case 0:
-                        return this.personalDatasets;
+                        return this.userDatasets;
                     case 1:
                         return this.sharedDatasets;
                     case 2:

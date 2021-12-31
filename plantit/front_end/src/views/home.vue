@@ -261,11 +261,11 @@
                                                 <i
                                                     class="fas fa-spinner"
                                                     v-if="
-                                                        personalDatasetsLoading
+                                                        userDatasetsLoading
                                                     "
                                                 ></i
                                                 ><b v-else>{{
-                                                    personalDatasets.folders
+                                                    userDatasets.folders
                                                         .length
                                                 }}</b>
                                                 owned
@@ -302,7 +302,7 @@
                                                     Projects
                                                 </h5>
                                                 <b>{{
-                                                    personalProjects.length
+                                                    userProjects.length
                                                 }}</b>
                                                 owned
                                                 <br />
@@ -571,8 +571,8 @@ export default {
             'tasksCompleted',
         ]),
         ...mapGetters('datasets', [
-            'personalDatasets',
-            'personalDatasetsLoading',
+            'userDatasets',
+            'userDatasetsLoading',
             'sharedDatasets',
             'sharedDatasetsLoading',
             'sharingDatasets',
@@ -581,10 +581,10 @@ export default {
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [
-            'personalWorkflows',
-            'personalWorkflowsLoading',
+            'userWorkflows',
+            'userWorkflowsLoading',
         ]),
-        ...mapGetters('projects', ['personalProjects', 'othersProjects']),
+        ...mapGetters('projects', ['userProjects', 'othersProjects']),
         isRootPath() {
             return this.$route.name === 'home';
         },

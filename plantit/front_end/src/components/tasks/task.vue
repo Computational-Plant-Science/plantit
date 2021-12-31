@@ -1811,7 +1811,7 @@
                                         <b-row>
                                             <b-col>
                                                 <datatree
-                                                    :node="personalDatasets"
+                                                    :node="userDatasets"
                                                     :upload="true"
                                                     :download="true"
                                                     :create="true"
@@ -2010,7 +2010,7 @@
                     :upload="false"
                     :download="false"
                     @selectNode="preTransferToCyVerse"
-                    :node="personalDatasets"
+                    :node="userDatasets"
                 ></datatree>
             </div>
             <div v-else>
@@ -2705,8 +2705,8 @@ export default {
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
         ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
         ...mapGetters('datasets', [
-            'personalDatasets',
-            'personalDatasetsLoading',
+            'userDatasets',
+            'userDatasetsLoading',
         ]),
         timeseriesData() {
             var x = [

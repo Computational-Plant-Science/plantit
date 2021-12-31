@@ -297,7 +297,7 @@
                                 </b-col>
                             </b-row>
                             <b-row
-                                v-if="personalProjects.length > 0"
+                                v-if="userProjects.length > 0"
                                 class="mt-2"
                                 ><b-col
                                     :class="
@@ -327,7 +327,7 @@
                             >
                             <b-row
                                 class="mt-1"
-                                v-for="project in personalProjects"
+                                v-for="project in userProjects"
                                 v-bind:key="project.title"
                                 ><b-col
                                     style="border-top: 2px solid lightgray"
@@ -484,7 +484,7 @@
                                     </b-col>
                                 </b-row>
                                 <b-row
-                                    v-if="personalProjects.length > 0"
+                                    v-if="userProjects.length > 0"
                                     class="mt-2"
                                     ><b-col
                                         :class="
@@ -515,7 +515,7 @@
                                 >
                                 <b-row
                                     class="mt-1"
-                                    v-for="project in personalProjects"
+                                    v-for="project in userProjects"
                                     v-bind:key="project.title"
                                     ><b-col
                                         style="border-top: 2px solid lightgray"
@@ -1431,7 +1431,7 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('projects', [
-            'personalProjects',
+            'userProjects',
             'projectsLoading',
             'othersProjects',
         ]),
@@ -1463,7 +1463,7 @@ export default {
                 ? this.internalNode.path
                 : this.node.path;
             if (this.projectsLoading) return [];
-            let projects = this.personalProjects
+            let projects = this.userProjects
                 .concat(this.othersProjects)
                 .filter((p) =>
                     p.studies.some((s) => s.dataset_paths.includes(path))
@@ -1666,7 +1666,7 @@ export default {
             await this.$store.dispatch('users/loadAll');
         },
         projectFor(study) {
-            return this.personalProjects.find(
+            return this.userProjects.find(
                 (p) =>
                     p.owner === study.project_owner &&
                     p.title === study.project_title

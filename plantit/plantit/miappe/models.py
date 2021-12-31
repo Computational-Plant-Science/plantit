@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy
 
 
-class Project(models.Model):
+class Investigation(models.Model):
     class License(models.TextChoices):
         CC_BY = 'BY', gettext_lazy('CC BY 4.0'),
         CC_BY_SA = 'SA', gettext_lazy('CC BY-SA 4.0')
@@ -28,7 +28,7 @@ class Project(models.Model):
 
 class Study(models.Model):
     team = models.ManyToManyField(User, related_name='study_team', null=True, blank=True)
-    investigation = models.ForeignKey(Project, null=False, blank=False, on_delete=models.CASCADE)
+    investigation = models.ForeignKey(Investigation, null=False, blank=False, on_delete=models.CASCADE)
     guid = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=250, blank=False)
     description = models.TextField(blank=True)

@@ -23,7 +23,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.celery_tasks import refresh_personal_workflows, aggregate_user_usage_stats
+from plantit.celery_tasks import refresh_user_workflows, aggregate_user_usage_stats
 from plantit.misc import get_csrf_token
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
@@ -136,7 +136,7 @@ class IDPViewSet(viewsets.ViewSet):
             num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
             if last_updated is None or num_cached == 0:
                 self.logger.info(f"GitHub user {owner}'s workflow cache is empty, scheduling refresh")
-                refresh_personal_workflows.s(owner).apply_async()
+                refresh_user_workflows.s(owner).apply_async()
             else:
                 age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
                 age_secs = age.total_seconds()
@@ -144,7 +144,7 @@ class IDPViewSet(viewsets.ViewSet):
                 if age_secs > max_secs:
                     self.logger.info(
                         f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
-                    refresh_personal_workflows.s(owner).apply_async()
+                    refresh_user_workflows.s(owner).apply_async()
 
         # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
         stats_last_updated = redis.get(f"stats_updated/{user.username}")

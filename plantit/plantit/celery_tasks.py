@@ -24,7 +24,7 @@ from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
-    refresh_personal_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
+    refresh_user_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
     configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_tasks_running_timeseries
 
 logger = get_task_logger(__name__)
@@ -440,8 +440,8 @@ def aggregate_user_usage_stats(username: str):
 
 
 @app.task()
-def refresh_personal_workflows(owner: str):
-    async_to_sync(refresh_personal_workflow_cache)(owner)
+def refresh_user_workflows(owner: str):
+    async_to_sync(refresh_user_workflow_cache)(owner)
 
 
 @app.task()

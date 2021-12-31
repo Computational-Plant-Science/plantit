@@ -11,8 +11,8 @@ from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
     check_user_authentication, list_user_projects, refresh_project_cache
 from plantit.users.models import Profile
-from plantit.miappe.models import Project
-from plantit.celery_tasks import refresh_personal_workflows
+from plantit.miappe.models import Investigation
+from plantit.celery_tasks import refresh_user_workflows
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ async def list_user(request):
     num_cached = len(list(redis.scan_iter(match=f"workflows/{profile.github_username}/*")))
     if last_updated is None or num_cached == 0:
         logger.info(f"{profile.github_username}'s workflow cache is empty, populating it now")
-        refresh_personal_workflows.s(profile.github_username).apply_async()
+        refresh_user_workflows.s(profile.github_username).apply_async()
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{profile.github_username}/*")]
     return JsonResponse({'workflows': workflows})

@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 
-from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, BiologicalMaterial, EnvironmentParameter, ExperimentalFactor, Study, Project, Event, DataFile
+from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, BiologicalMaterial, EnvironmentParameter, ExperimentalFactor, Study, Investigation, Event, DataFile
 from plantit.utils import project_to_dict
 
 
@@ -33,15 +33,15 @@ def list_or_create(request):
     if request.method == 'GET':
         team = request.GET.get('team', None)
         projects = [project_to_dict(project) for project in
-                    (Project.objects.all() if team is None else Project.objects.filter(team__username=team))]
+                    (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
         body = json.loads(request.body.decode('utf-8'))
         title = body['title']
         description = body['description'] if 'description' in body else None
 
-        if Project.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
-        project = Project.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
+        if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
+        project = Investigation.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
         return JsonResponse(project_to_dict(project))
 
 
@@ -49,7 +49,7 @@ def list_or_create(request):
 def list_by_owner(request, owner):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-    projects = [project_to_dict(project) for project in Project.objects.filter(owner=request.user)]
+    projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
     return JsonResponse({'projects': projects})
 
 
@@ -59,14 +59,14 @@ def get_or_delete(request, owner, title):
 
     if request.method == 'GET':
         try:
-            project = Project.objects.get(owner=request.user, title=title)
+            project = Investigation.objects.get(owner=request.user, title=title)
             return JsonResponse(project_to_dict(project))
         except:
             return HttpResponseNotFound()
     elif request.method == 'DELETE':
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
         project.delete()
-        projects = [project_to_dict(project) for project in Project.objects.filter(owner=request.user)]
+        projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
         return JsonResponse({'projects': projects})
 
 
@@ -76,7 +76,7 @@ def exists(request, owner, title):
     if request.user.username != owner: return HttpResponseForbidden()
 
     try:
-        Project.objects.get(owner=request.user, title=title)
+        Investigation.objects.get(owner=request.user, title=title)
         return JsonResponse({'exists': True})
     except:
         return JsonResponse({'exists': False})
@@ -91,7 +91,7 @@ def add_team_member(request, owner, title):
     username = body['username']
 
     try:
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
         user = User.objects.get(username=username)
     except:
         return HttpResponseNotFound()
@@ -111,7 +111,7 @@ def remove_team_member(request, owner, title):
     username = body['username']
 
     try:
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
         user = User.objects.get(username=username)
     except:
         return HttpResponseNotFound()
@@ -133,7 +133,7 @@ def add_study(request, owner, title):
     guid = f"{request.user.username}-{title.replace(' ', '-')}-{study_title.replace(' ', '-')}"
 
     try:
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
     except:
         return HttpResponseNotFound()
 
@@ -153,7 +153,7 @@ def remove_study(request, owner, title):
     study_title = body['title']
 
     try:
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
         study = Study.objects.get(project=project, title=study_title)
     except:
         return HttpResponseNotFound()
@@ -188,7 +188,7 @@ def edit_study(request, owner, title):
     study_experimental_factors = body['experimental_factors'] if 'experimental_factors' in body else None
 
     try:
-        project = Project.objects.get(owner=request.user, title=title)
+        project = Investigation.objects.get(owner=request.user, title=title)
         study = Study.objects.get(project=project, title=study_title)
         environment_parameters = list(EnvironmentParameter.objects.filter(study=study))
         experimental_factors = list(ExperimentalFactor.objects.filter(study=study))

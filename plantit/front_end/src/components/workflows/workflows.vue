@@ -59,12 +59,12 @@
                         >
                         <b-dropdown-item
                             @click="switchContext(org.login)"
-                            v-for="org in profile.githubOrganizations"
+                            v-for="org in profile.organizations"
                             v-bind:key="org.login"
                             ><i class="fas fa-building fa-fw"></i>
                             {{ org.login }}</b-dropdown-item
                         ><b-dropdown-text
-                            v-if="profile.githubOrganizations.length === 0"
+                            v-if="profile.organizations.length === 0"
                             ><i>None to show</i></b-dropdown-text
                         >
                         <b-dropdown-divider></b-dropdown-divider>
@@ -219,7 +219,7 @@ export default {
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
-        personalWorkflows: function () {
+        userWorkflows: function () {
             // noop
         },
         publicWorkflows: function () {
@@ -268,8 +268,8 @@ export default {
         ...mapGetters('workflows', [
             'orgWorkflows',
             'orgWorkflowsLoading',
-            'personalWorkflows',
-            'personalWorkflowsLoading',
+            'userWorkflows',
+            'userWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
         ]),
@@ -281,7 +281,7 @@ export default {
                 ...(this.context === ''
                     ? this.publicWorkflows
                     : this.context === this.profile.githubProfile.login
-                    ? this.personalWorkflows
+                    ? this.userWorkflows
                     : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },
@@ -289,7 +289,7 @@ export default {
             return this.context === ''
                 ? this.publicWorkflowsLoading
                 : this.context === this.profile.githubProfile.login
-                ? this.personalWorkflowsLoading
+                ? this.userWorkflowsLoading
                 : this.orgWorkflowsLoading;
         },
     },

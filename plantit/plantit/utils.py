@@ -38,7 +38,7 @@ from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
-from plantit.miappe.models import Project, Study
+from plantit.miappe.models import Investigation, Study
 from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
@@ -93,10 +93,10 @@ def list_user_projects(user: User):
     return list(user.projects.all())
 
 
-async def refresh_project_cache(project: Project):
-    logger.info(f"Refreshing project {project.unique_id} cache entry")
+async def refresh_project_cache(project: Investigation):
+    logger.info(f"Refreshing project {project.guid} cache entry")
     redis = RedisClient.get()
-    redis.set(f"projects/{project.unique_id}", project_to_dict(project))
+    redis.set(f"projects/{project.guid}", project_to_dict(project))
 
 
 def get_user_bundle(user: User):
@@ -846,7 +846,7 @@ def create_task(username: str,
         token=binascii.hexlify(os.urandom(20)).decode())
 
     # add MIAPPE info
-    if project is not None: task.project = Project.objects.get(owner=user, title=project)
+    if project is not None: task.project = Investigation.objects.get(owner=user, title=project)
     if study is not None: task.study = Study.objects.get(project=task.project, title=study)
 
     # add repo logo
@@ -2029,12 +2029,12 @@ def person_to_dict(user: User, role: str) -> dict:
     }
 
 
-def study_to_dict(study: Study, project: Project) -> dict:
+def study_to_dict(study: Study, project: Investigation) -> dict:
     team = [person_to_dict(person, 'Researcher') for person in study.team.all()]
     return {
         'project_title': project.title,
         'project_owner': project.owner.username,
-        'unique_id': study.unique_id,
+        'guid': study.guid,
         'title': study.title,
         'description': study.description,
         'start_date': study.start_date,
@@ -2059,18 +2059,18 @@ def study_to_dict(study: Study, project: Project) -> dict:
     }
 
 
-def get_project_workflows(project: Project):
+def get_project_workflows(project: Investigation):
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 'projects' in wf['config'] and project.unique_id in wf['config']['projects']]
+                 'projects' in wf['config'] and project.guid in wf['config']['projects']]
     return workflows
 
 
-def project_to_dict(project: Project) -> dict:
-    studies = [study_to_dict(study, project) for study in Study.objects.filter(project=project)]
+def project_to_dict(project: Investigation) -> dict:
+    studies = [study_to_dict(study, project) for study in Study.objects.filter(investigation=project)]
     team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
     return {
-        'unique_id': project.unique_id,
+        'guid': project.guid,
         'owner': project.owner.username,
         'title': project.title,
         'description': project.description,

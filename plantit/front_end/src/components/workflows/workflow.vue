@@ -1582,7 +1582,7 @@
                                                                                                     >
                                                                                                         <b-row
                                                                                                             v-if="
-                                                                                                                personalDatasetsLoading
+                                                                                                                userDatasetsLoading
                                                                                                             "
                                                                                                             align-v="center"
                                                                                                             align-h="center"
@@ -1613,7 +1613,7 @@
                                                                                                                         inputSelected
                                                                                                                     "
                                                                                                                     :node="
-                                                                                                                        personalDatasets
+                                                                                                                        userDatasets
                                                                                                                     "
                                                                                                                 ></datatree></b-col
                                                                                                         ></b-row>
@@ -1964,7 +1964,7 @@
                                                                                                     outputSelected
                                                                                                 "
                                                                                                 :node="
-                                                                                                    personalDatasets
+                                                                                                    userDatasets
                                                                                                 "
                                                                                             ></datatree></b-col
                                                                                     ></b-row>
@@ -3006,7 +3006,7 @@
                                                                                     </b-row>
                                                                                     <b-row
                                                                                         v-if="
-                                                                                            personalProjects.length >
+                                                                                            userProjects.length >
                                                                                             0
                                                                                         "
                                                                                         class="mt-2"
@@ -3042,7 +3042,7 @@
                                                                                     >
                                                                                     <b-row
                                                                                         class="mt-1"
-                                                                                        v-for="project in personalProjects"
+                                                                                        v-for="project in userProjects"
                                                                                         v-bind:key="
                                                                                             project.title
                                                                                         "
@@ -4284,7 +4284,7 @@ export default {
         },
     },
     watch: {
-        personalWorkflows: function () {
+        userWorkflows: function () {
             // noop
         },
         getWorkflow: function () {
@@ -4297,7 +4297,7 @@ export default {
         ...mapGetters('workflows', [
             'workflow',
             'publicWorkflowsLoading',
-            'personalWorkflowsLoading',
+            'userWorkflowsLoading',
         ]),
         ...mapGetters('tasks', [
             'tasks',
@@ -4307,16 +4307,16 @@ export default {
         ]),
         ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
         ...mapGetters('datasets', [
-            'personalDatasets',
+            'userDatasets',
             'publicDatasets',
             'sharedDatasets',
             'sharingDatasets',
-            'personalDatasetsLoading',
+            'userDatasetsLoading',
             'publicDatasetsLoading',
             'sharedDatasetsLoading',
             'sharingDatasetsLoading',
         ]),
-        ...mapGetters('projects', ['personalProjects', 'othersProjects']),
+        ...mapGetters('projects', ['userProjects', 'othersProjects']),
         getAgents() {
             return this.agentsPermitted(this.profile.djangoProfile.username);
         },
@@ -4335,7 +4335,7 @@ export default {
             );
         },
         workflowLoading() {
-            return this.publicWorkflowsLoading || this.personalWorkflowsLoading;
+            return this.publicWorkflowsLoading || this.userWorkflowsLoading;
         },
         scheduledTime: function () {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${

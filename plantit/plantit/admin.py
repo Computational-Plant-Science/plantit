@@ -3,7 +3,7 @@ from django.contrib import admin
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 from plantit.feedback.models import Feedback
-from plantit.miappe.models import Project, Study
+from plantit.miappe.models import Investigation, Study
 
 
 @admin.register(Agent)
@@ -33,8 +33,8 @@ class FeedbackAdmin(admin.ModelAdmin):
 
 # MIAPPE types
 
-@admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
+@admin.register(Investigation)
+class InvestigationAdmin(admin.ModelAdmin):
     pass
 
 
