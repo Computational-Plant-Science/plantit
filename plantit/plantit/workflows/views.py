@@ -44,35 +44,6 @@ async def list_personal(request, owner):
 @sync_to_async
 @login_required
 @async_to_sync
-async def list_collaborator(request, owner):
-    profile = await sync_to_async(Profile.objects.get)(user=request.user)
-    if owner != profile.github_username:
-        try: await sync_to_async(Profile.objects.get)(github_username=owner)
-        except: return HttpResponseNotFound()
-
-    collaborators = await get_collaborators_async(request.user)
-    redis = RedisClient.get()
-    wfs = dict()
-
-    for col in collaborators:
-        p = await get_user_django_profile(col)
-
-        # if user's workflow cache is empty (re)populate it
-        last_updated = redis.get(f"workflows_updated/{p.github_username}")
-        num_cached = len(list(redis.scan_iter(match=f"workflows/{p.github_username}/*")))
-        if last_updated is None or num_cached == 0:
-            logger.info(f"GitHub user {p.github_username}'s workflow cache is empty, populating it now")
-            refresh_personal_workflows.s(p.github_username).apply_async()
-
-        workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{p.github_username}/*")]
-        wfs[p.github_username] = workflows
-
-    return JsonResponse({'workflows': wfs})
-
-
-@sync_to_async
-@login_required
-@async_to_sync
 async def list_org(request, member):
     profile = await get_user_django_profile(request.user)
     redis = RedisClient.get()

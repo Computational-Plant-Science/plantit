@@ -284,8 +284,6 @@ export default {
                     ? this.publicWorkflows
                     : this.context === this.profile.githubProfile.login
                     ? this.personalWorkflows
-                    : Object.keys(this.collaborators).includes(this.context)
-                    ? this.collaborators[this.context]
                     : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },

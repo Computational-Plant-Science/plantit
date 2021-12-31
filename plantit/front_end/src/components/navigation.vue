@@ -1242,7 +1242,6 @@ export default {
             this.$store.dispatch('notifications/loadAll'),
             this.$store.dispatch('workflows/loadPublic'),
             this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
-            this.$store.dispatch('workflows/loadCollaborator', this.profile.githubProfile.login),
             this.$store.dispatch('workflows/loadOrg', this.profile.githubProfile.login),
             this.$store.dispatch('agents/loadAll'),
             this.$store.dispatch('datasets/loadPublic'),
