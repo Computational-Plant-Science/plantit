@@ -471,10 +471,10 @@
                             style="min-width: 30rem"
                             class="overflow-hidden mb-4"
                         >
-                            <blurb
+                            <workflowblurb
                                 :linkable="true"
                                 :workflow="workflow"
-                            ></blurb>
+                            ></workflowblurb>
                         </b-card>
                     </b-card-group>
                     <br />
@@ -1113,11 +1113,13 @@ import { guid } from '@/utils';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
 import router from '@/router';
+import workflowblurb from '@/components/workflows/workflow-blurb.vue'
 import taskblurb from '@/components/tasks/task-blurb.vue';
 
 export default {
     name: 'project',
     components: {
+        workflowblurb,
         taskblurb,
     },
     data: function () {
@@ -1562,7 +1564,8 @@ export default {
             return new Date(now.getFullYear(), now.getMonth(), now.getDate());
         },
         getWorkflows() {
-            return this.projectWorkflows[this.getProject.guid];
+            // return this.projectWorkflows[this.getProject.guid];
+          return this.getProject.workflows;
         },
         projectTasks() {
             return this.tasks.filter(
