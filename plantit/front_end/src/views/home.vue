@@ -19,8 +19,10 @@
             "
         >
             <b-row align-v="center"
-                ><b-col class="text-center" align-self="center"
-                    ><i
+                ><b-col class="text-center" align-self="center">
+                    <br />
+                    <br />
+                    <i
                         class="fas fa-exclamation-circle fa-fw fa-3x text-warning"
                     ></i
                     ><br />
@@ -67,7 +69,7 @@
                             :disabled="crumb.text === 'tasks'"
                             class="m-0"
                         >
-                            <h5
+                            <small
                                 :class="
                                     profile.darkMode
                                         ? 'text-light'
@@ -76,7 +78,7 @@
                             >
                                 <i class="fas fa-caret-right fa-fw fa-1x"></i>
                                 {{ crumb.text }}
-                            </h5>
+                            </small>
                         </b-breadcrumb-item>
                     </b-breadcrumb></b-col
                 ><!--<b-col md="auto" align-self="end"
@@ -88,6 +90,7 @@
             <b-row>
                 <b-col class="text-left" md="auto"
                     ><b-button
+                        size="sm"
                         id="workflows-button"
                         block
                         class="m-1 text-left"
@@ -103,6 +106,7 @@
                         >Click here to see explore and run public workflows, or
                         share your own.</b-popover
                     ><b-button
+                        size="sm"
                         id="datasets-button"
                         block
                         class="m-1 text-left"
@@ -119,6 +123,7 @@
                         >Click here to view your data in the CyVerse Data
                         Store.</b-popover
                     ><b-button
+                        size="sm"
                         id="projects-button"
                         block
                         class="m-1 text-left"
@@ -144,6 +149,7 @@
                         metadata.</b-popover
                     >
                     <b-button
+                        size="sm"
                         id="agents-button"
                         block
                         class="m-1 text-left"
@@ -159,6 +165,7 @@
                         >Click here to view and manage servers, clusters, and
                         other computing resources.</b-popover
                     ><b-button
+                        size="sm"
                         id="tasks-button"
                         block
                         class="m-1 text-left"
@@ -174,10 +181,31 @@
                         >Click here to see your workflow submissions and
                         results.</b-popover
                     >
+                    <b-button
+                        size="sm"
+                        id="users-button"
+                        block
+                        class="m-1 text-left"
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        to="/home/users/"
+                        ><i class="fas fa-user-friends fa-fw"></i>
+                        Users</b-button
+                    ><b-popover
+                        v-if="profile.hints && isRootPath"
+                        triggers="hover"
+                        placement="bottom"
+                        target="users-button"
+                        title="Users"
+                        >Click here to view the user registry.</b-popover
+                    >
                 </b-col>
-                <b-col
+                <b-col class="m-0 p-0"
                     ><router-view
-                        :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                        :class="
+                            profile.darkMode
+                                ? 'theme-dark m-0 p-1'
+                                : 'theme-light m-0 p-1'
+                        "
                     ></router-view>
                     <div v-if="isRootPath" class="p-2">
                         <b-row v-if="profile.stats !== null">
@@ -496,14 +524,14 @@
                                         ></div></div
                                 ></b-row> </b-col
                         ></b-row>
-                      <b-row v-else>
-                        <b-col>
-                        No usage statistics to show.
-                          </b-col>
-                      </b-row>
-                    </div> </b-col
-            ></b-row></div
-    ></b-container>
+                        <b-row v-else>
+                            <b-col> No usage statistics to show. </b-col>
+                        </b-row>
+                    </div>
+                </b-col></b-row
+            >
+        </div></b-container
+    >
 </template>
 
 <script>
@@ -653,7 +681,9 @@ export default {
         taskTimeseriesData() {
             return [
                 {
-                    x: this.tasks.map((t) => moment(t.created).format('YYYY-MM-DD HH:mm:ss')),
+                    x: this.tasks.map((t) =>
+                        moment(t.created).format('YYYY-MM-DD HH:mm:ss')
+                    ),
                     y: this.tasks.map(
                         (t) => `${t.workflow_owner}/${t.workflow_name}`
                     ),

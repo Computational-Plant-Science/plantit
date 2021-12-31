@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseNotFound
 from plantit.github import get_repo_readme, get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
 from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
-    check_user_authentication, get_profile_collaborators_async
+    check_user_authentication
 from plantit.users.models import Profile
 from plantit.celery_tasks import refresh_personal_workflows
 
@@ -50,7 +50,7 @@ async def list_collaborator(request, owner):
         try: await sync_to_async(Profile.objects.get)(github_username=owner)
         except: return HttpResponseNotFound()
 
-    collaborators = await get_profile_collaborators_async(profile)
+    collaborators = await get_collaborators_async(request.user)
     redis = RedisClient.get()
     wfs = dict()
 

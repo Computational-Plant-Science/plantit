@@ -80,65 +80,53 @@ def list_users(invalidate: bool = False) -> List[dict]:
 
 
 def refresh_user_cache():
-    for user in list(User.objects.all().exclude(profile__isnull=True)): get_user_bundle(user)
+    logger.info(f"Refreshing user cache")
+    redis = RedisClient.get()
+    for user in list(User.objects.all().exclude(profile__isnull=True)):
+        bundle = get_user_bundle(user)
+        redis.set(f"users/{user.username}", json.dumps(bundle))
     RedisClient.get().set(f"users_updated", timezone.now().timestamp())
 
 
-@sync_to_async
-def get_profile_collaborators_async(profile: Profile):
-    return list(profile.collaborators.all())
-
-
 def get_user_bundle(user: User):
-    redis = RedisClient.get()
     if not user.profile.github_username:
-        profile = {
+        return {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
-        redis.set(f"users/{user.username}", json.dumps(profile))
-        return profile
     else:
-        # github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-        #                               headers={'Authorization': f"Bearer {github_token}"}).json()
-
         # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
+        redis = RedisClient.get()
         cached = redis.get(f"users/{user.username}")
         if cached is not None:
-            decoded = json.loads(cached)
-            if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
-
+            # decoded = json.loads(cached)
+            # if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
             github_profile = async_to_sync(get_user_github_profile)(user)
             github_organizations = async_to_sync(get_user_github_organizations)(user)
-            profile = {
+            return {
                 'username': user.username,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'github_username': user.profile.github_username,
                 'github_profile': github_profile,
-                'github_organizations': github_organizations
+                'github_organizations': github_organizations,
             }
-            redis.set(f"users/{user.username}", json.dumps(profile))
-            return profile
 
         github_profile = async_to_sync(get_user_github_profile)(user)
         github_organizations = async_to_sync(get_user_github_organizations)(user)
-        profile = {
+        return ({
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'github_username': user.profile.github_username,
             'github_profile': github_profile,
-            'github_organizations': github_organizations
+            'github_organizations': github_organizations,
         } if 'login' in github_profile else {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-        }
-
-        redis.set(f"users/{user.username}", json.dumps(profile))
-        return profile
+        })
 
 
 @sync_to_async

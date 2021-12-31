@@ -1,8 +1,8 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
         <div v-if="isRootPath">
-            <b-row
-                ><b-col
+            <b-row class="m-0 p-0"
+                ><b-col class="m-0 p-0"
                     ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Tasks
                     </h4></b-col
@@ -78,7 +78,7 @@
                             >
                                 You haven't submitted any tasks yet.
                             </p>
-                            <div v-else>
+                            <div v-else class="ml-2 mr-2">
                                 <b-input-group size="sm" style="bottom: 4px"
                                     ><template #prepend>
                                         <b-input-group-text

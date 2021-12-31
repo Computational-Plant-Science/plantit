@@ -68,8 +68,8 @@
                             bg-variant="dark"
                             no-body
                             text-variant="white"
-                            img-width="60px"
-                            img-height="60px"
+                            img-width="50px"
+                            img-height="40px"
                             :img-src="
                                 require('../../assets/frontpage/icons/algorithm.png')
                             "
@@ -123,6 +123,15 @@
                     <b-col md="auto"
                         ><b-img
                             rounded
+                            class="mt-3"
+                            style="max-height: 3rem"
+                            left
+                            :src="
+                                require('../../assets/logos/github_mark_white.png')
+                            "
+                        ></b-img
+                    ><b-img
+                            rounded
                             style="max-height: 5rem"
                             center
                             :src="
@@ -137,8 +146,8 @@
                             bg-variant="dark"
                             text-variant="white"
                             no-body
-                            img-width="60px"
-                            img-height="60px"
+                            img-width="50px"
+                            img-height="40px"
                             :img-src="
                                 require('../../assets/frontpage/icons/code.png')
                             "
@@ -184,8 +193,8 @@
                             sub-title-text-variant="success"
                             class="text-left text-white rounded-0 overflow-hidden"
                             no-body
-                            img-width="60px"
-                            img-height="60px"
+                            img-width="50px"
+                            img-height="40px"
                             bg-variant="dark"
                             text-variant="white"
                             :img-src="

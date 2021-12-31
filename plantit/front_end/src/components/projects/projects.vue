@@ -15,7 +15,7 @@
                         >
                             <b-img
                                 class="mb-1"
-                                style="max-width: 40px"
+                                style="max-width: 35px"
                                 :src="
                                     profile.darkMode
                                         ? require('../../assets/miappe_icon.png')

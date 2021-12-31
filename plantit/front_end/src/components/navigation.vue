@@ -704,26 +704,6 @@
                         </b-nav-item>-->
                 </b-navbar-nav>
                 <b-navbar-nav class="ml-auto p-0 m-0">
-                    <b-nav-item
-                        v-if="
-                            profile.loggedIn
-                                ? profile.githubProfile === null ||
-                                  profile.githubProfile === undefined
-                                : false
-                        "
-                        title="Log in to GitHub"
-                        href="/apis/v1/idp/github_request_identity/"
-                        class="p-0 mt-1 ml-0 mr-0"
-                    >
-                        <b-button
-                            class="mt-2 text-left"
-                            variant="warning"
-                            size="md"
-                        >
-                            <i class="fab fa-github"></i>
-                            Log in to GitHub
-                        </b-button>
-                    </b-nav-item>
                     <b-popover
                         :variant="profile.darkMode ? 'dark' : 'outline-light'"
                         v-if="profile.first && !ackedFirst"
@@ -1086,7 +1066,6 @@
             </b-container>
         </b-navbar>
         <br />
-        <br />
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"
@@ -1254,10 +1233,7 @@ export default {
         }
 
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
-        await Promise.all([
-            store.dispatch('user/loadProfile'),
-            this.getVersion(),
-        ]);
+        await Promise.all([store.dispatch('user/loadProfile'), this.getVersion()]);
 
         // load the rest of the model
         await Promise.all([

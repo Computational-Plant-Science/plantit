@@ -7,12 +7,14 @@ from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import jwt
+import json
 import requests
+import traceback
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse, HttpResponseNotFound
 from django.shortcuts import redirect
 from django.utils import timezone
 from github import Github
@@ -31,6 +33,8 @@ from plantit.users.serializers import UserSerializer
 from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, \
     get_user_statistics, \
     get_user_bundle
+
+logger = logging.getLogger(__name__)
 
 
 class IDPViewSet(viewsets.ViewSet):
@@ -266,7 +270,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        return JsonResponse({'users': list_users()})
+        return JsonResponse({'users': list_users(invalidate=True)})
 
     @action(detail=False, methods=['get'])
     def get_current(self, request):
@@ -293,7 +297,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first': user.profile.first_login
             },
             'stats': stats,
-            'collaborators': [get_user_bundle(c) for c in user.profile.collaborators.all()]
         }
 
         if request.user.profile.cyverse_access_token != '':
@@ -315,8 +318,51 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def list_collaborators(self, request):
-        collaborators = [get_user_bundle(user) for user in request.user.profile.collaborators.all()]
-        return JsonResponse(collaborators)
+        collaborators = []
+        for profile in Profile.objects.all():
+            if len(list(profile.collaborators.filter(user=request.user))) > 0:
+                collaborators.append(get_user_bundle(profile.user))
+        return JsonResponse({'collaborators': collaborators})
+
+    @action(detail=False, methods=['post'])
+    def add_collaborator(self, request):
+        try:
+            username = request.data['username']
+            collaborator = User.objects.get(username=username)
+            profile = request.user.profile
+        except:
+            logger.error(traceback.format_exc())
+            return HttpResponseNotFound()
+        if collaborator == request.user or profile.collaborators.filter(username=username): return HttpResponseBadRequest()
+
+        profile.collaborators.add(collaborator)
+        profile.save()
+
+        redis = RedisClient.get()
+        bundle = get_user_bundle(request.user)
+        redis.set(f"users/{username}", json.dumps(bundle))
+
+        return JsonResponse({'collaborators': [get_user_bundle(c) for c in request.user.profile.collaborators.all()]})
+
+    @action(detail=False, methods=['post'])
+    def remove_collaborator(self, request):
+        try:
+            username = request.data['username']
+            collaborator = User.objects.get(username=username)
+            profile = request.user.profile
+        except:
+            logger.error(traceback.format_exc())
+            return HttpResponseNotFound()
+        if collaborator == request.user or not profile.collaborators.filter(username=username).exists(): return HttpResponseBadRequest()
+
+        profile.collaborators.remove(collaborator)
+        profile.save()
+
+        redis = RedisClient.get()
+        bundle = get_user_bundle(request.user)
+        redis.set(f"users/{username}", json.dumps(bundle))
+
+        return JsonResponse({'collaborators': [get_user_bundle(c) for c in request.user.profile.collaborators.all()]})
 
     @action(detail=False, methods=['get'])
     def get_by_username(self, request):

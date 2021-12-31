@@ -30,34 +30,6 @@
             </template>-->
             <br/>
             <b-card-group columns>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.cyverse.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/cyversebw.png')"
-                            height="42px"
-                            alt="Cyverse"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="https://www.nsf.gov/">
-                        <b-img
-                            :src="require('@/assets/sponsors/nsf.png')"
-                            height="60px"
-                            alt="National Science Foundation"
-                        ></b-img>
-                    </b-link>
-                </b-card>
               <b-card
                   class="mt-1"
                     align="center"
@@ -73,6 +45,20 @@
                         ></b-img>
                     </b-link>
                 </b-card>
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                    style="border: none; box-shadow: none"
+                >
+                    <b-link href="http://www.cyverse.org/">
+                        <b-img
+                            :src="require('@/assets/sponsors/cyversebw.png')"
+                            height="42px"
+                            alt="Cyverse"
+                        ></b-img>
+                    </b-link>
+                </b-card>
               <b-card
                     align="center"
                     bg-variant="transparent"
@@ -82,8 +68,22 @@
                     <b-link href="http://www.xsede.org/">
                         <b-img
                             :src="require('@/assets/sponsors/xsede.png')"
-                            height="60px"
+                            height="55px"
                             alt="XSEDE"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+              <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                    style="border: none; box-shadow: none; top: -20px"
+                >
+                    <b-link href="https://www.nsf.gov/">
+                        <b-img
+                            :src="require('@/assets/sponsors/nsf.png')"
+                            height="50px"
+                            alt="National Science Foundation"
                         ></b-img>
                     </b-link>
                 </b-card>
@@ -96,12 +96,11 @@
                     <b-link href="http://www.uga.edu/">
                         <b-img
                             :src="require('@/assets/sponsors/uga.png')"
-                            height="47px"
+                            height="40px"
                             alt="University Of Georgia"
                         ></b-img>
                     </b-link>
                 </b-card>
-
                 <b-card
                     align="center"
                     bg-variant="transparent"

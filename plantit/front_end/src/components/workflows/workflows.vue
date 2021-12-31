@@ -39,34 +39,6 @@
                                 ><i class="fas fa-user"></i> Yours</span
                             ><span v-else-if="context === ''"
                                 ><i class="fas fa-users"></i> Public</span
-                            ><span
-                                v-else-if="
-                                    profile.collaborators
-                                        .map((c) => c.github_username)
-                                        .includes(context)
-                                "
-                            >
-                                <b-img
-                                    v-if="
-                                        profile.collaborators.filter(
-                                            (c) => c.github_username
-                                        )[0].github_profile.avatar_url
-                                    "
-                                    class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="
-                                        width: 20px;
-                                        height: 20px;
-                                        position: relative;
-                                        border: 1px solid #e2e3b0;
-                                    "
-                                    rounded="circle"
-                                    :src="
-                                        profile.collaborators.filter(
-                                            (c) => c.github_username
-                                        )[0].github_profile.avatar_url
-                                    "
-                                ></b-img>
-                                {{ context }}</span
                             ><span v-else
                                 ><i class="fas fa-building"></i>
                                 {{ context }}</span
@@ -96,12 +68,12 @@
                             ><i>None to show</i></b-dropdown-text
                         >
                         <b-dropdown-divider></b-dropdown-divider>
-                        <b-dropdown-header
-                            >Your Collaborators</b-dropdown-header
+                        <!--<b-dropdown-header
+                            >Your Projects</b-dropdown-header
                         >
                         <b-dropdown-item
                             @click="switchContext(col.github_username)"
-                            v-for="col in profile.collaborators"
+                            v-for="col in collaborators"
                             v-bind:key="col.github_username"
                             ><b-img
                                 id="avatar"
@@ -121,9 +93,9 @@
                             {{ col.github_username }}</b-dropdown-item
                         >
                         <b-dropdown-text
-                            v-if="profile.collaborators.length === 0"
+                            v-if="collaborators.length === 0"
                             ><i>None to show</i></b-dropdown-text
-                        >
+                        >-->
                     </b-dropdown>
                     <b-popover
                         v-if="profile.hints"
@@ -206,14 +178,14 @@
                         >You haven't created any workflow bindings yet. Add a
                         <code>plantit.yaml</code> file to any public repository
                         to bind a workflow.</span
-                    ><span
+                    ><!--<span
                         v-else-if="
-                            profile.collaborators
-                                .map((c) => c.github_username)
-                                .includes(context)
+                            collaborators !== null && collaborators
+                                        .map((c) => c.github_username)
+                                        .includes(context)
                         "
                         >This user has no workflow bindings yet.</span
-                    ><span v-else
+                    >--><span v-else
                         >This organization has no workflow bindings yet.</span
                     ></b-col
                 ></b-row
@@ -230,6 +202,8 @@
 import blurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'workflows',
@@ -298,8 +272,6 @@ export default {
             'orgWorkflowsLoading',
             'personalWorkflows',
             'personalWorkflowsLoading',
-            'collaboratorWorkflows',
-            'collaboratorWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
         ]),
@@ -312,14 +284,8 @@ export default {
                     ? this.publicWorkflows
                     : this.context === this.profile.githubProfile.login
                     ? this.personalWorkflows
-                    : this.profile.collaborators
-                          .map((c) => c.github_username)
-                          .includes(this.context)
-                    ? this.collaboratorWorkflows[
-                          this.profile.collaborators.filter(
-                              (c) => c.github_username
-                          )[0].github_username
-                      ]
+                    : Object.keys(this.collaborators).includes(this.context)
+                    ? this.collaborators[this.context]
                     : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },

@@ -15,7 +15,6 @@ export const user = {
             cyverseProfile: null,
             githubProfile: null,
             githubOrganizations: [],
-            collaborators: [],
             hints: false,
             stats: null
         },
@@ -45,9 +44,6 @@ export const user = {
         },
         setGithubOrganizations(state, organizations) {
             state.profile.githubOrganizations = organizations;
-        },
-        setCollaborators(state, collaborators) {
-            state.profile.collaborators = collaborators;
         },
         setHints(state, show) {
             state.profile.hints = show;
@@ -118,7 +114,6 @@ export const user = {
                     commit('setCyverseProfile', response.data.cyverse_profile);
                     commit('setGithubProfile', response.data.github_profile);
                     commit('setGithubOrganizations', response.data.github_organizations);
-                    commit('setCollaborators', response.data.collaborators);
                     commit('setFirst', response.data.django_profile.first);
                     commit('setDarkMode', response.data.django_profile.dark_mode);
                     commit('setHints', response.data.django_profile.hints);
