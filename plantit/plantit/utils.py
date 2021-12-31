@@ -90,13 +90,7 @@ def refresh_user_cache():
 
 @sync_to_async
 def list_user_projects(user: User):
-    return list(user.projects.all())
-
-
-async def refresh_project_cache(project: Investigation):
-    logger.info(f"Refreshing project {project.guid} cache entry")
-    redis = RedisClient.get()
-    redis.set(f"projects/{project.guid}", project_to_dict(project))
+    return list(user.project_teams.all()) + list(Investigation.objects.filter(owner=user))
 
 
 def get_user_bundle(user: User):

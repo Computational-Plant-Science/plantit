@@ -16,17 +16,21 @@
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="userCount >= 0" class="text-success">
                                 {{ userCount }}
-                            </h1></b-col
+                            </h1><b-spinner v-else type="spinner"
+                                label="Loading..."
+                                variant="success"></b-spinner></b-col
                         >
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 v-if="userCount >= 0" class="text-white">
+                            ><h5 class="text-white">
                                 users
                             </h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 class="text-success">
+                            ><h1 v-if="workflowCount >= 0" class="text-success">
                                 {{ workflowCount }}
-                            </h1></b-col
+                            </h1><b-spinner v-else type="spinner"
+                                label="Loading..."
+                                variant="success"></b-spinner></b-col
                         >
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">workflows</h5>
@@ -37,9 +41,9 @@
                             </h1>
                             <b-spinner
                                 v-else
-                                type="grow"
+                                type="spinner"
                                 label="Loading..."
-                                variant="secondary"
+                                variant="success"
                             ></b-spinner>
                         </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"

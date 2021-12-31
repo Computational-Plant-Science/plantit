@@ -39,7 +39,24 @@
                                 ><i class="fas fa-user"></i> Yours</span
                             ><span v-else-if="context === ''"
                                 ><i class="fas fa-users"></i> Public</span
-                            ><span v-else
+                            ><span
+                                v-else-if="
+                                    getProjects
+                                        .map((p) => p.title)
+                                        .includes(context)
+                                "
+                                ><b-img
+                                    class="mb-1"
+                                    style="max-width: 15px"
+                                    :src="
+                                        profile.darkMode
+                                            ? require('../../assets/miappe_icon.png')
+                                            : require('../../assets/miappe_icon_black.png')
+                                    "
+                                ></b-img>
+                                {{ context }}</span
+                            >
+                            <span v-else
                                 ><i class="fas fa-building"></i>
                                 {{ context }}</span
                             >
@@ -68,34 +85,25 @@
                             ><i>None to show</i></b-dropdown-text
                         >
                         <b-dropdown-divider></b-dropdown-divider>
-                        <!--<b-dropdown-header
-                            >Your Projects</b-dropdown-header
-                        >
+                        <b-dropdown-header>Your Projects</b-dropdown-header>
                         <b-dropdown-item
-                            @click="switchContext(col.github_username)"
-                            v-for="col in collaborators"
-                            v-bind:key="col.github_username"
+                            v-for="project in getProjects"
+                            @click="switchContext(project.title)"
+                            v-bind:key="project.guid"
                             ><b-img
-                                id="avatar"
-                                v-if="col.github_profile.avatar_url"
-                                class="avatar m-0 mb-1 p-0 github-hover logo"
-                                style="
-                                    width: 20px;
-                                    height: 20px;
-                                    position: relative;
-                                    left: -3px;
-                                    top: 0.5px;
-                                    border: 1px solid #e2e3b0;
+                                class="mb-1"
+                                style="max-width: 15px"
+                                :src="
+                                    profile.darkMode
+                                        ? require('../../assets/miappe_icon.png')
+                                        : require('../../assets/miappe_icon_black.png')
                                 "
-                                rounded="circle"
-                                :src="col.github_profile.avatar_url"
                             ></b-img>
-                            {{ col.github_username }}</b-dropdown-item
+                            {{ project.title }}</b-dropdown-item
                         >
-                        <b-dropdown-text
-                            v-if="collaborators.length === 0"
+                        <b-dropdown-text v-if="getProjects.length === 0"
                             ><i>None to show</i></b-dropdown-text
-                        >-->
+                        >
                     </b-dropdown>
                     <b-popover
                         v-if="profile.hints"
@@ -178,14 +186,12 @@
                         >You haven't created any workflow bindings yet. Add a
                         <code>plantit.yaml</code> file to any public repository
                         to bind a workflow.</span
-                    ><!--<span
+                    ><span
                         v-else-if="
-                            collaborators !== null && collaborators
-                                        .map((c) => c.github_username)
-                                        .includes(context)
+                            getProjects.map((c) => c.title).includes(context)
                         "
-                        >This user has no workflow bindings yet.</span
-                    >--><span v-else
+                        >This project has no associated workflows yet.</span
+                    ><span v-else
                         >This organization has no workflow bindings yet.</span
                     ></b-col
                 ></b-row
@@ -252,22 +258,26 @@ export default {
             if (this.context === '')
                 await this.$store.dispatch('workflows/refreshPublic');
             else if (this.context === this.profile.githubProfile.login)
-                await this.$store.dispatch(
-                    'workflows/refreshPersonal',
-                    this.profile.githubProfile.login
-                );
-            else
-                await this.$store.dispatch(
-                    'workflows/refreshOrg',
-                    this.context
-                );
+                await this.$store.dispatch('workflows/refreshUser');
+            else if (
+                this.getProjects.map((p) => p.title).includes(this.context)
+            )
+                await this.$store.dispatch('workflows/refreshProject');
+            else await this.$store.dispatch('workflows/refreshOrg');
         },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
+        ...mapGetters('projects', [
+            'projectsLoading',
+            'othersProjects',
+            'userProjects',
+        ]),
         ...mapGetters('workflows', [
             'orgWorkflows',
             'orgWorkflowsLoading',
+            'projectWorkflows',
+            'projectWorkflowsLoading',
             'userWorkflows',
             'userWorkflowsLoading',
             'publicWorkflows',
@@ -276,12 +286,23 @@ export default {
         isRootPath() {
             return this.$route.name === 'workflows';
         },
+        getProjects() {
+            return this.userProjects.concat(this.othersProjects);
+        },
         getWorkflows() {
             return [
                 ...(this.context === ''
                     ? this.publicWorkflows
                     : this.context === this.profile.githubProfile.login
                     ? this.userWorkflows
+                    : this.getProjects
+                          .map((p) => p.title)
+                          .includes(this.context)
+                    ? this.projectWorkflows[
+                          this.getProjects.filter(
+                              (p) => p.title === this.context
+                          )[0].guid
+                      ]
                     : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },

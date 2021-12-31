@@ -130,10 +130,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async loadUser({ commit }, owner) {
+        async loadUser({ commit }) {
             commit('setUserLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/u/`)
+                .get(`/apis/v1/workflows/u/`)
                 .then((response) => {
                     commit('setUser', response.data.workflows);
                     commit('setUserLoading', false);
@@ -144,10 +144,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async loadOrg({ commit }, owner) {
+        async loadOrg({ commit }) {
             commit('setOrgLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/o/`)
+                .get(`/apis/v1/workflows/o/`)
                 .then((response) => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
@@ -158,10 +158,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async loadProject({ commit }, guid) {
+        async loadProject({ commit }) {
             commit('setProjectLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${guid}/p/`)
+                .get(`/apis/v1/workflows/p/`)
                 .then((response) => {
                     commit('setProject', response.data.workflows);
                     commit('setProjectLoading', false);
@@ -189,10 +189,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async refreshOrg({ commit }, owner) {
+        async refreshOrg({ commit }) {
             commit('setOrgLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/o/?invalidate=True`)
+                .get(`/apis/v1/workflows/o/?invalidate=True`)
                 .then((response) => {
                     commit('setOrg', response.data.workflows);
                     commit('setOrgLoading', false);
@@ -203,10 +203,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async refreshProject({ commit }, guid) {
+        async refreshProject({ commit }) {
             commit('setProjectLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${guid}/p/?invalidate=True`)
+                .get(`/apis/v1/workflows/p/?invalidate=True`)
                 .then((response) => {
                     commit('setProject', response.data.workflows);
                     commit('setProjectLoading', false);
@@ -217,10 +217,10 @@ export const workflows = {
                     throw error;
                 });
         },
-        async refreshUser({ commit }, owner) {
+        async refreshUser({ commit }) {
             commit('setUserLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/u/?invalidate=True`)
+                .get(`/apis/v1/workflows/u/?invalidate=True`)
                 .then((response) => {
                     commit('setUser', response.data.workflows);
                     commit('setUserLoading', false);

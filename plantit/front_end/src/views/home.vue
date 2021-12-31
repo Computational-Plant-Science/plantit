@@ -131,7 +131,7 @@
                         to="/home/projects/"
                         ><b-img
                             class="mb-1"
-                            style="max-width: 18px"
+                            style="max-width: 13px"
                             :src="
                                 profile.darkMode
                                     ? require('../assets/miappe_icon.png')

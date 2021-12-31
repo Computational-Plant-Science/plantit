@@ -1,18 +1,16 @@
 import json
 import logging
 
-import traceback
 from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound
 
+from plantit.celery_tasks import refresh_user_workflows
 from plantit.github import get_repo_readme, get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
-from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
-    check_user_authentication, list_user_projects, refresh_project_cache
 from plantit.users.models import Profile
-from plantit.miappe.models import Investigation
-from plantit.celery_tasks import refresh_user_workflows
+from plantit.utils import get_user_django_profile, list_public_workflows, refresh_org_workflow_cache, get_workflow, \
+    list_user_projects, project_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -72,18 +70,14 @@ async def list_org(request):
 @login_required
 @async_to_sync
 async def list_project(request):
-    # TODO cache organization memberships so don't have to look up each time
     projects = await list_user_projects(request.user)
     redis = RedisClient.get()
     wfs = dict()
 
     # load workflows for each project
     for proj in projects:
-        cached = redis.get(f"projects/{proj.guid}")
-        if cached is None: refresh_project_cache(proj)
-
-        keys = json.loads(redis.get(f"projects/{proj.guid}"))['workflows']
-        workflows = [json.loads(redis.get(key)) for key in [f"workflows/{k}" for k in keys]]
+        p = await sync_to_async(project_to_dict)(proj)
+        workflows = [json.loads(redis.get(key)) for key in [f"workflows/{k}" for k in p['workflows']]]
         wfs[proj.guid] = workflows
 
     return JsonResponse({'workflows': wfs})

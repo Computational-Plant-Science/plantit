@@ -15,7 +15,7 @@ class Investigation(models.Model):
         CC_BY_NC_ND = 'NN', gettext_lazy('CC BY-NC-ND 4.0')
 
     owner = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
-    team = models.ManyToManyField(User, related_name='projects', null=True, blank=True)
+    team = models.ManyToManyField(User, related_name='project_teams', null=True, blank=True)
     guid = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=255, blank=False)
     description = models.TextField(blank=True)
