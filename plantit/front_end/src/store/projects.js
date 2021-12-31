@@ -5,13 +5,13 @@ import Vue from "vue";
 export const projects = {
     namespaced: true,
     state: () => ({
-        personal: [],
+        user: [],
         others: [],
         loading: true
     }),
     mutations: {
-        setPersonal(state, projects) {
-            state.personal = projects;
+        setUser(state, projects) {
+            state.user = projects;
         },
         setOthers(state, projects) {
             state.others = projects;
@@ -20,22 +20,22 @@ export const projects = {
             state.loading = loading;
         },
         addOrUpdate(state, project) {
-            let i = state.personal.findIndex(inv => inv.unique_id === project.unique_id);
-            if (i === -1) state.personal.unshift(project);
-            else Vue.set(state.personal, i, project);
+            let i = state.user.findIndex(inv => inv.guid === project.guid);
+            if (i === -1) state.user.unshift(project);
+            else Vue.set(state.user, i, project);
 
-            // let j = state.others.findIndex(inv => inv.unique_id === project.unique_id);
+            // let j = state.others.findIndex(inv => inv.guid === project.guid);
             // if (j === -1) state.others.unshift(project);
             // else Vue.set(state.others, j, project);
         },
     },
     actions: {
-        async loadPersonal({ commit, rootState }) {
+        async loadUser({ commit, rootState }) {
             commit('setLoading', true);
             await axios
                 .get(`/apis/v1/miappe/${rootState.user.profile.djangoProfile.username}/`)
                 .then(response => {
-                    commit('setPersonal', response.data.projects);
+                    commit('setUser', response.data.projects);
                     commit('setLoading', false);
                 })
                 .catch(error => {
@@ -58,15 +58,15 @@ export const projects = {
                     throw error;
                 });
         },
-        setPersonal({commit}, projects) {
-            commit('setPersonal', projects);
+        setUser({commit}, projects) {
+            commit('setUser', projects);
         },
         addOrUpdate({ commit }, projects) {
             commit('addOrUpdate', projects);
         }
     },
     getters: {
-        personalProjects: state => state.personal,
+        userProjects: state => state.user,
         othersProjects: state => state.others,
         projectsLoading: state => state.loading,
     }

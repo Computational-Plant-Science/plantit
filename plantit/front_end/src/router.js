@@ -59,7 +59,7 @@ let router = new Router({
         //     name: 'beta',
         //     component: beta,
         //     meta: {
-        //         title: 'PlantIT Beta',
+        //         title: 'plantIT Beta',
         //         crumb: [],
         //         requiresAuth: false
         //     }

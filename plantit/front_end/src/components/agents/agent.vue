@@ -361,7 +361,6 @@ import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import { guid } from '@/utils';
-import router from '@/router';
 import { Plotly } from 'vue-plotly';
 
 export default {
@@ -383,8 +382,8 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('workflows', [
-            'personalWorkflowsLoading',
-            'personalWorkflows',
+            'userWorkflowsLoading',
+            'userWorkflows',
             'publicWorkflowsLoading',
             'publicWorkflows',
         ]),
@@ -521,50 +520,17 @@ export default {
                     throw error;
                 });
         },
-        copyPublicKey() {
-            let copied = document.getElementById('publicKey');
-            copied.focus();
-            copied.select();
-            document.execCommand('copy');
-            this.$bvToast.toast(`Copied public key to clipboard`, {
-                autoHideDelay: 3000,
-                appendToast: false,
-                noCloseButton: true,
-            });
-        },
         async refreshWorkflows() {
             await Promise.all([
                 this.$store.dispatch('workflows/refreshPublic'),
                 this.$store.dispatch(
-                    'workflows/refreshPersonal',
+                    'workflows/refreshUser',
                     this.profile.githubProfile.login
                 ),
             ]);
         },
         async refreshUsers() {
             await this.$store.dispatch('users/loadAll');
-        },
-        specifyAuthorizedUser() {
-            this.$bvModal.show('authorizeUser');
-        },
-        specifyAuthorizedWorkflow() {
-            this.$bvModal.show('authorizeWorkflow');
-        },
-        specifyBlockedWorkflow() {
-            this.$bvModal.show('blockWorkflow');
-        },
-        showKeyModal() {
-            this.$bvModal.show('key');
-        },
-        hideKeyModal() {
-            this.$bvModal.hide('key');
-            this.publicKey = '';
-        },
-        showUnbindAgentModal() {
-            this.$bvModal.show('unbind');
-        },
-        showAuthenticateModal() {
-            this.$bvModal.show('authenticate');
         },
         async authorizeUser(user) {
             this.authorizingUser = true;
@@ -645,119 +611,6 @@ export default {
                         guid: guid().toString(),
                     });
                     this.authorizingUser = false;
-                    throw error;
-                });
-        },
-        async getKey() {
-            this.gettingKey = true;
-            await axios
-                .get(`/apis/v1/users/get_key/`)
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        this.publicKey = response.data.public_key;
-                        this.showKeyModal();
-                        // await this.$store.dispatch('alerts/add', {
-                        //     variant: 'success',
-                        //     message: `Retrieved public key`,
-                        //     guid: guid().toString()
-                        // });
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to retrieve public key`,
-                            guid: guid().toString(),
-                        });
-                    }
-                    this.gettingKey = false;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to retrieve public key`,
-                        guid: guid().toString(),
-                    });
-                    this.gettingKey = false;
-                    throw error;
-                });
-        },
-        async setAuthStrategy(strategy) {
-            let data = {
-                strategy: strategy,
-            };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/auth/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/setPersonal',
-                            response.data.agents
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Configured agent ${this.$router.currentRoute.params.name} for ${this.getAgent.authentication} authentication`,
-                            guid: guid().toString(),
-                        });
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                })
-                .catch(async (error) => {
-                    Sentry.captureException(error);
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
-                        guid: guid().toString(),
-                    });
-                    throw error;
-                });
-        },
-        submitAuthentication() {
-            this.checkConnection();
-        },
-        async unbindAgent() {
-            await axios({
-                method: 'delete',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/`,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then((response) => {
-                    if (response.status === 200) {
-                        this.$store.dispatch(
-                            'agents/setPersonal',
-                            response.data.agents
-                        );
-                        this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Removed binding for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString(),
-                        });
-                        router.push({
-                            name: 'agents',
-                        });
-                    } else {
-                        this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString(),
-                        });
-                    }
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
-                        guid: guid().toString(),
-                    });
                     throw error;
                 });
         },

@@ -3,9 +3,9 @@ from rest_framework import serializers
 from plantit.miappe.models import *
 
 
-class InvestigationSerializer(serializers.ModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Investigation
+        model = Project
         fields = '__all__'
 
 

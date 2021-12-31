@@ -4,14 +4,14 @@ from django.forms import ModelForm
 from plantit.miappe.models import *
 
 
-class InvestigationForm(ModelForm):
+class ProjectForm(ModelForm):
     class Meta:
-        model = Investigation
+        model = Project
         fields = '__all__'
 
 
-class InvestigationAdmin(admin.ModelAdmin):
-    form = InvestigationForm
+class ProjectAdmin(admin.ModelAdmin):
+    form = ProjectForm
 
 
 class StudyForm(ModelForm):
@@ -114,7 +114,7 @@ class ObservedVariableAdmin(admin.ModelAdmin):
     form = ObservedVariableForm
 
 
-admin.site.register(Investigation, InvestigationAdmin)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(Study, StudyAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(DataFile, FileAdmin)

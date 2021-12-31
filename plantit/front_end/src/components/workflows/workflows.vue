@@ -202,8 +202,6 @@
 import blurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
-import axios from 'axios';
-import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'workflows',

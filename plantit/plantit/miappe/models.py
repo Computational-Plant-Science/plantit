@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy
 
 
-class Investigation(models.Model):
+class Project(models.Model):
     class License(models.TextChoices):
         CC_BY = 'BY', gettext_lazy('CC BY 4.0'),
         CC_BY_SA = 'SA', gettext_lazy('CC BY-SA 4.0')
@@ -15,8 +15,8 @@ class Investigation(models.Model):
         CC_BY_NC_ND = 'NN', gettext_lazy('CC BY-NC-ND 4.0')
 
     owner = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
-    team = models.ManyToManyField(User, related_name='investigation_team', null=True, blank=True)
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    team = models.ManyToManyField(User, related_name='projects', null=True, blank=True)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=255, blank=False)
     description = models.TextField(blank=True)
     submission_date = models.DateField(blank=True, null=True)
@@ -28,8 +28,8 @@ class Investigation(models.Model):
 
 class Study(models.Model):
     team = models.ManyToManyField(User, related_name='study_team', null=True, blank=True)
-    investigation = models.ForeignKey(Investigation, null=False, blank=False, on_delete=models.CASCADE)
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    investigation = models.ForeignKey(Project, null=False, blank=False, on_delete=models.CASCADE)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=250, blank=False)
     description = models.TextField(blank=True)
     start_date = models.DateField(default=timezone.now, blank=True, null=True)
@@ -60,7 +60,7 @@ class DataFile(models.Model):
 
 
 class BiologicalMaterial(models.Model):
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     organism = models.CharField(max_length=255, unique=True, blank=True)
     genus = models.CharField(max_length=255, blank=True)
     species = models.CharField(max_length=255, blank=True)
@@ -99,7 +99,7 @@ class Event(models.Model):
 
 
 class ObservationUnit(models.Model):
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     type = models.CharField(max_length=255, blank=True)
     external_id = models.CharField(max_length=255, blank=True)
     spatial_distribution = models.TextField(blank=True)
@@ -107,7 +107,7 @@ class ObservationUnit(models.Model):
 
 
 class Sample(models.Model):
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     structure_development_stage = models.CharField(max_length=255, blank=True)
     anatomical_entity = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
@@ -116,7 +116,7 @@ class Sample(models.Model):
 
 
 class ObservedVariable(models.Model):
-    unique_id = models.CharField(max_length=255, unique=True, blank=True)
+    guid = models.CharField(max_length=255, unique=True, blank=True)
     name = models.CharField(max_length=255, blank=True)
     accession_number = models.CharField(max_length=255, blank=True)
     trait = models.CharField(max_length=255, blank=True)

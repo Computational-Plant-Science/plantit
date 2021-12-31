@@ -294,9 +294,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
-                'first': user.profile.first_login
+                'first': user.profile.first_login,
             },
             'stats': stats,
+            'projects': [p.unique_id for p in user.projects.all()]
         }
 
         if request.user.profile.cyverse_access_token != '':
@@ -312,7 +313,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if request.user.profile.github_token != '' and user.profile.github_username != '':
             bundle = get_user_bundle(request.user)
             response['github_profile'] = bundle['github_profile']
-            response['github_organizations'] = bundle['github_organizations']
+            response['organizations'] = bundle['github_organizations']
 
         return JsonResponse(response)
 

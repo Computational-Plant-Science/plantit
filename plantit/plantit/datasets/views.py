@@ -16,7 +16,7 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
-from plantit.miappe.models import Investigation, Study
+from plantit.miappe.models import Project, Study
 from plantit.notifications.models import Notification
 from plantit.users.models import Profile
 from plantit.utils import dataset_access_policy_to_dict, project_to_dict, get_user_django_profile
@@ -185,8 +185,8 @@ async def create(request):
 
     if project is not None and study is not None:
         try:
-            investigation = await sync_to_async(Investigation.objects.get)(owner=owner, title=project['title'])
-            study = await sync_to_async(Study.objects.get)(investigation=investigation, title=study['title'])
+            Project = await sync_to_async(Project.objects.get)(owner=owner, title=project['title'])
+            study = await sync_to_async(Study.objects.get)(Project=Project, title=study['title'])
         except:
             logger.warning(traceback.format_exc())
             return HttpResponseNotFound()
@@ -195,6 +195,6 @@ async def create(request):
         else: study.dataset_paths = [path]
         await sync_to_async(study.save)()
         logger.info(f"Bound {path} to project {project}, study {study}")
-        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(investigation)})
+        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(Project)})
     else:
         return JsonResponse({'path': path})

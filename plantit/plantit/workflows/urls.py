@@ -4,9 +4,9 @@ from . import views
 
 urlpatterns = [
     path(r'', views.list_public),
-    path(r'<member>/o/', views.list_org),
-    path(r'<owner>/u/', views.list_personal),
-    path(r'<owner>/c/', views.list_collaborator),
+    path(r'u/', views.list_user),
+    path(r'o/', views.list_org),
+    path(r'p/', views.list_project),
     path(r'<owner>/u/<name>/<branch>/', views.get),
     path(r'<owner>/u/<name>/<branch>/search/', views.search),
     path(r'<owner>/u/<name>/<branch>/refresh/', views.refresh),

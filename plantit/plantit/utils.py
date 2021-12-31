@@ -38,7 +38,7 @@ from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
-from plantit.miappe.models import Investigation, Study
+from plantit.miappe.models import Project, Study
 from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
@@ -86,6 +86,17 @@ def refresh_user_cache():
         bundle = get_user_bundle(user)
         redis.set(f"users/{user.username}", json.dumps(bundle))
     RedisClient.get().set(f"users_updated", timezone.now().timestamp())
+
+
+@sync_to_async
+def list_user_projects(user: User):
+    return list(user.projects.all())
+
+
+async def refresh_project_cache(project: Project):
+    logger.info(f"Refreshing project {project.unique_id} cache entry")
+    redis = RedisClient.get()
+    redis.set(f"projects/{project.unique_id}", project_to_dict(project))
 
 
 def get_user_bundle(user: User):
@@ -273,7 +284,7 @@ async def calculate_user_statistics(user: User) -> dict:
     owned_workflows = [
         f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}"
         for
-        workflow in list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
+        workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
     used_workflows_counter = Counter(used_workflows)
     unique_used_workflows = list(np.unique(used_workflows))
@@ -413,10 +424,10 @@ async def refresh_online_users_workflow_cache():
     logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        await refresh_personal_workflow_cache(profile.github_username)
+        await refresh_user_workflow_cache(profile.github_username)
 
 
-async def refresh_personal_workflow_cache(github_username: str):
+async def refresh_user_workflow_cache(github_username: str):
     if github_username is None or github_username == '': raise ValueError(f"No GitHub username provided")
 
     try:
@@ -500,7 +511,7 @@ def list_public_workflows() -> List[dict]:
     return workflows
 
 
-def list_personal_workflows(owner: str) -> List[dict]:
+def list_user_workflows(owner: str) -> List[dict]:
     redis = RedisClient.get()
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
@@ -530,7 +541,7 @@ async def get_workflow(
         return json.loads(workflow)
 
 
-# def empty_personal_workflow_cache(owner: str):
+# def empty_user_workflow_cache(owner: str):
 #     redis = RedisClient.get()
 #     keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
 #     cleaned = len(keys)
@@ -805,7 +816,7 @@ def create_task(username: str,
                 branch: dict,
                 name: str = None,
                 guid: str = None,
-                investigation: str = None,
+                project: str = None,
                 study: str = None):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
@@ -835,8 +846,8 @@ def create_task(username: str,
         token=binascii.hexlify(os.urandom(20)).decode())
 
     # add MIAPPE info
-    if investigation is not None: task.investigation = Investigation.objects.get(owner=user, title=investigation)
-    if study is not None: task.study = Study.objects.get(investigation=task.investigation, title=study)
+    if project is not None: task.project = Project.objects.get(owner=user, title=project)
+    if study is not None: task.study = Study.objects.get(project=task.project, title=study)
 
     # add repo logo
     if 'logo' in workflow['config']:
@@ -1796,10 +1807,10 @@ def task_to_dict(task: Task) -> dict:
         'owner': task.user.username,
         'name': task.name,
         'project': {
-            'title': task.investigation.title,
-            'owner': task.investigation.owner.username,
-            'description': task.investigation.description
-        } if task.investigation is not None else None,
+            'title': task.project.title,
+            'owner': task.project.owner.username,
+            'description': task.project.description
+        } if task.project is not None else None,
         'study': {
             'title': task.study.title,
             'description': task.study.description
@@ -2018,7 +2029,7 @@ def person_to_dict(user: User, role: str) -> dict:
     }
 
 
-def study_to_dict(study: Study, project: Investigation) -> dict:
+def study_to_dict(study: Study, project: Project) -> dict:
     team = [person_to_dict(person, 'Researcher') for person in study.team.all()]
     return {
         'project_title': project.title,
@@ -2048,8 +2059,15 @@ def study_to_dict(study: Study, project: Investigation) -> dict:
     }
 
 
-def project_to_dict(project: Investigation) -> dict:
-    studies = [study_to_dict(study, project) for study in Study.objects.filter(investigation=project)]
+def get_project_workflows(project: Project):
+    redis = RedisClient.get()
+    workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
+                 'projects' in wf['config'] and project.unique_id in wf['config']['projects']]
+    return workflows
+
+
+def project_to_dict(project: Project) -> dict:
+    studies = [study_to_dict(study, project) for study in Study.objects.filter(project=project)]
     team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
     return {
         'unique_id': project.unique_id,
@@ -2061,6 +2079,7 @@ def project_to_dict(project: Investigation) -> dict:
         'associated_publication': project.associated_publication,
         'studies': studies,
         'team': team,
+        'workflows': get_project_workflows(project)
     }
 
 

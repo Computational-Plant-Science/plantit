@@ -18,7 +18,6 @@
             >
             <b-card
                 v-else
-                :sub-title="getProject.unique_id"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 border-variant="secondary"
                 :header-text-variant="profile.darkMode ? 'white' : 'dark'"
@@ -37,7 +36,7 @@
                                 "
                             >
                                 {{ getProject.title }}
-                            </h4> </b-col
+                            </h4></b-col
                         ><b-col
                             v-if="ownsProject"
                             class="m-0"
@@ -54,6 +53,7 @@
                             ></b-col
                         >
                     </b-row>
+                    <i>{{ getProject.guid }}</i>
                     <h6 v-if="getProject.description !== null">
                         {{ getProject.description }}
                     </h6>
@@ -174,8 +174,8 @@
                                         v-b-tooltip.hover
                                         :title="
                                             'Remove ' +
-                                                study.title +
-                                                ' from this project'
+                                            study.title +
+                                            ' from this project'
                                         "
                                         @click="showRemoveStudyModal(study)"
                                     >
@@ -190,7 +190,7 @@
                                     ><span
                                         v-if="
                                             study.description !== null &&
-                                                study.description !== ''
+                                            study.description !== ''
                                         "
                                         >{{ study.description }}<br />
                                     </span>
@@ -266,7 +266,7 @@
                                     <span
                                         v-if="
                                             study.experimental_design_type !==
-                                                null
+                                            null
                                         "
                                     >
                                         <small
@@ -277,7 +277,7 @@
                                         <small
                                             v-if="
                                                 study.experimental_design_description !==
-                                                    null
+                                                null
                                             "
                                             >{{
                                                 study.experimental_design_description
@@ -288,7 +288,7 @@
                                     <span
                                         v-if="
                                             study.observation_unit_description !==
-                                                null
+                                            null
                                         "
                                     >
                                         <small
@@ -296,9 +296,10 @@
                                             <span
                                                 v-if="
                                                     study.observation_unit_level_hierarchy !==
-                                                        null
+                                                    null
                                                 "
-                                                > [{{
+                                            >
+                                                [{{
                                                     study.observation_unit_level_hierarchy
                                                 }}]</span
                                             >
@@ -306,7 +307,7 @@
                                         <small
                                             v-if="
                                                 study.observation_unit_description !==
-                                                    null
+                                                null
                                             "
                                             >{{
                                                 study.observation_unit_description
@@ -327,7 +328,7 @@
                                         <small
                                             v-if="
                                                 study.growth_facility_description !==
-                                                    null
+                                                null
                                             "
                                             >{{
                                                 study.growth_facility_description
@@ -407,7 +408,13 @@
                             ><b-img
                                 v-if="avatarUrl(member) !== ''"
                                 class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                                style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                style="
+                                    width: 2rem;
+                                    height: 2rem;
+                                    left: -3px;
+                                    top: 1.5px;
+                                    border: 1px solid #e2e3b0;
+                                "
                                 rounded="circle"
                                 :src="avatarUrl(member)"
                             ></b-img>
@@ -430,6 +437,46 @@
                             </b-button></b-col
                         >
                     </b-row>
+                    <br />
+                    <br />
+                    <b-row>
+                        <b-col
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Workflows
+                            </h5></b-col
+                        >
+                    </b-row>
+                    <span v-if="getWorkflows.length === 0"
+                        >This project has no associated workflows.</span
+                    >
+                    <b-card-group deck columns v-else>
+                        <b-card
+                            v-for="workflow in getWorkflows"
+                            :key="`${workflow.repo.owner.login}/${workflow.repo.name}/${workflow.branch.name}`"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            border-variant="default"
+                            :header-border-variant="
+                                profile.darkMode ? 'secondary' : 'default'
+                            "
+                            :text-variant="profile.darkMode ? 'white' : 'dark'"
+                            style="min-width: 30rem"
+                            class="overflow-hidden mb-4"
+                        >
+                            <blurb
+                                :linkable="true"
+                                :workflow="workflow"
+                            ></blurb>
+                        </b-card>
+                    </b-card-group>
                     <br />
                     <br />
                     <b-row>
@@ -525,7 +572,13 @@
                         <b-img
                             v-if="user.github_profile"
                             class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                            style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                            style="
+                                width: 2rem;
+                                height: 2rem;
+                                left: -3px;
+                                top: 1.5px;
+                                border: 1px solid #e2e3b0;
+                            "
                             rounded="circle"
                             :src="
                                 user.github_profile
@@ -654,13 +707,11 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="
-                `Remove ${
-                    this.teamMemberToRemove !== null
-                        ? this.teamMemberToRemove.id
-                        : 'team member'
-                }?`
-            "
+            :title="`Remove ${
+                this.teamMemberToRemove !== null
+                    ? this.teamMemberToRemove.id
+                    : 'team member'
+            }?`"
             @ok="removeTeamMember"
             ok-variant="danger"
         >
@@ -680,11 +731,9 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="
-                `Edit ${
-                    this.studyToEdit !== null ? this.studyToEdit.title : 'study'
-                }`
-            "
+            :title="`Edit ${
+                this.studyToEdit !== null ? this.studyToEdit.title : 'study'
+            }`"
             @ok="editStudy"
             ok-variant="success"
         >
@@ -1023,13 +1072,9 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="
-                `Remove ${
-                    this.studyToRemove !== null
-                        ? this.studyToRemove.title
-                        : 'study'
-                }?`
-            "
+            :title="`Remove ${
+                this.studyToRemove !== null ? this.studyToRemove.title : 'study'
+            }?`"
             @ok="removeStudy"
             ok-variant="danger"
         >
@@ -1073,9 +1118,9 @@ import taskblurb from '@/components/tasks/task-blurb.vue';
 export default {
     name: 'project',
     components: {
-        taskblurb
+        taskblurb,
     },
-    data: function() {
+    data: function () {
         return {
             addingTeamMember: false,
             removingTeamMember: false,
@@ -1095,7 +1140,7 @@ export default {
             studyAltitudeUnits: 'ft',
             studyAltitudeUnitsOptions: [
                 { value: 'ft', text: 'Feet' },
-                { value: 'm', text: 'Meters' }
+                { value: 'm', text: 'Meters' },
             ],
             studyExperimentalDesignDescription: '',
             studyExperimentalDesignType: '',
@@ -1107,7 +1152,7 @@ export default {
             studyCulturalPractices: '',
             studyToRemove: null,
             studyToEdit: null,
-            deleting: false
+            deleting: false,
         };
     },
     methods: {
@@ -1184,15 +1229,15 @@ export default {
                 cultural_practices:
                     this.studyCulturalPractices !== ''
                         ? this.studyCulturalPractices
-                        : this.studyToEdit.cultural_practices
+                        : this.studyToEdit.cultural_practices,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/miappe/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}/edit_study/`,
                 headers: { 'Content-Type': 'application/json' },
-                data: data
+                data: data,
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'projects/addOrUpdate',
@@ -1201,24 +1246,24 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Updated study ${this.studyToEdit.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to update study ${this.studyToEdit.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.editingStudy = false;
                     this.hideEditStudyModal();
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to update study ${this.studyToEdit.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.editingStudy = false;
                     throw error;
@@ -1239,50 +1284,50 @@ export default {
             await axios({
                 method: 'delete',
                 url: `/apis/v1/miappe/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}/`,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(response => {
+                .then((response) => {
                     if (response.status === 200) {
                         this.$store.dispatch(
-                            'projects/setPersonal',
+                            'projects/setUser',
                             response.data.projects
                         );
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Deleted project ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                         router.push({
-                            name: 'projects'
+                            name: 'projects',
                         });
                     } else {
                         this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to delete project ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.deleting = false;
                     this.hideDeleteProjectModal();
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to delete project ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.deleting = false;
                     throw error;
                 });
         },
         avatarUrl(user) {
-            let found = this.otherUsers.find(u => u.username === user.id);
+            let found = this.otherUsers.find((u) => u.username === user.id);
             if (found === undefined) return undefined;
             return found.github_profile.avatar_url;
         },
         specifyTeamMember(project) {
-            this.selectedInvestigation = project;
+            this.selectedProject = project;
             this.$bvModal.show('addTeamMember');
         },
         showRemoveTeamMemberModal(member) {
@@ -1299,9 +1344,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/miappe/${this.getProject.owner}/${this.getProject.title}/add_team_member/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'projects/addOrUpdate',
@@ -1310,24 +1355,24 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Added team member ${user.username} to project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to add team member ${user.username} to project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.$bvModal.hide('addTeamMember');
                     this.addingTeamMember = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to add team member ${user.username} to project ${this.getProject.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.$bvModal.hide('addTeamMember');
                     this.addingTeamMember = false;
@@ -1342,9 +1387,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/miappe/${this.getProject.owner}/${this.getProject.title}/remove_team_member/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'projects/addOrUpdate',
@@ -1353,24 +1398,24 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Removed team member ${user.id} from project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to remove team member ${user.id} from project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.teamMemberToRemove = null;
                     this.removingTeamMember = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to remove team member ${user.id} from project ${this.getProject.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.removingTeamMember = false;
                     throw error;
@@ -1396,15 +1441,15 @@ export default {
             this.addingStudy = true;
             let data = {
                 title: this.studyTitle,
-                description: this.studyDescription
+                description: this.studyDescription,
             };
             await axios({
                 method: 'post',
                 url: `/apis/v1/miappe/${this.getProject.owner}/${this.getProject.title}/add_study/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'projects/addOrUpdate',
@@ -1413,24 +1458,24 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Added study ${this.studyTitle} to project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to add study ${this.studyTitle} to project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.hideAddStudyModal();
                     this.addingStudy = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to add study ${this.studyTitle} to project ${this.getProject.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.hideAddStudyModal();
                     this.addingStudy = false;
@@ -1445,9 +1490,9 @@ export default {
                 method: 'post',
                 url: `/apis/v1/miappe/${this.getProject.owner}/${this.getProject.title}/remove_study/`,
                 data: data,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             })
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await this.$store.dispatch(
                             'projects/addOrUpdate',
@@ -1456,65 +1501,72 @@ export default {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Removed study ${study.title} from project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to remove study ${study.title} from project ${this.getProject.title}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
                         });
                     }
                     this.removingStudy = false;
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to remove study ${study.title} from project ${this.getProject.title}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
                     });
                     this.removingStudy = false;
                     throw error;
                 });
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        prettifyDate: function(date) {
+        prettifyDate: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY'
             )})`;
-        }
+        },
     },
     watch: {
         studyToEdit() {
-            // this.personalProjects.map(() => {});
-        }
+            // this.userProjects.map(() => {});
+        },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('projects', [
-            'personalProjects',
+            'userProjects',
             'othersProjects',
-            'projectsLoading'
+            'projectsLoading',
+        ]),
+        ...mapGetters('workflows', [
+            'projectWorkflows',
+            'projectWorkflowsLoading',
         ]),
         ...mapGetters('tasks', [
             'tasks',
             'tasksRunning',
             'tasksCompleted',
-            'tasksLoading'
+            'tasksLoading',
         ]),
         today() {
             let now = new Date();
             return new Date(now.getFullYear(), now.getMonth(), now.getDate());
         },
+        getWorkflows() {
+            return this.projectWorkflows[this.getProject.guid];
+        },
         projectTasks() {
             return this.tasks.filter(
-                t =>
+                (t) =>
                     t.project !== null &&
                     t.project.name === this.getProject.name
             );
@@ -1525,8 +1577,8 @@ export default {
             );
         },
         getProject() {
-            let project = this.personalProjects.find(
-                p =>
+            let project = this.userProjects.find(
+                (p) =>
                     p.owner === this.$router.currentRoute.params.owner &&
                     p.title === this.$router.currentRoute.params.title
             );
@@ -1535,7 +1587,7 @@ export default {
         },
         studyTitleExists() {
             return this.getProject.studies.some(
-                s => s.title === this.studyTitle
+                (s) => s.title === this.studyTitle
             );
         },
         studyTitleValid() {
@@ -1603,23 +1655,20 @@ export default {
             // return this.studyCulturalPractices !== '';
         },
         studyInfoValid() {
-            return (
-                this.studyTitleValid &&
-                this.studyDescriptionValid
-            );
+            return this.studyTitleValid && this.studyDescriptionValid;
         },
         otherUsers() {
             return this.allUsers.filter(
-                u =>
+                (u) =>
                     u.username !== this.profile.djangoProfile.username &&
                     ((this.projectSelected &&
-                        !this.selectedInvestigation.team.some(
-                            ua => ua.id === u.username
+                        !this.selectedProject.team.some(
+                            (ua) => ua.id === u.username
                         )) ||
                         !this.projectSelected)
             );
-        }
-    }
+        },
+    },
 };
 </script>
 

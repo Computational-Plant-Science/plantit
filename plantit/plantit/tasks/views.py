@@ -68,7 +68,7 @@ def get_all_or_create(request):
                 branch=branch,
                 name=task_name if task_name is not None and task_name != '' else task_guid,
                 guid=task_guid,
-                investigation=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
+                project=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
                 study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
             auth = parse_task_auth_options(task, workflow['auth'])
             logger.warning(auth)

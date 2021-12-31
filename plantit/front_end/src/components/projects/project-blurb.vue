@@ -1,7 +1,7 @@
 <template>
     <b-card
         :title="project.title"
-        :sub-title="project.unique_id"
+        :sub-title="project.guid"
         :bg-variant="profile.darkMode ? 'dark' : 'white'"
         :header-text-variant="profile.darkMode ? 'white' : 'dark'"
         :text-variant="profile.darkMode ? 'white' : 'dark'"

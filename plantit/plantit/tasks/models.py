@@ -10,7 +10,7 @@ from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
 from plantit.agents.models import Agent, AgentExecutor
-from plantit.miappe.models import Investigation, Study
+from plantit.miappe.models import Project, Study
 
 
 class TaskStatus(models.TextChoices):
@@ -55,7 +55,7 @@ class Task(models.Model):
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
     tags = TaggableManager()
-    investigation = models.ForeignKey(Investigation, null=True, blank=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.SET_NULL)
     inputs_detected = models.IntegerField(null=True, blank=True, default=0)
     inputs_downloaded = models.IntegerField(null=True, blank=True, default=0)
     inputs_submitted = models.IntegerField(null=True, blank=True, default=0)

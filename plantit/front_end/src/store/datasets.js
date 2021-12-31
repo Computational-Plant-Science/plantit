@@ -6,8 +6,8 @@ export const datasets = {
     state: () => ({
         public: [],
         publicLoading: true,
-        personal: [],
-        personalLoading: true,
+        user: [],
+        userLoading: true,
         shared: [],
         sharedLoading: true,
         sharing: [],
@@ -33,8 +33,8 @@ export const datasets = {
         setPublic(state, datasets) {
             state.public = datasets;
         },
-        setPersonal(state, datasets) {
-            state.personal = datasets;
+        setUser(state, datasets) {
+            state.user = datasets;
         },
         setShared(state, datasets) {
             state.shared = datasets;
@@ -45,8 +45,8 @@ export const datasets = {
         setPublicLoading(state, loading) {
             state.publicLoading = loading;
         },
-        setPersonalLoading(state, loading) {
-            state.personalLoading = loading;
+        setUserLoading(state, loading) {
+            state.userLoading = loading;
         },
         setSharedLoading(state, loading) {
             state.sharedLoading = loading;
@@ -56,8 +56,8 @@ export const datasets = {
         }
     },
     actions: {
-        async loadPersonal({ commit, rootState }) {
-            commit('setPersonalLoading', true);
+        async loadUser({ commit, rootState }) {
+            commit('setUserLoading', true);
             await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${rootState.user.profile.djangoProfile.username}/`,
@@ -68,12 +68,12 @@ export const datasets = {
                     }
                 )
                 .then(response => {
-                    commit('setPersonal', response.data);
-                    commit('setPersonalLoading', false);
+                    commit('setUser', response.data);
+                    commit('setUserLoading', false);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    commit('setPersonalLoading', false);
+                    commit('setUserLoading', false);
                     if (error.response.status === 403) {
                         sessionStorage.clear();
                         window.location.replace('/apis/v1/idp/cyverse_logout/');
@@ -146,11 +146,11 @@ export const datasets = {
         }
     },
     getters: {
-        personalDatasets: state => state.personal,
+        userDatasets: state => state.user,
         publicDatasets: state => state.public,
         sharedDatasets: state => state.shared,
         sharingDatasets: state => state.sharing,
-        personalDatasetsLoading: state => state.personalLoading,
+        userDatasetsLoading: state => state.userLoading,
         publicDatasetsLoading: state => state.publicLoading,
         sharedDatasetsLoading: state => state.sharedLoading,
         sharingDatasetsLoading: state => state.sharingLoading

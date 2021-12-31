@@ -81,7 +81,7 @@
                             target="create-project"
                             title="Create a new project"
                             >Click here to create a new MIAPPE
-                            investigation.</b-popover
+                            project.</b-popover
                         ></b-col
                     >
                     <b-col
@@ -137,12 +137,12 @@
                 </b-row>
                 <b-row v-else
                     ><b-col v-if="!sharedContext">
-                        <span v-if="personalProjects.length === 0"
+                        <span v-if="userProjects.length === 0"
                             >You haven't created any projects yet.</span
                         >
                         <projectblurb
-                            v-for="project in personalProjects"
-                            v-bind:key="project.unique_id"
+                            v-for="project in userProjects"
+                            v-bind:key="project.guid"
                             :project="project"
                         ></projectblurb></b-col
                     ><b-col v-else>
@@ -153,13 +153,14 @@
                             <b-card
                                 border-variant="secondary"
                                 v-for="project in othersProjects"
-                                v-bind:key="project.unique_id"
+                                v-bind:key="project.guid"
                                 :title="project.title"
-                                :sub-title="project.unique_id"
+                                :sub-title="project.guid"
                                 no-body
                             >
                                 <b-card-body>
                                     <h4>{{ project.title }}</h4>
+                                    <small>{{project.guid}}</small>
                                     <h6 v-if="project.description !== null">
                                         {{ project.description }}
                                     </h6>
@@ -188,45 +189,6 @@
                                     <br />
                                     <b-row>
                                         <b-col><h5>Studies</h5></b-col
-                                        ><b-col md="auto"
-                                            ><b-button
-                                                id="add-study"
-                                                :disabled="addingStudy"
-                                                :variant="
-                                                    profile.darkMode
-                                                        ? 'outline-light'
-                                                        : 'white'
-                                                "
-                                                size="sm"
-                                                title="Add a new study"
-                                                @click="specifyStudy(project)"
-                                                class="ml-0 mt-0 mr-0"
-                                            >
-                                                <b-spinner
-                                                    small
-                                                    v-if="addingStudy"
-                                                    label="Adding..."
-                                                    :variant="
-                                                        profile.darkMode
-                                                            ? 'light'
-                                                            : 'dark'
-                                                    "
-                                                    class="mr-1"
-                                                ></b-spinner
-                                                ><i
-                                                    v-else
-                                                    class="fas fa-plus mr-1"
-                                                ></i
-                                                >Add</b-button
-                                            ><b-popover
-                                                :show.sync="profile.hints"
-                                                triggers="manual"
-                                                placement="bottomleft"
-                                                target="add-study"
-                                                title="Add Study"
-                                                >Click here to add a new study
-                                                to this project.</b-popover
-                                            ></b-col
                                         >
                                     </b-row>
                                     <span v-if="project.studies.length === 0"
@@ -235,7 +197,7 @@
                                     <b-card-group>
                                         <b-card
                                             v-for="study in project.studies"
-                                            v-bind:key="study.unique_id"
+                                            v-bind:key="study.guid"
                                             no-body
                                             ><b-card-body>
                                                 <b>{{ study.title }}</b
@@ -523,7 +485,7 @@ export default {
             creatingProject: false,
             togglingContext: false,
             sharedContext: false,
-            selectedInvestigation: null,
+            selectedProject: null,
             addingTeamMember: false,
             removingTeamMember: false,
             addingStudy: false,
@@ -534,7 +496,7 @@ export default {
         async refreshProjects() {
             if (this.sharedContext)
                 await this.$store.dispatch('projects/loadOthers');
-            else await this.$store.dispatch('projects/loadPersonal');
+            else await this.$store.dispatch('projects/loadUser');
         },
         showCreateProjectModal() {
             this.$bvModal.show('createProject');
@@ -636,7 +598,7 @@ export default {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('projects', [
-            'personalProjects',
+            'userProjects',
             'othersProjects',
             'projectsLoading',
         ]),
@@ -644,12 +606,7 @@ export default {
             return this.$route.name === 'projects';
         },
         projectSelected() {
-            return this.selectedInvestigation !== null;
-        },
-        projectUniqueId() {
-            return `plantit-projects-${
-                this.profile.djangoProfile.username
-            }-${this.projectTitle.replace(' ', '-')}`;
+            return this.selectedProject !== null;
         },
         projectTitleValid() {
             return this.projectTitle !== '' && !this.projectTitleExists;
@@ -665,7 +622,7 @@ export default {
                 (u) =>
                     u.username !== this.profile.djangoProfile.username &&
                     ((this.projectSelected &&
-                        !this.selectedInvestigation.team.some(
+                        !this.selectedProject.team.some(
                             (ua) => ua.id === u.username
                         )) ||
                         !this.projectSelected)
