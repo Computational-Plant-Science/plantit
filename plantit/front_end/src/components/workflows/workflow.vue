@@ -3234,54 +3234,82 @@
                                                                     Start</b-button
                                                                 ></b-col
                                                             >
-                                                            <!--<b-col
-                                                        md="auto"
-                                                        class="mr-0"
-                                                        align-self="end"
-                                                    >
-                                                        <b-input-group>
-                                                            <template #append>
-                                                                <b-dropdown
-                                                                    :variant="profile.darkMode ? 'outline-secondary' : 'secondary'"
-                                                                    :text="
-                                                                        submitType
-                                                                    "
-                                                                    v-model="
-                                                                        submitType
-                                                                    "
-                                                                    block
-                                                                    dropleft
-                                                                >
+                                                            <b-col
+                                                                md="auto"
+                                                                class="mr-0"
+                                                                align-self="end"
+                                                            >
+                                                                <b-input-group>
                                                                     <template
-                                                                        #button-content
+                                                                        #append
                                                                     >
-                                                                        {{
-                                                                            submitType
-                                                                        }}
+                                                                        <b-dropdown
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'outline-secondary'
+                                                                                    : 'secondary'
+                                                                            "
+                                                                            :text="
+                                                                                submitType
+                                                                            "
+                                                                            v-model="
+                                                                                submitType
+                                                                            "
+                                                                            block
+                                                                            dropleft
+                                                                        >
+                                                                            <template
+                                                                                #button-content
+                                                                            >
+                                                                                {{
+                                                                                    submitType
+                                                                                }}
+                                                                            </template>
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    submitType =
+                                                                                        'Now'
+                                                                                "
+                                                                                >Now</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    submitType =
+                                                                                        'After'
+                                                                                "
+                                                                                >After</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    submitType =
+                                                                                        'Every'
+                                                                                "
+                                                                                >Every</b-dropdown-item
+                                                                            >
+                                                                        </b-dropdown>
                                                                     </template>
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            submitType =
-                                                                                'Now'
-                                                                        "
-                                                                        >Now</b-dropdown-item
+                                                                    <template
+                                                                        #append
+                                                                        ><b-form-spinbutton
+                                                                            min="1"
+                                                                            max="20"
+                                                                            value="1"
+                                                                            v-model="
+                                                                                iterations
+                                                                            "
+                                                                        ></b-form-spinbutton
+                                                                        >{{
+                                                                            iterations
+                                                                        }}
+                                                                        Time{{
+                                                                            iterations ===
+                                                                            1
+                                                                                ? ''
+                                                                                : 's'
+                                                                        }}</template
                                                                     >
-                                                                    <b-dropdown-item
-                                            @click="submitType = 'After'"
-                                            >After</b-dropdown-item
-                                        >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            submitType =
-                                                                                'Every'
-                                                                        "
-                                                                        >Every</b-dropdown-item
-                                                                    >
-                                                                </b-dropdown>
-                                                            </template>
-                                                            <template #append><b-form-spinbutton min="1" max="20" value="1" v-model="iterations"></b-form-spinbutton>{{ iterations }} Time{{ iterations === 1 ? '' : 's' }}</template>
-                                                        </b-input-group>
-                                                    </b-col>-->
+                                                                </b-input-group>
+                                                            </b-col>
                                                         </b-row>
                                                     </b-col></b-row
                                                 >

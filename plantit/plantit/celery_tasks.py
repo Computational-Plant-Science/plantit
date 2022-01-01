@@ -25,7 +25,7 @@ from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_
     submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     refresh_user_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_tasks_running_timeseries
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries
 
 logger = get_task_logger(__name__)
 
@@ -409,23 +409,32 @@ def cleanup_task(self, guid: str, auth: dict):
 
 
 @app.task()
-def aggregate_all_users_usage_stats():
+def refresh_all_users_stats():
     users = User.objects.all()
     for user in users:
-        logger.info(f"Aggregating statistics for {user.username}")
+        logger.info(f"Computing statistics for {user.username}")
         stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
         redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
 
-    tasks_running = get_tasks_running_timeseries(600)
+    logger.info(f"Computing aggregate statistics for {user.username}")
+    users_series = get_users_timeseries()
+    tasks_series = get_tasks_timeseries()
+    tasks_running_series = get_tasks_running_timeseries(600)
+
+    now = datetime.now()
     redis = RedisClient.get()
-    redis.set(f"tasks_running", json.dumps(tasks_running))
-    redis.set(f"tasks_running_updated", datetime.now().timestamp())
+    redis.set(f"users_timeseries", json.dumps(users_series))
+    redis.set(f"users_timeseries_updated", now.timestamp())
+    redis.set(f"tasks_timeseries", json.dumps(tasks_series))
+    redis.set(f"tasks_timeseries_updated", now.timestamp())
+    redis.set(f"tasks_running", json.dumps(tasks_running_series))
+    redis.set(f"tasks_running_updated", now.timestamp())
 
 
 @app.task()
-def aggregate_user_usage_stats(username: str):
+def refresh_user_stats(username: str):
     try:
         user = User.objects.get(username=username)
     except:
@@ -544,7 +553,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions', priority=2)
 
     # aggregate usage stats for each user
-    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_all_users_usage_stats.s(), name='aggregate user statistics', priority=2)
+    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics', priority=2)
 
     # agent healthchecks
     # TODO reenable with better scheduling strategy

@@ -27,10 +27,10 @@ async def list_user(request):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
     redis = RedisClient.get()
     last_updated = redis.get(f"workflows_updated/{profile.github_username}")
-    num_cached = len(list(redis.scan_iter(match=f"workflows/{profile.github_username}/*")))
+    # num_cached = len(list(redis.scan_iter(match=f"workflows/{profile.github_username}/*")))
 
     # if user's workflow cache is empty (re)populate it
-    if last_updated is None or num_cached == 0:
+    if last_updated is None:
         logger.info(f"{profile.github_username}'s workflow cache is empty, populating it now")
         refresh_user_workflows.s(profile.github_username).apply_async()
 
@@ -52,10 +52,10 @@ async def list_org(request):
     for org in orgs:
         org_name = org['login']
         last_updated = redis.get(f"workflows_updated/{org_name}")
-        num_cached = len(list(redis.scan_iter(match=f"workflows/{org_name}/*")))
+        # num_cached = len(list(redis.scan_iter(match=f"workflows/{org_name}/*")))
 
         # if org's workflow cache is empty, (re)populate it before returning
-        if last_updated is None or num_cached == 0:
+        if last_updated is None:
             logger.info(f"GitHub organization {org_name}'s workflow cache is empty, populating it now")
             await refresh_org_workflow_cache(org_name, profile.github_token)
 

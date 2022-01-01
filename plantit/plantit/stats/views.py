@@ -4,15 +4,16 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 
 from plantit.tasks.models import Task, TaskCounter, TaskStatus
-from plantit.utils import list_institutions, filter_online, get_tasks_running_timeseries
+from plantit.utils import list_institutions, filter_online, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries
 from plantit.redis import RedisClient
 
 
 def counts(request):
+    redis = RedisClient.get()
+
     # count users online by checking their CyVerse token expiry times
     users = list(User.objects.all())
     online = filter_online(users)
-    redis = RedisClient.get()
     workflows = len(list(redis.scan_iter('workflows/*')))
 
     return JsonResponse({
@@ -29,39 +30,29 @@ def institutions(request):
 
 
 def timeseries(request):
-    users_x = []
-    users_y = []
-    for i, user in enumerate(User.objects.all().order_by('profile__created')):
-        users_x.append(user.profile.created)
-        users_y.append(i + 1)
-
-    tasks_x = []
-    tasks_y = []
-    for i, task in enumerate(Task.objects.all().order_by('created')):
-        tasks_x.append(task.created)
-        tasks_y.append(i + 1)
-
     redis = RedisClient.get()
-    tasks_running = redis.get('tasks_running')
-    if tasks_running is not None: tasks_running = json.loads(tasks_running)
-    else: tasks_running = dict()
-    tasks_running_x = list(tasks_running.keys())
-    tasks_running_y = list(tasks_running.values())
+    cached_users = redis.get('users_timeseries')
+    cached_tasks = redis.get('tasks_timeseries')
+    cached_running = redis.get('tasks_running')
+
+    users = json.loads(cached_users) if cached_users is not None else get_users_timeseries()
+    tasks = json.loads(cached_tasks) if cached_tasks is not None else get_tasks_timeseries()
+    tasks_running = json.loads(cached_running) if cached_running is not None else get_tasks_running_timeseries()
 
     return JsonResponse({
         'users': {
-            'x': users_x,
-            'y': users_y,
+            'x': [u[0] for u in users],
+            'y': [u[1] for u in users],
             'type': 'scatter'
         },
         'tasks': {
-            'x': tasks_x,
-            'y': tasks_y,
+            'x': [t[0] for t in tasks],
+            'y': [t[1] for t in tasks],
             'type': 'scatter'
         },
         'tasks_running': {
-            'x': tasks_running_x,
-            'y': tasks_running_y,
+            'x': list(tasks_running.keys()),
+            'y': list(tasks_running.values()),
             'type': 'scatter'
         }
     })

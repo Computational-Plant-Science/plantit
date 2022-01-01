@@ -121,13 +121,13 @@ def get_user_bundle(user: User):
         github_profile = async_to_sync(get_user_github_profile)(user)
         github_organizations = async_to_sync(get_user_github_organizations)(user)
         return ({
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'github_username': user.profile.github_username,
-            'github_profile': github_profile,
-            'github_organizations': github_organizations,
-        } if 'login' in github_profile else {
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'github_username': user.profile.github_username,
+                    'github_profile': github_profile,
+                    'github_organizations': github_organizations,
+                } if 'login' in github_profile else {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
@@ -245,11 +245,23 @@ def get_user_statistics(user: User) -> dict:
     return stats
 
 
+def get_users_timeseries():
+    series = []
+    for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created, i + 1))
+    return series
+
+
+def get_tasks_timeseries():
+    series = []
+    for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created, i + 1))
+    return series
+
+
 def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
     tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
     series = dict()
 
-    # if user has no tasks, return here
+    # return early if no tasks
     if len(tasks) == 0:
         return series
 
@@ -501,7 +513,6 @@ def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
                  'public' in wf['config'] and wf['config']['public']]
-    print(len(workflows))
     return workflows
 
 
@@ -1370,7 +1381,8 @@ def upload_task_files(task: Task, ssh: SSH, options: PlantITCLIOptions, auth: di
     else:
         if 'input' in options:
             kind = options['input']['kind']
-            options['input']['path'] = 'input' if (kind == InputKind.DIRECTORY or kind == InputKind.FILES) else f"input/{options['input']['path'].rpartition('/')[2]}"
+            options['input']['path'] = 'input' if (
+                        kind == InputKind.DIRECTORY or kind == InputKind.FILES) else f"input/{options['input']['path'].rpartition('/')[2]}"
 
         # TODO support for various schedulers
         options['jobqueue'] = {'slurm': options['jobqueue']}
@@ -1826,7 +1838,8 @@ def task_to_dict(task: Task) -> dict:
         'workflow_branch': task.workflow_branch,
         'workflow_image_url': task.workflow_image_url,
         'input_path': task.workflow['config']['input']['path'] if 'input' in task.workflow['config'] else None,
-        'output_path': task.workflow['config']['output']['to'] if ('output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
+        'output_path': task.workflow['config']['output']['to'] if (
+                    'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,
         'is_success': task.is_success,

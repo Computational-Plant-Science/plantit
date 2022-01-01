@@ -23,7 +23,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.celery_tasks import refresh_user_workflows, aggregate_user_usage_stats
+from plantit.celery_tasks import refresh_user_workflows, refresh_user_stats
 from plantit.misc import get_csrf_token
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
@@ -149,15 +149,15 @@ class IDPViewSet(viewsets.ViewSet):
         # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
         stats_last_updated = redis.get(f"stats_updated/{user.username}")
         if stats_last_updated is None:
-            self.logger.info(f"No usage statistics for {user.username}. Scheduling aggregation...")
-            aggregate_user_usage_stats.s(user.username).apply_async()
+            self.logger.info(f"No usage statistics for {user.username}. Scheduling refresh...")
+            refresh_user_stats.s(user.username).apply_async()
         else:
             stats = redis.get(f"stats/{user.username}")
             stats_age_minutes = (datetime.now() - datetime.fromtimestamp(float(stats_last_updated))).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(
-                    f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Scheduling refresh...")
-                aggregate_user_usage_stats.s(user.username).apply_async()
+                    f"{stats_age_minutes} elapsed since refreshing usage statistics for {user.username}. Scheduling refresh...")
+                refresh_user_stats.s(user.username).apply_async()
 
         # open the user's dashboard
         return redirect(f"/home/")
