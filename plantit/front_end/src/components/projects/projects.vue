@@ -132,7 +132,7 @@
                         >
                     </b-col>
                 </b-row>
-                <b-row v-else
+                 <b-row v-else
                     ><b-col v-if="!sharedContext">
                         <span v-if="userProjects.length === 0"
                             >You haven't created any projects yet.</span
