@@ -1199,7 +1199,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
 
         # round up to the nearest hour
-        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), task.agent.max_nodes)}"
+        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), int(int(task.agent.max_nodes) / 60))}"
         if len(hours) == 1: hours = f"0{hours}"
         adjusted_str = f"{hours}:00:00"
 
