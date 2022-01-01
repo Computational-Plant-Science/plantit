@@ -39,7 +39,7 @@ logger = get_task_logger(__name__)
 #   clean up
 
 
-@app.task(track_started=True, bind=True)
+@app.task(track_started=True)
 def create_and_submit(username, workflow):
     try:
         user = User.objects.get(username=username)

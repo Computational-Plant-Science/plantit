@@ -1866,7 +1866,7 @@ def task_to_dict(task: Task) -> dict:
 
 def delayed_task_to_dict(task: DelayedTask) -> dict:
     return {
-        'agent': agent_to_dict(task.agent),
+        # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -1879,7 +1879,7 @@ def delayed_task_to_dict(task: DelayedTask) -> dict:
 
 def repeating_task_to_dict(task: RepeatingTask):
     return {
-        'agent': agent_to_dict(task.agent),
+        # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -1922,18 +1922,20 @@ def create_now_task(user: User, workflow):
 
 
 def create_delayed_task(user: User, workflow):
+    now = timezone.now().timestamp()
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
     agent = Agent.objects.get(name=workflow['config']['agent']['name'])
     task, created = DelayedTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        agent=agent,
+        # agent=agent,
         eta=eta,
         one_off=True,
         workflow_owner=workflow['repo']['owner']['login'],
         workflow_name=workflow['repo']['name'],
-        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
+        # name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
+        name=f"{user.username}-{now}",
         task='plantit.celery_tasks.create_and_submit',
         args=json.dumps([user.username, workflow]))
 
@@ -1947,7 +1949,7 @@ def create_repeating_task(user: User, workflow):
     task, created = RepeatingTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        agent=agent,
+        # agent=agent,
         eta=eta,
         workflow_owner=workflow['repo']['owner']['login'],
         workflow_name=workflow['repo']['name'],

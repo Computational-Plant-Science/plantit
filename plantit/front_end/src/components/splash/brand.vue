@@ -237,6 +237,12 @@
                         >
                             Recent news
                         </h5>
+                  <span v-if="loadingUpdates">
+                    <b-spinner type="spinner"
+                        label="Loading..."
+                        variant="secondary"></b-spinner> Loading updates...
+                  </span>
+                    <span v-else-if="updates.length === 0" :class="profile.darkMode ? 'text-light' : 'text-dark'">No updates to show.</span>
                         <b-row
                             v-for="update in updates"
                             v-bind:key="update.created"
