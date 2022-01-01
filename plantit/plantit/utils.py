@@ -41,6 +41,7 @@ from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
 from plantit.miappe.models import Investigation, Study
 from plantit.misc import del_none, format_bind_mount, parse_bind_mount
+from plantit.news.models import NewsUpdate
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
@@ -1958,9 +1959,6 @@ def create_repeating_task(user: User, workflow):
 # notifications
 
 def notification_to_dict(notification: Notification) -> dict:
-    # if isinstance(notification, DirectoryPolicyNotification):
-    #     return map_directory_policy_notification(notification)
-    # else:
     return {
         'id': notification.guid,
         'username': notification.user.username,
@@ -2159,3 +2157,12 @@ def project_to_dict(project: Investigation) -> dict:
 @sync_to_async
 def check_user_authentication(user):
     return user.is_authenticated
+
+
+# updates
+
+def update_to_dict(update: NewsUpdate):
+    return {
+        'created': update.created.isoformat(),
+        'content': update.content
+    }

@@ -140,7 +140,13 @@
                             class="text-right"
                             href="/apis/v1/idp/cyverse_login/"
                         >
-                            <span :class="profile.darkMode ? 'text-success' : 'text-dark'">
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-success'
+                                        : 'text-dark'
+                                "
+                            >
                                 <i class="fas fa-arrow-circle-right fa-fw"></i>
                                 Log In</span
                             >
@@ -168,23 +174,84 @@
                         </b-nav-item>-->
                 </b-row>
                 <b-row>
-                    <b-col md="auto"
-                        >
-                        <i
-                            class="text-theme mt-4 ml-1 text-left"
-                        >
+                    <b-col md="auto">
+                        <i class="text-theme mt-4 ml-1 text-left">
                             <span>a browser gateway for </span
-                            ><span class="text-theme" style="text-decoration: underline; text-decoration-color: #d6df5D"
+                            ><span
+                                class="text-theme"
+                                style="
+                                    text-decoration: underline;
+                                    text-decoration-color: #d6df5d;
+                                "
                                 >HPC plant phenotyping
                             </span>
                         </i></b-col
                     >
-                  <b-col></b-col>
+                    <b-col></b-col>
                 </b-row>
+                <br />
                 <b-row class="m-0 mt-2 mb-2"
-                    ><b-col
-                        ></b-col
-                ></b-row>
+                    ><b-col class="text-left">
+                        <h5
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            New to plantIT?
+                        </h5>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            plantIT is a web portal for high-performance &
+                            high-throughput computational phenomics, providing
+                            an interface for researchers and developers to
+                            collaborate by automating data management and
+                            software deployment tasks.
+                        </p>
+                        <hr/>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            <b>Developers:</b> Publish versionable container
+                            workflows from any GitHub repository to the
+                            worldwide research community.
+                        </p>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            <b>Biologists:</b> Deploy highly parallel
+                            simulations or analyses to a cluster or
+                            supercomputer, all from the browser.
+                        </p></b-col
+                    ><b-col class="text-left">
+                        <h5
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            Recent news
+                        </h5>
+                        <b-row
+                            v-for="update in updates"
+                            v-bind:key="update.created"
+                            ><b-col
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                                ><small>{{ prettify(update.created) }}</small>
+                                <p>{{ update.content }}</p></b-col
+                            ></b-row
+                        >
+                    </b-col></b-row
+                >
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
@@ -207,6 +274,7 @@ export default {
     data: function () {
         return {
             version: 0,
+            updates: [],
             timeseriesTasksRunning: null,
         };
     },
@@ -225,7 +293,7 @@ export default {
                         () => `running tasks`
                     ),
                     type: 'scatter',
-                    line: {color: '#d6df5D'}
+                    line: { color: '#d6df5D' },
                 },
             ];
         },
@@ -285,10 +353,18 @@ export default {
     },
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
-        await Promise.all([this.getVersion(), this.loadTimeseries()]);
-        // this.$store.dispatch('user/loadProfile');
+        await Promise.all([
+            this.getVersion(),
+            this.getUpdates(),
+            this.loadTimeseries(),
+        ]);
     },
     methods: {
+        prettify: function (date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY, h:mm a'
+            )})`;
+        },
         async getVersion() {
             await axios({
                 method: 'get',
@@ -301,6 +377,17 @@ export default {
                 .catch((error) => {
                     Sentry.captureException(error);
                     return error;
+                });
+        },
+        async getUpdates() {
+            await axios
+                .get('/apis/v1/news/updates/')
+                .then((response) => {
+                    this.updates = response.data.updates;
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
                 });
         },
         async loadTimeseries() {
