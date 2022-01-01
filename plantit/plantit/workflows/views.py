@@ -25,11 +25,11 @@ def list_public(request):
 @async_to_sync
 async def list_user(request):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
-
-    # if user's workflow cache is empty (re)populate it
     redis = RedisClient.get()
     last_updated = redis.get(f"workflows_updated/{profile.github_username}")
     num_cached = len(list(redis.scan_iter(match=f"workflows/{profile.github_username}/*")))
+
+    # if user's workflow cache is empty (re)populate it
     if last_updated is None or num_cached == 0:
         logger.info(f"{profile.github_username}'s workflow cache is empty, populating it now")
         refresh_user_workflows.s(profile.github_username).apply_async()
@@ -42,12 +42,11 @@ async def list_user(request):
 @login_required
 @async_to_sync
 async def list_org(request):
-    profile = await get_user_django_profile(request.user)
-
     # TODO cache organization memberships so don't have to look up each time
+    profile = await get_user_django_profile(request.user)
     orgs = await list_user_organizations(profile.github_username, profile.github_token)
     redis = RedisClient.get()
-    wfs = dict()
+    org_workflows = dict()
 
     # load workflows for each org
     for org in orgs:
@@ -61,26 +60,25 @@ async def list_org(request):
             await refresh_org_workflow_cache(org_name, profile.github_token)
 
         workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
-        wfs[org_name] = workflows
+        org_workflows[org_name] = workflows
 
-    return JsonResponse({'workflows': wfs})
+    return JsonResponse({'workflows': org_workflows})
 
 
 @sync_to_async
 @login_required
 @async_to_sync
 async def list_project(request):
-    projects = await list_user_projects(request.user)
     redis = RedisClient.get()
-    wfs = dict()
+    project_workflows = dict()
 
     # load workflows for each project
-    for proj in projects:
-        p = await sync_to_async(project_to_dict)(proj)
-        workflows = [json.loads(redis.get(key)) for key in [f"workflows/{k}" for k in p['workflows']]]
-        wfs[proj.guid] = workflows
+    for project in (await list_user_projects(request.user)):
+        proj_dict = await sync_to_async(project_to_dict)(project)
+        workflows = [json.loads(wf) for wf in [redis.get(key) for key in [f"workflows/{name}" for name in proj_dict['workflows']]] if wf is not None]
+        project_workflows[project.guid] = workflows
 
-    return JsonResponse({'workflows': wfs})
+    return JsonResponse({'workflows': project_workflows})
 
 
 @sync_to_async
@@ -96,6 +94,8 @@ async def get(request, owner, name, branch):
         github_token=profile.github_token,
         cyverse_token=profile.cyverse_access_token,
         invalidate=bool(invalidate))
+
+    # load the most recent submission config, if one exists
     redis = RedisClient.get()
     last_config = redis.get(f"workflow_configs/{request.user.username}/{owner}/{name}/{branch}")
     if last_config is not None: workflow['last_config'] = json.loads(last_config)
@@ -119,19 +119,14 @@ async def refresh(request, owner, name, branch):
     try:
         profile = await get_user_django_profile(request.user)
         workflow = await get_workflow(owner, name, branch, profile.github_token, profile.cyverse_access_token)
-    except:
-        return HttpResponseNotFound()
-
+    except: return HttpResponseNotFound()
     logger.info(f"Refreshed workflow {owner}/{name}/{branch}")
-    from pprint import pprint
-    pprint(workflow)
     return JsonResponse(workflow)
 
 
 @login_required
 def readme(request, owner, name):
-    rm = get_repo_readme(name, owner, request.user.profile.github_token)
-    return JsonResponse({'readme': rm})
+    return JsonResponse({'readme': get_repo_readme(name, owner, request.user.profile.github_token)})
 
 
 @sync_to_async
@@ -139,5 +134,5 @@ def readme(request, owner, name):
 @async_to_sync
 async def branches(request, owner, name):
     profile = await get_user_django_profile(request.user)
-    bs = await list_repo_branches(owner, name, profile.github_token)
-    return JsonResponse({'branches': [b['name'] for b in bs]})
+    repo_branches = await list_repo_branches(owner, name, profile.github_token)
+    return JsonResponse({'branches': [branch['name'] for branch in repo_branches]})

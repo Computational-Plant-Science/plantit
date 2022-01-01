@@ -56,37 +56,6 @@
             >
         </div>
         <div v-else>
-            <b-row class="mt-2" v-if="!isRootPath"
-                ><b-col align-self="end"
-                    ><b-breadcrumb
-                        class="m-0 p-0"
-                        style="background-color: transparent"
-                    >
-                        <b-breadcrumb-item
-                            v-for="crumb in crumbs"
-                            :key="crumb.text"
-                            :to="crumb.href"
-                            :disabled="crumb.text === 'tasks'"
-                            class="m-0"
-                        >
-                            <small
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                            >
-                                <i class="fas fa-caret-right fa-fw fa-1x"></i>
-                                {{ crumb.text }}
-                            </small>
-                        </b-breadcrumb-item>
-                    </b-breadcrumb></b-col
-                ><!--<b-col md="auto" align-self="end"
-                    ><b :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Welcome, {{ profile.cyverseProfile.first_name }}.
-                    </b></b-col
-                >--></b-row
-            >
             <b-row>
                 <b-col class="text-left" md="auto"
                     ><b-button
@@ -103,8 +72,7 @@
                         placement="bottom"
                         target="workflows-button"
                         title="Your Workflows"
-                        >Click here to see explore and run public workflows, or
-                        share your own.</b-popover
+                        >Click here to explore and run workflows.</b-popover
                     ><b-button
                         size="sm"
                         id="datasets-button"
@@ -131,7 +99,7 @@
                         to="/home/projects/"
                         ><b-img
                             class="mb-1"
-                            style="max-width: 13px"
+                            style="max-width: 15px"
                             :src="
                                 profile.darkMode
                                     ? require('../assets/miappe_icon.png')
@@ -200,6 +168,34 @@
                     >
                 </b-col>
                 <b-col class="m-0 p-0"
+                    ><b-row class="mt-2" v-if="!isRootPath"
+                        ><b-col align-self="end"
+                            ><b-breadcrumb
+                                class="m-0 p-0"
+                                style="background-color: transparent"
+                            >
+                                <b-breadcrumb-item
+                                    v-for="crumb in crumbs"
+                                    :key="crumb.text"
+                                    :to="crumb.href"
+                                    :disabled="crumb.text === 'tasks'"
+                                    class="m-0"
+                                >
+                                    <small
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        <i
+                                            class="fas fa-caret-right fa-fw fa-1x"
+                                        ></i>
+                                        {{ crumb.text }}
+                                    </small>
+                                </b-breadcrumb-item>
+                            </b-breadcrumb></b-col
+                        ></b-row
                     ><router-view
                         :class="
                             profile.darkMode
@@ -260,13 +256,10 @@
                                                 </h5>
                                                 <i
                                                     class="fas fa-spinner"
-                                                    v-if="
-                                                        userDatasetsLoading
-                                                    "
+                                                    v-if="userDatasetsLoading"
                                                 ></i
                                                 ><b v-else>{{
-                                                    userDatasets.folders
-                                                        .length
+                                                    userDatasets.folders.length
                                                 }}</b>
                                                 owned
                                                 <br />
@@ -301,9 +294,7 @@
                                                 >
                                                     Projects
                                                 </h5>
-                                                <b>{{
-                                                    userProjects.length
-                                                }}</b>
+                                                <b>{{ userProjects.length }}</b>
                                                 owned
                                                 <br />
                                                 <b>{{
@@ -580,10 +571,7 @@ export default {
             'publicDatasets',
         ]),
         ...mapGetters('notifications', ['notifications']),
-        ...mapGetters('workflows', [
-            'userWorkflows',
-            'userWorkflowsLoading',
-        ]),
+        ...mapGetters('workflows', ['userWorkflows', 'userWorkflowsLoading']),
         ...mapGetters('projects', ['userProjects', 'othersProjects']),
         isRootPath() {
             return this.$route.name === 'home';

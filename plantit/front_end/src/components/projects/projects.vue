@@ -15,7 +15,7 @@
                         >
                             <b-img
                                 class="mb-1"
-                                style="max-width: 25px"
+                                style="max-width: 22px"
                                 :src="
                                     profile.darkMode
                                         ? require('../../assets/miappe_icon.png')
@@ -84,10 +84,7 @@
                             project.</b-popover
                         ></b-col
                     >
-                    <b-col
-                        md="auto"
-                        class="ml-0 mb-1"
-                        align-self="center"
+                    <b-col md="auto" class="ml-0 mb-1" align-self="center"
                         ><b-button
                             id="refresh-projects"
                             :disabled="projectsLoading"
@@ -149,7 +146,14 @@
                         <span v-if="othersProjects.length === 0"
                             >You have not been invited to any projects.</span
                         >
-                        <b-card-group>
+                        <projectblurb
+                            v-for="project in othersProjects"
+                            v-bind:key="project.guid"
+                            :project="project"
+                            :selectable="false"
+                        ></projectblurb
+                    ></b-col>
+                    <!--<b-card-group>
                             <b-card
                                 border-variant="secondary"
                                 v-for="project in othersProjects"
@@ -389,9 +393,8 @@
                                     >
                                 </b-card-body>
                             </b-card></b-card-group
-                        ></b-col
-                    ></b-row
-                >
+                        >-->
+                </b-row>
             </div>
             <router-view
                 v-else

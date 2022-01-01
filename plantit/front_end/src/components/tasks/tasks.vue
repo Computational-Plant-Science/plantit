@@ -1,18 +1,18 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <div v-if="isRootPath">
-            <b-row class="m-0 p-0"
-                ><b-col class="m-0 p-0"
+            <b-row
+                ><b-col
                     ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Tasks
                     </h4></b-col
-                ><!--<b-col md="auto" align-self="center" class="mb-1"
-                    ><small
-                        >{{ tasks.length }} shown,
-                        {{ profile.stats.total_tasks }} total</small
-                    ></b-col
-                >-->
-                <b-col md="auto" class="ml-0 mb-1" align-self="center"
+                ><b-col align-self="center" md="auto"><b-badge
+                        pill
+                        :title="tasksRunning.length + ' running'"
+                        class="ml-1 mr-1 mb-1"
+                        variant="warning"
+                        >{{ tasksRunning.length }}</b-badge
+                    > <small>running</small></b-col><b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-tasks"
                         :disabled="tasksLoading"
@@ -39,8 +39,26 @@
                         title="Refresh Tasks"
                         >Click here to refresh your tasks.</b-popover
                     ></b-col
-                >
-            </b-row>
+                ></b-row
+            >
+            <b-row
+                ><b-col
+                    ><b-input-group size="sm"
+                        ><template #prepend>
+                            <b-input-group-text
+                                ><i class="fas fa-search"></i
+                            ></b-input-group-text> </template
+                        ><b-form-input
+                            :class="
+                                profile.darkMode
+                                    ? 'theme-search-dark'
+                                    : 'theme-search-light'
+                            "
+                            size="lg"
+                            type="search"
+                            v-model="searchText"
+                        ></b-form-input> </b-input-group></b-col
+            ></b-row>
             <b-row v-if="tasksLoading" class="mt-2">
                 <b-col class="text-left">
                     <b-spinner
@@ -58,14 +76,6 @@
             </b-row>
             <b-row v-else>
                 <b-col>
-                    <!--Running
-                    <b-badge
-                        pill
-                        :title="tasksRunning.length + ' running'"
-                        class="ml-1 mr-1 mb-1"
-                        variant="warning"
-                        >{{ tasksRunning.length }}</b-badge
-                    >-->
                     <b-row class="pl-0 pr-0"
                         ><b-col class="m-0 pl-0 pr-0">
                             <p
@@ -79,22 +89,6 @@
                                 You haven't submitted any tasks yet.
                             </p>
                             <div v-else class="ml-2 mr-2">
-                                <b-input-group size="sm" style="bottom: 4px"
-                                    ><template #prepend>
-                                        <b-input-group-text
-                                            ><i class="fas fa-search"></i
-                                        ></b-input-group-text> </template
-                                    ><b-form-input
-                                        :class="
-                                            profile.darkMode
-                                                ? 'theme-search-dark'
-                                                : 'theme-search-light'
-                                        "
-                                        size="lg"
-                                        type="search"
-                                        v-model="searchText"
-                                    ></b-form-input>
-                                </b-input-group>
                                 <b-list-group class="text-left m-0 p-0 mt-1">
                                     <taskblurb
                                         v-for="task in filtered"
@@ -481,20 +475,20 @@ import taskblurb from '@/components/tasks/task-blurb.vue';
 export default {
     name: 'tasks',
     components: {
-        taskblurb
+        taskblurb,
     },
-    data: function() {
+    data: function () {
         return {
-            searchText: ''
+            searchText: '',
         };
     },
     methods: {
         async loadMoreTasks() {
             await this.$store.dispatch('tasks/loadMore', {
-                page: this.tasksNextPage
+                page: this.tasksNextPage,
             });
         },
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
@@ -508,7 +502,7 @@ export default {
         async remove(task) {
             await axios
                 .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
-                .then(async response => {
+                .then(async (response) => {
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
@@ -519,36 +513,36 @@ export default {
                                 variant: 'success',
                                 message: `Deleted task ${task.name}`,
                                 guid: guid().toString(),
-                                time: moment().format()
-                            })
+                                time: moment().format(),
+                            }),
                         ]);
                         if (
                             this.$router.currentRoute.name === 'task' &&
                             task.name === this.$router.currentRoute.params.name
                         )
                             router.push({
-                                name: 'tasks'
+                                name: 'tasks',
                             });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to delete ${task.name}`,
                             guid: guid().toString(),
-                            time: moment().format()
+                            time: moment().format(),
                         });
                     }
                 })
-                .catch(async error => {
+                .catch(async (error) => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to delete task`,
                         guid: guid().toString(),
-                        time: moment().format()
+                        time: moment().format(),
                     });
                     return error;
                 });
-        }
+        },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -559,19 +553,19 @@ export default {
             'tasksCompleted',
             'tasksSucceeded',
             'tasksFailed',
-            'tasksNextPage'
+            'tasksNextPage',
         ]),
         isRootPath() {
             return this.$route.name === 'tasks';
         },
         filtered() {
             return this.tasks.filter(
-                task =>
+                (task) =>
                     (task.workflow_name !== null &&
                         task.workflow_name.includes(this.searchText)) ||
                     (task.name !== null &&
                         task.name.includes(this.searchText)) ||
-                    task.tags.some(tag => tag.includes(this.searchText)) ||
+                    task.tags.some((tag) => tag.includes(this.searchText)) ||
                     (task.project !== null &&
                         task.project.title.includes(this.searchText)) ||
                     (task.study !== null &&
@@ -580,23 +574,23 @@ export default {
         },
         filteredRunning() {
             return this.tasksRunning.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.searchText)) ||
                     (sub.name !== null && sub.name.includes(this.searchText)) ||
-                    sub.tags.some(tag => tag.includes(this.searchText))
+                    sub.tags.some((tag) => tag.includes(this.searchText))
             );
         },
         filteredCompleted() {
             return this.tasksCompleted.filter(
-                sub =>
+                (sub) =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.searchText)) ||
                     (sub.name !== null && sub.name.includes(this.searchText)) ||
-                    sub.tags.some(tag => tag.includes(this.searchText))
+                    sub.tags.some((tag) => tag.includes(this.searchText))
             );
-        }
-    }
+        },
+    },
 };
 </script>
 

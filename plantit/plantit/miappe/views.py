@@ -4,15 +4,10 @@ import uuid
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseNotFound, HttpResponse
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseNotFound
 from django.utils.dateparse import parse_date
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 
-from rest_framework.response import Response
-
-from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, BiologicalMaterial, EnvironmentParameter, ExperimentalFactor, Study, Investigation, Event, DataFile
+from plantit.miappe.models import EnvironmentParameter, ExperimentalFactor, Study, Investigation
 from plantit.utils import project_to_dict
 
 
@@ -39,7 +34,6 @@ def list_or_create(request):
         body = json.loads(request.body.decode('utf-8'))
         title = body['title']
         description = body['description'] if 'description' in body else None
-
         if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
         project = Investigation.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
         return JsonResponse(project_to_dict(project))
@@ -56,7 +50,6 @@ def list_by_owner(request, owner):
 @login_required
 def get_or_delete(request, owner, title):
     if request.user.username != owner: return HttpResponseForbidden()
-
     if request.method == 'GET':
         try:
             project = Investigation.objects.get(owner=request.user, title=title)
@@ -74,7 +67,6 @@ def get_or_delete(request, owner, title):
 def exists(request, owner, title):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-
     try:
         Investigation.objects.get(owner=request.user, title=title)
         return JsonResponse({'exists': True})
@@ -137,7 +129,7 @@ def add_study(request, owner, title):
     except:
         return HttpResponseNotFound()
 
-    study = Study.objects.create(project=project, title=study_title, guid=guid, description=study_description)
+    study = Study.objects.create(investigation=project, title=study_title, guid=guid, description=study_description)
     return JsonResponse(project_to_dict(project))
 
 
@@ -154,7 +146,7 @@ def remove_study(request, owner, title):
 
     try:
         project = Investigation.objects.get(owner=request.user, title=title)
-        study = Study.objects.get(project=project, title=study_title)
+        study = Study.objects.get(investigation=project, title=study_title)
     except:
         return HttpResponseNotFound()
 
@@ -189,9 +181,11 @@ def edit_study(request, owner, title):
 
     try:
         project = Investigation.objects.get(owner=request.user, title=title)
-        study = Study.objects.get(project=project, title=study_title)
+        study = Study.objects.get(investigation=project, title=study_title)
         environment_parameters = list(EnvironmentParameter.objects.filter(study=study))
         experimental_factors = list(ExperimentalFactor.objects.filter(study=study))
+
+        # TODO: pending environment params and experimental factor support
 
         for ep in study_environment_parameters:
             print(ep['name'], ep['value'])  # debugging

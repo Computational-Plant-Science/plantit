@@ -11,6 +11,7 @@
         <b-card-body>
             <h4>
                 <b-link
+                    :disabled="!selectable"
                     :class="profile.darkMode ? 'text-white' : 'text-dark'"
                     :to="{
                         name: 'project',
@@ -58,7 +59,11 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'project-blurb.vue',
     props: {
-        project: Object
+        project: Object,
+        selectable: {
+          type: Boolean,
+          default: true
+        }
     },
     methods: {
         prettify: function(date) {
