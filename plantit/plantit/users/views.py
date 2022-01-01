@@ -270,7 +270,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        return JsonResponse({'users': list_users(invalidate=True)})
+        return JsonResponse({'users': list_users()})
 
     @action(detail=False, methods=['get'])
     def get_current(self, request):
