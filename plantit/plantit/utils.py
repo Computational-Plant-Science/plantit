@@ -33,7 +33,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule
+from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 from math import ceil
 from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
@@ -1939,6 +1939,9 @@ def create_delayed_task(user: User, workflow):
         task='plantit.celery_tasks.create_and_submit',
         args=json.dumps([user.username, workflow]))
 
+    # manually make sure the task schedule is refreshed
+    PeriodicTasks.changed(task)
+
     return task, created
 
 
@@ -1956,6 +1959,11 @@ def create_repeating_task(user: User, workflow):
         name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
         task='plantit.celery_tasks.create_and_submit',
         args=json.dumps([user.username, workflow]))
+
+    # manually make sure the task schedule is refreshed
+    PeriodicTasks.changed(task)
+
+    return task, created
 
 
 # notifications

@@ -3208,13 +3208,13 @@
                                                                                 "
                                                                                 >After</b-dropdown-item
                                                                             >
-                                                                            <b-dropdown-item
+                                                                            <!--<b-dropdown-item
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Every'
                                                                                 "
                                                                                 >Every</b-dropdown-item
-                                                                            >
+                                                                            >-->
                                                                         </b-dropdown>
                                                                     </template>
                                                                     <!--<template

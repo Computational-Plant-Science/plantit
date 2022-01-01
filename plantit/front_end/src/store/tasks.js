@@ -6,12 +6,20 @@ export const tasks = {
     namespaced: true,
     state: () => ({
         tasks: [],
+        delayed: [],
+        repeating: [],
         loading: true,
         nextPage: 2
     }),
     mutations: {
         setAll(state, tasks) {
             state.tasks = tasks;
+        },
+        setDelayed(state, tasks) {
+            state.delayed = tasks;
+        },
+        setRepeating(state, tasks) {
+            state.repeating = tasks;
         },
         addAll(state, tasks) {
             state.tasks = state.tasks.concat(tasks);
@@ -26,7 +34,7 @@ export const tasks = {
             let i = state.tasks.findIndex(t => t.guid === task.guid);
             if (i === -1) state.tasks.unshift(task);
             else Vue.set(state.tasks, i, task);
-        }
+        },
     },
     actions: {
         setAll({commit}, tasks) {

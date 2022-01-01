@@ -55,14 +55,12 @@ def get_all_or_create(request):
 
             return JsonResponse(task_to_dict(task))
         elif workflow['type'] == 'After':
-            # create delayed task
             task, created = create_delayed_task(request.user, workflow)
             return JsonResponse({
                 'created': created,
                 'task': delayed_task_to_dict(task)
             })
         elif workflow['type'] == 'Every':
-            # create repeating task
             task,created = create_repeating_task(request.user, workflow)
             return JsonResponse({
                 'created': created,
@@ -74,9 +72,6 @@ def get_all_or_create(request):
 
 @login_required
 def get_by_owner(request, owner):
-    # params = request.query_params
-    # page = params.get('page') if 'page' in params else -1
-
     try:
         user = User.objects.get(username=owner)
     except:
@@ -86,28 +81,47 @@ def get_by_owner(request, owner):
     paginator = Paginator(tasks, 20)
     page = paginator.get_page(int(request.GET.get('page', 1)))
 
-    data = {
+    return JsonResponse({
         'previous_page': page.has_previous() and page.previous_page_number() or None,
         'next_page': page.has_next() and page.next_page_number() or None,
         'tasks': [task_to_dict(task) for task in list(page)]
-    }
-    return JsonResponse(data)
-    # JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+    })
 
-    # TODO we still eventually need paging
-    # if 'running' in params and params.get('running') == 'True':
-    #     tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
-    # elif 'running' in params and params.get('running') == 'False':
-    #     tasks = [t for t in tasks if t.is_complete]
-    #     if page > -1:
-    #         start = int(page) * 20
-    #         count = start + 20
-    #         tasks = tasks[start:(start + count)]
-    # else:
-    #     if page > -1:
-    #         start = int(page) * 20
-    #         count = start + 20
-    #         tasks = tasks[start:(start + count)]
+
+@login_required
+def get_delayed_by_owner(request, owner):
+    try:
+        user = User.objects.get(username=owner)
+    except:
+        return HttpResponseNotFound()
+
+    tasks = DelayedTask.objects.filter(user=user)
+    paginator = Paginator(tasks, 20)
+    page = paginator.get_page(int(request.GET.get('page', 1)))
+
+    return JsonResponse({
+        'previous_page': page.has_previous() and page.previous_page_number() or None,
+        'next_page': page.has_next() and page.next_page_number() or None,
+        'tasks': [delayed_task_to_dict(task) for task in list(page)]
+    })
+
+
+@login_required
+def get_repeating_by_owner(request, owner):
+    try:
+        user = User.objects.get(username=owner)
+    except:
+        return HttpResponseNotFound()
+
+    tasks = RepeatingTask.objects.filter(user=user)
+    paginator = Paginator(tasks, 20)
+    page = paginator.get_page(int(request.GET.get('page', 1)))
+
+    return JsonResponse({
+        'previous_page': page.has_previous() and page.previous_page_number() or None,
+        'next_page': page.has_next() and page.next_page_number() or None,
+        'tasks': [repeating_task_to_dict(task) for task in list(page)]
+    })
 
 
 @login_required
