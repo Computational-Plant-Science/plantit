@@ -1,5 +1,9 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent">
+    <b-container
+        fluid
+        class="m-0 mt-3 p-3"
+        style="background-color: transparent"
+    >
         <div v-if="profileLoading">
             <b-row align-v="center">
                 <b-col class="text-center">
@@ -210,7 +214,7 @@
                                     <b-col>
                                         <b-row align-v="start">
                                             <b-col md="auto">
-                                                <h2
+                                                <h4
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -218,7 +222,7 @@
                                                     "
                                                 >
                                                     Account Summary
-                                                </h2>
+                                                </h4>
                                             </b-col>
                                         </b-row>
                                         <b-row>
@@ -368,7 +372,24 @@
                                             </b-col>
                                         </b-row>
                                     </b-col>
-                                    <b-col>
+                                </b-row>
+                                <br />
+                                <b-row align-v="start">
+                                    <b-col md="auto">
+                                        <h4
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Usage Statistics
+                                        </h4>
+                                    </b-col>
+                                </b-row>
+                                <br/>
+                                <b-row>
+                                    <b-col md="auto">
                                         <Plotly
                                             v-if="
                                                 profile.stats.workflow_usage
@@ -378,7 +399,7 @@
                                             :layout="workflowPlotLayout"
                                         ></Plotly>
                                     </b-col>
-                                    <b-col>
+                                    <b-col md="auto">
                                         <Plotly
                                             v-if="
                                                 profile.stats.agent_usage.labels
@@ -388,132 +409,26 @@
                                             :layout="agentPlotLayout"
                                         ></Plotly>
                                     </b-col>
-                                </b-row>
-                                <b-row>
                                     <b-col>
                                         <Plotly
+                                            v-if="
+                                                timeseriesUserTasksRunning !==
+                                                null
+                                            "
+                                            :data="tasksRunningPlotData"
+                                            :layout="tasksRunningPlotLayout"
+                                        ></Plotly>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col
+                                        ><Plotly
                                             v-if="tasks.length > 0"
                                             :data="taskTimeseriesData"
                                             :layout="taskTimeseriesLayout"
                                         ></Plotly
                                     ></b-col>
-                                </b-row>
-                                <b-row>
-                                    <div
-                                        v-if="
-                                            profile.stats.timeseries !==
-                                            undefined
-                                        "
-                                    >
-                                        <h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Usage in the past<b-dropdown
-                                                class="ml-2 p-0"
-                                                size="sm"
-                                                dropright
-                                                v-model="statsScope"
-                                            >
-                                                <template #button-content>
-                                                    {{ statsScope }}
-                                                </template>
-                                                <b-dropdown-item
-                                                    title="Hour"
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :link-class="
-                                                        profile.darkMode
-                                                            ? 'text-secondary'
-                                                            : 'text-dark'
-                                                    "
-                                                    @click="statsScope = 'Hour'"
-                                                >
-                                                    Hour </b-dropdown-item
-                                                ><b-dropdown-item
-                                                    title="Day"
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :link-class="
-                                                        profile.darkMode
-                                                            ? 'text-secondary'
-                                                            : 'text-dark'
-                                                    "
-                                                    @click="statsScope = 'Day'"
-                                                >
-                                                    Day </b-dropdown-item
-                                                ><b-dropdown-item
-                                                    title="Week"
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :link-class="
-                                                        profile.darkMode
-                                                            ? 'text-secondary'
-                                                            : 'text-dark'
-                                                    "
-                                                    @click="statsScope = 'Week'"
-                                                >
-                                                    Week
-                                                </b-dropdown-item>
-                                                <b-dropdown-item
-                                                    title="Month"
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :link-class="
-                                                        profile.darkMode
-                                                            ? 'text-secondary'
-                                                            : 'text-dark'
-                                                    "
-                                                    @click="
-                                                        statsScope = 'Month'
-                                                    "
-                                                >
-                                                    Month </b-dropdown-item
-                                                ><b-dropdown-item
-                                                    title="Year"
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :link-class="
-                                                        profile.darkMode
-                                                            ? 'text-secondary'
-                                                            : 'text-dark'
-                                                    "
-                                                    @click="statsScope = 'Year'"
-                                                >
-                                                    Year
-                                                </b-dropdown-item></b-dropdown
-                                            >
-                                        </h5>
-                                        <div v-if="statsScope === 'Hour'">
-                                            TODO: hour data
-                                        </div>
-                                        <div v-if="statsScope === 'Day'"></div>
-                                        <div v-if="statsScope === 'Week'"></div>
-                                        <div
-                                            v-if="statsScope === 'Month'"
-                                        ></div>
-                                        <div
-                                            v-if="statsScope === 'Year'"
-                                        ></div></div
-                                ></b-row> </b-col
+                                </b-row> </b-col
                         ></b-row>
                         <b-row v-else>
                             <b-col> No usage statistics to show. </b-col>
@@ -529,6 +444,8 @@
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import { Plotly } from 'vue-plotly';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home',
@@ -538,10 +455,15 @@ export default {
     data: function () {
         return {
             crumbs: [],
+            timeseriesUsers: [],
+            timeseriesTasks: [],
+            timeseriesTasksRunning: null,
+            timeseriesUserTasksRunning: null,
         };
     },
-    created() {
+    async created() {
         this.crumbs = this.$route.meta.crumb;
+        await this.loadTimeseries();
     },
     watch: {
         $route() {
@@ -551,6 +473,22 @@ export default {
     methods: {
         prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
+        },
+        async loadTimeseries() {
+            await axios
+                .get('/apis/v1/stats/timeseries/')
+                .then((response) => {
+                    this.timeseriesUsers = [response.data.users];
+                    this.timeseriesTasks = [response.data.tasks];
+                    this.timeseriesTasksRunning = [response.data.tasks_running];
+                    this.timeseriesUserTasksRunning = [
+                        response.data.user_tasks_running,
+                    ];
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
         },
     },
     computed: {
@@ -599,6 +537,8 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                height: 300,
+                width: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -626,6 +566,8 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                height: 300,
+                width: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -695,6 +637,19 @@ export default {
                 },
             ];
         },
+        tasksRunningPlotData() {
+            return this.timeseriesUserTasksRunning === null
+                ? { x: [], y: [], type: 'scatter' }
+                : [
+                      {
+                          x: this.timeseriesUserTasksRunning[0].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesUserTasksRunning[0].y,
+                          type: 'scatter',
+                      },
+                  ];
+        },
         taskTimeseriesLayout() {
             return {
                 font: {
@@ -731,6 +686,47 @@ export default {
                 yaxis: {
                     showticklabels: false,
                 },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+        tasksRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Task Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                },
+                height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

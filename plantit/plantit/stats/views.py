@@ -34,10 +34,12 @@ def timeseries(request):
     cached_users = redis.get('users_timeseries')
     cached_tasks = redis.get('tasks_timeseries')
     cached_running = redis.get('tasks_running')
+    cached_user_running = redis.get('user_tasks_running')
 
     users = json.loads(cached_users) if cached_users is not None else get_users_timeseries()
     tasks = json.loads(cached_tasks) if cached_tasks is not None else get_tasks_timeseries()
     tasks_running = json.loads(cached_running) if cached_running is not None else get_tasks_running_timeseries()
+    user_tasks_running = json.loads(cached_user_running) if cached_user_running is not None else get_tasks_running_timeseries(600, request.user)
 
     return JsonResponse({
         'users': {
@@ -53,6 +55,11 @@ def timeseries(request):
         'tasks_running': {
             'x': list(tasks_running.keys()),
             'y': list(tasks_running.values()),
+            'type': 'scatter'
+        },
+        'user_tasks_running': {
+            'x': list(user_tasks_running.keys()),
+            'y': list(user_tasks_running.values()),
             'type': 'scatter'
         }
     })

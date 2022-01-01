@@ -1066,7 +1066,6 @@
             </b-container>
         </b-navbar>
         <br />
-        <br />
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"

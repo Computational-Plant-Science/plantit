@@ -248,13 +248,13 @@ def get_user_statistics(user: User) -> dict:
 
 def get_users_timeseries():
     series = []
-    for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created, i + 1))
+    for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created.isoformat(), i + 1))
     return series
 
 
 def get_tasks_timeseries():
     series = []
-    for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created, i + 1))
+    for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created.isoformat(), i + 1))
     return series
 
 
