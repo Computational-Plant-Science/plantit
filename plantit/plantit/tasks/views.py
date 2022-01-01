@@ -22,7 +22,7 @@ from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status, list_task_results, check_task_cyverse_transfer, cleanup_task
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, \
+from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, create_now_task, create_delayed_task, create_repeating_task, \
     log_task_orchestrator_status, \
     push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, parse_time_limit_seconds, \
     get_task_scheduler_log_file_path, get_task_agent_log_file_path, \
@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def get_all_or_create(request):
-    user = request.user
     workflow = json.loads(request.body.decode('utf-8'))
 
     if request.method == 'GET':
@@ -41,85 +40,36 @@ def get_all_or_create(request):
         return JsonResponse({'tasks': [task_to_dict(sub) for sub in tasks]})
     elif request.method == 'POST':
         if workflow['type'] == 'Now':
-            repo_owner = workflow['repo']['owner']['login']
-            repo_name = workflow['repo']['name']
-            repo_branch = workflow['branch']['name']
+            if workflow['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
 
-            redis = RedisClient.get()
-            last_config = workflow.copy()
-            del last_config['auth']
-            last_config['timestamp'] = timezone.now().isoformat()
-            redis.set(f"workflow_configs/{request.user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(last_config))
-
-            config = workflow['config']
-            branch = workflow['branch']
-            task_name = config.get('task_name', None)
-            task_guid = config.get('task_guid', None)
-
-            if task_guid is None: return HttpResponseBadRequest()
-
-            task_time_limit = parse_time_limit_seconds(workflow['config']['time'])
+            # create task and submit task chain immediately
+            task = create_now_task(request.user, workflow)
+            task_time_limit = parse_time_limit_seconds(task.workflow['config']['time'])
             step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-            agent = Agent.objects.get(name=config['agent']['name'])
-            task = create_task(
-                username=user.username,
-                agent_name=agent.name,
-                workflow=workflow,
-                branch=branch,
-                name=task_name if task_name is not None and task_name != '' else task_guid,
-                guid=task_guid,
-                project=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
-                study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
-            auth = parse_task_auth_options(task, workflow['auth'])
-            logger.warning(auth)
-
-            (prepare_task_environment.s(task.guid, auth) |\
-             submit_task.s(auth) |\
+            auth = parse_task_auth_options(task, task.workflow['auth'])
+            (prepare_task_environment.s(task.guid, auth) | \
+             submit_task.s(auth) | \
              poll_task_status.s(auth)).apply_async(
-                soft_time_limit=task_time_limit if agent.executor == AgentExecutor.LOCAL else step_time_limit,
+                soft_time_limit=task_time_limit if task.agent.executor == AgentExecutor.LOCAL else step_time_limit,
                 priority=1)
 
             return JsonResponse(task_to_dict(task))
-
-        # TODO refactor delayed/repeating task logic, maybe move to `create_task`
-        # elif workflow['type'] == 'After':
-        #     eta, seconds = parse_task_eta(workflow)
-        #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-        #     task, created = DelayedTask.objects.get_or_create(
-        #         user=user,
-        #         interval=schedule,
-        #         agent=agent,
-        #         eta=eta,
-        #         one_off=True,
-        #         workflow_owner=workflow['repo']['owner']['login'],
-        #         workflow_name=workflow['repo']['name'],
-        #         name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-        #         task='plantit.celery_tasks.create_and_submit_task',
-        #         args=json.dumps([user.username, agent.name, workflow]))
-        #     return JsonResponse({
-        #         'created': created,
-        #         'task': delayed_task_to_dict(task)
-        #     })
-        # elif workflow['type'] == 'Every':
-        #     eta, seconds = parse_task_eta(workflow)
-        #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-        #     task, created = RepeatingTask.objects.get_or_create(
-        #         user=user,
-        #         interval=schedule,
-        #         agent=agent,
-        #         eta=eta,
-        #         workflow_owner=workflow['repo']['owner']['login'],
-        #         workflow_name=workflow['repo']['name'],
-        #         name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-        #         task='plantit.celery_tasks.create_and_submit_task',
-        #         args=json.dumps([user.username, agent.name, workflow]))
-        #     return JsonResponse({
-        #         'created': created,
-        #         'task': repeating_task_to_dict(task)
-        #     })
-
+        elif workflow['type'] == 'After':
+            # create delayed task
+            task, created = create_delayed_task(request.user, workflow)
+            return JsonResponse({
+                'created': created,
+                'task': delayed_task_to_dict(task)
+            })
+        elif workflow['type'] == 'Every':
+            # create repeating task
+            task,created = create_repeating_task(request.user, workflow)
+            return JsonResponse({
+                'created': created,
+                'task': repeating_task_to_dict(task)
+            })
         else:
-            raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
+            raise ValueError(f"Unsupported task type (expected: Now, After, or Every)")
 
 
 @login_required

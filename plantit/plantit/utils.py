@@ -33,6 +33,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
+from django_celery_beat.models import IntervalSchedule
 from math import ceil
 from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
@@ -1887,6 +1888,71 @@ def repeating_task_to_dict(task: RepeatingTask):
         'enabled': task.enabled,
         'last_run': task.last_run_at
     }
+
+
+def create_now_task(user: User, workflow):
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    redis = RedisClient.get()
+    last_config = workflow.copy()
+    del last_config['auth']
+    last_config['timestamp'] = timezone.now().isoformat()
+    redis.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(last_config))
+
+    config = workflow['config']
+    branch = workflow['branch']
+    task_name = config.get('task_name', None)
+    task_guid = config.get('task_guid', None)
+
+    agent = Agent.objects.get(name=config['agent']['name'])
+    task = create_task(
+        username=user.username,
+        agent_name=agent.name,
+        workflow=workflow,
+        branch=branch,
+        name=task_name if task_name is not None and task_name != '' else task_guid,
+        guid=task_guid,
+        project=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
+        study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
+
+    return task
+
+
+def create_delayed_task(user: User, workflow):
+    eta, seconds = parse_task_eta(workflow)
+    schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+    task, created = DelayedTask.objects.get_or_create(
+        user=user,
+        interval=schedule,
+        agent=agent,
+        eta=eta,
+        one_off=True,
+        workflow_owner=workflow['repo']['owner']['login'],
+        workflow_name=workflow['repo']['name'],
+        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
+        task='plantit.celery_tasks.create_and_submit',
+        args=json.dumps([user.username, workflow]))
+
+    return task, created
+
+
+def create_repeating_task(user: User, workflow):
+    eta, seconds = parse_task_eta(workflow)
+    schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+    task, created = RepeatingTask.objects.get_or_create(
+        user=user,
+        interval=schedule,
+        agent=agent,
+        eta=eta,
+        workflow_owner=workflow['repo']['owner']['login'],
+        workflow_name=workflow['repo']['name'],
+        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
+        task='plantit.celery_tasks.create_and_submit',
+        args=json.dumps([user.username, workflow]))
 
 
 # notifications

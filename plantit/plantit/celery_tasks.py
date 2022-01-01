@@ -22,7 +22,7 @@ from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
-    submit_jobqueue_task, \
+    submit_jobqueue_task, parse_time_limit_seconds, parse_task_auth_options, create_now_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     refresh_user_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
     configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries
@@ -37,6 +37,25 @@ logger = get_task_logger(__name__)
 #   check results
 #   check CyVerse transfer
 #   clean up
+
+
+@app.task(track_started=True, bind=True)
+def create_and_submit(username, workflow):
+    try:
+        user = User.objects.get(username=username)
+    except:
+        logger.error(traceback.format_exc())
+        return
+
+    task = create_now_task(user, workflow)
+    task_time_limit = parse_time_limit_seconds(task.workflow['config']['time'])
+    step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
+    auth = parse_task_auth_options(task, task.workflow['auth'])
+    (prepare_task_environment.s(task.guid, auth) | \
+     submit_task.s(auth) | \
+     poll_task_status.s(auth)).apply_async(
+        soft_time_limit=task_time_limit if task.agent.executor == AgentExecutor.LOCAL else step_time_limit,
+        priority=1)
 
 
 @app.task(track_started=True, bind=True)

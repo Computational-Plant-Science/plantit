@@ -3132,77 +3132,6 @@
                                                         </b-row>
                                                         <b-row>
                                                             <b-col
-                                                                md="auto"
-                                                                v-if="
-                                                                    submitType ===
-                                                                        'After' ||
-                                                                    submitType ===
-                                                                        'Every'
-                                                                "
-                                                                ><b-input-group>
-                                                                    <b-form-spinbutton
-                                                                        v-model="
-                                                                            delayValue
-                                                                        "
-                                                                        min="1"
-                                                                        max="100"
-                                                                    ></b-form-spinbutton
-                                                                    ><template
-                                                                        #append
-                                                                    >
-                                                                        <b-dropdown
-                                                                            variant="secondary"
-                                                                            :text="
-                                                                                submitType
-                                                                            "
-                                                                            v-model="
-                                                                                submitType
-                                                                            "
-                                                                            block
-                                                                        >
-                                                                            <template
-                                                                                #button-content
-                                                                            >
-                                                                                {{
-                                                                                    delayUnits
-                                                                                }}
-                                                                                <i
-                                                                                    class="fas fa-caret-down fa-fw"
-                                                                                ></i>
-                                                                            </template>
-                                                                            <b-dropdown-item
-                                                                                @click="
-                                                                                    delayUnits =
-                                                                                        'Seconds'
-                                                                                "
-                                                                                >Seconds</b-dropdown-item
-                                                                            >
-                                                                            <b-dropdown-item
-                                                                                @click="
-                                                                                    delayUnits =
-                                                                                        'Minutes'
-                                                                                "
-                                                                                >Minutes</b-dropdown-item
-                                                                            >
-                                                                            <b-dropdown-item
-                                                                                @click="
-                                                                                    delayUnits =
-                                                                                        'Hours'
-                                                                                "
-                                                                                >Hours</b-dropdown-item
-                                                                            >
-                                                                            <b-dropdown-item
-                                                                                @click="
-                                                                                    delayUnits =
-                                                                                        'Days'
-                                                                                "
-                                                                                >Days</b-dropdown-item
-                                                                            >
-                                                                        </b-dropdown>
-                                                                    </template></b-input-group
-                                                                ></b-col
-                                                            >
-                                                            <b-col
                                                                 ><b-button
                                                                     :disabled="
                                                                         !canSubmit ||
@@ -3256,7 +3185,7 @@
                                                                                 submitType
                                                                             "
                                                                             block
-                                                                            dropleft
+                                                                            dropup
                                                                         >
                                                                             <template
                                                                                 #button-content
@@ -3288,7 +3217,7 @@
                                                                             >
                                                                         </b-dropdown>
                                                                     </template>
-                                                                    <template
+                                                                    <!--<template
                                                                         #append
                                                                         ><b-form-spinbutton
                                                                             min="1"
@@ -3307,9 +3236,73 @@
                                                                                 ? ''
                                                                                 : 's'
                                                                         }}</template
-                                                                    >
+                                                                    >-->
                                                                 </b-input-group>
                                                             </b-col>
+                                                            <b-col
+                                                                md="auto"
+                                                                v-if="
+                                                                    submitType ===
+                                                                        'After' ||
+                                                                    submitType ===
+                                                                        'Every'
+                                                                "
+                                                                ><b-input-group>
+                                                                    <b-form-spinbutton
+                                                                        v-model="
+                                                                            delayValue
+                                                                        "
+                                                                        min="1"
+                                                                        max="100"
+                                                                    ></b-form-spinbutton
+                                                                    ><template
+                                                                        #append
+                                                                    >
+                                                                        <b-dropdown
+                                                                            variant="secondary"
+                                                                            :text="
+                                                                                submitType
+                                                                            "
+                                                                            v-model="
+                                                                                submitType
+                                                                            "
+                                                                            block
+                                                                        >
+                                                                            <template
+                                                                                #button-content
+                                                                            >
+                                                                                {{
+                                                                                    delayUnits
+                                                                                }}
+                                                                                <i
+                                                                                    class="fas fa-caret-down fa-fw"
+                                                                                ></i>
+                                                                            </template>
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Minutes'
+                                                                                "
+                                                                                >Minutes</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Hours'
+                                                                                "
+                                                                                >Hours</b-dropdown-item
+                                                                            >
+                                                                            <b-dropdown-item
+                                                                                @click="
+                                                                                    delayUnits =
+                                                                                        'Days'
+                                                                                "
+                                                                                >Days</b-dropdown-item
+                                                                            >
+                                                                        </b-dropdown>
+                                                                    </template></b-input-group
+                                                                ></b-col
+                                                            >
                                                         </b-row>
                                                     </b-col></b-row
                                                 >
