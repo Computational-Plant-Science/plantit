@@ -96,7 +96,11 @@
                                     v-if="!getTask.is_complete"
                                     class="mr-1"
                                     small
-                                    :variant="profile.darkMode ? 'text-white' : 'text-dark'"
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
                                 >
                                 </b-spinner>
                                 <b
@@ -107,7 +111,9 @@
                                             ? 'text-secondary'
                                             : getTask.is_complete
                                             ? 'text-success'
-                                            : (profile.darkMode ? 'text-white' : 'text-dark')
+                                            : profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
                                     "
                                     >{{
                                         !getTask.agent.is_local &&
@@ -159,14 +165,21 @@
                                         >{{ getTask.input_path }}</small
                                     ><small v-else
                                         ><i
-                                            class="far fa-circle text-secondary fa-fw"
+                                            v-if="profile.darkMode"
+                                            class="far fa-circle text-white fa-fw"
+                                        ></i
+                                        ><i
+                                            v-else
+                                            class="far fa-circle text-dark fa-fw"
                                         ></i
                                     ></small>
                                     <small
-                                        ><i v-if="profile.darkMode"
+                                        ><i
+                                            v-if="profile.darkMode"
                                             class="fas fa-arrow-right text-white fa-fw mr-1 ml-1"
                                         ></i
-                                    ><i v-else
+                                        ><i
+                                            v-else
                                             class="fas fa-arrow-right text-dark fa-fw mr-1 ml-1"
                                         ></i
                                     ></small>
@@ -2704,10 +2717,7 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
         ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
-        ...mapGetters('datasets', [
-            'userDatasets',
-            'userDatasetsLoading',
-        ]),
+        ...mapGetters('datasets', ['userDatasets', 'userDatasetsLoading']),
         timeseriesData() {
             var x = [
                 moment(this.getTask.created).format('YYYY-MM-DD HH:mm:ss'),
