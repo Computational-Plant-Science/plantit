@@ -189,8 +189,9 @@
                                                     delayed.workflow_image_url
                                                 "
                                             ></b-img>
-                                            <i class="fas fa-coffee fa-fw"> </i> DUE {{ prettify(delayed.eta) }}
-                                          <br/>
+                                            <i class="fas fa-coffee fa-fw"> </i>
+                                            DUE {{ prettify(delayed.eta) }}
+                                            <br />
                                             <small
                                                 v-if="
                                                     delayed.workflow_name !==
@@ -214,6 +215,18 @@
                                                     }}</a
                                                 >
                                             </small>
+                                            <b-button
+                                                size="sm"
+                                                @click="
+                                                    deleteDelayed(
+                                                        delayed.name
+                                                    )
+                                                "
+                                                ><i
+                                                    class="fas fa-times text-danger fa-fw"
+                                                ></i>
+                                                Delete</b-button
+                                            >
                                         </b-card-body>
                                     </b-card>
                                 </b-list-group>
@@ -651,6 +664,68 @@ export default {
         };
     },
     methods: {
+        async deleteDelayed(name) {
+            this.unschedulingDelayed = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setDelayed',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled delayed task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingDelayed = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule delayed task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingDelayed = false;
+                    throw error;
+                });
+        },
+        async deleteRepeating(name) {
+            this.unschedulingRepeating = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setRepeating',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled repeating task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingRepeating = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule repeating task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingRepeating = false;
+                    throw error;
+                });
+        },
         async loadMoreTasks() {
             await this.$store.dispatch('tasks/loadMore', {
                 page: this.tasksNextPage,

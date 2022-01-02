@@ -3138,7 +3138,7 @@
                                                                         submitted
                                                                     "
                                                                     @click="
-                                                                        trySubmit
+                                                                        onStart
                                                                     "
                                                                     :variant="
                                                                         profile.darkMode
@@ -3302,7 +3302,315 @@
                                                                         </b-dropdown>
                                                                     </template></b-input-group
                                                                 ></b-col
-                                                            >
+                                                            > </b-row
+                                                        ><b-row class="mt-4">
+                                                            <b-col
+                                                                ><b-row
+                                                                    ><b-col
+                                                                        ><h5>
+                                                                            Scheduled
+                                                                            Tasks
+                                                                        </h5></b-col
+                                                                    ></b-row
+                                                                >
+                                                                <hr />
+                                                                <b-row>
+                                                                    <b-col
+                                                                        ><b
+                                                                            >Delayed</b
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        tasksLoading
+                                                                    "
+                                                                    ><b-col
+                                                                        ><b-spinner
+                                                                            small
+                                                                            label="Loading..."
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'light'
+                                                                                    : 'dark'
+                                                                            "
+                                                                            class="mr-1"
+                                                                        ></b-spinner></b-col
+                                                                ></b-row>
+                                                                <b-row
+                                                                    v-else-if="
+                                                                        !tasksLoading &&
+                                                                        delayedTasks.length ===
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <p
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light pl-3 pr-3'
+                                                                                    : 'text-dark pl-3 pr-3'
+                                                                            "
+                                                                        >
+                                                                            No
+                                                                            delayed
+                                                                            tasks
+                                                                            are
+                                                                            scheduled.
+                                                                        </p>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-list-group
+                                                                    v-else
+                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                >
+                                                                    <b-card
+                                                                        v-for="task in delayedTasks"
+                                                                        v-bind:key="
+                                                                            task.name
+                                                                        "
+                                                                        class="mt-2 pt-1 overflow-hidden"
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        border-variant="secondary"
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        :body-text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        no-body
+                                                                    >
+                                                                        <b-card-body>
+                                                                            <b-img
+                                                                                v-if="
+                                                                                    task.workflow_image_url !==
+                                                                                        undefined &&
+                                                                                    task.workflow_image_url !==
+                                                                                        null
+                                                                                "
+                                                                                rounded
+                                                                                class="card-img-right"
+                                                                                style="
+                                                                                    max-width: 5rem;
+                                                                                    position: absolute;
+                                                                                    right: -15px;
+                                                                                    top: -20px;
+                                                                                    z-index: 1;
+                                                                                "
+                                                                                right
+                                                                                :src="
+                                                                                    task.workflow_image_url
+                                                                                "
+                                                                            ></b-img>
+                                                                            <i
+                                                                                class="fas fa-coffee fa-fw"
+                                                                            >
+                                                                            </i>
+                                                                            DUE
+                                                                            {{
+                                                                                prettify(
+                                                                                    task.eta
+                                                                                )
+                                                                            }}
+                                                                            <br />
+                                                                            <small
+                                                                                v-if="
+                                                                                    task.workflow_name !==
+                                                                                    null
+                                                                                "
+                                                                                class="mr-1 mb-0"
+                                                                                ><a
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-light'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
+                                                                                    ><i
+                                                                                        class="fab fa-github fa-fw"
+                                                                                    ></i>
+                                                                                    {{
+                                                                                        task.workflow_owner
+                                                                                    }}/{{
+                                                                                        task.workflow_name
+                                                                                    }}</a
+                                                                                >
+                                                                            </small>
+                                                                            <b-button
+                                                                                size="sm"
+                                                                                @click="
+                                                                                    deleteDelayed(task.name)
+                                                                                "
+                                                                                ><i
+                                                                                    class="fas fa-times text-danger fa-fw"
+                                                                                ></i>
+                                                                                Delete</b-button
+                                                                            >
+                                                                        </b-card-body>
+                                                                    </b-card>
+                                                                </b-list-group>
+                                                                <b-row>
+                                                                    <b-col
+                                                                        ><b
+                                                                            >Repeating</b
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        tasksLoading
+                                                                    "
+                                                                    ><b-col
+                                                                        ><b-spinner
+                                                                            small
+                                                                            label="Loading..."
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'light'
+                                                                                    : 'dark'
+                                                                            "
+                                                                            class="mr-1"
+                                                                        ></b-spinner></b-col
+                                                                ></b-row>
+                                                                <b-row
+                                                                    v-else-if="
+                                                                        !tasksLoading &&
+                                                                        repeatingTasks.length ===
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <p
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light pl-3 pr-3'
+                                                                                    : 'text-dark pl-3 pr-3'
+                                                                            "
+                                                                        >
+                                                                            No
+                                                                            repeating
+                                                                            tasks
+                                                                            are
+                                                                            scheduled.
+                                                                        </p>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-list-group
+                                                                    v-else
+                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                >
+                                                                    <b-card
+                                                                        v-for="task in repeatingTasks"
+                                                                        v-bind:key="
+                                                                            task.name
+                                                                        "
+                                                                        class="mt-2 pt-1 overflow-hidden"
+                                                                        :bg-variant="
+                                                                            profile.darkMode
+                                                                                ? 'dark'
+                                                                                : 'white'
+                                                                        "
+                                                                        :header-text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        border-variant="secondary"
+                                                                        :text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        :body-text-variant="
+                                                                            profile.darkMode
+                                                                                ? 'white'
+                                                                                : 'dark'
+                                                                        "
+                                                                        no-body
+                                                                    >
+                                                                        <b-card-body>
+                                                                            <b-img
+                                                                                v-if="
+                                                                                    task.workflow_image_url !==
+                                                                                        undefined &&
+                                                                                    task.workflow_image_url !==
+                                                                                        null
+                                                                                "
+                                                                                rounded
+                                                                                class="card-img-right"
+                                                                                style="
+                                                                                    max-width: 5rem;
+                                                                                    position: absolute;
+                                                                                    right: -15px;
+                                                                                    top: -20px;
+                                                                                    z-index: 1;
+                                                                                "
+                                                                                right
+                                                                                :src="
+                                                                                    task.workflow_image_url
+                                                                                "
+                                                                            ></b-img>
+                                                                            <i
+                                                                                class="fas fa-coffee fa-fw"
+                                                                            >
+                                                                            </i>
+                                                                            DUE
+                                                                            {{
+                                                                                prettify(
+                                                                                    task.eta
+                                                                                )
+                                                                            }}
+                                                                            <br />
+                                                                            <small
+                                                                                v-if="
+                                                                                    task.workflow_name !==
+                                                                                    null
+                                                                                "
+                                                                                class="mr-1 mb-0"
+                                                                                ><a
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-light'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
+                                                                                    ><i
+                                                                                        class="fab fa-github fa-fw"
+                                                                                    ></i>
+                                                                                    {{
+                                                                                        task.workflow_owner
+                                                                                    }}/{{
+                                                                                        task.workflow_name
+                                                                                    }}</a
+                                                                                >
+                                                                            </small>
+                                                                            <b-button
+                                                                                size="sm"
+                                                                                @click="
+                                                                                    deleteRepeating(task.name)
+                                                                                "
+                                                                                ><i
+                                                                                    class="fas fa-times text-danger fa-fw"
+                                                                                ></i>
+                                                                                Delete</b-button
+                                                                            >
+                                                                        </b-card-body>
+                                                                    </b-card>
+                                                                </b-list-group>
+                                                            </b-col>
                                                         </b-row>
                                                     </b-col></b-row
                                                 >
@@ -3785,6 +4093,68 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
+        async deleteDelayed(name) {
+            this.unschedulingDelayed = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setDelayed',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled delayed task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingDelayed = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule delayed task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingDelayed = false;
+                    throw error;
+                });
+        },
+        async deleteRepeating(name) {
+            this.unschedulingRepeating = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setRepeating',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled repeating task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingRepeating = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule repeating task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingRepeating = false;
+                    throw error;
+                });
+        },
         setTimeLimitUnits(units) {
             this.timeLimitUnits = units;
         },
@@ -3793,7 +4163,6 @@ export default {
         },
         async loadSelectedInput(path) {
             this.selectedInputLoading = true;
-
             await axios({
                 method: 'post',
                 url: `https://de.cyverse.org/terrain/secured/filesystem/stat`,
@@ -4082,10 +4451,6 @@ export default {
             );
             // TODO walltime
         },
-        trySubmit() {
-            if (this.mustAuthenticate) this.showAuthenticateModal();
-            else this.onStart();
-        },
         async onStart() {
             // prepare configuration
             this.params['config'] = {};
@@ -4335,7 +4700,25 @@ export default {
             'tasksByOwner',
             'task',
             'tasksLoading',
+            'tasksDelayed',
+            'tasksRepeating',
         ]),
+        delayedTasks() {
+            return this.tasksDelayed.filter(
+                (t) =>
+                    t.workflow_owner === this.getWorkflow.repo.owner.login &&
+                    t.workflow_name === this.getWorkflow.repo.name &&
+                    t.workflow_branch === this.getWorkflow.branch.name
+            );
+        },
+        repeatingTasks() {
+            return this.tasksRepeating.filter(
+                (t) =>
+                    t.workflow_owner === this.getWorkflow.repo.owner.login &&
+                    t.workflow_name === this.getWorkflow.repo.name &&
+                    t.workflow_branch === this.getWorkflow.branch.name
+            );
+        },
         ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
         ...mapGetters('datasets', [
             'userDatasets',
@@ -4431,6 +4814,7 @@ export default {
                 this.paramsValid &&
                 this.inputValid &&
                 this.outputValid &&
+                this.selectedAgent !== null &&
                 this.selectedAgent.name !== ''
             );
         },
