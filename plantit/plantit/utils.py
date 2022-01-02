@@ -33,7 +33,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule
+from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 from math import ceil
 from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
@@ -250,12 +250,22 @@ def get_user_statistics(user: User) -> dict:
 def get_users_timeseries():
     series = []
     for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"users_timeseries", json.dumps(series))
+
     return series
 
 
 def get_tasks_timeseries():
     series = []
     for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"tasks_timeseries", json.dumps(series))
+
     return series
 
 
@@ -278,6 +288,10 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
         running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
         series[datetime.fromtimestamp(t).isoformat()] = running
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"user_tasks_running/{user.username}" if user is not None else 'tasks_running', json.dumps(series))
 
     return series
 
@@ -1175,8 +1189,33 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
            [cli_push]
 
 
+def calculate_node_count(task: Task, inputs: List[str]):
+    return 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+
+
+def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+    jobqueue = options['jobqueue']
+    split_time = jobqueue['walltime'].split(':')
+    hours = int(split_time[0])
+    minutes = int(split_time[1])
+    seconds = int(split_time[2])
+    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+    # TODO adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
+    # nodes = calculate_node_count(task, inputs)
+    # adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+    # round up to the nearest hour
+    hours = f"{min(ceil(walltime.total_seconds() / 60 / 60), int(int(task.agent.max_walltime) / 60))}"
+    if len(hours) == 1: hours = f"0{hours}"
+    adjusted_str = f"{hours}:00:00"
+
+    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+    return adjusted_str
+
+
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
-    nodes = 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+    nodes = calculate_node_count(task, inputs)
     task.inputs_detected = len(inputs)
     task.save()
 
@@ -1189,26 +1228,11 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
         f"#SBATCH --mem={jobqueue['memory']}")
     if 'walltime' in jobqueue:
-        split_time = jobqueue['walltime'].split(':')
-        hours = int(split_time[0])
-        minutes = int(split_time[1])
-        seconds = int(split_time[2])
-        walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-        # adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
-        adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
-
-        # round up to the nearest hour
-        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), task.agent.max_nodes)}"
-        if len(hours) == 1: hours = f"0{hours}"
-        adjusted_str = f"{hours}:00:00"
-
-        logger.debug(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+        walltime = calculate_walltime(task, options, inputs)
         async_to_sync(push_task_event)(task)
-
-        task.job_requested_walltime = adjusted_str
+        task.job_requested_walltime = walltime
         task.save()
-        commands.append(f"#SBATCH --time={adjusted_str}")
+        commands.append(f"#SBATCH --time={walltime}")
     if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
     if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
@@ -1858,7 +1882,9 @@ def task_to_dict(task: Task) -> dict:
         'output_files': json.loads(results) if results is not None else [],
         'job_id': task.job_id,
         'job_status': task.job_status,
-        'job_walltime': task.job_consumed_walltime
+        'job_walltime': task.job_consumed_walltime,
+        'delayed_id': task.delayed_id,
+        'repeating_id': task.repeating_id
     }
 
     return t
@@ -1866,20 +1892,26 @@ def task_to_dict(task: Task) -> dict:
 
 def delayed_task_to_dict(task: DelayedTask) -> dict:
     return {
-        'agent': agent_to_dict(task.agent),
+        # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
+        'enabled': task.enabled,
         'interval': {
             'every': task.interval.every,
             'period': task.interval.period
         },
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
+
     }
 
 
 def repeating_task_to_dict(task: RepeatingTask):
     return {
-        'agent': agent_to_dict(task.agent),
+        # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -1887,11 +1919,15 @@ def repeating_task_to_dict(task: RepeatingTask):
             'period': task.interval.period
         },
         'enabled': task.enabled,
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
     }
 
 
-def create_now_task(user: User, workflow):
+def create_immediate_task(user: User, workflow):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     repo_branch = workflow['branch']['name']
@@ -1922,38 +1958,70 @@ def create_now_task(user: User, workflow):
 
 
 def create_delayed_task(user: User, workflow):
+    now = timezone.now().timestamp()
+    id = f"{user.username}-delayed-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = DelayedTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        agent=agent,
         eta=eta,
         one_off=True,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_delayed',
+        args=json.dumps([user.username, workflow, id]))
+
+    # manually refresh task schedule
+    PeriodicTasks.changed(task)
 
     return task, created
 
 
 def create_repeating_task(user: User, workflow):
+    now = timezone.now().timestamp()
+    id = f"{user.username}-repeating-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = RepeatingTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        agent=agent,
         eta=eta,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_repeating',
+        args=json.dumps([user.username, workflow, id]))
+
+    # manually refresh task schedule
+    PeriodicTasks.changed(task)
+
+    return task, created
 
 
 # notifications

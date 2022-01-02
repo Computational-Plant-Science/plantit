@@ -6,13 +6,46 @@
                     ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Tasks
                     </h4></b-col
-                ><b-col align-self="center" md="auto"><b-badge
+                ><b-col align-self="center" md="auto"
+                    ><b-badge
                         pill
                         :title="tasksRunning.length + ' running'"
                         class="ml-1 mr-1 mb-1"
                         variant="warning"
                         >{{ tasksRunning.length }}</b-badge
-                    > <small>running</small></b-col><b-col md="auto" class="ml-0 mb-1" align-self="center"
+                    >
+                    <small>running</small></b-col
+                ><b-col v-if="tasksNextPage !== null" md="auto"
+                    ><b-button
+                        id="load-more-completed-tasks"
+                        :disabled="tasksLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        title="Load more"
+                        @click="loadMoreTasks"
+                        class="ml-0 mt-0 mr-0 text-center"
+                    >
+                        <b-spinner
+                            small
+                            v-if="tasksLoading"
+                            label="Loading..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-plus mr-1"></i
+                        >{{
+                            tasksLoading ? 'Loading...' : 'Load More'
+                        }}</b-button
+                    ><b-popover
+                        v-if="profile.hints"
+                        triggers="hover"
+                        placement="left"
+                        target="load-more-completed-tasks"
+                        title="Load More"
+                        >Click here to load more completed tasks.</b-popover
+                    ></b-col
+                >
+                <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-tasks"
                         :disabled="tasksLoading"
@@ -89,9 +122,156 @@
                                 You haven't submitted any tasks yet.
                             </p>
                             <div v-else class="ml-2 mr-2">
+                                <b-row
+                                    class="m-3 mb-1 pl-0 pr-0 text-center"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Delayed</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksDelayed.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0 text-center"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-center text-light pl-3 pr-3'
+                                                    : 'text-center text-dark pl-3 pr-3'
+                                            "
+                                        >
+                                            No delayed tasks are scheduled.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                    <b-card
+                                        v-for="delayed in tasksDelayed"
+                                        v-bind:key="delayed.name"
+                                        class="mt-2 pt-1 overflow-hidden"
+                                        :bg-variant="
+                                            profile.darkMode ? 'dark' : 'white'
+                                        "
+                                        :header-text-variant="
+                                            profile.darkMode ? 'white' : 'dark'
+                                        "
+                                        border-variant="secondary"
+                                        :text-variant="
+                                            profile.darkMode ? 'white' : 'dark'
+                                        "
+                                        :body-text-variant="
+                                            profile.darkMode ? 'white' : 'dark'
+                                        "
+                                        no-body
+                                    >
+                                        <b-card-body>
+                                            <b-img
+                                                v-if="
+                                                    delayed.workflow_image_url !==
+                                                        undefined &&
+                                                    delayed.workflow_image_url !==
+                                                        null
+                                                "
+                                                rounded
+                                                class="card-img-right"
+                                                style="
+                                                    max-width: 5rem;
+                                                    position: absolute;
+                                                    right: -15px;
+                                                    top: -20px;
+                                                    z-index: 1;
+                                                "
+                                                right
+                                                :src="
+                                                    delayed.workflow_image_url
+                                                "
+                                            ></b-img>
+                                            <i class="fas fa-coffee fa-fw"> </i> DUE {{ prettify(delayed.eta) }}
+                                          <br/>
+                                            <small
+                                                v-if="
+                                                    delayed.workflow_name !==
+                                                    null
+                                                "
+                                                class="mr-1 mb-0"
+                                                ><a
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                    :href="`https://github.com/${delayed.workflow_owner}/${delayed.workflow_name}`"
+                                                    ><i
+                                                        class="fab fa-github fa-fw"
+                                                    ></i>
+                                                    {{
+                                                        delayed.workflow_owner
+                                                    }}/{{
+                                                        delayed.workflow_name
+                                                    }}</a
+                                                >
+                                            </small>
+                                        </b-card-body>
+                                    </b-card>
+                                </b-list-group>
+                                <!--<b-row
+                                    class="m-3 mb-1 pl-0 pr-0 text-center"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Repeating</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksRepeating.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0 text-center"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-center text-light pl-3 pr-3'
+                                                    : 'text-center text-dark pl-3 pr-3'
+                                            "
+                                        >
+                                            No repeating tasks are scheduled.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                </b-list-group>-->
+                                <b-row
+                                    class="m-3 mb-1 pl-0 pr-0 text-center"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Running</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksRunning.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0 text-center"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-center text-light pl-3 pr-3'
+                                                    : 'text-center text-dark pl-3 pr-3'
+                                            "
+                                        >
+                                            No tasks are running.
+                                        </p>
+                                    </b-col>
+                                </b-row>
                                 <b-list-group class="text-left m-0 p-0 mt-1">
                                     <taskblurb
-                                        v-for="task in filtered"
+                                        v-for="task in filteredRunning"
                                         v-bind:key="task.guid"
                                         :task="task"
                                         :project="true"
@@ -405,51 +585,39 @@
                                         </small>
                                     </b-list-group-item>-->
                                 </b-list-group>
-                                <div v-if="tasksNextPage !== null">
-                                    <b-button
-                                        id="load-more-completed-tasks"
-                                        :disabled="tasksLoading"
-                                        :variant="
-                                            profile.darkMode
-                                                ? 'outline-light'
-                                                : 'white'
-                                        "
-                                        size="sm"
-                                        title="Load more"
-                                        @click="loadMoreTasks"
-                                        block
-                                        class="ml-0 mt-0 mr-0 text-center"
-                                    >
-                                        <b-spinner
-                                            small
-                                            v-if="tasksLoading"
-                                            label="Loading..."
-                                            :variant="
+                                <b-row
+                                    class="m-3 mb-1 pl-0 pr-0 text-center"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Completed</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksCompleted.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0 text-center"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
                                                 profile.darkMode
-                                                    ? 'light'
-                                                    : 'dark'
+                                                    ? 'text-center text-light pl-3 pr-3'
+                                                    : 'text-center text-dark pl-3 pr-3'
                                             "
-                                            class="mr-1"
-                                        ></b-spinner
-                                        ><i
-                                            v-else
-                                            class="fas fa-caret-down mr-1"
-                                        ></i
-                                        >{{
-                                            tasksLoading
-                                                ? 'Loading...'
-                                                : 'Load More'
-                                        }}</b-button
-                                    ><b-popover
-                                        v-if="profile.hints"
-                                        triggers="hover"
-                                        placement="left"
-                                        target="load-more-completed-tasks"
-                                        title="Load More"
-                                        >Click here to load more completed
-                                        tasks.</b-popover
-                                    >
-                                </div>
+                                        >
+                                            No completed tasks.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                    <taskblurb
+                                        v-for="task in filteredCompleted"
+                                        v-bind:key="task.guid"
+                                        :task="task"
+                                        :project="true"
+                                    ></taskblurb>
+                                </b-list-group>
                             </div>
                         </b-col>
                     </b-row>
@@ -497,7 +665,11 @@ export default {
             this.$bvModal.show('remove ' + task.name);
         },
         async refresh() {
-            await this.$store.dispatch('tasks/loadAll');
+            await Promise.all([
+                this.$store.dispatch('tasks/loadAll'),
+                this.$store.dispatch('tasks/loadDelayed'),
+                this.$store.dispatch('tasks/loadRepeating'),
+            ]);
         },
         async remove(task) {
             await axios
@@ -548,6 +720,8 @@ export default {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('tasks', [
             'tasks',
+            'tasksDelayed',
+            'tasksRepeating',
             'tasksLoading',
             'tasksRunning',
             'tasksCompleted',
@@ -574,20 +748,30 @@ export default {
         },
         filteredRunning() {
             return this.tasksRunning.filter(
-                (sub) =>
-                    (sub.workflow_name !== null &&
-                        sub.workflow_name.includes(this.searchText)) ||
-                    (sub.name !== null && sub.name.includes(this.searchText)) ||
-                    sub.tags.some((tag) => tag.includes(this.searchText))
+                (task) =>
+                    (task.workflow_name !== null &&
+                        task.workflow_name.includes(this.searchText)) ||
+                    (task.name !== null &&
+                        task.name.includes(this.searchText)) ||
+                    task.tags.some((tag) => tag.includes(this.searchText)) ||
+                    (task.project !== null &&
+                        task.project.title.includes(this.searchText)) ||
+                    (task.study !== null &&
+                        task.study.title.includes(this.searchText))
             );
         },
         filteredCompleted() {
             return this.tasksCompleted.filter(
-                (sub) =>
-                    (sub.workflow_name !== null &&
-                        sub.workflow_name.includes(this.searchText)) ||
-                    (sub.name !== null && sub.name.includes(this.searchText)) ||
-                    sub.tags.some((tag) => tag.includes(this.searchText))
+                (task) =>
+                    (task.workflow_name !== null &&
+                        task.workflow_name.includes(this.searchText)) ||
+                    (task.name !== null &&
+                        task.name.includes(this.searchText)) ||
+                    task.tags.some((tag) => tag.includes(this.searchText)) ||
+                    (task.project !== null &&
+                        task.project.title.includes(this.searchText)) ||
+                    (task.study !== null &&
+                        task.study.title.includes(this.searchText))
             );
         },
     },

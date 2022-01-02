@@ -80,6 +80,8 @@ class Task(models.Model):
     transfer_path = models.CharField(max_length=250, null=True, blank=True)
     due_time = models.DateTimeField(null=True, blank=True)
     cleanup_time = models.DateTimeField(null=True, blank=True)
+    delayed_id = models.CharField(max_length=250, null=True, blank=True)
+    repeating_id = models.CharField(max_length=250, null=True, blank=True)
 
     @property
     def is_success(self):
@@ -126,6 +128,8 @@ class DelayedTask(PeriodicTask):
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_branch = models.CharField(max_length=280, null=True, blank=True)
+    workflow_image_url = models.URLField(null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
 
 
@@ -134,4 +138,6 @@ class RepeatingTask(PeriodicTask):
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_branch = models.CharField(max_length=280, null=True, blank=True)
+    workflow_image_url = models.URLField(null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)

@@ -3208,13 +3208,13 @@
                                                                                 "
                                                                                 >After</b-dropdown-item
                                                                             >
-                                                                            <b-dropdown-item
+                                                                            <!--<b-dropdown-item
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Every'
                                                                                 "
                                                                                 >Every</b-dropdown-item
-                                                                            >
+                                                                            >-->
                                                                         </b-dropdown>
                                                                     </template>
                                                                     <!--<template
@@ -4166,32 +4166,24 @@ export default {
             if (this.getWorkflow.config.logo !== null)
                 config.logo = this.getWorkflow.config.logo;
 
-            let data = {
-                repo: this.getWorkflow.repo,
-                branch: this.getWorkflow.branch,
-                config: config,
-                type: this.submitType,
-                miappe: {
-                    project: this.selectedProject,
-                    study: this.selectedStudy,
-                },
-            };
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.selectedAgent.username,
-                };
-
-            this.submitted = true;
+            this.submitting = true;
             if (this.submitType === 'Now')
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
-                    data: data,
+                    data: {
+                        repo: this.getWorkflow.repo,
+                        branch: this.getWorkflow.branch,
+                        config: config,
+                        type: this.submitType,
+                        auth: {
+                            username: this.selectedAgent.username,
+                        },
+                        miappe: {
+                            project: this.selectedProject,
+                            study: this.selectedStudy,
+                        },
+                    },
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
@@ -4206,9 +4198,11 @@ export default {
                                 name: taskName,
                             },
                         });
+                        this.submitting = false;
                     })
                     .catch((error) => {
                         Sentry.captureException(error);
+                        this.submitting = false;
                         throw error;
                     });
             else if (this.submitType === 'After')
@@ -4217,24 +4211,51 @@ export default {
                     url: `/apis/v1/tasks/`,
                     data: {
                         repo: this.getWorkflow.repo,
+                        branch: this.getWorkflow.branch,
                         config: config,
                         type: this.submitType,
+                        auth: {
+                            username: this.selectedAgent.username,
+                        },
+                        miappe: {
+                            project: this.selectedProject,
+                            study: this.selectedStudy,
+                        },
                         delayUnits: this.delayUnits,
                         delayValue: this.delayValue,
                     },
                     headers: { 'Content-Type': 'application/json' },
                 })
-                    .then((response) => {
-                        this.statusAlertMessage =
-                            response.status === 200 && response.data.created
-                                ? `Scheduled task ${this.$router.currentRoute.params.name} on ${config.agent.name}`
-                                : `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
-                        this.showStatusAlert = true;
+                    .then(async (response) => {
+                        if (response.status === 200 && response.data.created) {
+                            await this.$store.dispatch(
+                                'tasks/addDelayed',
+                                response.data.task
+                            );
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Scheduled task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            });
+                        } else
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'danger',
+                                message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            });
+                        this.submitting = false;
                     })
-                    .catch((error) => {
+                    .catch(async (error) => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule task ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
-                        this.showStatusAlert = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                            guid: guid().toString(),
+                            time: moment().format(),
+                        });
+                        this.submitting = false;
                         throw error;
                     });
             else if (this.submitType === 'Every')
@@ -4243,25 +4264,52 @@ export default {
                     url: `/apis/v1/tasks/`,
                     data: {
                         repo: this.getWorkflow.repo,
+                        branch: this.getWorkflow.branch,
                         config: config,
                         type: this.submitType,
+                        auth: {
+                            username: this.selectedAgent.username,
+                        },
+                        miappe: {
+                            project: this.selectedProject,
+                            study: this.selectedStudy,
+                        },
                         delayUnits: this.delayUnits,
                         delayValue: this.delayValue,
                     },
                     headers: { 'Content-Type': 'application/json' },
                 })
-                    .then((response) => {
+                    .then(async (response) => {
                         this.loadRepeatingRuns();
-                        this.statusAlertMessage =
-                            response.status === 200 && response.data.created
-                                ? `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`
-                                : `Failed to schedule repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
-                        this.showStatusAlert = true;
+                        if (response.status === 200 && response.data.created) {
+                            await this.$store.dispatch(
+                                'tasks/addRepeating',
+                                response.data.task
+                            );
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            });
+                        } else
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'danger',
+                                message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            });
+                        this.submitting = false;
                     })
-                    .catch((error) => {
+                    .catch(async (error) => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule task ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
-                        this.showStatusAlert = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to schedule repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
+                            guid: guid().toString(),
+                            time: moment().format(),
+                        });
+                        this.submitting = false;
                         throw error;
                     });
         },

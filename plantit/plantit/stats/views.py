@@ -34,7 +34,7 @@ def timeseries(request):
     cached_users = redis.get('users_timeseries')
     cached_tasks = redis.get('tasks_timeseries')
     cached_running = redis.get('tasks_running')
-    cached_user_running = redis.get('user_tasks_running')
+    cached_user_running = redis.get(f"user_tasks_running/{request.user.username}")
 
     users = json.loads(cached_users) if cached_users is not None else get_users_timeseries()
     tasks = json.loads(cached_tasks) if cached_tasks is not None else get_tasks_timeseries()

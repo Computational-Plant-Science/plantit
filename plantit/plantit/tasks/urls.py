@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path(r'', views.get_all_or_create),
     path(r'<owner>/', views.get_by_owner),
+    path(r'<owner>/delayed/', views.get_delayed_by_owner),
+    path(r'<owner>/repeating/', views.get_repeating_by_owner),
     path(r'<owner>/<name>/', views.get_by_owner_and_name),
     path(r'<owner>/<name>/exists/', views.exists),
     path(r'<owner>/<name>/status/', views.status),
