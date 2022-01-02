@@ -250,12 +250,22 @@ def get_user_statistics(user: User) -> dict:
 def get_users_timeseries():
     series = []
     for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"users_timeseries", json.dumps(series))
+
     return series
 
 
 def get_tasks_timeseries():
     series = []
     for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"tasks_timeseries", json.dumps(series))
+
     return series
 
 
@@ -278,6 +288,10 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
         running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
         series[datetime.fromtimestamp(t).isoformat()] = running
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"user_tasks_running/{user.username}" if user is not None else 'tasks_running', json.dumps(series))
 
     return series
 
@@ -1199,7 +1213,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
 
         # round up to the nearest hour
-        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), int(int(task.agent.max_nodes) / 60))}"
+        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), int(int(task.agent.max_walltime) / 60))}"
         if len(hours) == 1: hours = f"0{hours}"
         adjusted_str = f"{hours}:00:00"
 
