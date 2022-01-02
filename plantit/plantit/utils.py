@@ -1189,8 +1189,33 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
            [cli_push]
 
 
+def calculate_node_count(task: Task, inputs: List[str]):
+    return 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+
+
+def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+    jobqueue = options['jobqueue']
+    split_time = jobqueue['walltime'].split(':')
+    hours = int(split_time[0])
+    minutes = int(split_time[1])
+    seconds = int(split_time[2])
+    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+    # TODO adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
+    # nodes = calculate_node_count(task, inputs)
+    # adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+    # round up to the nearest hour
+    hours = f"{min(ceil(walltime.total_seconds() / 60 / 60), int(int(task.agent.max_walltime) / 60))}"
+    if len(hours) == 1: hours = f"0{hours}"
+    adjusted_str = f"{hours}:00:00"
+
+    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+    return adjusted_str
+
+
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
-    nodes = 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+    nodes = calculate_node_count(task, inputs)
     task.inputs_detected = len(inputs)
     task.save()
 
@@ -1203,26 +1228,11 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
         f"#SBATCH --mem={jobqueue['memory']}")
     if 'walltime' in jobqueue:
-        split_time = jobqueue['walltime'].split(':')
-        hours = int(split_time[0])
-        minutes = int(split_time[1])
-        seconds = int(split_time[2])
-        walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-        # adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
-        adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
-
-        # round up to the nearest hour
-        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), int(int(task.agent.max_walltime) / 60))}"
-        if len(hours) == 1: hours = f"0{hours}"
-        adjusted_str = f"{hours}:00:00"
-
-        logger.debug(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+        walltime = calculate_walltime(task, options, inputs)
         async_to_sync(push_task_event)(task)
-
-        task.job_requested_walltime = adjusted_str
+        task.job_requested_walltime = walltime
         task.save()
-        commands.append(f"#SBATCH --time={adjusted_str}")
+        commands.append(f"#SBATCH --time={walltime}")
     if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
     if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
