@@ -1872,7 +1872,9 @@ def task_to_dict(task: Task) -> dict:
         'output_files': json.loads(results) if results is not None else [],
         'job_id': task.job_id,
         'job_status': task.job_status,
-        'job_walltime': task.job_consumed_walltime
+        'job_walltime': task.job_consumed_walltime,
+        'delayed_id': task.delayed_id,
+        'repeating_id': task.repeating_id
     }
 
     return t
@@ -1883,11 +1885,17 @@ def delayed_task_to_dict(task: DelayedTask) -> dict:
         # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
+        'enabled': task.enabled,
         'interval': {
             'every': task.interval.every,
             'period': task.interval.period
         },
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
+
     }
 
 
@@ -1901,11 +1909,15 @@ def repeating_task_to_dict(task: RepeatingTask):
             'period': task.interval.period
         },
         'enabled': task.enabled,
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
     }
 
 
-def create_now_task(user: User, workflow):
+def create_immediate_task(user: User, workflow):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     repo_branch = workflow['branch']['name']
@@ -1937,44 +1949,66 @@ def create_now_task(user: User, workflow):
 
 def create_delayed_task(user: User, workflow):
     now = timezone.now().timestamp()
+    id = f"{user.username}-delayed-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = DelayedTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        # agent=agent,
         eta=eta,
         one_off=True,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        # name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-        name=f"{user.username}-{now}",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_delayed',
+        args=json.dumps([user.username, workflow, id]))
 
-    # manually make sure the task schedule is refreshed
+    # manually refresh task schedule
     PeriodicTasks.changed(task)
 
     return task, created
 
 
 def create_repeating_task(user: User, workflow):
+    now = timezone.now().timestamp()
+    id = f"{user.username}-repeating-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = RepeatingTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        # agent=agent,
         eta=eta,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_repeating',
+        args=json.dumps([user.username, workflow, id]))
 
-    # manually make sure the task schedule is refreshed
+    # manually refresh task schedule
     PeriodicTasks.changed(task)
 
     return task, created

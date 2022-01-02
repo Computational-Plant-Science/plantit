@@ -1239,8 +1239,8 @@ export default {
         await Promise.all([
             this.$store.dispatch('users/loadAll'),
             this.$store.dispatch('tasks/loadAll'),
-            // this.$store.dispatch('tasks/loadDelayed'),
-            // this.$store.dispatch('tasks/loadRepeating'),
+            this.$store.dispatch('tasks/loadDelayed'),
+            this.$store.dispatch('tasks/loadRepeating'),
             this.$store.dispatch('notifications/loadAll'),
             this.$store.dispatch('workflows/loadPublic'),
             this.$store.dispatch('workflows/loadUser'),

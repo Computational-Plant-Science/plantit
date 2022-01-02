@@ -4265,14 +4265,18 @@ export default {
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
-                        if (response.status === 200 && response.data.created)
+                        if (response.status === 200 && response.data.created) {
+                            await this.$store.dispatch(
+                                'tasks/addDelayed',
+                                response.data.task
+                            );
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'success',
                                 message: `Scheduled task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
                                 guid: guid().toString(),
                                 time: moment().format(),
                             });
-                        else
+                        } else
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'danger',
                                 message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
@@ -4315,14 +4319,18 @@ export default {
                 })
                     .then(async (response) => {
                         this.loadRepeatingRuns();
-                        if (response.status === 200 && response.data.created)
+                        if (response.status === 200 && response.data.created) {
+                            await this.$store.dispatch(
+                                'tasks/addRepeating',
+                                response.data.task
+                            );
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'success',
                                 message: `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
                                 guid: guid().toString(),
                                 time: moment().format(),
                             });
-                        else
+                        } else
                             await this.$store.dispatch('alerts/add', {
                                 variant: 'danger',
                                 message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
