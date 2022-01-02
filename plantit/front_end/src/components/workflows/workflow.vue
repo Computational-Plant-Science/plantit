@@ -3649,39 +3649,6 @@
                     <br />
                 </b-col>
             </b-row>
-            <b-modal
-                v-if="this.selectedAgent !== null"
-                id="authenticate"
-                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                centered
-                close
-                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.selectedAgent.name"
-                @ok="onStart"
-                ok-variant="success"
-            >
-                <b-form-group description="Enter your username.">
-                    <b-form-input
-                        v-model="authenticationUsername"
-                        type="text"
-                        placeholder="Your username"
-                        required
-                    ></b-form-input
-                ></b-form-group>
-                <b-form-group description="Enter your password.">
-                    <b-form-input
-                        v-model="authenticationPassword"
-                        type="password"
-                        placeholder="Your password"
-                        required
-                    ></b-form-input>
-                </b-form-group>
-            </b-modal>
         </b-container>
     </div>
 </template>
@@ -3741,8 +3708,6 @@ export default {
             activeTab: 0,
             activeAgentTab: 0,
             submitted: false,
-            authenticationUsername: '',
-            authenticationPassword: '',
             currentResourceTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
@@ -4120,9 +4085,6 @@ export default {
         trySubmit() {
             if (this.mustAuthenticate) this.showAuthenticateModal();
             else this.onStart();
-        },
-        showAuthenticateModal() {
-            this.$bvModal.show('authenticate');
         },
         async onStart() {
             // prepare configuration

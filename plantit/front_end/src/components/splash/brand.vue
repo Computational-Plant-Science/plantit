@@ -204,30 +204,30 @@
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            plantIT is a web portal for high-performance &
-                            high-throughput computational phenomics, providing
-                            an interface for researchers and developers to
-                            collaborate by automating data management and
-                            software deployment tasks.
+                            plantIT is a web portal for
+                            high-performance/-throughput phenomics. It automates
+                            data transfers and workflow deployments, making it
+                            easy to submit phenotyping pipelines to XSEDE and
+                            other supercomputing resources.
                         </p>
-                        <hr/>
+                        <hr />
                         <p
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            <b>Developers:</b> Publish versionable container
-                            workflows from any GitHub repository to the
-                            worldwide research community.
-                        </p>
-                        <p
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                        >
-                            <b>Biologists:</b> Deploy highly parallel
+                            For <b>Researchers:</b> Deploy highly parallel
                             simulations or analyses to a cluster or
                             supercomputer, all from the browser.
+                        </p>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
+                            For <b>Developers:</b> Publish versionable container
+                            workflows from any GitHub repository to the
+                            worldwide research community.
                         </p></b-col
                     ><b-col class="text-left">
                         <h5
