@@ -302,7 +302,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import mapboxgl from 'mapbox-gl';
 import { Plotly } from 'vue-plotly';
-import moment from "moment";
+import moment from 'moment';
 
 export default {
     name: 'stats',
@@ -537,17 +537,32 @@ export default {
             };
         },
         tasksPlotData() {
-            return this.timeseriesTasks;
+            return [
+                {
+                    x: this.timeseriesTasks[0].x.map((t) =>
+                        moment(t).format('YYYY-MM-DD HH:mm:ss')
+                    ),
+                    y: this.timeseriesTasks[0].y,
+                    type: 'scatter',
+                    line: { color: '#d6df5D', shape: 'spline' },
+                },
+            ];
         },
         tasksRunningPlotData() {
-          if (this.timeseriesTasksRunning === null) return {x: [], y: [], type: 'scatter'}
-            return [
-              {
-                x: this.timeseriesTasksRunning[0].x.map((t) => moment(t).format('YYYY-MM-DD HH:mm:ss')),
-                    y: this.timeseriesTasksRunning[0].y,
-                    type: 'scatter',
-              }
-            ]
+            // if (this.timeseriesTasksRunning === null)
+            //     return { x: [], y: [], type: 'scatter' };
+            return this.timeseriesTasksRunning === null
+                ? [{ x: [], y: [], type: 'scatter' }]
+                : [
+                      {
+                          x: this.timeseriesTasksRunning[0].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesTasksRunning[0].y,
+                          type: 'scatter',
+                          line: { color: '#d6df5D', shape: 'spline' },
+                      },
+                  ];
         },
         tasksPlotLayout() {
             return {
@@ -556,7 +571,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Total Tasks',
+                    text: 'Total',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -596,7 +611,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Tasks Running',
+                    text: 'Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -624,7 +639,7 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
-                    showticklabels:   false,
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',

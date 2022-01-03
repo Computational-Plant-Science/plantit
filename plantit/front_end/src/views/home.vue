@@ -647,6 +647,7 @@ export default {
                           ),
                           y: this.timeseriesUserTasksRunning[0].y,
                           type: 'scatter',
+                          line: {color: '#d6df5D', shape: 'spline'}
                       },
                   ];
         },
