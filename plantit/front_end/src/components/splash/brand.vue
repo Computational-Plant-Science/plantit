@@ -270,7 +270,8 @@
                                         : 'text-dark'
                                 "
                                 ><small>{{ prettify(update.created) }}</small>
-                                <p>{{ update.content }}</p></b-col
+                            <VueMarkdown>{{ update.content }}</VueMarkdown>
+                                <!--<p>{{ update.content }}</p>--></b-col
                             ></b-row
                         >
                     </b-col></b-row
@@ -291,9 +292,13 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
+import VueMarkdown from "vue-markdown";
 
 export default {
     name: 'home-brand',
+  components: {
+     VueMarkdown,
+  },
     data: function () {
         return {
             version: 0,

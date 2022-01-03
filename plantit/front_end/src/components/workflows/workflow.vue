@@ -3827,7 +3827,6 @@ import router from '../../router';
 import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
-import VueMarkdown from 'vue-markdown';
 import { guid } from '@/utils';
 import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
 import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
@@ -3840,7 +3839,6 @@ export default {
     name: 'workflow',
     components: {
         Multiselect,
-        VueMarkdown,
         datatree,
         delayedtaskblurb,
         repeatingtaskblurb,

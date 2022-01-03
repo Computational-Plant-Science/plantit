@@ -1215,14 +1215,14 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
     if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
-        f"#SBATCH --mem={jobqueue['memory']}")
+        f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else jobqueue['memory']}")
     if 'walltime' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
         async_to_sync(push_task_event)(task)
         task.job_requested_walltime = walltime
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
-    if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
+    if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
     if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
     elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
