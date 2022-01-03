@@ -1033,8 +1033,11 @@
                                                                                 : 'white'
                                                                         "
                                                                         :border-variant="
-                                                                            timeLimit !==
-                                                                            0
+                                                                            submitType ===
+                                                                            'Every'
+                                                                                ? 'secondary'
+                                                                                : timeLimit !==
+                                                                                  0
                                                                                 ? 'success'
                                                                                 : 'secondary'
                                                                         "
@@ -1098,19 +1101,32 @@
                                                                                         md="auto"
                                                                                         ><h5
                                                                                             :class="
-                                                                                                profile.darkMode
+                                                                                                submitType ===
+                                                                                                'Every'
+                                                                                                    ? 'text-secondary'
+                                                                                                    : profile.darkMode
                                                                                                     ? 'text-white'
                                                                                                     : 'text-dark'
                                                                                             "
                                                                                         >
                                                                                             {{
-                                                                                                taskName !==
-                                                                                                ''
+                                                                                                submitType ===
+                                                                                                'Every'
+                                                                                                    ? '(auto-generated)'
+                                                                                                    : taskName !==
+                                                                                                      ''
                                                                                                     ? taskName
                                                                                                     : taskGuid
                                                                                             }}
                                                                                             <i
                                                                                                 v-if="
+                                                                                                    submitType ===
+                                                                                                    'Every'
+                                                                                                "
+                                                                                                class="far fa-circle text-secondary fa-fw"
+                                                                                            ></i>
+                                                                                            <i
+                                                                                                v-else-if="
                                                                                                     nameValid
                                                                                                 "
                                                                                                 class="fas fa-check text-success fa-fw"
@@ -1168,6 +1184,10 @@
                                                                                     >
                                                                                         <b-col>
                                                                                             <b-form-input
+                                                                                                :disabled="
+                                                                                                    submitType ===
+                                                                                                    'Every'
+                                                                                                "
                                                                                                 :class="
                                                                                                     profile.darkMode
                                                                                                         ? 'input-dark'
@@ -3307,13 +3327,25 @@
                                                             <b-col
                                                                 ><b-row
                                                                     ><b-col
-                                                                        ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
                                                                             Scheduled
                                                                             Tasks
                                                                         </h5></b-col
                                                                     ></b-row
                                                                 >
-                                                              <hr style="border-top: 1px solid darkgray" />
+                                                                <hr
+                                                                    style="
+                                                                        border-top: 1px
+                                                                            solid
+                                                                            darkgray;
+                                                                    "
+                                                                />
                                                                 <b-row>
                                                                     <b-col
                                                                         ><b

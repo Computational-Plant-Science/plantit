@@ -1928,7 +1928,7 @@ def create_immediate_task(user: User, workflow):
     config = workflow['config']
     branch = workflow['branch']
     task_name = config.get('task_name', None)
-    task_guid = config.get('task_guid', None)
+    task_guid = config.get('task_guid', None) if workflow['type'] != 'Every' else str(uuid.uuid4())
 
     # TODO handle repeating tasks & repeating GUID issue
 
