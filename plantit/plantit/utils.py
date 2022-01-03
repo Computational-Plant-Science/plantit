@@ -1223,7 +1223,8 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
     if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
+    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
@@ -1928,6 +1929,8 @@ def create_immediate_task(user: User, workflow):
     branch = workflow['branch']
     task_name = config.get('task_name', None)
     task_guid = config.get('task_guid', None)
+
+    # TODO handle repeating tasks & repeating GUID issue
 
     agent = Agent.objects.get(name=config['agent']['name'])
     task = create_task(

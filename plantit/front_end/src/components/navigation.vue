@@ -1029,7 +1029,6 @@
                     <b-col
                         v-if="titleContent === 'sidebar'"
                         md="auto"
-                        align-self="center"
                     >
                         <b-alert
                             class="m-0"
