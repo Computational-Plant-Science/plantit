@@ -151,75 +151,43 @@
                                     </b-col>
                                 </b-row>
                                 <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <b-card
-                                        v-for="delayed in tasksDelayed"
-                                        v-bind:key="delayed.name"
-                                        class="mt-2 pt-1 overflow-hidden"
-                                        :bg-variant="
-                                            profile.darkMode ? 'dark' : 'white'
-                                        "
-                                        :header-text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        border-variant="secondary"
-                                        :text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        :body-text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        no-body
-                                    >
-                                        <b-card-body>
-                                            <b-img
-                                                v-if="
-                                                    delayed.workflow_image_url !==
-                                                        undefined &&
-                                                    delayed.workflow_image_url !==
-                                                        null
-                                                "
-                                                rounded
-                                                class="card-img-right"
-                                                style="
-                                                    max-width: 5rem;
-                                                    position: absolute;
-                                                    right: -15px;
-                                                    top: -20px;
-                                                    z-index: 1;
-                                                "
-                                                right
-                                                :src="
-                                                    delayed.workflow_image_url
-                                                "
-                                            ></b-img>
-                                            <i class="fas fa-coffee fa-fw"> </i>
-                                            DUE {{ prettify(delayed.eta) }}
-                                            <br />
-                                            <small
-                                                v-if="
-                                                    delayed.workflow_name !==
-                                                    null
-                                                "
-                                                class="mr-1 mb-0"
-                                                ><a
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :href="`https://github.com/${delayed.workflow_owner}/${delayed.workflow_name}`"
-                                                    ><i
-                                                        class="fab fa-github fa-fw"
-                                                    ></i>
-                                                    {{
-                                                        delayed.workflow_owner
-                                                    }}/{{
-                                                        delayed.workflow_name
-                                                    }}</a
-                                                >
-                                            </small>
-                                        </b-card-body>
-                                    </b-card>
+                                    <delayedtaskblurb
+                                        v-for="task in tasksDelayed"
+                                        v-bind:key="task.name"
+                                        :task="task"
+                                    ></delayedtaskblurb>
+                                </b-list-group>
+                                <b-row
+                                    class="m-3 mb-1 pl-0 pr-0 text-center"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Repeating</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksRepeating.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0 text-center"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-center text-light pl-3 pr-3'
+                                                    : 'text-center text-dark pl-3 pr-3'
+                                            "
+                                        >
+                                            No repeating tasks are scheduled.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                    <repeatingtaskblurb
+                                        v-for="task in tasksRepeating"
+                                        v-bind:key="task.name"
+                                        :task="task"
+                                    ></repeatingtaskblurb>
                                 </b-list-group>
                                 <!--<b-row
                                     class="m-3 mb-1 pl-0 pr-0 text-center"
@@ -642,12 +610,16 @@ import axios from 'axios';
 import router from '@/router';
 import * as Sentry from '@sentry/browser';
 import { guid } from '@/utils';
-import taskblurb from '@/components/tasks/task-blurb.vue';
+import taskblurb from '@/components/tasks/task-blurb';
+import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
+import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
 
 export default {
     name: 'tasks',
     components: {
         taskblurb,
+        delayedtaskblurb,
+        repeatingtaskblurb,
     },
     data: function () {
         return {
@@ -655,6 +627,68 @@ export default {
         };
     },
     methods: {
+        async deleteDelayed(name) {
+            this.unschedulingDelayed = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setDelayed',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled delayed task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingDelayed = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule delayed task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingDelayed = false;
+                    throw error;
+                });
+        },
+        async deleteRepeating(name) {
+            this.unschedulingRepeating = true;
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+                )
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setRepeating',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled repeating task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingRepeating = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule repeating task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingRepeating = false;
+                    throw error;
+                });
+        },
         async loadMoreTasks() {
             await this.$store.dispatch('tasks/loadMore', {
                 page: this.tasksNextPage,

@@ -443,6 +443,22 @@ def delete(request, owner, name):
 
 
 @login_required
+def unschedule_delayed(request, owner, name):
+    try: task = DelayedTask.objects.get(user=request.user, name=name)
+    except: return HttpResponseNotFound()
+    task.delete()
+    return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
+
+
+@login_required
+def unschedule_repeating(request, owner, name):
+    try: task = RepeatingTask.objects.get(user=request.user, name=name)
+    except: return HttpResponseNotFound()
+    task.delete()
+    return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
+
+
+@login_required
 def exists(request, owner, name):
     try:
         Task.objects.get(user=User.objects.get(username=owner), name=name)

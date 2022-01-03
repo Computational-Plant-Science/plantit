@@ -54,6 +54,12 @@ export const tasks = {
         setAll({ commit }, tasks) {
             commit('setAll', tasks);
         },
+        setDelayed({ commit }, tasks) {
+            commit('setDelayed', tasks);
+        },
+        setRepeating({ commit }, tasks) {
+            commit('setRepeating', tasks);
+        },
         async loadAll({ commit, rootState }) {
             commit('setLoading', true);
             await Promise.all([

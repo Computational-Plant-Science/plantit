@@ -3138,7 +3138,7 @@
                                                                         submitted
                                                                     "
                                                                     @click="
-                                                                        trySubmit
+                                                                        onStart
                                                                     "
                                                                     :variant="
                                                                         profile.darkMode
@@ -3208,13 +3208,13 @@
                                                                                 "
                                                                                 >After</b-dropdown-item
                                                                             >
-                                                                            <!--<b-dropdown-item
+                                                                            <b-dropdown-item
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Every'
                                                                                 "
                                                                                 >Every</b-dropdown-item
-                                                                            >-->
+                                                                            >
                                                                         </b-dropdown>
                                                                     </template>
                                                                     <!--<template
@@ -3302,10 +3302,143 @@
                                                                         </b-dropdown>
                                                                     </template></b-input-group
                                                                 ></b-col
-                                                            >
-                                                        </b-row>
-                                                    </b-col></b-row
-                                                >
+                                                            > </b-row
+                                                        ><b-row class="mt-4">
+                                                            <b-col
+                                                                ><b-row
+                                                                    ><b-col
+                                                                        ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                                                                            Scheduled
+                                                                            Tasks
+                                                                        </h5></b-col
+                                                                    ></b-row
+                                                                >
+                                                              <hr style="border-top: 1px solid darkgray" />
+                                                                <b-row>
+                                                                    <b-col
+                                                                        ><b
+                                                                            >Delayed</b
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        tasksLoading
+                                                                    "
+                                                                    ><b-col
+                                                                        ><b-spinner
+                                                                            small
+                                                                            label="Loading..."
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'light'
+                                                                                    : 'dark'
+                                                                            "
+                                                                            class="mr-1"
+                                                                        ></b-spinner></b-col
+                                                                ></b-row>
+                                                                <b-row
+                                                                    v-else-if="
+                                                                        !tasksLoading &&
+                                                                        delayedTasks.length ===
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <p
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light pl-3 pr-3'
+                                                                                    : 'text-dark pl-3 pr-3'
+                                                                            "
+                                                                        >
+                                                                            No
+                                                                            delayed
+                                                                            tasks
+                                                                            are
+                                                                            scheduled.
+                                                                        </p>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-list-group
+                                                                    v-else
+                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                >
+                                                                    <delayedtaskblurb
+                                                                        v-for="task in delayedTasks"
+                                                                        v-bind:key="
+                                                                            task.name
+                                                                        "
+                                                                        :task="
+                                                                            task
+                                                                        "
+                                                                    ></delayedtaskblurb>
+                                                                </b-list-group>
+                                                                <b-row
+                                                                    class="mt-3"
+                                                                >
+                                                                    <b-col
+                                                                        ><b
+                                                                            >Repeating</b
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        tasksLoading
+                                                                    "
+                                                                    ><b-col
+                                                                        ><b-spinner
+                                                                            small
+                                                                            label="Loading..."
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'light'
+                                                                                    : 'dark'
+                                                                            "
+                                                                            class="mr-1"
+                                                                        ></b-spinner></b-col
+                                                                ></b-row>
+                                                                <b-row
+                                                                    v-else-if="
+                                                                        !tasksLoading &&
+                                                                        repeatingTasks.length ===
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <p
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light pl-3 pr-3'
+                                                                                    : 'text-dark pl-3 pr-3'
+                                                                            "
+                                                                        >
+                                                                            No
+                                                                            repeating
+                                                                            tasks
+                                                                            are
+                                                                            scheduled.
+                                                                        </p>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-list-group
+                                                                    v-else
+                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                >
+                                                                    <repeatingtaskblurb
+                                                                        v-for="task in repeatingTasks"
+                                                                        v-bind:key="
+                                                                            task.name
+                                                                        "
+                                                                        :task="
+                                                                            task
+                                                                        "
+                                                                    ></repeatingtaskblurb>
+                                                                </b-list-group>
+                                                            </b-col>
+                                                        </b-row> </b-col
+                                                ></b-row>
                                             </b-tab>
                                             <!--<b-tab
                                                 title="Runs"
@@ -3649,39 +3782,6 @@
                     <br />
                 </b-col>
             </b-row>
-            <b-modal
-                v-if="this.selectedAgent !== null"
-                id="authenticate"
-                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                centered
-                close
-                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.selectedAgent.name"
-                @ok="onStart"
-                ok-variant="success"
-            >
-                <b-form-group description="Enter your username.">
-                    <b-form-input
-                        v-model="authenticationUsername"
-                        type="text"
-                        placeholder="Your username"
-                        required
-                    ></b-form-input
-                ></b-form-group>
-                <b-form-group description="Enter your password.">
-                    <b-form-input
-                        v-model="authenticationPassword"
-                        type="password"
-                        placeholder="Your password"
-                        required
-                    ></b-form-input>
-                </b-form-group>
-            </b-modal>
         </b-container>
     </div>
 </template>
@@ -3697,6 +3797,8 @@ import moment from 'moment';
 import cronstrue from 'cronstrue';
 import VueMarkdown from 'vue-markdown';
 import { guid } from '@/utils';
+import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
+import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
 
 String.prototype.capitalize = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -3708,6 +3810,8 @@ export default {
         Multiselect,
         VueMarkdown,
         datatree,
+        delayedtaskblurb,
+        repeatingtaskblurb,
     },
     props: {
         owner: {
@@ -3741,8 +3845,6 @@ export default {
             activeTab: 0,
             activeAgentTab: 0,
             submitted: false,
-            authenticationUsername: '',
-            authenticationPassword: '',
             currentResourceTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
@@ -3820,6 +3922,68 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
+        // async deleteDelayed(name) {
+        //     this.unschedulingDelayed = true;
+        //     await axios
+        //         .get(
+        //             `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+        //         )
+        //         .then(async (response) => {
+        //             await Promise.all([
+        //                 this.$store.dispatch(
+        //                     'tasks/setDelayed',
+        //                     response.data.tasks
+        //                 ),
+        //                 this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Unscheduled delayed task`,
+        //                     guid: guid().toString(),
+        //                 }),
+        //             ]);
+        //             this.unschedulingDelayed = false;
+        //         })
+        //         .catch(async (error) => {
+        //             Sentry.captureException(error);
+        //             await this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to unschedule delayed task`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.unschedulingDelayed = false;
+        //             throw error;
+        //         });
+        // },
+        // async deleteRepeating(name) {
+        //     this.unschedulingRepeating = true;
+        //     await axios
+        //         .get(
+        //             `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+        //         )
+        //         .then(async (response) => {
+        //             await Promise.all([
+        //                 this.$store.dispatch(
+        //                     'tasks/setRepeating',
+        //                     response.data.tasks
+        //                 ),
+        //                 this.$store.dispatch('alerts/add', {
+        //                     variant: 'success',
+        //                     message: `Unscheduled repeating task`,
+        //                     guid: guid().toString(),
+        //                 }),
+        //             ]);
+        //             this.unschedulingRepeating = false;
+        //         })
+        //         .catch(async (error) => {
+        //             Sentry.captureException(error);
+        //             await this.$store.dispatch('alerts/add', {
+        //                 variant: 'danger',
+        //                 message: `Failed to unschedule repeating task`,
+        //                 guid: guid().toString(),
+        //             });
+        //             this.unschedulingRepeating = false;
+        //             throw error;
+        //         });
+        // },
         setTimeLimitUnits(units) {
             this.timeLimitUnits = units;
         },
@@ -3828,7 +3992,6 @@ export default {
         },
         async loadSelectedInput(path) {
             this.selectedInputLoading = true;
-
             await axios({
                 method: 'post',
                 url: `https://de.cyverse.org/terrain/secured/filesystem/stat`,
@@ -4117,13 +4280,6 @@ export default {
             );
             // TODO walltime
         },
-        trySubmit() {
-            if (this.mustAuthenticate) this.showAuthenticateModal();
-            else this.onStart();
-        },
-        showAuthenticateModal() {
-            this.$bvModal.show('authenticate');
-        },
         async onStart() {
             // prepare configuration
             this.params['config'] = {};
@@ -4318,7 +4474,6 @@ export default {
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
-                        this.loadRepeatingRuns();
                         if (response.status === 200 && response.data.created) {
                             await this.$store.dispatch(
                                 'tasks/addRepeating',
@@ -4373,7 +4528,25 @@ export default {
             'tasksByOwner',
             'task',
             'tasksLoading',
+            'tasksDelayed',
+            'tasksRepeating',
         ]),
+        delayedTasks() {
+            return this.tasksDelayed.filter(
+                (t) =>
+                    t.workflow_owner === this.getWorkflow.repo.owner.login &&
+                    t.workflow_name === this.getWorkflow.repo.name &&
+                    t.workflow_branch === this.getWorkflow.branch.name
+            );
+        },
+        repeatingTasks() {
+            return this.tasksRepeating.filter(
+                (t) =>
+                    t.workflow_owner === this.getWorkflow.repo.owner.login &&
+                    t.workflow_name === this.getWorkflow.repo.name &&
+                    t.workflow_branch === this.getWorkflow.branch.name
+            );
+        },
         ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
         ...mapGetters('datasets', [
             'userDatasets',
@@ -4469,6 +4642,7 @@ export default {
                 this.paramsValid &&
                 this.inputValid &&
                 this.outputValid &&
+                this.selectedAgent !== null &&
                 this.selectedAgent.name !== ''
             );
         },

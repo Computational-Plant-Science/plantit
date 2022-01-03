@@ -1,5 +1,4 @@
 import json
-import json
 import traceback
 from datetime import timedelta, datetime
 from os import environ
