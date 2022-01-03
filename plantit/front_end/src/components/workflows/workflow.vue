@@ -1110,8 +1110,8 @@
                                                                                             "
                                                                                         >
                                                                                             {{
-                                                                                                submitType ===
-                                                                                                'Every'
+                                                                                                submitType !==
+                                                                                                'Now'
                                                                                                     ? '(auto-generated)'
                                                                                                     : taskName !==
                                                                                                       ''
