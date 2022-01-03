@@ -96,7 +96,7 @@ def prepare_task_environment(self, guid: str, auth: dict):
         print(auth)
         ssh = get_task_ssh_client(task, auth)
         with ssh:
-            log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.name} on {task.agent.name}"])
+            log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
             async_to_sync(push_task_event)(task)
 
             local = task.agent.executor == AgentExecutor.LOCAL
@@ -112,7 +112,7 @@ def prepare_task_environment(self, guid: str, auth: dict):
 
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
-        logger.error(f"Failed to prepare environment for {task.user.username}'s task {task.name} on {task.agent.name}: {error}")
+        logger.error(f"Failed to prepare environment for {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
         async_to_sync(push_task_event)(task)
         self.request.callbacks = None # stop the task chain
 
@@ -143,7 +143,7 @@ def submit_task(self, guid: str, auth: dict):
                 task.status = TaskStatus.SUCCESS
                 task.save()
 
-                message = f"Task {task.name} (GUID: {task.guid}) succeeded"
+                message = f"Task {task.guid} succeeded"
                 log_task_orchestrator_status(task, [message])
                 async_to_sync(push_task_event)(task)
 
@@ -170,7 +170,7 @@ def submit_task(self, guid: str, auth: dict):
 
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
-        logger.error(f"Failed to {'run' if local else 'submit'} {task.user.username}'s task {task.name} on {task.agent.name}: {error}")
+        logger.error(f"Failed to {'run' if local else 'submit'} {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
         async_to_sync(push_task_event)(task)
         self.request.callbacks = None  # stop the task chain
 

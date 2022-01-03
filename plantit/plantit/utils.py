@@ -1199,7 +1199,7 @@ def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]
     if len(hours) == 1: hours = f"0{hours}"
     adjusted_str = f"{hours}:00:00"
 
-    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.guid}")
     return adjusted_str
 
 
@@ -1462,7 +1462,7 @@ def log_task_orchestrator_status(task: Task, messages: List[str]):
     log_path = get_task_orchestrator_log_file_path(task)
     with open(log_path, 'a') as log:
         for message in messages:
-            logger.info(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
+            logger.info(f"[{task.user.username}'s task {task.guid}] {message}")
             log.write(f"{message}\n")
 
 
@@ -1927,8 +1927,9 @@ def create_immediate_task(user: User, workflow):
 
     config = workflow['config']
     branch = workflow['branch']
-    task_name = config.get('task_name', None)
     task_guid = config.get('task_guid', None) if workflow['type'] == 'Now' else str(uuid.uuid4())
+    task_name = task_guid
+    # task_name = config.get('task_name', None)
 
     agent = Agent.objects.get(name=config['agent']['name'])
     task = create_task(
