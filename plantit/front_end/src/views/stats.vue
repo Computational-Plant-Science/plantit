@@ -624,6 +624,7 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showticklabels:   false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',

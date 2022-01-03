@@ -725,6 +725,7 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showticklabels: false,
                 },
                 height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
