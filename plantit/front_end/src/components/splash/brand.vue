@@ -4,6 +4,7 @@
             <b-card
                 align="center"
                 class="p-1 text-white"
+                header-bg-variant="transparent"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
                 border-variant="default"
@@ -237,7 +238,10 @@
                             workflows from any GitHub repository to the
                             worldwide research community.
                         </p></b-col
-                    ><b-col class="text-left">
+                    ><b-col
+                        class="text-left"
+                        style="overflow-y: scroll; height: 30rem"
+                    >
                         <h5
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -261,7 +265,7 @@
                             >No updates to show.</span
                         >
                         <b-row
-                            v-for="update in updates"
+                            v-for="update in getUpdates"
                             v-bind:key="update.created"
                             ><b-col
                                 :class="
@@ -270,7 +274,7 @@
                                         : 'text-dark'
                                 "
                                 ><small>{{ prettify(update.created) }}</small>
-                            <VueMarkdown>{{ update.content }}</VueMarkdown>
+                                <VueMarkdown>{{ update.content }}</VueMarkdown>
                                 <!--<p>{{ update.content }}</p>--></b-col
                             ></b-row
                         >
@@ -292,13 +296,13 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
-import VueMarkdown from "vue-markdown";
+import VueMarkdown from 'vue-markdown';
 
 export default {
     name: 'home-brand',
-  components: {
-     VueMarkdown,
-  },
+    components: {
+        VueMarkdown,
+    },
     data: function () {
         return {
             version: 0,
@@ -308,6 +312,12 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
+        getUpdates() {
+            return this.updates
+                .slice()
+                .sort((u) => u.created)
+                .reverse();
+        },
         tasksRunningPlotData() {
             if (this.timeseriesTasksRunning === null)
                 return { x: [], y: [], type: 'scatter' };
@@ -383,7 +393,7 @@ export default {
         this.crumbs = this.$route.meta.crumb;
         await Promise.all([
             this.getVersion(),
-            this.getUpdates(),
+            this.loadUpdates(),
             this.loadTimeseries(),
         ]);
     },
@@ -407,7 +417,7 @@ export default {
                     return error;
                 });
         },
-        async getUpdates() {
+        async loadUpdates() {
             await axios
                 .get('/apis/v1/news/updates/')
                 .then((response) => {
