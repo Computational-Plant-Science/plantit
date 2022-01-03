@@ -72,10 +72,8 @@ def get_all_or_create(request):
 
 @login_required
 def get_by_owner(request, owner):
-    try:
-        user = User.objects.get(username=owner)
-    except:
-        return HttpResponseNotFound()
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
 
     tasks = Task.objects.filter(user=user)
     paginator = Paginator(tasks, 20)

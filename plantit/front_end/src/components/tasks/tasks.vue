@@ -15,7 +15,10 @@
                         >{{ tasksRunning.length }}</b-badge
                     >
                     <small>running</small></b-col
-                ><b-col v-if="tasksNextPage !== null" md="auto"
+                ><b-col
+                    v-if="tasksNextPage !== null"
+                    md="auto"
+                    align-self="center"
                     ><b-button
                         id="load-more-completed-tasks"
                         :disabled="tasksLoading"
@@ -189,8 +192,9 @@
                                                     delayed.workflow_image_url
                                                 "
                                             ></b-img>
-                                            <i class="fas fa-coffee fa-fw"> </i> DUE {{ prettify(delayed.eta) }}
-                                          <br/>
+                                            <i class="fas fa-coffee fa-fw"> </i>
+                                            DUE {{ prettify(delayed.eta) }}
+                                            <br />
                                             <small
                                                 v-if="
                                                     delayed.workflow_name !==

@@ -106,23 +106,10 @@ def get_user_bundle(user: User):
         # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
         redis = RedisClient.get()
         cached = redis.get(f"users/{user.username}")
-        if cached is not None:
-            # decoded = json.loads(cached)
-            # if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
-            github_profile = async_to_sync(get_user_github_profile)(user)
-            github_organizations = async_to_sync(get_user_github_organizations)(user)
-            return {
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'github_username': user.profile.github_username,
-                'github_profile': github_profile,
-                'github_organizations': github_organizations,
-            }
-
+        if cached is not None: return json.loads(cached)
         github_profile = async_to_sync(get_user_github_profile)(user)
         github_organizations = async_to_sync(get_user_github_organizations)(user)
-        return ({
+        bundle = {
                     'username': user.username,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
@@ -133,7 +120,9 @@ def get_user_bundle(user: User):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-        })
+        }
+        redis.set(f"users/{user.username}", bundle)
+        return bundle
 
 
 @sync_to_async
@@ -1821,19 +1810,18 @@ def task_to_dict(task: Task) -> dict:
     if Path(orchestrator_log_file_path).is_file():
         with open(orchestrator_log_file_path, 'r') as log:
             orchestrator_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
-    else:
-        orchestrator_logs = []
+    else: orchestrator_logs = []
 
-    try:
-        AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
-        can_restart = True
-    except:
-        can_restart = False
+    # try:
+    #     AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
+    #     can_restart = True
+    # except:
+    #     can_restart = False
 
     results = RedisClient.get().get(f"results/{task.guid}")
 
-    t = {
-        'can_restart': can_restart,
+    return {
+        # 'can_restart': can_restart,
         'guid': task.guid,
         'status': task.status,
         'owner': task.user.username,
@@ -1886,8 +1874,6 @@ def task_to_dict(task: Task) -> dict:
         'delayed_id': task.delayed_id,
         'repeating_id': task.repeating_id
     }
-
-    return t
 
 
 def delayed_task_to_dict(task: DelayedTask) -> dict:
@@ -2060,7 +2046,7 @@ def agent_to_dict_async(agent: Agent, user: User = None):
 
 
 def agent_to_dict(agent: Agent, user: User = None) -> dict:
-    tasks = AgentTask.objects.filter(agent=agent)
+    # tasks = AgentTask.objects.filter(agent=agent)
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
     mapped = {
         'name': agent.name,
@@ -2081,7 +2067,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'disabled': agent.disabled,
         'public': agent.public,
         'gpus': agent.gpus,
-        'tasks': [agent_task_to_dict(task) for task in tasks],
+        # 'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,
