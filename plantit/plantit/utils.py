@@ -1190,12 +1190,17 @@ def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]
     seconds = int(split_time[2])
     walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
+    # use the configured time limit rather than the jobqueue config value (soon to be deprecated)
+    walltime = timedelta(hours=int(task.workflow['config']['time']['limit']), minutes=0, seconds=0)
+
     # TODO adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
     # nodes = calculate_node_count(task, inputs)
     # adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
 
     # round up to the nearest hour
-    hours = f"{min(ceil(walltime.total_seconds() / 60 / 60), int(int(task.agent.max_walltime) / 60))}"
+    job_walltime = ceil(walltime.total_seconds() / 60 / 60)
+    agent_walltime = int(int(task.agent.max_walltime) / 60)
+    hours = f"{min(job_walltime, agent_walltime)}"
     if len(hours) == 1: hours = f"0{hours}"
     adjusted_str = f"{hours}:00:00"
 
