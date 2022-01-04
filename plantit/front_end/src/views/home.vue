@@ -420,7 +420,15 @@
                                         ></Plotly>
                                     </b-col>
                                 </b-row>
-                                <!--<b-row>
+                                <b-row>
+                                    <b-col
+                                        ><Plotly
+                                            v-if="tasks.length > 0"
+                                            :data="taskTimeseriesData"
+                                            :layout="taskTimeseriesLayout"
+                                        ></Plotly
+                                    ></b-col> </b-row
+                                ><b-row>
                                     <b-col
                                         ><Plotly
                                             v-if="
@@ -430,17 +438,7 @@
                                             :data="workflowsRunningPlotData"
                                             :layout="workflowsRunningPlotLayout"
                                         ></Plotly
-                                    ></b-col>
-                                </b-row>-->
-                                <b-row>
-                                    <b-col
-                                        ><Plotly
-                                            v-if="tasks.length > 0"
-                                            :data="taskTimeseriesData"
-                                            :layout="taskTimeseriesLayout"
-                                        ></Plotly
-                                    ></b-col>
-                                </b-row> </b-col
+                                    ></b-col> </b-row></b-col
                         ></b-row>
                         <b-row v-else>
                             <b-col> No usage statistics to show. </b-col>
@@ -471,8 +469,7 @@ export default {
             timeseriesTasks: [],
             timeseriesTasksRunning: null,
             timeseriesUserTasksRunning: null,
-            // timeseriesWorkflowsRunning: null,
-            // timeseriesUserWorkflowsRunning: null,
+            timeseriesUserWorkflowsRunning: null,
         };
     },
     async created() {
@@ -498,10 +495,8 @@ export default {
                     this.timeseriesUserTasksRunning = [
                         response.data.user_tasks_running,
                     ];
-                    // this.timeseriesWorkflowsRunning =
-                    //     response.data.workflows_running;
-                    // this.timeseriesUserWorkflowsRunning =
-                    //     response.data.user_workflows_running;
+                    this.timeseriesUserWorkflowsRunning =
+                        response.data.user_workflows_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -665,7 +660,7 @@ export default {
                           ),
                           y: this.timeseriesUserTasksRunning[0].y,
                           type: 'scatter',
-                          line: { color: '#d6df5D', shape: 'spline' },
+                          line: { color: '#d6df5D', },
                       },
                   ];
         },
@@ -751,37 +746,64 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        // workflowsRunningPlotData() {
-        //     return this.timeseriesUserWorkflowsRunning === null
-        //         ? { x: [], y: [], type: 'scatter' }
-        //         : Object.keys(this.timeseriesUserWorkflowsRunning).map(
-        //               (key) => {
-        //                   return {
-        //                       x: this.timeseriesUserWorkflowsRunning[key].x.map(
-        //                           (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
-        //                       ),
-        //                       y: this.timeseriesUserWorkflowsRunning.y,
-        //                       z: this.timeseriesUserWorkflowsRunning.z,
-        //                       type: 'surface',
-        //                       // line: { color: '#d6df5D', shape: 'spline' },
-        //                   };
-        //               }
-        //           );
-        // },
-        // workflowsRunningPlotLayout() {
-        //     return {
-        //         title: 'Workflow Usage',
-        //         showlegend: false,
-        //         autosize: true,
-        //         scene: {
-        //             xaxis: { title: 'Time' },
-        //             yaxis: { title: 'Workflow' },
-        //             zaxis: { title: 'Tasks' },
-        //         },
-        //         paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-        //         plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-        //     };
-        // },
+        workflowsRunningPlotData() {
+            return this.timeseriesUserWorkflowsRunning === null
+                ? []
+                : Object.keys(this.timeseriesUserWorkflowsRunning).map(
+                      (key) => {
+                          return {
+                              x: this.timeseriesUserWorkflowsRunning[key].x.map(
+                                  (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
+                              ),
+                              y: this.timeseriesUserWorkflowsRunning[key].y,
+                              name: key,
+                              type: 'scatter',
+                          };
+                      }
+                  );
+        },
+        workflowsRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Workflow Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                    showticklabels: false,
+                },
+                height: 600,
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
     },
 };
 </script>

@@ -131,6 +131,17 @@
                                     Workflows</b-button
                                 ></template
                             >
+                            <b-row>
+                                <b-col
+                                    ><Plotly
+                                        v-if="
+                                            timeseriesWorkflowsRunning !== null
+                                        "
+                                        :data="workflowsRunningPlotData"
+                                        :layout="workflowsRunningPlotLayout"
+                                    ></Plotly
+                                ></b-col>
+                            </b-row>
                             <h5
                                 :class="
                                     profile.darkMode
@@ -320,6 +331,7 @@ export default {
             timeseriesUsers: [],
             timeseriesTasks: [],
             timeseriesTasksRunning: null,
+            timeseriesWorkflowsRunning: null,
             onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
@@ -420,6 +432,8 @@ export default {
                     this.timeseriesUsers = [response.data.users];
                     this.timeseriesTasks = [response.data.tasks];
                     this.timeseriesTasksRunning = [response.data.tasks_running];
+                    this.timeseriesWorkflowsRunning =
+                        response.data.workflows_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -544,7 +558,7 @@ export default {
                     ),
                     y: this.timeseriesTasks[0].y,
                     type: 'scatter',
-                    line: { color: '#d6df5D', shape: 'spline' },
+                    line: { color: '#d6df5D', },
                 },
             ];
         },
@@ -560,7 +574,7 @@ export default {
                           ),
                           y: this.timeseriesTasksRunning[0].y,
                           type: 'scatter',
-                          line: { color: '#d6df5D', shape: 'spline' },
+                          line: { color: '#d6df5D', },
                       },
                   ];
         },
@@ -641,6 +655,64 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+        workflowsRunningPlotData() {
+            return this.timeseriesWorkflowsRunning === null
+                ? []
+                : Object.keys(this.timeseriesWorkflowsRunning).map((key) => {
+                      return {
+                          x: this.timeseriesWorkflowsRunning[key].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesWorkflowsRunning[key].y,
+                          name: key,
+                          type: 'scatter',
+                          // mode: 'lines',
+                          // line: { shape: 'spline' },
+                      };
+                  });
+        },
+        workflowsRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                    showticklabels: false,
+                },
+                height: 600,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

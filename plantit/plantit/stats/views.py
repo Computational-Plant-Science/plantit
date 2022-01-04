@@ -35,15 +35,15 @@ def timeseries(request):
     cached_tasks = redis.get('tasks_timeseries')
     cached_running = redis.get('tasks_running')
     cached_user_running = redis.get(f"user_tasks_running/{request.user.username}")
-    # cached_workflows_running = redis.get(f"workflows_running")
-    # cached_user_workflows_running = redis.get(f"workflows_running/{request.user.username}")
+    cached_workflows_running = redis.get(f"workflows_running")
+    cached_user_workflows_running = redis.get(f"workflows_running/{request.user.username}")
 
     users = json.loads(cached_users) if cached_users is not None else get_users_timeseries()
     tasks = json.loads(cached_tasks) if cached_tasks is not None else get_tasks_timeseries()
     tasks_running = json.loads(cached_running) if cached_running is not None else get_tasks_running_timeseries()
     user_tasks_running = json.loads(cached_user_running) if cached_user_running is not None else get_tasks_running_timeseries(600, request.user)
-    # workflows_running = json.loads(cached_workflows_running) if cached_workflows_running is not None else get_workflows_running_timeseries()
-    # user_workflows_running = json.loads(cached_user_workflows_running) if cached_user_workflows_running is not None else get_workflows_running_timeseries(request.user)
+    workflows_running = json.loads(cached_workflows_running) if cached_workflows_running is not None else get_workflows_running_timeseries()
+    user_workflows_running = json.loads(cached_user_workflows_running) if cached_user_workflows_running is not None else get_workflows_running_timeseries(request.user)
 
     return JsonResponse({
         'users': {
@@ -66,16 +66,14 @@ def timeseries(request):
             'y': list(user_tasks_running.values()),
             'type': 'scatter'
         },
-        # 'workflows_running': {
-        #     'x': list([k.partition('-')[0] for k in workflows_running.keys()]),
-        #     'y': list([k.partition('-')[2] for k in workflows_running.keys()]),
-        #     'z': list(workflows_running.values()),
-        #     'type': 'surface'
-        # },
-        # 'user_workflows_running': {k: {
-        #     'x': list([kk for kk in v.keys()]),
-        #     'y': [k for _ in range(0, len(v))],
-        #     'z': list([vv for vv in v.values()]),
-        #     'type': 'surface'
-        # } for k, v in user_workflows_running.items()}
+        'workflows_running': {k: {
+            'x': list([kk for kk in v.keys()]),
+            'y': list([vv for vv in v.values()]),
+            'type': 'scatter'
+        } for k, v in workflows_running.items()},
+        'user_workflows_running': {k: {
+            'x': list([kk for kk in v.keys()]),
+            'y': list([vv for vv in v.values()]),
+            'type': 'scatter'
+        } for k, v in user_workflows_running.items()},
     })

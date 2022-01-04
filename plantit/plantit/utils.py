@@ -249,7 +249,7 @@ def get_users_timeseries():
 
 def get_tasks_timeseries():
     series = []
-    for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created.isoformat(), i + 1))
+    for i, task in enumerate(Task.objects.all().order_by('created')[:100]): series.append((task.created.isoformat(), i + 1))
 
     # update cache
     redis = RedisClient.get()
@@ -259,7 +259,7 @@ def get_tasks_timeseries():
 
 
 def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
-    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')[:100]  # TODO make limit configurable
     series = dict()
 
     # return early if no tasks
@@ -286,7 +286,7 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
 
 
 def get_workflows_running_timeseries(user: User = None):
-    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')[:100]  # TODO make limit configurable
     series = dict()
 
     # return early if no tasks
@@ -1205,6 +1205,7 @@ def calculate_node_count(task: Task, inputs: List[str]):
 
 
 def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+    # by default, use the suggested walltime provided in plantit.yaml
     jobqueue = options['jobqueue']
     split_time = jobqueue['walltime'].split(':')
     hours = int(split_time[0])
@@ -1212,8 +1213,13 @@ def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]
     seconds = int(split_time[2])
     walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-    # use the configured time limit rather than the jobqueue config value (soon to be deprecated)
-    walltime = timedelta(hours=int(task.workflow['config']['time']['limit']), minutes=0, seconds=0)
+    # if we have a manual (or preset) override, use that instead
+    if 'time' in task.workflow['config'] and 'limit' in task.workflow['config']['time'] and 'units' in task.workflow['config']['time']:
+        units = task.workflow['config']['time']['units']
+        limit = int(task.workflow['config']['time']['limit'])
+        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
+        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
+        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
 
     # TODO adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
     # nodes = calculate_node_count(task, inputs)
