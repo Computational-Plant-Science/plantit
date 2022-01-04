@@ -1221,9 +1221,17 @@ def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]
         elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
         elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
 
-    # TODO adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
-    # nodes = calculate_node_count(task, inputs)
-    # adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+    # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
+    # need to compute suggested walltime as a function of workflow, agent, and number of inputs
+    # how to do this? cache suggestions for each combination independently?
+    # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
+    #
+    # a good first step might be to compute aggregate stats for runtimes per workflow per agent,
+    # to get a sense for the scaling of each as a function of inputs and resources available
+    #
+    # naive (bad) solution:
+    #   nodes = calculate_node_count(task, inputs)
+    #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
 
     # round up to the nearest hour
     job_walltime = ceil(walltime.total_seconds() / 60 / 60)
