@@ -142,6 +142,7 @@
                                     ></Plotly
                                 ></b-col>
                             </b-row>
+                            <hr/>
                             <h5
                                 :class="
                                     profile.darkMode
@@ -669,7 +670,7 @@ export default {
                           ),
                           y: this.timeseriesWorkflowsRunning[key].y,
                           name: key,
-                          type: 'scatter',
+                          type: 'line',
                           // mode: 'lines',
                           // line: { shape: 'spline' },
                       };
@@ -688,7 +689,7 @@ export default {
                     },
                 },
                 legend: {
-                    orientation: 'h',
+                    // orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -712,7 +713,6 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 600,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

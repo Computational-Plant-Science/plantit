@@ -757,7 +757,7 @@ export default {
                               ),
                               y: this.timeseriesUserWorkflowsRunning[key].y,
                               name: key,
-                              type: 'scatter',
+                              type: 'line',
                           };
                       }
                   );
@@ -775,7 +775,7 @@ export default {
                     },
                 },
                 legend: {
-                    orientation: 'h',
+                    // orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },

@@ -249,7 +249,7 @@ def get_users_timeseries():
 
 def get_tasks_timeseries():
     series = []
-    for i, task in enumerate(Task.objects.all().order_by('-created')[:100]): series.append((task.created.isoformat(), i + 1))
+    for i, task in enumerate(Task.objects.all().order_by('created')[:100]): series.append((task.created.isoformat(), i + 1))
 
     # update cache
     redis = RedisClient.get()
@@ -287,7 +287,7 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
 
 def get_workflows_running_timeseries(user: User = None):
     # TODO make limit configurable
-    tasks = Task.objects.filter(workflow__config__public=True) if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]
+    tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
     series = dict()
 
     # return early if no tasks
