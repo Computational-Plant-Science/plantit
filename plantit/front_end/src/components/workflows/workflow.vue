@@ -4318,6 +4318,7 @@ export default {
             let taskName = this.taskName === '' ? this.taskGuid : this.taskName;
             let config = {
                 name: this.getWorkflow.config.name,
+                public: this.getWorkflow.config.public,
                 task_name: taskName,
                 task_guid: this.taskGuid,
                 image: this.getWorkflow.config.image,
