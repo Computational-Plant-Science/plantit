@@ -285,6 +285,28 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     return series
 
 
+def get_workflows_running_timeseries(user: User = None):
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    for task in tasks:
+        workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
+        if workflow not in series: series[workflow] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[workflow]: series[workflow][timestamp] = 0
+        series[workflow][timestamp] = series[workflow][timestamp] + 1
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"workflows_running/{user.username}" if user is not None else 'workflows_running', json.dumps(series))
+
+    return series
+
+
 async def calculate_user_statistics(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
     all_tasks = await filter_tasks(user=user)

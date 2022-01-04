@@ -387,7 +387,7 @@
                                         </h4>
                                     </b-col>
                                 </b-row>
-                                <br/>
+                                <br />
                                 <b-row>
                                     <b-col md="auto">
                                         <Plotly
@@ -420,6 +420,18 @@
                                         ></Plotly>
                                     </b-col>
                                 </b-row>
+                                <!--<b-row>
+                                    <b-col
+                                        ><Plotly
+                                            v-if="
+                                                timeseriesUserWorkflowsRunning !==
+                                                null
+                                            "
+                                            :data="workflowsRunningPlotData"
+                                            :layout="workflowsRunningPlotLayout"
+                                        ></Plotly
+                                    ></b-col>
+                                </b-row>-->
                                 <b-row>
                                     <b-col
                                         ><Plotly
@@ -459,6 +471,8 @@ export default {
             timeseriesTasks: [],
             timeseriesTasksRunning: null,
             timeseriesUserTasksRunning: null,
+            // timeseriesWorkflowsRunning: null,
+            // timeseriesUserWorkflowsRunning: null,
         };
     },
     async created() {
@@ -484,6 +498,10 @@ export default {
                     this.timeseriesUserTasksRunning = [
                         response.data.user_tasks_running,
                     ];
+                    // this.timeseriesWorkflowsRunning =
+                    //     response.data.workflows_running;
+                    // this.timeseriesUserWorkflowsRunning =
+                    //     response.data.user_workflows_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -647,7 +665,7 @@ export default {
                           ),
                           y: this.timeseriesUserTasksRunning[0].y,
                           type: 'scatter',
-                          line: {color: '#d6df5D', shape: 'spline'}
+                          line: { color: '#d6df5D', shape: 'spline' },
                       },
                   ];
         },
@@ -733,6 +751,37 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
+        // workflowsRunningPlotData() {
+        //     return this.timeseriesUserWorkflowsRunning === null
+        //         ? { x: [], y: [], type: 'scatter' }
+        //         : Object.keys(this.timeseriesUserWorkflowsRunning).map(
+        //               (key) => {
+        //                   return {
+        //                       x: this.timeseriesUserWorkflowsRunning[key].x.map(
+        //                           (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
+        //                       ),
+        //                       y: this.timeseriesUserWorkflowsRunning.y,
+        //                       z: this.timeseriesUserWorkflowsRunning.z,
+        //                       type: 'surface',
+        //                       // line: { color: '#d6df5D', shape: 'spline' },
+        //                   };
+        //               }
+        //           );
+        // },
+        // workflowsRunningPlotLayout() {
+        //     return {
+        //         title: 'Workflow Usage',
+        //         showlegend: false,
+        //         autosize: true,
+        //         scene: {
+        //             xaxis: { title: 'Time' },
+        //             yaxis: { title: 'Workflow' },
+        //             zaxis: { title: 'Tasks' },
+        //         },
+        //         paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+        //         plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+        //     };
+        // },
     },
 };
 </script>
