@@ -1363,7 +1363,7 @@
                                                                                                         ? 60
                                                                                                         : timeLimitUnits ===
                                                                                                           'Hours'
-                                                                                                        ? 24
+                                                                                                        ? 48
                                                                                                         : 10
                                                                                                 "
                                                                                             ></b-form-spinbutton></b-col
