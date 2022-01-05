@@ -29,9 +29,6 @@
                         phenotyping. It was preceded by &mdash; grew out of, as
                         it were &mdash;
                         <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
                             href="http://dirt.cyverse.org/?q=welcome"
                             >DIRT</b-link
                         >
@@ -45,9 +42,9 @@
                         plantIT is free software-as-a-service for HPC/HTC
                         phenotyping in the browser. Registered users can access
                         and annotate data stored in the CyVerse cloud and submit
-                        (possibly highly parallel) trait extraction pipelines, simulations, or other tasks to
-                        clusters and supercomputers, no programming experience
-                        required.
+                        (possibly highly parallel) trait extraction pipelines,
+                        simulations, or other tasks to clusters and
+                        supercomputers, no programming experience required.
                     </p>
                     <p>
                         plantIT is also a platform-as-a-service for programmers
@@ -61,51 +58,32 @@
                         plantIT makes a number of algorithms available by
                         default, including the original DIRT as well as
                         <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
                             href="https://github.com/Computational-Plant-Science/3D_model_reconstruction_demo"
                             >DIRT3D</b-link
                         >, a 3D root system reconstruction and analysis pipeline
                         <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
                             href="https://academic.oup.com/plphys/article/187/2/739/6317839"
                             >(Liu et al 2021)</b-link
-                        > and other trait analysis workflows.
+                        >
+                        and other trait analysis workflows.
                     </p>
                     <p>
                         plantIT is flexible enough to run most
                         container-friendly workflows, but if you want to do
                         genomics, a different tool (e.g.,
-                        <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            href="https://genomevolution.org/CoGe/"
+                        <b-link href="https://genomevolution.org/CoGe/"
                             >CoGe</b-link
                         >
                         or
-                        <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            href="https://easygwas.ethz.ch/"
+                        <b-link href="https://easygwas.ethz.ch/"
                             >easyGWAS</b-link
                         >) might be a better fit. Feel free to file bug reports,
                         make suggestions, request features
                         <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
                             href="https://github.com/Computational-Plant-Science/plantit"
                             >on GitHub</b-link
                         >, or
                         <b-link
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
                             href="https://github.com/Computational-Plant-Science/plantit/discussions"
                             >get in touch</b-link
                         >
@@ -120,118 +98,53 @@
                         <li>
                             a pipeline framework (e.g.,
                             <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
                                 href="https://snakemake.readthedocs.io/en/stable/"
                                 >Snakemake</b-link
                             >,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://www.nextflow.io/"
+                            <b-link href="https://www.nextflow.io/"
                                 >NextFlow</b-link
                             >,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://github.com/spotify/luigi"
+                            <b-link href="https://github.com/spotify/luigi"
                                 >Luigi</b-link
                             >,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://airflow.apache.org/"
+                            <b-link href="https://airflow.apache.org/"
                                 >AirFlow</b-link
                             >)
                         </li>
                         <li>
                             a machine learning automation platform (e.g.,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://metaflow.org/"
+                            <b-link href="https://metaflow.org/"
                                 >MetaFlow</b-link
                             >)
                         </li>
                         <li>
                             a distributed queue or task scheduler (e.g.,
                             <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
                                 href="https://docs.celeryproject.org/en/stable/index.html"
                                 >Celery</b-link
-                            >,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://dask.org/"
-                                >Dask</b-link
-                            >)
+                            >, <b-link href="https://dask.org/">Dask</b-link>)
                         </li>
                         <li>
                             a batch-processing, streaming, or analytics platform
                             (e.g.,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://spark.apache.org/"
+                            <b-link href="https://spark.apache.org/"
                                 >Spark</b-link
                             >)
                         </li>
                         <li>
                             a container orchestrator or infrastructure-as-code
                             system (e.g.,
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                                href="https://kubernetes.io/"
+                            <b-link href="https://kubernetes.io/"
                                 >Kubernetes</b-link
                             >)
                         </li>
                         <li>
                             a cluster scheduler (e.g.,
                             <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
                                 href="https://adaptivecomputing.com/cherry-services/torque-resource-manager/"
                                 >Torque/Moab</b-link
                             >,
                             <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
                                 href="https://slurm.schedmd.com/overview.html"
                                 >SLURM</b-link
                             >)
@@ -241,7 +154,13 @@
             </b-row>
             <br />
             <br />
-            <hr :style="profile.darkMode ? 'border-top: 1px solid #dee2e6' : 'border-top: 1px solid #212529'" />
+            <hr
+                :style="
+                    profile.darkMode
+                        ? 'border-top: 1px solid #dee2e6'
+                        : 'border-top: 1px solid #212529'
+                "
+            />
             <br />
             <br />
             <b-row class="text-center">
@@ -451,7 +370,7 @@
                             "
                             footer-border-variant="white"
                         >
-                          <template #default>
+                            <template #default>
                                 <h5
                                     :class="
                                         profile.darkMode
@@ -502,7 +421,7 @@
                             "
                             footer-border-variant="white"
                         >
-                          <template #default>
+                            <template #default>
                                 <h5
                                     :class="
                                         profile.darkMode
@@ -546,7 +465,7 @@
                             "
                             footer-border-variant="white"
                         >
-                          <template #default>
+                            <template #default>
                                 <h5
                                     :class="
                                         profile.darkMode
@@ -597,7 +516,7 @@
                             "
                             footer-border-variant="white"
                         >
-                          <template #default>
+                            <template #default>
                                 <h5
                                     :class="
                                         profile.darkMode
@@ -671,5 +590,16 @@ export default {
     },
 };
 </script>
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+@import '../scss/main.sass'
 
-<style scoped></style>
+.vertical-center
+    min-height: 100%
+    /* Fallback for browsers do NOT support vh unit */
+    min-height: 100vh
+    /* These two lines are counted as one :-)       */
+
+    display: flex
+    align-items: center
+</style>

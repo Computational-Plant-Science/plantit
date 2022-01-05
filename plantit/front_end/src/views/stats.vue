@@ -131,6 +131,18 @@
                                     Workflows</b-button
                                 ></template
                             >
+                            <b-row>
+                                <b-col
+                                    ><Plotly
+                                        v-if="
+                                            timeseriesWorkflowsRunning !== null
+                                        "
+                                        :data="workflowsRunningPlotData"
+                                        :layout="workflowsRunningPlotLayout"
+                                    ></Plotly
+                                ></b-col>
+                            </b-row>
+                            <hr/>
                             <h5
                                 :class="
                                     profile.darkMode
@@ -302,7 +314,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import mapboxgl from 'mapbox-gl';
 import { Plotly } from 'vue-plotly';
-import moment from "moment";
+import moment from 'moment';
 
 export default {
     name: 'stats',
@@ -320,6 +332,7 @@ export default {
             timeseriesUsers: [],
             timeseriesTasks: [],
             timeseriesTasksRunning: null,
+            timeseriesWorkflowsRunning: null,
             onlineCount: -1,
             workflowCount: -1,
             taskCount: -1,
@@ -420,6 +433,8 @@ export default {
                     this.timeseriesUsers = [response.data.users];
                     this.timeseriesTasks = [response.data.tasks];
                     this.timeseriesTasksRunning = [response.data.tasks_running];
+                    this.timeseriesWorkflowsRunning =
+                        response.data.workflows_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -537,17 +552,32 @@ export default {
             };
         },
         tasksPlotData() {
-            return this.timeseriesTasks;
+            return [
+                {
+                    x: this.timeseriesTasks[0].x.map((t) =>
+                        moment(t).format('YYYY-MM-DD HH:mm:ss')
+                    ),
+                    y: this.timeseriesTasks[0].y,
+                    type: 'scatter',
+                    line: { color: '#d6df5D', },
+                },
+            ];
         },
         tasksRunningPlotData() {
-          if (this.timeseriesTasksRunning === null) return {x: [], y: [], type: 'scatter'}
-            return [
-              {
-                x: this.timeseriesTasksRunning[0].x.map((t) => moment(t).format('YYYY-MM-DD HH:mm:ss')),
-                    y: this.timeseriesTasksRunning[0].y,
-                    type: 'scatter',
-              }
-            ]
+            // if (this.timeseriesTasksRunning === null)
+            //     return { x: [], y: [], type: 'scatter' };
+            return this.timeseriesTasksRunning === null
+                ? [{ x: [], y: [], type: 'scatter' }]
+                : [
+                      {
+                          x: this.timeseriesTasksRunning[0].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesTasksRunning[0].y,
+                          type: 'scatter',
+                          line: { color: '#d6df5D', },
+                      },
+                  ];
         },
         tasksPlotLayout() {
             return {
@@ -556,7 +586,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Total Tasks',
+                    text: 'Total',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -596,7 +626,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Tasks Running',
+                    text: 'Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -624,6 +654,64 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showticklabels: false,
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+        workflowsRunningPlotData() {
+            return this.timeseriesWorkflowsRunning === null
+                ? []
+                : Object.keys(this.timeseriesWorkflowsRunning).map((key) => {
+                      return {
+                          x: this.timeseriesWorkflowsRunning[key].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesWorkflowsRunning[key].y,
+                          name: key,
+                          type: 'line',
+                          // mode: 'lines',
+                          // line: { shape: 'spline' },
+                      };
+                  });
+        },
+        workflowsRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    // orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                    showticklabels: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',

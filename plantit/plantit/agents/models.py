@@ -35,6 +35,7 @@ class Agent(models.Model):
     max_cores = models.IntegerField(blank=True, null=True, default=1)
     max_processes = models.IntegerField(blank=True, null=True, default=1)
     max_nodes = models.IntegerField(blank=True, null=True, default=1)
+    orchestrator_queue = models.CharField(max_length=250, null=True, blank=True)
     queue = models.CharField(max_length=250, null=True, blank=True)
     project = models.CharField(max_length=250, null=True, blank=True)
     header_skip = models.CharField(max_length=1000, null=True, blank=True)

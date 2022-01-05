@@ -33,7 +33,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import Count
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule
+from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 from math import ceil
 from paramiko.ssh_exception import SSHException
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask, AgentAuthentication
@@ -106,23 +106,10 @@ def get_user_bundle(user: User):
         # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
         redis = RedisClient.get()
         cached = redis.get(f"users/{user.username}")
-        if cached is not None:
-            # decoded = json.loads(cached)
-            # if 'github_profile' in decoded: return decoded  # we may not have loaded the user's GitHub profile yet
-            github_profile = async_to_sync(get_user_github_profile)(user)
-            github_organizations = async_to_sync(get_user_github_organizations)(user)
-            return {
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'github_username': user.profile.github_username,
-                'github_profile': github_profile,
-                'github_organizations': github_organizations,
-            }
-
+        if cached is not None: return json.loads(cached)
         github_profile = async_to_sync(get_user_github_profile)(user)
         github_organizations = async_to_sync(get_user_github_organizations)(user)
-        return ({
+        bundle = {
                     'username': user.username,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
@@ -133,7 +120,9 @@ def get_user_bundle(user: User):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-        })
+        }
+        redis.set(f"users/{user.username}", bundle)
+        return bundle
 
 
 @sync_to_async
@@ -250,17 +239,27 @@ def get_user_statistics(user: User) -> dict:
 def get_users_timeseries():
     series = []
     for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"users_timeseries", json.dumps(series))
+
     return series
 
 
 def get_tasks_timeseries():
     series = []
-    for i, task in enumerate(Task.objects.all().order_by('created')): series.append((task.created.isoformat(), i + 1))
+    for i, task in enumerate(Task.objects.all().order_by('created')[:100]): series.append((task.created.isoformat(), i + 1))
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"tasks_timeseries", json.dumps(series))
+
     return series
 
 
 def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
-    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('completed')
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]  # TODO make limit configurable
     series = dict()
 
     # return early if no tasks
@@ -278,6 +277,33 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
         running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
         series[datetime.fromtimestamp(t).isoformat()] = running
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"user_tasks_running/{user.username}" if user is not None else 'tasks_running', json.dumps(series))
+
+    return series
+
+
+def get_workflows_running_timeseries(user: User = None):
+    # TODO make limit configurable
+    tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    for task in tasks:
+        workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
+        if workflow not in series: series[workflow] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[workflow]: series[workflow][timestamp] = 0
+        series[workflow][timestamp] = series[workflow][timestamp] + 1
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"workflows_running/{user.username}" if user is not None else 'workflows_running', json.dumps(series))
 
     return series
 
@@ -1175,8 +1201,52 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
            [cli_push]
 
 
+def calculate_node_count(task: Task, inputs: List[str]):
+    return 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+
+
+def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+    # by default, use the suggested walltime provided in plantit.yaml
+    jobqueue = options['jobqueue']
+    split_time = jobqueue['walltime'].split(':')
+    hours = int(split_time[0])
+    minutes = int(split_time[1])
+    seconds = int(split_time[2])
+    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+    # if we have a manual (or preset) override, use that instead
+    if 'time' in task.workflow['config'] and 'limit' in task.workflow['config']['time'] and 'units' in task.workflow['config']['time']:
+        units = task.workflow['config']['time']['units']
+        limit = int(task.workflow['config']['time']['limit'])
+        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
+        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
+        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
+
+    # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
+    # need to compute suggested walltime as a function of workflow, agent, and number of inputs
+    # how to do this? cache suggestions for each combination independently?
+    # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
+    #
+    # a good first step might be to compute aggregate stats for runtimes per workflow per agent,
+    # to get a sense for the scaling of each as a function of inputs and resources available
+    #
+    # naive (bad) solution:
+    #   nodes = calculate_node_count(task, inputs)
+    #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+    # round up to the nearest hour
+    job_walltime = ceil(walltime.total_seconds() / 60 / 60)
+    agent_walltime = int(int(task.agent.max_walltime) / 60)
+    hours = f"{min(job_walltime, agent_walltime)}"
+    if len(hours) == 1: hours = f"0{hours}"
+    adjusted_str = f"{hours}:00:00"
+
+    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.guid}")
+    return adjusted_str
+
+
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
-    nodes = 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+    nodes = calculate_node_count(task, inputs)
     task.inputs_detected = len(inputs)
     task.save()
 
@@ -1187,30 +1257,16 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
     if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
-        f"#SBATCH --mem={jobqueue['memory']}")
+        f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else jobqueue['memory']}")
     if 'walltime' in jobqueue:
-        split_time = jobqueue['walltime'].split(':')
-        hours = int(split_time[0])
-        minutes = int(split_time[1])
-        seconds = int(split_time[2])
-        walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-        # adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
-        adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
-
-        # round up to the nearest hour
-        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), task.agent.max_nodes)}"
-        if len(hours) == 1: hours = f"0{hours}"
-        adjusted_str = f"{hours}:00:00"
-
-        logger.debug(f"Using adjusted walltime {adjusted_str} for {task.user.username}'s task {task.name}")
+        walltime = calculate_walltime(task, options, inputs)
         async_to_sync(push_task_event)(task)
-
-        task.job_requested_walltime = adjusted_str
+        task.job_requested_walltime = walltime
         task.save()
-        commands.append(f"#SBATCH --time={adjusted_str}")
-    if gpus: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
+        commands.append(f"#SBATCH --time={walltime}")
+    if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
+    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
@@ -1448,7 +1504,7 @@ def log_task_orchestrator_status(task: Task, messages: List[str]):
     log_path = get_task_orchestrator_log_file_path(task)
     with open(log_path, 'a') as log:
         for message in messages:
-            logger.info(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
+            logger.info(f"[{task.user.username}'s task {task.guid}] {message}")
             log.write(f"{message}\n")
 
 
@@ -1797,19 +1853,18 @@ def task_to_dict(task: Task) -> dict:
     if Path(orchestrator_log_file_path).is_file():
         with open(orchestrator_log_file_path, 'r') as log:
             orchestrator_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
-    else:
-        orchestrator_logs = []
+    else: orchestrator_logs = []
 
-    try:
-        AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
-        can_restart = True
-    except:
-        can_restart = False
+    # try:
+    #     AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
+    #     can_restart = True
+    # except:
+    #     can_restart = False
 
     results = RedisClient.get().get(f"results/{task.guid}")
 
-    t = {
-        'can_restart': can_restart,
+    return {
+        # 'can_restart': can_restart,
         'guid': task.guid,
         'status': task.status,
         'owner': task.user.username,
@@ -1858,10 +1913,10 @@ def task_to_dict(task: Task) -> dict:
         'output_files': json.loads(results) if results is not None else [],
         'job_id': task.job_id,
         'job_status': task.job_status,
-        'job_walltime': task.job_consumed_walltime
+        'job_walltime': task.job_consumed_walltime,
+        'delayed_id': task.delayed_id,
+        'repeating_id': task.repeating_id
     }
-
-    return t
 
 
 def delayed_task_to_dict(task: DelayedTask) -> dict:
@@ -1869,11 +1924,17 @@ def delayed_task_to_dict(task: DelayedTask) -> dict:
         # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
+        'enabled': task.enabled,
         'interval': {
             'every': task.interval.every,
             'period': task.interval.period
         },
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
+
     }
 
 
@@ -1887,11 +1948,15 @@ def repeating_task_to_dict(task: RepeatingTask):
             'period': task.interval.period
         },
         'enabled': task.enabled,
-        'last_run': task.last_run_at
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
     }
 
 
-def create_now_task(user: User, workflow):
+def create_immediate_task(user: User, workflow):
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     repo_branch = workflow['branch']['name']
@@ -1904,8 +1969,9 @@ def create_now_task(user: User, workflow):
 
     config = workflow['config']
     branch = workflow['branch']
-    task_name = config.get('task_name', None)
-    task_guid = config.get('task_guid', None)
+    task_guid = config.get('task_guid', None) if workflow['type'] == 'Now' else str(uuid.uuid4())
+    task_name = task_guid
+    # task_name = config.get('task_name', None)
 
     agent = Agent.objects.get(name=config['agent']['name'])
     task = create_task(
@@ -1923,39 +1989,69 @@ def create_now_task(user: User, workflow):
 
 def create_delayed_task(user: User, workflow):
     now = timezone.now().timestamp()
+    id = f"{user.username}-delayed-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = DelayedTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        # agent=agent,
         eta=eta,
         one_off=True,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        # name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-        name=f"{user.username}-{now}",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_delayed',
+        args=json.dumps([user.username, workflow, id]))
+
+    # manually refresh task schedule
+    PeriodicTasks.changed(task)
 
     return task, created
 
 
 def create_repeating_task(user: User, workflow):
+    now = timezone.now().timestamp()
+    id = f"{user.username}-repeating-{now}"
     eta, seconds = parse_task_eta(workflow)
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-    agent = Agent.objects.get(name=workflow['config']['agent']['name'])
+
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
+    repo_branch = workflow['branch']['name']
+
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else: workflow_image_url = None
+
     task, created = RepeatingTask.objects.get_or_create(
         user=user,
         interval=schedule,
-        # agent=agent,
         eta=eta,
-        workflow_owner=workflow['repo']['owner']['login'],
-        workflow_name=workflow['repo']['name'],
-        name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-        task='plantit.celery_tasks.create_and_submit',
-        args=json.dumps([user.username, workflow]))
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_repeating',
+        args=json.dumps([user.username, workflow, id]))
+
+    # manually refresh task schedule
+    PeriodicTasks.changed(task)
+
+    return task, created
 
 
 # notifications
@@ -1994,7 +2090,7 @@ def agent_to_dict_async(agent: Agent, user: User = None):
 
 
 def agent_to_dict(agent: Agent, user: User = None) -> dict:
-    tasks = AgentTask.objects.filter(agent=agent)
+    # tasks = AgentTask.objects.filter(agent=agent)
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
     mapped = {
         'name': agent.name,
@@ -2015,7 +2111,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'disabled': agent.disabled,
         'public': agent.public,
         'gpus': agent.gpus,
-        'tasks': [agent_task_to_dict(task) for task in tasks],
+        # 'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'is_local': agent.executor == AgentExecutor.LOCAL,
         'is_healthy': agent.is_healthy,

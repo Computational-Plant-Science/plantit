@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 
 from plantit.tasks.models import Task, TaskCounter, TaskStatus
-from plantit.utils import list_institutions, filter_online, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries
+from plantit.utils import list_institutions, filter_online, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries, get_workflows_running_timeseries
 from plantit.redis import RedisClient
 
 
@@ -34,12 +34,16 @@ def timeseries(request):
     cached_users = redis.get('users_timeseries')
     cached_tasks = redis.get('tasks_timeseries')
     cached_running = redis.get('tasks_running')
-    cached_user_running = redis.get('user_tasks_running')
+    cached_user_running = redis.get(f"user_tasks_running/{request.user.username}")
+    cached_workflows_running = redis.get(f"workflows_running")
+    cached_user_workflows_running = redis.get(f"workflows_running/{request.user.username}")
 
     users = json.loads(cached_users) if cached_users is not None else get_users_timeseries()
     tasks = json.loads(cached_tasks) if cached_tasks is not None else get_tasks_timeseries()
     tasks_running = json.loads(cached_running) if cached_running is not None else get_tasks_running_timeseries()
     user_tasks_running = json.loads(cached_user_running) if cached_user_running is not None else get_tasks_running_timeseries(600, request.user)
+    workflows_running = json.loads(cached_workflows_running) if cached_workflows_running is not None else get_workflows_running_timeseries()
+    user_workflows_running = json.loads(cached_user_workflows_running) if cached_user_workflows_running is not None else get_workflows_running_timeseries(request.user)
 
     return JsonResponse({
         'users': {
@@ -61,5 +65,15 @@ def timeseries(request):
             'x': list(user_tasks_running.keys()),
             'y': list(user_tasks_running.values()),
             'type': 'scatter'
-        }
+        },
+        'workflows_running': {k: {
+            'x': list([kk for kk in v.keys()]),
+            'y': list([vv for vv in v.values()]),
+            'type': 'scatter'
+        } for k, v in workflows_running.items()},
+        'user_workflows_running': {k: {
+            'x': list([kk for kk in v.keys()]),
+            'y': list([vv for vv in v.values()]),
+            'type': 'scatter'
+        } for k, v in user_workflows_running.items()},
     })

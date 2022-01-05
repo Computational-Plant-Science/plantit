@@ -22,7 +22,7 @@ from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status, list_task_results, check_task_cyverse_transfer, cleanup_task
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, create_now_task, create_delayed_task, create_repeating_task, \
+from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestrator_log_file_path, create_immediate_task, create_delayed_task, create_repeating_task, \
     log_task_orchestrator_status, \
     push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict, parse_time_limit_seconds, \
     get_task_scheduler_log_file_path, get_task_agent_log_file_path, \
@@ -43,7 +43,7 @@ def get_all_or_create(request):
             if workflow['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
 
             # create task and submit task chain immediately
-            task = create_now_task(request.user, workflow)
+            task = create_immediate_task(request.user, workflow)
             task_time_limit = parse_time_limit_seconds(task.workflow['config']['time'])
             step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
             auth = parse_task_auth_options(task, task.workflow['auth'])
@@ -55,14 +55,12 @@ def get_all_or_create(request):
 
             return JsonResponse(task_to_dict(task))
         elif workflow['type'] == 'After':
-            # create delayed task
             task, created = create_delayed_task(request.user, workflow)
             return JsonResponse({
                 'created': created,
                 'task': delayed_task_to_dict(task)
             })
         elif workflow['type'] == 'Every':
-            # create repeating task
             task,created = create_repeating_task(request.user, workflow)
             return JsonResponse({
                 'created': created,
@@ -74,40 +72,32 @@ def get_all_or_create(request):
 
 @login_required
 def get_by_owner(request, owner):
-    # params = request.query_params
-    # page = params.get('page') if 'page' in params else -1
-
-    try:
-        user = User.objects.get(username=owner)
-    except:
-        return HttpResponseNotFound()
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
 
     tasks = Task.objects.filter(user=user)
     paginator = Paginator(tasks, 20)
     page = paginator.get_page(int(request.GET.get('page', 1)))
 
-    data = {
+    return JsonResponse({
         'previous_page': page.has_previous() and page.previous_page_number() or None,
         'next_page': page.has_next() and page.next_page_number() or None,
         'tasks': [task_to_dict(task) for task in list(page)]
-    }
-    return JsonResponse(data)
-    # JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+    })
 
-    # TODO we still eventually need paging
-    # if 'running' in params and params.get('running') == 'True':
-    #     tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
-    # elif 'running' in params and params.get('running') == 'False':
-    #     tasks = [t for t in tasks if t.is_complete]
-    #     if page > -1:
-    #         start = int(page) * 20
-    #         count = start + 20
-    #         tasks = tasks[start:(start + count)]
-    # else:
-    #     if page > -1:
-    #         start = int(page) * 20
-    #         count = start + 20
-    #         tasks = tasks[start:(start + count)]
+
+@login_required
+def get_delayed_by_owner(request, owner):
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
+    return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=user, enabled=True)]})
+
+
+@login_required
+def get_repeating_by_owner(request, owner):
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
+    return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=user, enabled=True)]})
 
 
 @login_required
@@ -450,6 +440,22 @@ def delete(request, owner, name):
     tasks = list(Task.objects.filter(user=user))
 
     return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+
+
+@login_required
+def unschedule_delayed(request, owner, name):
+    try: task = DelayedTask.objects.get(user=request.user, name=name)
+    except: return HttpResponseNotFound()
+    task.delete()
+    return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
+
+
+@login_required
+def unschedule_repeating(request, owner, name):
+    try: task = RepeatingTask.objects.get(user=request.user, name=name)
+    except: return HttpResponseNotFound()
+    task.delete()
+    return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @login_required
