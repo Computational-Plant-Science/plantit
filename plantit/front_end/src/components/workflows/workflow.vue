@@ -172,15 +172,8 @@
                                                     ></b-badge
                                                 ></b-col
                                             >
-                                            <b-col><Plotly
-                                        v-if="
-                                            workflowTimeseries !== null
-                                        "
-                                        :data="workflowRunningPlotData"
-                                        :layout="workflowRunningPlotLayout"
-                                    ></Plotly
-                                ></b-col>
                                         </b-row>
+
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <h5>
@@ -255,7 +248,15 @@
                                                 ></b-col
                                             >-->
                                         </b-row>
-                                        <b-tabs
+                                      <b-row><b-col><Plotly
+                                        v-if="
+                                            workflowTimeseries !== null && workflowRunningPlotData[0].x.length > 0
+                                        "
+                                        :data="workflowRunningPlotData"
+                                        :layout="workflowRunningPlotLayout"
+                                    ></Plotly
+                                ></b-col></b-row>
+                                      <b-tabs
                                             v-model="activeTab"
                                             nav-class="bg-transparent"
                                             active-nav-item-class="bg-transparent text-dark"
@@ -3927,7 +3928,7 @@ export default {
         };
     },
     async mounted() {
-        await this.loadWorkflow();
+        await Promise.all([this.loadWorkflow(), this.loadTimeseries()]);
         this.populateComponents();
 
         if (
@@ -3965,9 +3966,9 @@ export default {
     methods: {
         async loadTimeseries() {
             await axios
-                .get('/apis/v1/stats/workflow_timeseries/')
+                .get(`/apis/v1/stats/workflow_timeseries/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/${this.$router.currentRoute.params.branch}/`)
                 .then((response) => {
-                    this.workflowTimeseries = [response.data.workflow_running];
+                    this.workflowTimeseries = response.data.workflow_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -4702,13 +4703,13 @@ export default {
         workflowRunningPlotData() {
             return this.workflowTimeseries === null
                 ? []
-                : {
+                : [{
                       x: this.workflowTimeseries.x.map((t) =>
                           moment(t).format('YYYY-MM-DD HH:mm:ss')
                       ),
                       y: this.workflowTimeseries.y,
                       type: 'line',
-                  };
+                  }];
         },
         workflowRunningPlotLayout() {
             return {
@@ -4731,6 +4732,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    showticklabels: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -4747,7 +4749,7 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 600,
+                height: 200,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

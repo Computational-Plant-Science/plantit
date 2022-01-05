@@ -231,6 +231,57 @@
                                 ></b-card-group
                             ></b-tab
                         >
+                      <b-tab
+                            title="Agents"
+                            :title-link-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            :class="
+                                profile.darkMode
+                                    ? 'theme-dark m-0 p-3'
+                                    : 'theme-light m-0 p-3'
+                            "
+                            ><template #title
+                                ><h1
+                                    v-if="agentCount >= 0"
+                                    class="text-success text-center"
+                                >
+                                    {{ agentCount }}
+                                </h1>
+                                <b-spinner
+                                    v-else
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner
+                                ><b-button
+                                    :variant="
+                                        activeTab === 2
+                                            ? profile.darkMode
+                                                ? 'outline-success'
+                                                : 'success'
+                                            : profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    v-b-tooltip.hover
+                                    :title="`Agents`"
+                                    ><i class="fas fa-server fa-fw"></i>
+                                    Agents</b-button
+                                ></template
+                            >
+                            <b-row>
+                                <b-col
+                                    ><Plotly
+                                        v-if="
+                                            timeseriesAgentsRunning !== null
+                                        "
+                                        :data="agentsRunningPlotData"
+                                        :layout="agentsRunningPlotLayout"
+                                    ></Plotly
+                                ></b-col>
+                            </b-row>
+                      </b-tab>
                         <b-tab
                             title="Tasks"
                             :title-link-class="
@@ -256,7 +307,7 @@
                                 ></b-spinner
                                 ><b-button
                                     :variant="
-                                        activeTab === 2
+                                        activeTab === 3
                                             ? profile.darkMode
                                                 ? 'outline-success'
                                                 : 'success'
@@ -333,8 +384,10 @@ export default {
             timeseriesTasks: [],
             timeseriesTasksRunning: null,
             timeseriesWorkflowsRunning: null,
+            timeseriesAgentsRunning: null,
             onlineCount: -1,
             workflowCount: -1,
+            agentCount: -1,
             taskCount: -1,
             runningCount: -1,
             institutions: [],
@@ -406,6 +459,7 @@ export default {
                     this.userCount = response.data.users;
                     this.onlineCount = response.data.online;
                     this.workflowCount = response.data.workflows;
+                    this.agentCount = response.data.agents;
                     this.taskCount = response.data.tasks;
                     this.runningCount = response.data.running;
                 })
@@ -433,8 +487,8 @@ export default {
                     this.timeseriesUsers = [response.data.users];
                     this.timeseriesTasks = [response.data.tasks];
                     this.timeseriesTasksRunning = [response.data.tasks_running];
-                    this.timeseriesWorkflowsRunning =
-                        response.data.workflows_running;
+                    this.timeseriesWorkflowsRunning = response.data.workflows_running;
+                    this.timeseriesAgentsRunning = response.data.agents_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -677,6 +731,63 @@ export default {
                   });
         },
         workflowsRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    // orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                    showticklabels: false,
+                },
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+      agentsRunningPlotData() {
+            return this.timeseriesAgentsRunning === null
+                ? []
+                : Object.keys(this.timeseriesAgentsRunning).map((key) => {
+                      return {
+                          x: this.timeseriesAgentsRunning[key].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesAgentsRunning[key].y,
+                          name: key,
+                          type: 'line',
+                          // mode: 'lines',
+                          // line: { shape: 'spline' },
+                      };
+                  });
+        },
+        agentsRunningPlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',

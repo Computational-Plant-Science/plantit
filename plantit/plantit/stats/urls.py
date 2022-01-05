@@ -6,5 +6,5 @@ urlpatterns = [
     path(r'counts/', views.counts),
     path(r'institutions/', views.institutions),
     path(r'timeseries/', views.timeseries),
-    path(r'workflow_timeseries/', views.workflow_timeseries)
+    path(r'workflow_timeseries/<owner>/<name>/<branch>/', views.workflow_timeseries)
 ]

@@ -330,6 +330,50 @@ def get_workflows_running_timeseries(user: User = None):
     return series
 
 
+def get_agent_running_timeseries(name):
+    agent = Agent.objects.get(name=name)
+    tasks = Task.objects.filter(agent=agent).order_by('-created')
+    series = dict()
+
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series: series[timestamp] = 0
+        series[timestamp] = series[timestamp] + 1
+
+        # update cache
+    redis = RedisClient.get()
+    redis.set(f"agent_running/{name}", json.dumps(series))
+
+    return series
+
+
+def get_agents_running_timeseries(user: User = None):
+    # TODO make limit configurable
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        agent = task.agent
+        if agent.name not in series: series[agent.name] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[agent.name]: series[agent.name][timestamp] = 0
+        series[agent.name][timestamp] = series[agent.name][timestamp] + 1
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"agents_running/{user.username}" if user is not None else 'agents_running', json.dumps(series))
+
+    return series
+
 async def calculate_user_statistics(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
     all_tasks = await filter_tasks(user=user)

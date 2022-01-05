@@ -389,6 +389,10 @@
                                 </b-row>
                                 <br />
                                 <b-row>
+                                    <b-col><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Workflows</h5></b-col>
+                                </b-row>
+                                <hr/>
+                            <b-row>
                                     <b-col md="auto">
                                         <Plotly
                                             v-if="
@@ -399,7 +403,22 @@
                                             :layout="workflowPlotLayout"
                                         ></Plotly>
                                     </b-col>
-                                    <b-col md="auto">
+                                <b-col><Plotly
+                                            v-if="
+                                                timeseriesUserWorkflowsRunning !==
+                                                null
+                                            "
+                                            :data="workflowsRunningPlotData"
+                                            :layout="workflowsRunningPlotLayout"
+                                        ></Plotly
+                                    ></b-col>
+                            </b-row>
+                                <br/>
+                              <b-row>
+                                    <b-col><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Agents</h5></b-col>
+                                </b-row>
+                                <hr/>
+                              <b-row><b-col md="auto">
                                         <Plotly
                                             v-if="
                                                 profile.stats.agent_usage.labels
@@ -408,8 +427,28 @@
                                             :data="agentPlotData"
                                             :layout="agentPlotLayout"
                                         ></Plotly>
-                                    </b-col>
-                                    <b-col>
+                                    </b-col><b-col><Plotly
+                                            v-if="
+                                                timeseriesUserAgentsRunning !==
+                                                null
+                                            "
+                                            :data="agentsRunningPlotData"
+                                            :layout="agentsRunningPlotLayout"
+                                        ></Plotly
+                                    ></b-col></b-row>
+                              <br/>
+                              <b-row>
+                                    <b-col><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Tasks</h5></b-col>
+                                </b-row>
+                                <hr/>
+                              <b-row>
+                                    <b-col
+                                        ><Plotly
+                                            v-if="tasks.length > 0"
+                                            :data="taskTimeseriesData"
+                                            :layout="taskTimeseriesLayout"
+                                        ></Plotly
+                                    ></b-col><b-col>
                                         <Plotly
                                             v-if="
                                                 timeseriesUserTasksRunning !==
@@ -418,30 +457,9 @@
                                             :data="tasksRunningPlotData"
                                             :layout="tasksRunningPlotLayout"
                                         ></Plotly>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col
-                                        ><Plotly
-                                            v-if="tasks.length > 0"
-                                            :data="taskTimeseriesData"
-                                            :layout="taskTimeseriesLayout"
-                                        ></Plotly
-                                    ></b-col> </b-row
-                                ><b-row>
-                                    <b-col
-                                        ><Plotly
-                                            v-if="
-                                                timeseriesUserWorkflowsRunning !==
-                                                null
-                                            "
-                                            :data="workflowsRunningPlotData"
-                                            :layout="workflowsRunningPlotLayout"
-                                        ></Plotly
-                                    ></b-col> </b-row></b-col
-                        ></b-row>
-                        <b-row v-else>
-                            <b-col> No usage statistics to show. </b-col>
+                                    </b-col></b-row
+                                >
+                            </b-col>
                         </b-row>
                     </div>
                 </b-col></b-row
@@ -470,6 +488,8 @@ export default {
             timeseriesTasksRunning: null,
             timeseriesUserTasksRunning: null,
             timeseriesUserWorkflowsRunning: null,
+            timeseriesAgentsRunning: null,
+            timeseriesUserAgentsRunning: null,
         };
     },
     async created() {
@@ -497,6 +517,7 @@ export default {
                     ];
                     this.timeseriesUserWorkflowsRunning =
                         response.data.user_workflows_running;
+                    this.timeseriesUserAgentsRunning = response.data.user_agents_running;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -539,19 +560,18 @@ export default {
         workflowPlotLayout() {
             return {
                 title: {
-                    text: 'Workflow Usage',
+                    text: 'Cumulative Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                autosize: true,
                 legend: {
                     orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
-                height: 300,
-                width: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -568,19 +588,18 @@ export default {
         agentPlotLayout() {
             return {
                 title: {
-                    text: 'Agent Usage',
+                    text: 'Cumulative Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                autosize: true,
                 legend: {
                     orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
-                height: 300,
-                width: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -606,7 +625,7 @@ export default {
         taskPlotLayout() {
             return {
                 title: {
-                    text: 'Task Status Distribution',
+                    text: 'Completion Status',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -671,7 +690,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Recent Tasks',
+                    text: 'Recent Submissions',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -697,9 +716,9 @@ export default {
                         },
                     },
                 },
-                yaxis: {
-                    showticklabels: false,
-                },
+                // yaxis: {
+                //     showticklabels: false,
+                // },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -711,7 +730,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Task Usage',
+                    text: 'Recent Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -741,7 +760,6 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -769,7 +787,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Workflow Usage',
+                    text: 'Recent Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -799,7 +817,63 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 600,
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+            };
+        },
+        agentsRunningPlotData() {
+            return this.timeseriesUserAgentsRunning === null
+                ? []
+                : Object.keys(this.timeseriesUserAgentsRunning).map(
+                      (key) => {
+                          return {
+                              x: this.timeseriesUserAgentsRunning[key].x.map(
+                                  (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
+                              ),
+                              y: this.timeseriesUserAgentsRunning[key].y,
+                              name: key,
+                              type: 'line',
+                          };
+                      }
+                  );
+        },
+        agentsRunningPlotLayout() {
+            return {
+                font: {
+                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                },
+                autosize: true,
+                title: {
+                    text: 'Recent Usage',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                legend: {
+                    // orientation: 'h',
+                    font: {
+                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                    },
+                },
+                xaxis: {
+                    showgrid: false,
+                    showline: true,
+                    linecolor: 'rgb(102, 102, 102)',
+                    titlefont: {
+                        font: {
+                            color: 'rgb(204, 204, 204)',
+                        },
+                    },
+                    tickfont: {
+                        font: {
+                            color: 'rgb(102, 102, 102)',
+                        },
+                    },
+                },
+                yaxis: {
+                    dtick: 1,
+                    showticklabels: false,
+                },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
