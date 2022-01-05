@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 
 from plantit.tasks.models import Task, TaskCounter, TaskStatus
-from plantit.utils import list_institutions, filter_online, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries, get_workflows_running_timeseries
+from plantit.utils import list_institutions, filter_online, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries, get_workflow_running_timeseries, get_workflows_running_timeseries
 from plantit.redis import RedisClient
 
 
@@ -27,6 +27,18 @@ def counts(request):
 
 def institutions(request):
     return JsonResponse({'institutions': list_institutions()})
+
+
+def workflow_timeseries(request, owner, name, branch):
+    redis = RedisClient.get()
+    cached = redis.get(f"workflow_running/{owner}/{name}/{branch}")
+    workflow_running = json.loads(cached) if cached is not None else get_workflow_running_timeseries(owner, name, branch)
+
+    return JsonResponse({'workflow_running': {
+        'x': list(workflow_running.keys()),
+        'y': list(workflow_running.values()),
+        'type': 'scatter'
+    }})
 
 
 def timeseries(request):

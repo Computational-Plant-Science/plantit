@@ -285,6 +285,27 @@ def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None)
     return series
 
 
+def get_workflow_running_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str):
+    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per workflow
+    for task in tasks:
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series: series[timestamp] = 0
+        series[timestamp] = series [timestamp] + 1
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"workflow_running/{workflow_owner}/{workflow_name}/{workflow_branch}", json.dumps(series))
+
+    return series
+
+
 def get_workflows_running_timeseries(user: User = None):
     # TODO make limit configurable
     tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
@@ -294,6 +315,7 @@ def get_workflows_running_timeseries(user: User = None):
     if len(tasks) == 0:
         return series
 
+    # count tasks per workflow
     for task in tasks:
         workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
         if workflow not in series: series[workflow] = dict()
