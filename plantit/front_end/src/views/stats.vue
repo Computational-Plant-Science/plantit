@@ -503,7 +503,7 @@ export default {
                 autosize: true,
                 height: 350,
                 title: {
-                    text: 'Total Users',
+                    text: 'Total',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
