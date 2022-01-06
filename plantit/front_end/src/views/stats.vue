@@ -562,7 +562,16 @@ export default {
             };
         },
         usersPlotData() {
-            return this.timeseriesUsers;
+          return [
+                {
+                    x: this.timeseriesUsers[0].x.map((t) =>
+                        moment(t).format('YYYY-MM-DD HH:mm:ss')
+                    ),
+                    y: this.timeseriesUsers[0].y,
+                    type: 'scatter',
+                    line: { color: '#d6df5D', },
+                },
+            ];
         },
         usersPlotLayout() {
             return {

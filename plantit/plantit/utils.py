@@ -2316,7 +2316,7 @@ def get_project_workflows(project: Investigation):
 
 
 def project_to_dict(project: Investigation) -> dict:
-    studies = [study_to_dict(study, project) for study in Study.objects.filter(investigation=project)]
+    studies = [study_to_dict(study, project) for study in Study.objects.select_related().filter(investigation=project)]
     team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
     return {
         'guid': project.guid,
