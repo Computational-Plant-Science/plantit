@@ -121,7 +121,7 @@ def get_user_bundle(user: User):
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
-        redis.set(f"users/{user.username}", bundle)
+        redis.set(f"users/{user.username}", json.dumps(bundle))
         return bundle
 
 
