@@ -248,24 +248,6 @@
                                                 ></b-col
                                             >-->
                                         </b-row>
-                                        <b-row
-                                            ><b-col
-                                                ><Plotly
-                                            class="p-2"
-                                                    v-if="
-                                                        workflowTimeseries !==
-                                                            null &&
-                                                        workflowRunningPlotData[0]
-                                                            .x.length > 0
-                                                    "
-                                                    :data="
-                                                        workflowRunningPlotData
-                                                    "
-                                                    :layout="
-                                                        workflowRunningPlotLayout
-                                                    "
-                                                ></Plotly></b-col
-                                        ></b-row>
                                         <b-tabs
                                             v-model="activeTab"
                                             nav-class="bg-transparent"
@@ -3847,7 +3829,6 @@ import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
 import { guid } from '@/utils';
-import { Plotly } from 'vue-plotly';
 import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
 import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
 
@@ -3858,7 +3839,6 @@ String.prototype.capitalize = function () {
 export default {
     name: 'workflow',
     components: {
-        Plotly,
         Multiselect,
         datatree,
         delayedtaskblurb,
@@ -3934,11 +3914,10 @@ export default {
                 },
             },
             selectedAgent: null,
-            workflowTimeseries: null,
         };
     },
     async mounted() {
-        await Promise.all([this.loadWorkflow(), this.loadTimeseries()]);
+        await this.loadWorkflow();
         this.populateComponents();
 
         if (
@@ -3974,19 +3953,6 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
-        async loadTimeseries() {
-            await axios
-                .get(
-                    `/apis/v1/stats/workflow_timeseries/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/${this.$router.currentRoute.params.branch}/`
-                )
-                .then((response) => {
-                    this.workflowTimeseries = response.data.workflow_running;
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        },
         // async deleteDelayed(name) {
         //     this.unschedulingDelayed = true;
         //     await axios
