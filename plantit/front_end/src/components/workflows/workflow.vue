@@ -248,15 +248,25 @@
                                                 ></b-col
                                             >-->
                                         </b-row>
-                                      <b-row><b-col><Plotly
-                                        v-if="
-                                            workflowTimeseries !== null && workflowRunningPlotData[0].x.length > 0
-                                        "
-                                        :data="workflowRunningPlotData"
-                                        :layout="workflowRunningPlotLayout"
-                                    ></Plotly
-                                ></b-col></b-row>
-                                      <b-tabs
+                                        <b-row
+                                            ><b-col
+                                                ><Plotly
+                                            class="p-2"
+                                                    v-if="
+                                                        workflowTimeseries !==
+                                                            null &&
+                                                        workflowRunningPlotData[0]
+                                                            .x.length > 0
+                                                    "
+                                                    :data="
+                                                        workflowRunningPlotData
+                                                    "
+                                                    :layout="
+                                                        workflowRunningPlotLayout
+                                                    "
+                                                ></Plotly></b-col
+                                        ></b-row>
+                                        <b-tabs
                                             v-model="activeTab"
                                             nav-class="bg-transparent"
                                             active-nav-item-class="bg-transparent text-dark"
@@ -3966,7 +3976,9 @@ export default {
     methods: {
         async loadTimeseries() {
             await axios
-                .get(`/apis/v1/stats/workflow_timeseries/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/${this.$router.currentRoute.params.branch}/`)
+                .get(
+                    `/apis/v1/stats/workflow_timeseries/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/${this.$router.currentRoute.params.branch}/`
+                )
                 .then((response) => {
                     this.workflowTimeseries = response.data.workflow_running;
                 })
@@ -4703,13 +4715,16 @@ export default {
         workflowRunningPlotData() {
             return this.workflowTimeseries === null
                 ? []
-                : [{
-                      x: this.workflowTimeseries.x.map((t) =>
-                          moment(t).format('YYYY-MM-DD HH:mm:ss')
-                      ),
-                      y: this.workflowTimeseries.y,
-                      type: 'line',
-                  }];
+                : [
+                      {
+                          x: this.workflowTimeseries.x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.workflowTimeseries.y,
+                          type: 'line',
+                          line: { color: '#d6df5D', shape: 'spline' },
+                      },
+                  ];
         },
         workflowRunningPlotLayout() {
             return {
@@ -4732,7 +4747,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
-                    showticklabels: false,
+                    showticklabels: true,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -4749,7 +4764,7 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 200,
+                height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

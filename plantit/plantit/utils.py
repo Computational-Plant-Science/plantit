@@ -394,8 +394,13 @@ async def calculate_user_statistics(user: User) -> dict:
                     [agent for agent in await filter_agents(user=user) if agent is not None]]
     used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
                    [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
+    # used_projects = [(await sync_to_async(project_to_dict)(project))['name'] for project in
+    #                 [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
     used_agents_counter = Counter(used_agents)
+    # used_projects_counter = Counter(used_projects)
     unique_used_agents = list(np.unique(used_agents))
+    # unique_used_projects = list(np.unique(used_projects))
+
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
     # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
     tasks_running = await sync_to_async(get_tasks_running_timeseries)(600, user)
@@ -413,6 +418,10 @@ async def calculate_user_statistics(user: User) -> dict:
             'values': [used_agents_counter[agent] for agent in unique_used_agents],
             'labels': unique_used_agents,
         },
+        # 'project_usage': {
+        #     'values': [used_projects_counter[project] for project in unique_used_projects],
+        #     'labels': unique_used_projects
+        # },
         'task_status': {
             'values': [1 if task.status == 'success' else 0 for task in all_tasks],
             'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
@@ -659,6 +668,11 @@ def get_task_user(task: Task):
 @sync_to_async
 def get_task_agent(task: Task):
     return task.agent
+
+
+@sync_to_async
+def get_task_project(task: Task):
+    return task.project
 
 
 def parse_task_walltime(walltime) -> timedelta:

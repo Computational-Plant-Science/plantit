@@ -308,7 +308,7 @@ export default {
                         () => `running tasks`
                     ),
                     type: 'scatter',
-                    line: { color: '#d6df5D', shape: 'spline' },
+                    line: { color: '#d6df5D', },
                 },
             ];
         },
