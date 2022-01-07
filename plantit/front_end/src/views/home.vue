@@ -221,10 +221,11 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    Account Summary
+                                                    Usage Summary
                                                 </h4>
                                             </b-col>
                                         </b-row>
+                                        <hr />
                                         <b-row>
                                             <b-col md="auto" class="mt-3">
                                                 <h5
@@ -383,68 +384,9 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Cumulative Usage
-                                        </h4>
-                                    </b-col>
-                                </b-row>
-                                <br />
-                                <b-row>
-                                    <b-col md="auto">
-                                        <Plotly
-                                            v-if="
-                                                profile.stats.workflow_usage
-                                                    .labels.length > 0
-                                            "
-                                            :data="workflowPlotData"
-                                            :layout="workflowPlotLayout"
-                                        ></Plotly>
-                                    </b-col>
-                                    <b-col md="auto">
-                                        <Plotly
-                                            v-if="
-                                                profile.stats.agent_usage.labels
-                                                    .length > 0
-                                            "
-                                            :data="agentPlotData"
-                                            :layout="agentPlotLayout"
-                                        ></Plotly></b-col
-                                ><b-col md="auto" v-if="profile.stats.project_usage !== undefined && profile.stats.project_usage !== null">
-                                        <Plotly
-                                            v-if="
-                                                profile.stats.project_usage.labels
-                                                    .length > 0
-                                            "
-                                            :data="projectPlotData"
-                                            :layout="projectPlotLayout"
-                                        ></Plotly> </b-col
-                                ></b-row>
-                                <br />
-                                <b-row align-v="start">
-                                    <b-col md="auto">
-                                        <h4
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
                                             Recent Usage
                                         </h4>
                                     </b-col>
-                                </b-row>
-                                <br />
-                                <b-row>
-                                    <b-col
-                                        ><h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Tasks
-                                        </h5></b-col
-                                    >
                                 </b-row>
                                 <hr />
                                 <b-row>
@@ -465,20 +407,6 @@
                                         ></Plotly> </b-col
                                 ></b-row>
                                 <br />
-                                <b-row>
-                                    <b-col
-                                        ><h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Workflows
-                                        </h5></b-col
-                                    >
-                                </b-row>
-                                <hr />
                                 <b-row
                                     ><b-col
                                         ><Plotly
@@ -490,21 +418,7 @@
                                             :layout="workflowsRunningPlotLayout"
                                         ></Plotly></b-col
                                 ></b-row>
-                                <br/>
-                                <b-row>
-                                    <b-col
-                                        ><h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Agents
-                                        </h5></b-col
-                                    >
-                                </b-row>
-                                <hr />
+                                <br />
                                 <b-row
                                     ><b-col
                                         ><Plotly
@@ -515,6 +429,57 @@
                                             :data="agentsRunningPlotData"
                                             :layout="agentsRunningPlotLayout"
                                         ></Plotly></b-col
+                                ></b-row>
+                                <br />
+                                <b-row align-v="start">
+                                    <b-col md="auto">
+                                        <h4
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Cumulative Usage
+                                        </h4>
+                                    </b-col>
+                                </b-row>
+                                <hr />
+                                <b-row>
+                                    <b-col>
+                                        <Plotly
+                                            v-if="
+                                                profile.stats.workflow_usage
+                                                    .labels.length > 0
+                                            "
+                                            :data="workflowPlotData"
+                                            :layout="workflowPlotLayout"
+                                        ></Plotly>
+                                    </b-col>
+                                    <b-col>
+                                        <Plotly
+                                            v-if="
+                                                profile.stats.agent_usage.labels
+                                                    .length > 0
+                                            "
+                                            :data="agentPlotData"
+                                            :layout="agentPlotLayout"
+                                        ></Plotly></b-col
+                                    ><b-col
+                                        v-if="
+                                            profile.stats.project_usage !==
+                                                undefined &&
+                                            profile.stats.project_usage !== null
+                                        "
+                                    >
+                                        <Plotly
+                                            v-if="
+                                                profile.stats.project_usage
+                                                    .labels.length > 0
+                                            "
+                                            :data="projectPlotData"
+                                            :layout="projectPlotLayout"
+                                        ></Plotly> </b-col
                                 ></b-row>
                             </b-col>
                         </b-row>
@@ -628,7 +593,8 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
-                height: 250,
+                showlegend: false,
+                // height: 250,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -657,7 +623,8 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
-                height: 250,
+                showlegend: false,
+                // height: 250,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -686,6 +653,8 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                showlegend: false,
+                // height: 250,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -776,7 +745,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Status',
+                    text: 'Task Status',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -816,7 +785,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Submissions',
+                    text: 'Tasks Running',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -873,7 +842,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Tasks',
+                    // text: 'Workflows',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -928,7 +897,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Tasks',
+                    text: 'Agents',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },

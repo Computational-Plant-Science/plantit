@@ -50,7 +50,7 @@
                             ><h5 class="text-white">tasks</h5>
                         </b-col>
                     </b-row>
-                    <br/>
+                    <!--<br/>
                     <b-row v-if="profile.loggedIn">
                         <b-col
                             ><Plotly
@@ -59,7 +59,7 @@
                                 :layout="tasksRunningPlotLayout"
                             ></Plotly
                         ></b-col>
-                    </b-row>
+                    </b-row>-->
                 </b-container>
             </template>
             <b-container>
