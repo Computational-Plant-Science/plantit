@@ -24,7 +24,7 @@ from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_
     submit_jobqueue_task, parse_time_limit_seconds, parse_task_auth_options, create_immediate_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
     refresh_user_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries, get_workflows_running_timeseries, get_agents_running_timeseries
 
 logger = get_task_logger(__name__)
 
@@ -467,6 +467,8 @@ def refresh_all_users_stats():
     users_series = get_users_timeseries()
     tasks_series = get_tasks_timeseries()
     tasks_running_series = get_tasks_running_timeseries(600)
+    workflows_running_series = get_workflows_running_timeseries()
+    agents_running_series = get_agents_running_timeseries()
 
     now = datetime.now()
     redis = RedisClient.get()
@@ -476,6 +478,10 @@ def refresh_all_users_stats():
     redis.set(f"tasks_timeseries_updated", now.timestamp())
     redis.set(f"tasks_running", json.dumps(tasks_running_series))
     redis.set(f"tasks_running_updated", now.timestamp())
+    redis.set(f"workflows_running", json.dumps(workflows_running_series))
+    redis.set(f"workflows_running_updated", now.timestamp())
+    redis.set(f"agents_running", json.dumps(agents_running_series))
+    redis.set(f"agents_running_updated", now.timestamp())
 
 
 @app.task()

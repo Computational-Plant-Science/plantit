@@ -121,7 +121,7 @@ def get_user_bundle(user: User):
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
-        redis.set(f"users/{user.username}", bundle)
+        redis.set(f"users/{user.username}", json.dumps(bundle))
         return bundle
 
 
@@ -330,6 +330,50 @@ def get_workflows_running_timeseries(user: User = None):
     return series
 
 
+def get_agent_running_timeseries(name):
+    agent = Agent.objects.get(name=name)
+    tasks = Task.objects.filter(agent=agent).order_by('-created')
+    series = dict()
+
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series: series[timestamp] = 0
+        series[timestamp] = series[timestamp] + 1
+
+        # update cache
+    redis = RedisClient.get()
+    redis.set(f"agent_running/{name}", json.dumps(series))
+
+    return series
+
+
+def get_agents_running_timeseries(user: User = None):
+    # TODO make limit configurable
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        agent = task.agent
+        if agent.name not in series: series[agent.name] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[agent.name]: series[agent.name][timestamp] = 0
+        series[agent.name][timestamp] = series[agent.name][timestamp] + 1
+
+    # update cache
+    redis = RedisClient.get()
+    redis.set(f"agents_running/{user.username}" if user is not None else 'agents_running', json.dumps(series))
+
+    return series
+
 async def calculate_user_statistics(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
     all_tasks = await filter_tasks(user=user)
@@ -350,8 +394,12 @@ async def calculate_user_statistics(user: User) -> dict:
                     [agent for agent in await filter_agents(user=user) if agent is not None]]
     used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
                    [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
+    used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
+                    [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
     used_agents_counter = Counter(used_agents)
+    used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
     unique_used_agents = list(np.unique(used_agents))
+
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
     # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
     tasks_running = await sync_to_async(get_tasks_running_timeseries)(600, user)
@@ -368,6 +416,10 @@ async def calculate_user_statistics(user: User) -> dict:
         'agent_usage': {
             'values': [used_agents_counter[agent] for agent in unique_used_agents],
             'labels': unique_used_agents,
+        },
+        'project_usage': {
+            'values': list(dict(used_projects_counter).values()),
+            'labels': list(dict(used_projects_counter).keys()),
         },
         'task_status': {
             'values': [1 if task.status == 'success' else 0 for task in all_tasks],
@@ -615,6 +667,11 @@ def get_task_user(task: Task):
 @sync_to_async
 def get_task_agent(task: Task):
     return task.agent
+
+
+@sync_to_async
+def get_task_project(task: Task):
+    return task.project
 
 
 def parse_task_walltime(walltime) -> timedelta:
@@ -2260,7 +2317,7 @@ def get_project_workflows(project: Investigation):
 
 
 def project_to_dict(project: Investigation) -> dict:
-    studies = [study_to_dict(study, project) for study in Study.objects.filter(investigation=project)]
+    studies = [study_to_dict(study, project) for study in Study.objects.select_related().filter(investigation=project)]
     team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
     return {
         'guid': project.guid,

@@ -172,15 +172,8 @@
                                                     ></b-badge
                                                 ></b-col
                                             >
-                                            <b-col><Plotly
-                                        v-if="
-                                            workflowTimeseries !== null
-                                        "
-                                        :data="workflowRunningPlotData"
-                                        :layout="workflowRunningPlotLayout"
-                                    ></Plotly
-                                ></b-col>
                                         </b-row>
+
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <h5>
@@ -3836,7 +3829,6 @@ import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
 import { guid } from '@/utils';
-import { Plotly } from 'vue-plotly';
 import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
 import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
 
@@ -3847,7 +3839,6 @@ String.prototype.capitalize = function () {
 export default {
     name: 'workflow',
     components: {
-        Plotly,
         Multiselect,
         datatree,
         delayedtaskblurb,
@@ -3923,7 +3914,6 @@ export default {
                 },
             },
             selectedAgent: null,
-            workflowTimeseries: null,
         };
     },
     async mounted() {
@@ -3963,17 +3953,6 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
-        async loadTimeseries() {
-            await axios
-                .get('/apis/v1/stats/workflow_timeseries/')
-                .then((response) => {
-                    this.workflowTimeseries = [response.data.workflow_running];
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        },
         // async deleteDelayed(name) {
         //     this.unschedulingDelayed = true;
         //     await axios
@@ -4702,13 +4681,16 @@ export default {
         workflowRunningPlotData() {
             return this.workflowTimeseries === null
                 ? []
-                : {
-                      x: this.workflowTimeseries.x.map((t) =>
-                          moment(t).format('YYYY-MM-DD HH:mm:ss')
-                      ),
-                      y: this.workflowTimeseries.y,
-                      type: 'line',
-                  };
+                : [
+                      {
+                          x: this.workflowTimeseries.x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.workflowTimeseries.y,
+                          type: 'line',
+                          line: { color: '#d6df5D', shape: 'spline' },
+                      },
+                  ];
         },
         workflowRunningPlotLayout() {
             return {
@@ -4731,6 +4713,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    showticklabels: true,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -4747,7 +4730,7 @@ export default {
                     dtick: 1,
                     showticklabels: false,
                 },
-                height: 600,
+                height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
