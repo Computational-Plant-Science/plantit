@@ -126,7 +126,7 @@
                         <b-col></b-col>
                         <b-col align-self="center" md="auto">
                             <b-button
-                                v-if="!profile.loggedIn"
+                                v-if="!profile.loggedIn && !maintenance"
                                 variant="white"
                                 class="text-center"
                                 href="/apis/v1/idp/cyverse_login/"
@@ -199,6 +199,12 @@
                         <b-col></b-col>
                     </b-row>
                 </template>
+                <b-row align-v="center" v-if="maintenance"
+                    ><b-col class="text-center" align-self="center"
+                        >CyVerse is currently undergoing maintenance. We will be
+                        back up when the maintenance window completes.</b-col
+                    >
+                </b-row>
                 <b-row class="m-0 mt-2 mb-2"
                     ><b-col class="text-left">
                         <h5
@@ -312,6 +318,13 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
+        maintenance() {
+            return this.profile.maintenance_windows.some(
+                (w) =>
+                    moment(w.start) < moment().utc().valueOf() &&
+                    moment(w.end) > moment().utc().valueOf()
+            );
+        },
         getUpdates() {
             return this.updates
                 .slice()
@@ -419,7 +432,7 @@ export default {
         },
         async loadUpdates() {
             await axios
-                .get('/apis/v1/news/updates/')
+                .get('/apis/v1/misc/updates/')
                 .then((response) => {
                     this.updates = response.data.updates;
                 })

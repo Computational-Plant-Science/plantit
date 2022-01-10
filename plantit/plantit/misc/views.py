@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 
-from plantit.news.models import NewsUpdate
+from plantit.misc.models import NewsUpdate
 from plantit.utils import update_to_dict
 
 

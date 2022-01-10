@@ -1,12 +1,17 @@
+import re
 import logging
 from typing import List
 
 import paramiko
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
-from plantit.misc import clean_html
-
 logger = logging.getLogger(__name__)
+
+
+def clean_html(raw_html: str) -> str:
+    expr = re.compile('<.*?>')
+    text = re.sub(expr, '', raw_html)
+    return text
 
 
 class SSH:

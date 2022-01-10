@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from plantit.news.models import NewsUpdate
+from plantit.misc.models import NewsUpdate, MaintenanceWindow
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 from plantit.feedback.models import Feedback
@@ -9,6 +9,11 @@ from plantit.miappe.models import Investigation, Study
 
 @admin.register(NewsUpdate)
 class NewsUpdateAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(MaintenanceWindow)
+class MaintenanceWindowAdmin(admin.ModelAdmin):
     pass
 
 

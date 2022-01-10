@@ -17,7 +17,8 @@ export const user = {
             organizations: [],
             projects: [],
             hints: false,
-            stats: null
+            stats: null,
+            maintenanceWindows: []
         },
         profileLoading: true
     }),
@@ -51,6 +52,9 @@ export const user = {
         },
         setStats(state, stats) {
             state.profile.stats = stats;
+        },
+        setMaintenanceWindows(state, windows) {
+            state.profile.maintenanceWindows = windows;
         },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
@@ -120,6 +124,7 @@ export const user = {
                     commit('setHints', response.data.django_profile.hints);
                     commit('setPushNotifications', response.data.django_profile.push_notifications);
                     commit('setStats', response.data.stats);
+                    commit('setMaintenanceWindows', response.data.maintenance_windows);
                     commit('setProfileLoading', false);
                 })
                 .catch(error => {

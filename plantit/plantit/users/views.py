@@ -24,12 +24,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.celery_tasks import refresh_user_workflows, refresh_user_stats
-from plantit.misc import get_csrf_token
+from plantit.utils import get_csrf_token
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
+from plantit.misc.models import MaintenanceWindow
 from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, \
     get_user_statistics, \
     get_user_bundle
@@ -283,6 +284,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             user.profile.save()
             user.save()
 
+        # get only maintenance windows occurring today or in the future
+        maintenance_windows = list(MaintenanceWindow.objects.filter(start__gte=datetime.today().date()))
+        maintenance_windows = [{'start': w.start.isoformat(), 'end': w.end.isoformat()} for w in maintenance_windows]
+
         response = {
             'django_profile': {
                 'username': user.username,
@@ -295,6 +300,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
+                'maintenance_windows': maintenance_windows
             },
             'stats': stats,
             'projects': [p.guid for p in user.project_teams.all()]

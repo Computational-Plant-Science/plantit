@@ -21,7 +21,7 @@ urlpatterns = [
                   url('workflows/', include("plantit.workflows.urls")),
                   url('tasks/', include("plantit.tasks.urls")),
                   url('stats/', include("plantit.stats.urls")),
-                  url('news/', include("plantit.news.urls")),
+                  url('misc/', include("plantit.misc.urls")),
                   url('notifications/', include("plantit.notifications.urls")),
                   url('feedback/', include("plantit.feedback.urls")),
                   url('miappe/', include("plantit.miappe.urls")),
