@@ -9,6 +9,7 @@ djangorestframework
 djangochannelsrestframework
 django-enum-choices
 django-simple-history
+django-cacheops
 psycopg2-binary
 markdown
 paramiko

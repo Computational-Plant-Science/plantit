@@ -112,7 +112,8 @@ INSTALLED_APPS = [
     'taggit',
     'django_celery_beat',
     'channels',
-    'simple_history'
+    'simple_history',
+    'cacheops'
 ]
 
 MIDDLEWARE = [
@@ -208,3 +209,24 @@ REST_FRAMEWORK = {
 }
 
 TAGGIT_CASE_INSENSITIVE = True
+
+CACHEOPS_REDIS = {
+    'host': 'redis', # redis-server is on same machine
+    'port': 6379,    # default redis port
+}
+
+# Alternatively the redis connection can be defined using a URL:
+# CACHEOPS_REDIS = "redis://redis:6379/1"
+
+CACHEOPS = {
+    # cache User.objects.get() calls and all other plantit model gets for 15 minutes
+    'auth.user': {'ops': 'get', 'timeout': 60 * 15},
+    'plantit.*': {'ops': 'get', 'timeout': 60 * 15},
+
+    # Enable manual caching on all other models with default timeout of an hour
+    # Use Post.objects.cache().get(...)
+    #  or Tags.objects.filter(...).order_by(...).cache()
+    # to cache particular ORM request.
+    # Invalidation is still automatic
+    # '*.*': {'ops': (), 'timeout': 60*60},
+}
