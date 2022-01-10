@@ -11,7 +11,7 @@ export const datasets = {
         shared: [],
         sharedLoading: true,
         sharing: [],
-        sharingLoading: true
+        sharingLoading: true,
     }),
     mutations: {
         // TODO use this as a reference to move other websocket stuff into Vuex
@@ -53,7 +53,7 @@ export const datasets = {
         },
         setSharingLoading(state, loading) {
             state.sharingLoading = loading;
-        }
+        },
     },
     actions: {
         async loadUser({ commit, rootState }) {
@@ -63,15 +63,15 @@ export const datasets = {
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${rootState.user.profile.djangoProfile.username}/`,
                     {
                         headers: {
-                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
-                        }
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`,
+                        },
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     commit('setUser', response.data);
                     commit('setUserLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setUserLoading', false);
                     if (error.response.status === 403) {
@@ -88,15 +88,15 @@ export const datasets = {
                     'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/shared',
                     {
                         headers: {
-                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
-                        }
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`,
+                        },
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     commit('setPublic', response.data);
                     commit('setPublicLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setPublicLoading', true);
                     throw error;
@@ -109,15 +109,15 @@ export const datasets = {
                     'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/',
                     {
                         headers: {
-                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
-                        }
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`,
+                        },
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     commit('setShared', response.data);
                     commit('setSharedLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setSharedLoading', true);
                     throw error;
@@ -128,14 +128,14 @@ export const datasets = {
             await axios
                 .get('/apis/v1/datasets/sharing/', {
                     headers: {
-                        Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
-                    }
+                        Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`,
+                    },
                 })
-                .then(response => {
+                .then((response) => {
                     commit('setSharing', response.data.datasets);
                     commit('setSharingLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setSharingLoading', true);
                     throw error;
@@ -143,16 +143,16 @@ export const datasets = {
         },
         setSharing({ commit }, datasets) {
             commit('setSharing', datasets);
-        }
+        },
     },
     getters: {
-        userDatasets: state => state.user,
-        publicDatasets: state => state.public,
-        sharedDatasets: state => state.shared,
-        sharingDatasets: state => state.sharing,
-        userDatasetsLoading: state => state.userLoading,
-        publicDatasetsLoading: state => state.publicLoading,
-        sharedDatasetsLoading: state => state.sharedLoading,
-        sharingDatasetsLoading: state => state.sharingLoading
-    }
+        userDatasets: (state) => state.user,
+        publicDatasets: (state) => state.public,
+        sharedDatasets: (state) => state.shared,
+        sharingDatasets: (state) => state.sharing,
+        userDatasetsLoading: (state) => state.userLoading,
+        publicDatasetsLoading: (state) => state.publicLoading,
+        sharedDatasetsLoading: (state) => state.sharedLoading,
+        sharingDatasetsLoading: (state) => state.sharingLoading,
+    },
 };

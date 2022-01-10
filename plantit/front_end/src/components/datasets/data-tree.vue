@@ -2148,7 +2148,8 @@ export default {
         //             throw error;
         //         });
         // },
-        // new version proxies via PlantIT to link project/study info
+
+        // proxy via PlantIT to link project/study info
         async createDirectory(path, token) {
             this.creatingDirectory = true;
             this.$bvModal.hide('createDirectoryModal');

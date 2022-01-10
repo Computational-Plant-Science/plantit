@@ -247,13 +247,9 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
-import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'home-about',
-    components: {
-        Plotly,
-    },
     async mounted() {
         await Promise.all([this.loadCounts(), this.loadTimeseries()]);
     },
