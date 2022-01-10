@@ -1224,7 +1224,8 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
 
 
 def calculate_node_count(task: Task, inputs: List[str]):
-    return 1 if task.agent.launcher else (min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1)
+    node_count = min(len(inputs), task.agent.max_nodes)
+    return 1 if task.agent.launcher else (node_count if inputs is not None and not task.agent.job_array else 1)
 
 
 def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
@@ -1269,6 +1270,7 @@ def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]
 
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = calculate_node_count(task, inputs)
+    tasks = min(len(inputs), task.agent.max_cores)
     task.inputs_detected = len(inputs)
     task.save()
 
@@ -1293,7 +1295,7 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
         commands.append(f"#SBATCH -N {nodes}")
-        commands.append(f"#SBATCH --ntasks={min(len(inputs), task.agent.max_cores) if inputs is not None and not task.agent.job_array else 1}")
+        commands.append(f"#SBATCH --ntasks={tasks if inputs is not None and not task.agent.job_array else 1}")
     else:
         commands.append(f"#SBATCH -N 1")
         commands.append("#SBATCH --ntasks=1")

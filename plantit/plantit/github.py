@@ -158,9 +158,9 @@ def validate_repo_config(config: dict, cyverse_token: str) -> (bool, List[str]):
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_profile(owner: str, token: str) -> dict:
+async def get_profile(owner: str, token: str, timeout: int = 15) -> dict:
     headers = {'Authorization': f"Bearer {token}"}
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://api.github.com/users/{owner}")
         if response.status_code != 200: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
 
@@ -175,12 +175,12 @@ async def get_profile(owner: str, token: str) -> dict:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_repo(owner: str, name: str, token: str) -> dict:
+async def get_repo(owner: str, name: str, token: str, timeout: int = 15) -> dict:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(
             f"https://api.github.com/repos/{owner}/{name}",
             headers={
@@ -199,11 +199,11 @@ async def get_repo(owner: str, name: str, token: str) -> dict:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_repo_branches(owner: str, name: str, token: str) -> list:
+async def list_repo_branches(owner: str, name: str, token: str, timeout: int = 15) -> list:
     headers = {
         "Authorization": f"token {token}",
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://api.github.com/repos/{owner}/{name}/branches")
         branches = response.json()
         return branches
@@ -215,11 +215,11 @@ async def list_repo_branches(owner: str, name: str, token: str) -> list:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_repositories(owner: str, token: str) -> list:
+async def list_repositories(owner: str, token: str, timeout: int = 15) -> list:
     headers = {
         "Authorization": f"token {token}",
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://api.github.com/users/{owner}/repos")
         jsn = response.json()
         # if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']: raise ValueError(jsn['message'])
@@ -235,11 +235,11 @@ async def list_repositories(owner: str, token: str) -> list:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-def get_repo_readme(owner: str, name: str, token: str) -> str:
+def get_repo_readme(owner: str, name: str, token: str, timeout: int = 15) -> str:
     # TODO refactor to use asyncx
     try:
         url = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
-        request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
+        request = requests.get(url, timeout=timeout) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
         file = request.json()
         text = requests.get(file['download_url']).text
         logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
@@ -247,7 +247,7 @@ def get_repo_readme(owner: str, name: str, token: str) -> str:
     except:
         try:
             url = f"https://api.github.com/repos/{owner}/{name}/contents/README"
-            request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
+            request = requests.get(url, timeout=timeout) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
             file = request.json()
             text = requests.get(file['download_url']).text
             logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
@@ -263,12 +263,12 @@ def get_repo_readme(owner: str, name: str, token: str) -> str:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_repo_config(owner: str, name: str, token: str, branch: str = 'master') -> dict:
+async def get_repo_config(owner: str, name: str, token: str, branch: str = 'master', timeout: int = 15) -> dict:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         # response = await client.get(
         #     f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
         #     else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
@@ -312,12 +312,12 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_connectable_repos_by_org(owner: str, token: str) -> List[dict]:
+async def list_connectable_repos_by_org(owner: str, token: str, timmeout: int = 15) -> List[dict]:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         workflows = []
         org_repos = await list_repositories(owner, token)
 
@@ -374,12 +374,12 @@ async def list_connectable_repos_by_org(owner: str, token: str) -> List[dict]:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
+async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int = 15) -> List[dict]:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         workflows = []
         owned_repos = await list_repositories(owner, token)
         for repository in owned_repos:
@@ -433,12 +433,12 @@ async def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_user_organizations(username: str, token: str) -> List[dict]:
+async def list_user_organizations(username: str, token: str, timeout: int = 15) -> List[dict]:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://api.github.com/users/{username}/orgs")
         if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
         jsn = response.json()

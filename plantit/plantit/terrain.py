@@ -1,4 +1,5 @@
 import json
+import asyncio
 import logging
 import multiprocessing
 import pprint
@@ -8,6 +9,7 @@ from os import environ, listdir
 from os.path import basename, join, isfile, isdir
 from typing import List
 
+import httpx
 import requests
 from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from requests.auth import HTTPBasicAuth
@@ -112,6 +114,65 @@ def list_dir(path: str, token: str) -> List[str]:
         content = response.json()
         files = content['files']
         return [file['path'] for file in files]
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def get_dirs(paths: List[str], token: str, timeout: int = 15) -> List[dict]:
+    urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}" for path in paths]
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
+        tasks = [client.get(url).json() for url in urls]
+        results = await asyncio.gather(*tasks)
+        return results
+
+
+async def create_dir(path: str, token: str, timeout: int = 15):
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
+        response = await client.post("https://de.cyverse.org/terrain/secured/filesystem/directory/create", data=json.dumps({'path': path}))
+        response.raise_for_status()
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def share_dir(dir: dict, token: str, timeout: int = 15):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json;charset=utf-8"
+    }
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
+        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(dir))
+        response.raise_for_status()
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+async def unshare_dir(path: str, token: str, timeout: int = 15):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": 'application/json;charset=utf-8'
+    }
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
+        response = await client.post("https://de.cyverse.org/terrain/secured/unshare",
+                                     data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
+        response.raise_for_status()
 
 
 @retry(

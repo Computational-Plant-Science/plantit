@@ -1,17 +1,14 @@
-import asyncio
 import json
 import logging
 import pprint
 import traceback
 import uuid
-from typing import List
 
-import httpx
-import requests
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse
 from django.utils import timezone
 
@@ -20,12 +17,19 @@ from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
 from plantit.users.models import Profile
 from plantit.utils import dataset_access_policy_to_dict, project_to_dict, get_user_django_profile
+import plantit.terrain as terrain
 
 logger = logging.getLogger(__name__)
 
 
 @login_required
-def sharing(request):  # directories the current user is sharing
+def sharing(request):
+    """
+    Get directories the current user is sharing.
+
+    :param request: The request
+    :return: The response
+    """
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
     return JsonResponse({'datasets': [dataset_access_policy_to_dict(policy) for policy in policies]})
 
@@ -33,16 +37,17 @@ def sharing(request):  # directories the current user is sharing
 @sync_to_async
 @login_required
 @async_to_sync
-async def shared(request):  # directories shared with the current user
+async def shared(request):
+    """
+    Get directories shared with the current user.
+
+    :param request: The request
+    :return: The response
+    """
     policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
-    urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
-    headers = {
-        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
-    }
-    async with httpx.AsyncClient(headers=headers) as client:
-        tasks = [client.get(url).json() for url in urls]
-        results = await asyncio.gather(*tasks)
-        return JsonResponse({'datasets': [directory for directory in results]})
+    paths = [policy.path for policy in policies]
+    dirs = await terrain.get_dirs(paths, request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    return JsonResponse({'datasets': [dir for dir in dirs]})
 
 
 @sync_to_async
@@ -88,14 +93,7 @@ async def share(request):
         })
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    headers = {
-        "Authorization": f"Bearer {profile.cyverse_access_token}",
-        "Content-Type": "application/json;charset=utf-8"
-    }
-    async with httpx.AsyncClient(headers=headers) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(body))
-        pprint.pprint(response.json())
-        response.raise_for_status()
+    await terrain.share_dir(body, profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
 
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
@@ -148,13 +146,7 @@ async def unshare(request):
     })
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    headers = {
-        "Authorization": f"Bearer {profile.cyverse_access_token}",
-        "Content-Type": 'application/json;charset=utf-8'
-    }
-    async with httpx.AsyncClient(headers=headers) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
-        response.raise_for_status()
+    await terrain.unshare_dir(path, profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
 
     await sync_to_async(policy.delete)()
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
@@ -176,12 +168,7 @@ async def create(request):
     project = body.get('project', None)
     study = body.get('study', None)
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    headers = {
-        "Authorization": f"Bearer {profile.cyverse_access_token}",
-    }
-    async with httpx.AsyncClient(headers=headers) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/filesystem/directory/create", data=json.dumps({'path': path}))
-        response.raise_for_status()
+    await terrain.create_dir(path, profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
 
     if project is not None and study is not None:
         try:

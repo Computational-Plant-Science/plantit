@@ -58,6 +58,7 @@ services:
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -157,6 +158,7 @@ services:
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -225,6 +227,7 @@ services:
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

@@ -60,6 +60,7 @@ services:
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -131,6 +132,7 @@ services:
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -198,6 +200,7 @@ services:
       - FEEDBACK_FILE=${FEEDBACK_FILE}
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

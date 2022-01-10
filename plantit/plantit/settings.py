@@ -38,6 +38,7 @@ assert 'TUTORIALS_FILE' in os.environ, f"{missing_variable} TUTORIALS_FILE"
 assert 'FEEDBACK_FILE' in os.environ, f"{missing_variable} FEEDBACK_FILE"
 assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_MINUTES"
 assert 'AGENTS_HEALTHCHECKS_SAVED' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_SAVED"
+assert 'HTTP_TIMEOUT' in os.environ, f"{missing_variable} HTTP_TIMEOUT"
 
 # global Celery task timeout
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
@@ -68,6 +69,7 @@ TUTORIALS_FILE = os.environ.get("TUTORIALS_FILE")
 FEEDBACK_FILE = os.environ.get("FEEDBACK_FILE")
 AGENTS_HEALTHCHECKS_MINUTES = os.environ.get("AGENTS_HEALTHCHECKS_MINUTES")
 AGENTS_HEALTHCHECKS_SAVED = os.environ.get("AGENTS_HEALTHCHECKS_SAVED")
+HTTP_TIMEOUT = os.environ.get("HTTP_TIMEOUT")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
