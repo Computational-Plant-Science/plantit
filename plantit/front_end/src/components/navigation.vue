@@ -641,7 +641,7 @@
         <div class="mt-2" v-if="maintenance !== undefined">
             <b-alert variant="warning" :show="true"
                 >CyVerse is undergoing maintenance scheduled to complete
-                {{ prettify(maintenance.end) }}. You will be logged out in a few
+                {{ prettify(maintenance.end) }} EST. You will be logged out in a few
                 moments.</b-alert
             >
         </div>

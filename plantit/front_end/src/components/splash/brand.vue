@@ -215,7 +215,7 @@
                 <b-row align-v="center" v-if="maintenance !== undefined"
                     ><b-col class="text-center" align-self="center"
                         ><b-alert variant="warning" :show="true"
-                            >CyVerse is undergoing maintenance scheduled to complete {{ prettify(maintenance.end) }}.</b-alert
+                            >CyVerse is undergoing maintenance scheduled to complete {{ prettify(maintenance.end) }} EST.</b-alert
                         ></b-col
                     >
                 </b-row>
