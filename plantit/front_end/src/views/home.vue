@@ -59,14 +59,6 @@
                 ></b-row
             >
         </div>
-        <div v-else-if="maintenance">
-            <b-row align-v="center"
-                ><b-col class="text-center" align-self="center"
-                    >CyVerse is currently undergoing maintenance. We will be
-                    back up when the maintenance window completes.</b-col
-                >
-            </b-row>
-        </div>
         <div v-else>
             <b-row>
                 <b-col class="text-left" md="auto"
@@ -574,13 +566,6 @@ export default {
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', ['userWorkflows', 'userWorkflowsLoading']),
         ...mapGetters('projects', ['userProjects', 'othersProjects']),
-        maintenance() {
-            return this.profile.maintenance_windows.some(
-                (w) =>
-                    moment(w.start) < moment().utc().valueOf() &&
-                    moment(w.end) > moment().utc().valueOf()
-            );
-        },
         isRootPath() {
             return this.$route.name === 'home';
         },

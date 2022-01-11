@@ -12,7 +12,7 @@
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="
                     width: 90%;
-                    height: 90%;
+                    height: 80%;
                     padding: 0;
                     margin: 0 auto;
                     float: none;
@@ -31,7 +31,17 @@
                                 "
                                 style="text-decoration: underline; z-index: 100"
                             >
-                                plant<small
+                                <b-img
+                                    style="
+                                        max-width: 1.2rem;
+                                        position: relative;
+                                        top: -8px;
+                                    "
+                                    :src="require('../../assets/logo.png')"
+                                    left
+                                    class="m-0 p-0"
+                                ></b-img
+                                >plant<small
                                     class="mb-3 text-success"
                                     style="
                                         text-decoration: underline;
@@ -126,7 +136,10 @@
                         <b-col></b-col>
                         <b-col align-self="center" md="auto">
                             <b-button
-                                v-if="!profile.loggedIn && !maintenance"
+                                v-if="
+                                    !profile.loggedIn &&
+                                    maintenance === undefined
+                                "
                                 variant="white"
                                 class="text-center"
                                 href="/apis/v1/idp/cyverse_login/"
@@ -142,7 +155,7 @@
                                 <b>CyVerse</b>
                             </b-button>
                             <b-button
-                                v-else
+                                v-else-if="maintenance === undefined"
                                 variant="white"
                                 class="text-right"
                                 href="/apis/v1/idp/cyverse_login/"
@@ -199,10 +212,11 @@
                         <b-col></b-col>
                     </b-row>
                 </template>
-                <b-row align-v="center" v-if="maintenance"
+                <b-row align-v="center" v-if="maintenance !== undefined"
                     ><b-col class="text-center" align-self="center"
-                        >CyVerse is currently undergoing maintenance. We will be
-                        back up when the maintenance window completes.</b-col
+                        ><b-alert variant="warning" :show="true"
+                            >CyVerse is undergoing maintenance scheduled to complete {{ prettify(maintenance.end) }}.</b-alert
+                        ></b-col
                     >
                 </b-row>
                 <b-row class="m-0 mt-2 mb-2"
@@ -313,17 +327,20 @@ export default {
         return {
             version: 0,
             updates: [],
+            loadingUpdates: false,
+            maintenanceWindows: [],
             timeseriesTasksRunning: null,
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
         maintenance() {
-            return this.profile.maintenance_windows.some(
-                (w) =>
-                    moment(w.start) < moment().utc().valueOf() &&
-                    moment(w.end) > moment().utc().valueOf()
-            );
+            let now = moment();
+            return this.maintenanceWindows.find((w) => {
+                let start = moment(w.start);
+                let end = moment(w.end);
+                return start.isBefore(now) && end.isAfter(now);
+            });
         },
         getUpdates() {
             return this.updates
@@ -406,6 +423,7 @@ export default {
         this.crumbs = this.$route.meta.crumb;
         await Promise.all([
             this.getVersion(),
+            this.loadMaintenanceWindows(),
             this.loadUpdates(),
             this.loadTimeseries(),
         ]);
@@ -431,10 +449,24 @@ export default {
                 });
         },
         async loadUpdates() {
+            this.loadingUpdates = true;
             await axios
                 .get('/apis/v1/misc/updates/')
                 .then((response) => {
                     this.updates = response.data.updates;
+                    this.loadingUpdates = false;
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    this.loadingUpdates = false;
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadMaintenanceWindows() {
+            await axios
+                .get('/apis/v1/misc/maintenance/')
+                .then((response) => {
+                    this.maintenanceWindows = response.data.windows;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);

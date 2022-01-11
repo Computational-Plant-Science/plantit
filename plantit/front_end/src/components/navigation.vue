@@ -140,7 +140,17 @@
                             "
                             style="text-decoration: underline; z-index: 100"
                         >
-                            plant<small
+                            <b-img
+                                style="
+                                    max-width: 1.2rem;
+                                    position: relative;
+                                    top: -8px;
+                                "
+                                :src="require('../assets/logo.png')"
+                                left
+                                class="m-0 p-0"
+                            ></b-img
+                            >plant<small
                                 class="mb-3 text-success"
                                 style="
                                     text-decoration: underline;
@@ -535,7 +545,7 @@
                             Log Out
                         </b-dropdown-item>
                     </b-nav-item-dropdown>
-                    <b-nav-item href="/apis/v1/idp/cyverse_login/" v-else>
+                    <b-nav-item href="/apis/v1/idp/cyverse_login/" v-else-if="maintenance === undefined">
                         <b-button
                             variant="white"
                             block
@@ -593,17 +603,13 @@
                                 </b-button>
                             </b-nav-item> </b-navbar-nav
                     ></b-col>-->
-                    <b-col
-                        v-if="titleContent === 'sidebar'"
-                        md="auto"
-                    >
+                    <b-col v-if="titleContent === 'sidebar'" md="auto">
                         <b-alert
                             class="m-0"
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             :show="true"
                         >
-                            <b
-                            >
+                            <b>
                                 View your tasks ({{ tasksRunning.length }}
                                 running,
                                 {{ profile.stats.total_tasks }} total)
@@ -632,6 +638,13 @@
             </b-container>
         </b-navbar>
         <br />
+        <div class="mt-2" v-if="maintenance !== undefined">
+            <b-alert variant="warning" :show="true"
+                >CyVerse is undergoing maintenance scheduled to complete
+                {{ prettify(maintenance.end) }}. You will be logged out in a few
+                moments.</b-alert
+            >
+        </div>
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"
@@ -743,6 +756,7 @@ export default {
             // alert countdown
             dismissSecs: 10,
             dismissCountDown: 0,
+            maintenanceWindows: [],
         };
     },
     computed: {
@@ -760,6 +774,14 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
+        maintenance() {
+            let now = moment();
+            return this.maintenanceWindows.find((w) => {
+                let start = moment(w.start);
+                let end = moment(w.end);
+                return start.isBefore(now) && end.isAfter(now);
+            });
+        },
         feedbackValid() {
             return (
                 this.feedbackUsed !== '' ||
@@ -795,7 +817,11 @@ export default {
         }
 
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
-        await Promise.all([store.dispatch('user/loadProfile'), this.getVersion()]);
+        await Promise.all([
+            store.dispatch('user/loadProfile'),
+            this.getVersion(),
+            this.loadMaintenanceWindows(),
+        ]);
 
         // load the rest of the model
         await Promise.all([
@@ -834,6 +860,19 @@ export default {
         },
     },
     methods: {
+        async loadMaintenanceWindows() {
+            await axios
+                .get('/apis/v1/misc/maintenance/')
+                .then((response) => {
+                    this.maintenanceWindows = response.data.windows;
+                    if (this.maintenance !== undefined)
+                        setInterval(this.logOut, 5000);
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         async ackFirstLogin() {
             await axios({
                 method: 'get',

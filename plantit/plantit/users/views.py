@@ -284,10 +284,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             user.profile.save()
             user.save()
 
-        # get only maintenance windows occurring today or in the future
-        maintenance_windows = list(MaintenanceWindow.objects.filter(start__gte=datetime.today().date()))
-        maintenance_windows = [{'start': w.start.isoformat(), 'end': w.end.isoformat()} for w in maintenance_windows]
-
         response = {
             'django_profile': {
                 'username': user.username,
@@ -300,7 +296,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
-                'maintenance_windows': maintenance_windows
             },
             'stats': stats,
             'projects': [p.guid for p in user.project_teams.all()]

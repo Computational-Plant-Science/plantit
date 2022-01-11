@@ -312,7 +312,7 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def list_connectable_repos_by_org(owner: str, token: str, timmeout: int = 15) -> List[dict]:
+async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 15) -> List[dict]:
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
