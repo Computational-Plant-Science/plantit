@@ -139,8 +139,10 @@ def get_user_django_profile(user: User):
 
 def get_user_cyverse_profile(user: User) -> dict:
     profile = terrain.get_profile(user.username, user.profile.cyverse_access_token)
-    altered = False
+    if profile is None: raise ValueError(f"User {user.username} has no CyVerse profile")
 
+    # only write back to DB if we change anything
+    altered = False
     if profile['first_name'] != user.first_name:
         user.first_name = profile['first_name']
         altered = True
@@ -197,8 +199,14 @@ def filter_agents(user: User = None, guest: User = None):
 
 
 def filter_online(users: List[User]) -> List[User]:
-    online = []
+    """
+    Selects only those users currently online by checking their Terrain token expiry times
 
+    :param users: The list of users
+    :return: The logged-in users
+    """
+
+    online = []
     for user in users:
         decoded_token = jwt.decode(user.profile.cyverse_access_token, options={
             'verify_signature': False,
@@ -217,220 +225,6 @@ def filter_online(users: List[User]) -> List[User]:
             online.append(user)
 
     return online
-
-
-def get_user_statistics(user: User) -> dict:
-    redis = RedisClient.get()
-    stats_last_updated = redis.get(f"stats_updated/{user.username}")
-
-    # if we haven't aggregated stats for this user before, do it now
-    if stats_last_updated is None:
-        logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-        stats = async_to_sync(calculate_user_statistics)(user)
-        redis = RedisClient.get()
-        redis.set(f"stats/{user.username}", json.dumps(stats))
-        redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
-    else:
-        stats = redis.get(f"stats/{user.username}")
-        stats = json.loads(stats) if stats is not None else None
-
-    return stats
-
-
-def get_users_timeseries():
-    series = []
-    for i, user in enumerate(User.objects.all().order_by('profile__created')): series.append((user.profile.created.isoformat(), i + 1))
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"users_timeseries", json.dumps(series))
-
-    return series
-
-
-def get_tasks_timeseries():
-    series = []
-    for i, task in enumerate(Task.objects.all().order_by('created')[:100]): series.append((task.created.isoformat(), i + 1))
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"tasks_timeseries", json.dumps(series))
-
-    return series
-
-
-def get_tasks_running_timeseries(interval_seconds: int = 600, user: User = None):
-    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]  # TODO make limit configurable
-    series = dict()
-
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
-
-    # find the running interval for each task
-    start_end_times = dict()
-    for task in tasks:
-        start_end_times[task.guid] = (task.created, task.completed if task.completed is not None else timezone.now())
-
-    # count the number of running tasks for each value in the time domain
-    start = min([v[0] for v in start_end_times.values()])
-    end = max(v[1] for v in start_end_times.values())
-    for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
-        running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
-        series[datetime.fromtimestamp(t).isoformat()] = running
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"user_tasks_running/{user.username}" if user is not None else 'tasks_running', json.dumps(series))
-
-    return series
-
-
-def get_workflow_running_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str):
-    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
-    series = dict()
-
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
-
-    # count tasks per workflow
-    for task in tasks:
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series: series[timestamp] = 0
-        series[timestamp] = series [timestamp] + 1
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"workflow_running/{workflow_owner}/{workflow_name}/{workflow_branch}", json.dumps(series))
-
-    return series
-
-
-def get_workflows_running_timeseries(user: User = None):
-    # TODO make limit configurable
-    tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
-    series = dict()
-
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
-
-    # count tasks per workflow
-    for task in tasks:
-        workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
-        if workflow not in series: series[workflow] = dict()
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series[workflow]: series[workflow][timestamp] = 0
-        series[workflow][timestamp] = series[workflow][timestamp] + 1
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"workflows_running/{user.username}" if user is not None else 'workflows_running', json.dumps(series))
-
-    return series
-
-
-def get_agent_running_timeseries(name):
-    agent = Agent.objects.get(name=name)
-    tasks = Task.objects.filter(agent=agent).order_by('-created')
-    series = dict()
-
-    if len(tasks) == 0:
-        return series
-
-    # count tasks per agent
-    for task in tasks:
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series: series[timestamp] = 0
-        series[timestamp] = series[timestamp] + 1
-
-        # update cache
-    redis = RedisClient.get()
-    redis.set(f"agent_running/{name}", json.dumps(series))
-
-    return series
-
-
-def get_agents_running_timeseries(user: User = None):
-    # TODO make limit configurable
-    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
-    series = dict()
-
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
-
-    # count tasks per agent
-    for task in tasks:
-        agent = task.agent
-        if agent.name not in series: series[agent.name] = dict()
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series[agent.name]: series[agent.name][timestamp] = 0
-        series[agent.name][timestamp] = series[agent.name][timestamp] + 1
-
-    # update cache
-    redis = RedisClient.get()
-    redis.set(f"agents_running/{user.username}" if user is not None else 'agents_running', json.dumps(series))
-
-    return series
-
-async def calculate_user_statistics(user: User) -> dict:
-    profile = await sync_to_async(Profile.objects.get)(user=user)
-    all_tasks = await filter_tasks(user=user)
-    completed_tasks = await filter_tasks(user=user, completed=True)
-    total_tasks = len(all_tasks)
-    total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
-    total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
-    owned_workflows = [
-        f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}"
-        for
-        workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
-    used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
-    used_workflows_counter = Counter(used_workflows)
-    unique_used_workflows = list(np.unique(used_workflows))
-    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
-                    [agent for agent in await filter_agents(user=user) if agent is not None]]
-    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
-                    [agent for agent in await filter_agents(user=user) if agent is not None]]
-    used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
-                   [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
-    used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
-                    [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
-    used_agents_counter = Counter(used_agents)
-    used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
-    unique_used_agents = list(np.unique(used_agents))
-
-    # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
-    # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
-    tasks_running = await sync_to_async(get_tasks_running_timeseries)(600, user)
-
-    return {
-        'total_tasks': total_tasks,
-        'total_task_seconds': total_time,
-        'total_task_results': total_results,
-        'owned_workflows': owned_workflows,
-        'workflow_usage': {
-            'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],
-            'labels': unique_used_workflows,
-        },
-        'agent_usage': {
-            'values': [used_agents_counter[agent] for agent in unique_used_agents],
-            'labels': unique_used_agents,
-        },
-        'project_usage': {
-            'values': list(dict(used_projects_counter).values()),
-            'labels': list(dict(used_projects_counter).keys()),
-        },
-        'task_status': {
-            'values': [1 if task.status == 'success' else 0 for task in all_tasks],
-            'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
-        },
-        'owned_agents': owned_agents,
-        'guest_agents': guest_agents,
-        'institution': profile.institution,
-        'tasks_running': tasks_running
-    }
 
 
 def get_or_create_user_keypair(username: str, overwrite: bool = False) -> str:
@@ -474,58 +268,8 @@ def get_user_public_key_path(username: str) -> Path:
     return Path(join(path, f"{username}_id_rsa.pub"))
 
 
-def repopulate_institutions_cache():
-    redis = RedisClient.get()
-    institution_counts = list(
-        Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
-
-    for institution_count in institution_counts:
-        institution = institution_count['institution']
-        count = institution_count['institution__count']
-
-        place = quote_plus(institution)
-        response = requests.get(
-            f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
-        content = response.json()
-        feature = content['features'][0]
-        feature['id'] = institution
-        feature['properties'] = {
-            'name': institution,
-            'count': count
-        }
-        redis.set(f"institutions/{institution}", json.dumps({
-            'institution': institution,
-            'count': count,
-            'geocode': feature
-        }))
-
-    redis.set("institutions_updated", timezone.now().timestamp())
-
-
-def list_institutions(invalidate: bool = False) -> List[dict]:
-    redis = RedisClient.get()
-    updated = redis.get('institutions_updated')
-
-    # repopulate if empty or invalidation requested
-    if updated is None or len(list(redis.scan_iter(match=f"institutions/*"))) == 0 or invalidate:
-        logger.info(f"Populating user institution cache")
-        repopulate_institutions_cache()
-    else:
-        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
-        age_secs = age.total_seconds()
-        max_secs = (int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60)
-
-        # otherwise only if stale
-        if age_secs > max_secs:
-            logger.info(
-                f"User institution cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            repopulate_institutions_cache()
-
-    return [json.loads(redis.get(key)) for key in redis.scan_iter(match='institutions/*')]
-
 
 # workflows
-
 
 async def refresh_online_users_workflow_cache():
     users = await sync_to_async(User.objects.all)()
@@ -2393,3 +2137,241 @@ def format_bind_mount(workdir: str, bind_mount: BindMount) -> str:
 def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:
     split = bind_mount.rpartition(':')
     return BindMount(host_path=split[0], container_path=split[2]) if len(split) > 0 else BindMount(host_path=workdir, container_path=bind_mount)
+
+
+# stats
+
+def list_institutions() -> dict:
+    annotations = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
+    institutions = dict()
+
+    for ann in annotations:
+        name = ann['institution']
+        count = ann['institution__count']
+        place = quote_plus(name)
+        response = requests.get(
+            f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
+        content = response.json()
+        feature = content['features'][0]
+        feature['id'] = name
+        feature['properties'] = {
+            'name': name,
+            'count': count
+        }
+        institutions[name] = {
+            'institution': name,
+            'count': count,
+            'geocode': feature
+        }
+
+    return institutions
+
+
+def get_total_counts():
+    redis = RedisClient.get()
+    users = User.objects.count()
+    online = len(filter_online(users))  # TODO store this in the DB each time the user logs in
+    workflows = len(list(redis.scan_iter('workflows/*')))
+    agents = Agent.objects.count()
+    tasks = TaskCounter.load().count
+    running = len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
+
+    return {
+        'users': users,
+        'online': online,
+        'workflows': workflows,
+        'agents': agents,
+        'tasks': tasks,
+        'running': running
+    }
+
+
+def get_aggregate_timeseries():
+    users_total = get_users_total_timeseries()
+    tasks_total = get_tasks_total_timeseries()
+    tasks_usage = get_tasks_usage_timeseries()
+    workflows_usage = get_workflows_usage_timeseries()
+    agents_usage = get_agents_usage_timeseries()
+
+    return {
+        'users_total': users_total,
+        'tasks_total': tasks_total,
+        'tasks_usage': tasks_usage,
+        'agents_usage': agents_usage,
+        'workflows_usage': workflows_usage,
+    }
+
+
+def get_user_timeseries(user: User):
+    tasks_usage = get_tasks_usage_timeseries(user=user)
+    workflows_usage = get_workflows_usage_timeseries(user)
+    agents_usage = get_agents_usage_timeseries(user)
+
+    return {
+        'tasks_usage': tasks_usage,
+        'agents_usage': agents_usage,
+        'workflows_usage': workflows_usage
+    }
+
+
+def get_users_total_timeseries():
+    return [(user.profile.created.isoformat(), i + 1) for i, user in enumerate(User.objects.all().order_by('profile__created'))]
+
+
+def get_tasks_total_timeseries():
+    return [(task.created.isoformat(), i + 1) for i, task in enumerate(Task.objects.all().order_by('created')[:100])]
+
+
+def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None):
+    tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]  # TODO make limit configurable
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # find the running interval for each task
+    start_end_times = dict()
+    for task in tasks:
+        start_end_times[task.guid] = (task.created, task.completed if task.completed is not None else timezone.now())
+
+    # count the number of running tasks for each value in the time domain
+    start = min([v[0] for v in start_end_times.values()])
+    end = max(v[1] for v in start_end_times.values())
+    for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
+        running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
+        series[datetime.fromtimestamp(t).isoformat()] = running
+
+    return series
+
+
+def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str):
+    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per workflow
+    for task in tasks:
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series: series[timestamp] = 0
+        series[timestamp] = series [timestamp] + 1
+
+    return series
+
+
+def get_workflows_usage_timeseries(user: User = None):
+    # TODO make limit configurable
+    tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per workflow
+    for task in tasks:
+        workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
+        if workflow not in series: series[workflow] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[workflow]: series[workflow][timestamp] = 0
+        series[workflow][timestamp] = series[workflow][timestamp] + 1
+
+    return series
+
+
+def get_agent_usage_timeseries(name):
+    agent = Agent.objects.get(name=name)
+    tasks = Task.objects.filter(agent=agent).order_by('-created')
+    series = dict()
+
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series: series[timestamp] = 0
+        series[timestamp] = series[timestamp] + 1
+
+    return series
+
+
+def get_agents_usage_timeseries(user: User = None):
+    # TODO make limit configurable
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
+    series = dict()
+
+    # return early if no tasks
+    if len(tasks) == 0:
+        return series
+
+    # count tasks per agent
+    for task in tasks:
+        agent = task.agent
+        if agent.name not in series: series[agent.name] = dict()
+        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+        if timestamp not in series[agent.name]: series[agent.name][timestamp] = 0
+        series[agent.name][timestamp] = series[agent.name][timestamp] + 1
+
+    return series
+
+
+async def calculate_user_statistics(user: User) -> dict:
+    profile = await sync_to_async(Profile.objects.get)(user=user)
+    all_tasks = await filter_tasks(user=user)
+    completed_tasks = await filter_tasks(user=user, completed=True)
+    total_tasks = len(all_tasks)
+    total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
+    total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
+    owned_workflows = [
+        f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}"
+        for
+        workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
+    used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
+    used_workflows_counter = Counter(used_workflows)
+    unique_used_workflows = list(np.unique(used_workflows))
+    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                    [agent for agent in await filter_agents(user=user) if agent is not None]]
+    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                    [agent for agent in await filter_agents(user=user) if agent is not None]]
+    used_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in
+                   [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
+    used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
+                    [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
+    used_agents_counter = Counter(used_agents)
+    used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
+    unique_used_agents = list(np.unique(used_agents))
+
+    # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
+    # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
+    tasks_running = await sync_to_async(get_tasks_usage_timeseries)(600, user)
+
+    return {
+        'total_tasks': total_tasks,
+        'total_task_seconds': total_time,
+        'total_task_results': total_results,
+        'owned_workflows': owned_workflows,
+        'workflow_usage': {
+            'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],
+            'labels': unique_used_workflows,
+        },
+        'agent_usage': {
+            'values': [used_agents_counter[agent] for agent in unique_used_agents],
+            'labels': unique_used_agents,
+        },
+        'project_usage': {
+            'values': list(dict(used_projects_counter).values()),
+            'labels': list(dict(used_projects_counter).keys()),
+        },
+        'task_status': {
+            'values': [1 if task.status == 'success' else 0 for task in all_tasks],
+            'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
+        },
+        'owned_agents': owned_agents,
+        'guest_agents': guest_agents,
+        'institution': profile.institution,
+        'tasks_running': tasks_running
+    }

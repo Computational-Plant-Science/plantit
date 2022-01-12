@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 import jwt
 import json
 import requests
+from requests import HTTPError
 import traceback
 from asgiref.sync import async_to_sync
 from django.conf import settings
@@ -77,11 +78,10 @@ class IDPViewSet(viewsets.ViewSet):
                                  auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
 
         # if we have anything other than a 200 the auth request did not succeed
-        if response.status_code == 400:
-            return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
-        elif response.status_code != 200:
-            return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
+        if response.status_code == 400: return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
+        elif response.status_code != 200: return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
 
+        # get the response body
         content = response.json()
 
         # make sure we have CyVerse access & refresh tokens
@@ -90,7 +90,7 @@ class IDPViewSet(viewsets.ViewSet):
         if 'refresh_token' not in content: return HttpResponseBadRequest(
             "Missing param on token response: 'refresh_token'")
 
-        # decode the tokens
+        # decode them
         access_token = content['access_token']
         refresh_token = content['refresh_token']
         decoded_access_token = jwt.decode(access_token, options={
@@ -108,7 +108,7 @@ class IDPViewSet(viewsets.ViewSet):
             'verify_iss': False
         })
 
-        # retrieve the user entry (or create it if it's their first time logging in)
+        # retrieve the user entry (or create if it's their first time logging in)
         user, _ = User.objects.get_or_create(username=decoded_access_token['preferred_username'])
 
         # update the user's personal info
@@ -126,41 +126,17 @@ class IDPViewSet(viewsets.ViewSet):
         profile.save()
         user.save()
 
-        # log the user in
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-        # if user's workflow cache is empty or stale, schedule a (re)population task
+        # if user's stats haven't been calculated yet, schedule it
         redis = RedisClient.get()
-        owner = user.profile.github_username
-        if owner is not None:  # ...but only if they've connected their GitHub account
-            last_updated = redis.get(f"workflows_updated/{owner}")
-            num_cached = len(list(redis.scan_iter(match=f"workflows/{owner}/*")))
-            if last_updated is None or num_cached == 0:
-                self.logger.info(f"GitHub user {owner}'s workflow cache is empty, scheduling refresh")
-                refresh_user_workflows.s(owner).apply_async()
-            else:
-                age = (datetime.now() - datetime.fromtimestamp(float(last_updated)))
-                age_secs = age.total_seconds()
-                max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-                if age_secs > max_secs:
-                    self.logger.info(
-                        f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), scheduling refresh")
-                    refresh_user_workflows.s(owner).apply_async()
-
-        # if user's usage stats are stale or haven't been calculated yet, schedule an aggregation task
-        stats_last_updated = redis.get(f"stats_updated/{user.username}")
-        if stats_last_updated is None:
+        cached_stats = redis.get(f"stats/{user.username}")
+        if cached_stats is None:
             self.logger.info(f"No usage statistics for {user.username}. Scheduling refresh...")
             refresh_user_stats.s(user.username).apply_async()
-        else:
-            stats = redis.get(f"stats/{user.username}")
-            stats_age_minutes = (datetime.now() - datetime.fromtimestamp(float(stats_last_updated))).total_seconds() / 60
-            if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-                self.logger.info(
-                    f"{stats_age_minutes} elapsed since refreshing usage statistics for {user.username}. Scheduling refresh...")
-                refresh_user_stats.s(user.username).apply_async()
 
-        # open the user's dashboard
+        # log the user into the builtin django backend
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        # open the dashboard
         return redirect(f"/home/")
 
     @action(methods=['get'], detail=False)
@@ -276,11 +252,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
-        stats = get_user_statistics(user) if request.user.profile.github_token != '' else None
 
+        # get stats
+        if request.user.profile.github_token != '':
+            redis = RedisClient.get()
+            cached = redis.get(f"stats/{user.username}")
+            stats = json.loads(cached) if cached is not None else None
+        else: stats = None
+
+        # TODO: reenable
         if user.profile.push_notification_status == 'pending':
-            user.profile.push_notification_status = get_sns_subscription_status(
-                user.profile.push_notification_topic_arn)
+            user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
             user.profile.save()
             user.save()
 
@@ -302,10 +284,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         }
 
         if request.user.profile.cyverse_access_token != '':
-            try:
-                response['cyverse_profile'] = get_user_cyverse_profile(request.user)
-            except ValueError:
-                # if the CyVerse request fails, log the user out
+            # if we can't get a profile from CyVerse, log the user out ( sorry :/ )
+            try: response['cyverse_profile'] = get_user_cyverse_profile(request.user)
+            except (HTTPError, ValueError):
                 logout(request)
                 return redirect(
                     "https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"

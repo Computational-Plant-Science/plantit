@@ -641,7 +641,7 @@
         <div class="mt-2" v-if="maintenance !== undefined">
             <b-alert variant="warning" :show="true"
                 >CyVerse is undergoing maintenance scheduled to complete
-                {{ prettify(maintenance.end) }} EST. You will be logged out in a few
+                {{ prettify(maintenance.end) }}. You will be logged out in a few
                 moments.</b-alert
             >
         </div>
@@ -715,7 +715,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
@@ -775,6 +775,8 @@ export default {
             'notificationsUnread',
         ]),
         maintenance() {
+            let tz = moment.tz.guess();
+            alert(tz);
             let now = moment();
             return this.maintenanceWindows.find((w) => {
                 let start = moment(w.start);

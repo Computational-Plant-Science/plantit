@@ -60,14 +60,10 @@ def get_profile(username: str, access_token: str) -> dict:
     response = requests.get(
         f"https://de.cyverse.org/terrain/secured/user-info?username={username}",
         headers={'Authorization': f"Bearer {access_token}"})
-    if response.status_code == 401 or response.status_code == 403:
-        raise ValueError('Invalid token')
-    else:
-        content = response.json()
-        if username in content:
-            return content[username]
-        else:
-            raise ValueError(f"User {username} has no CyVerse profile")
+    response.raise_for_status()
+    content = response.json()
+    if username in content: return content[username]
+    else: return None
 
 
 @retry(

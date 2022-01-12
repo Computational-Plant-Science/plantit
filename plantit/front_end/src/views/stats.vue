@@ -70,7 +70,7 @@
                                     Users</b-button
                                 ></template
                             ><Plotly
-                                v-if="timeseriesUsers.length > 0"
+                                v-if="timeseriesUsersTotal.length > 0"
                                 :data="usersPlotData"
                                 :layout="usersPlotLayout"
                             ></Plotly>
@@ -134,15 +134,13 @@
                             <b-row>
                                 <b-col
                                     ><Plotly
-                                        v-if="
-                                            timeseriesWorkflowsRunning !== null
-                                        "
+                                        v-if="timeseriesWorkflowsUsage !== null"
                                         :data="workflowsRunningPlotData"
                                         :layout="workflowsRunningPlotLayout"
                                     ></Plotly
                                 ></b-col>
                             </b-row>
-                            <hr/>
+                            <hr />
                             <h5
                                 :class="
                                     profile.darkMode
@@ -231,7 +229,7 @@
                                 ></b-card-group
                             ></b-tab
                         >
-                      <b-tab
+                        <b-tab
                             title="Agents"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -273,15 +271,13 @@
                             <b-row>
                                 <b-col
                                     ><Plotly
-                                        v-if="
-                                            timeseriesAgentsRunning !== null
-                                        "
+                                        v-if="timeseriesAgentsUsage !== null"
                                         :data="agentsRunningPlotData"
                                         :layout="agentsRunningPlotLayout"
                                     ></Plotly
                                 ></b-col>
                             </b-row>
-                      </b-tab>
+                        </b-tab>
                         <b-tab
                             title="Tasks"
                             :title-link-class="
@@ -321,12 +317,12 @@
                                     Tasks</b-button
                                 ></template
                             ><Plotly
-                                v-if="timeseriesTasks.length > 0"
+                                v-if="timeseriesTasksTotal.length > 0"
                                 :data="tasksPlotData"
                                 :layout="tasksPlotLayout"
                             ></Plotly>
                             <Plotly
-                                v-if="timeseriesTasksRunning !== null"
+                                v-if="timeseriesTasksUsage !== null"
                                 :data="tasksRunningPlotData"
                                 :layout="tasksRunningPlotLayout"
                             ></Plotly>
@@ -380,11 +376,11 @@ export default {
             mapMarkers: [],
             mapPopup: null,
             userCount: -1,
-            timeseriesUsers: [],
-            timeseriesTasks: [],
-            timeseriesTasksRunning: null,
-            timeseriesWorkflowsRunning: null,
-            timeseriesAgentsRunning: null,
+            timeseriesUsersTotal: [],
+            timeseriesTasksTotal: [],
+            timeseriesTasksUsage: null,
+            timeseriesWorkflowsUsage: null,
+            timeseriesAgentsUsage: null,
             onlineCount: -1,
             workflowCount: -1,
             agentCount: -1,
@@ -484,11 +480,45 @@ export default {
             await axios
                 .get('/apis/v1/stats/timeseries/')
                 .then((response) => {
-                    this.timeseriesUsers = [response.data.users];
-                    this.timeseriesTasks = [response.data.tasks];
-                    this.timeseriesTasksRunning = [response.data.tasks_running];
-                    this.timeseriesWorkflowsRunning = response.data.workflows_running;
-                    this.timeseriesAgentsRunning = response.data.agents_running;
+                    this.timeseriesUsersTotal = [
+                        {
+                            x: response.data.users_total.map((u) => u[0]),
+                            y: response.data.users_total.map((u) => u[1]),
+                            type: 'scatter',
+                        },
+                    ];
+                    this.timeseriesTasksTotal = [
+                        {
+                            x: response.data.tasks_total.map((u) => u[0]),
+                            y: response.data.tasks_total.map((u) => u[1]),
+                            type: 'scatter',
+                        },
+                    ];
+                    this.timeseriesTasksUsage = [response.data.tasks_usage];
+                    this.timeseriesWorkflowsUsage = Object.fromEntries(
+                        Object.entries(response.data.workflows_usage).map(
+                            ([k, v], _) => [
+                                k,
+                                {
+                                    x: Object.keys(v),
+                                    y: Object.values(v),
+                                    type: 'scatter',
+                                },
+                            ]
+                        )
+                    );
+                    this.timeseriesAgentsUsage = Object.fromEntries(
+                        Object.entries(response.data.agents_usage).map(
+                            ([k, v], _) => [
+                                k,
+                                {
+                                    x: Object.keys(v),
+                                    y: Object.values(v),
+                                    type: 'scatter',
+                                },
+                            ]
+                        )
+                    );
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -562,14 +592,14 @@ export default {
             };
         },
         usersPlotData() {
-          return [
+            return [
                 {
-                    x: this.timeseriesUsers[0].x.map((t) =>
+                    x: this.timeseriesUsersTotal[0].x.map((t) =>
                         moment(t).format('YYYY-MM-DD HH:mm:ss')
                     ),
-                    y: this.timeseriesUsers[0].y,
+                    y: this.timeseriesUsersTotal[0].y,
                     type: 'scatter',
-                    line: { color: '#d6df5D', },
+                    line: { color: '#d6df5D' },
                 },
             ];
         },
@@ -617,28 +647,28 @@ export default {
         tasksPlotData() {
             return [
                 {
-                    x: this.timeseriesTasks[0].x.map((t) =>
+                    x: this.timeseriesTasksTotal[0].x.map((t) =>
                         moment(t).format('YYYY-MM-DD HH:mm:ss')
                     ),
-                    y: this.timeseriesTasks[0].y,
+                    y: this.timeseriesTasksTotal[0].y,
                     type: 'scatter',
-                    line: { color: '#d6df5D', },
+                    line: { color: '#d6df5D' },
                 },
             ];
         },
         tasksRunningPlotData() {
             // if (this.timeseriesTasksRunning === null)
             //     return { x: [], y: [], type: 'scatter' };
-            return this.timeseriesTasksRunning === null
+            return this.timeseriesTasksUsage === null
                 ? [{ x: [], y: [], type: 'scatter' }]
                 : [
                       {
-                          x: this.timeseriesTasksRunning[0].x.map((t) =>
+                          x: this.timeseriesTasksUsage[0].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesTasksRunning[0].y,
+                          y: this.timeseriesTasksUsage[0].y,
                           type: 'scatter',
-                          line: { color: '#d6df5D', },
+                          line: { color: '#d6df5D' },
                       },
                   ];
         },
@@ -724,14 +754,14 @@ export default {
             };
         },
         workflowsRunningPlotData() {
-            return this.timeseriesWorkflowsRunning === null
+            return this.timeseriesWorkflowsUsage === null
                 ? []
-                : Object.keys(this.timeseriesWorkflowsRunning).map((key) => {
+                : Object.keys(this.timeseriesWorkflowsUsage).map((key) => {
                       return {
-                          x: this.timeseriesWorkflowsRunning[key].x.map((t) =>
+                          x: this.timeseriesWorkflowsUsage[key].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesWorkflowsRunning[key].y,
+                          y: this.timeseriesWorkflowsUsage[key].y,
                           name: key,
                           type: 'line',
                           // mode: 'lines',
@@ -780,15 +810,15 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-      agentsRunningPlotData() {
-            return this.timeseriesAgentsRunning === null
+        agentsRunningPlotData() {
+            return this.timeseriesAgentsUsage === null
                 ? []
-                : Object.keys(this.timeseriesAgentsRunning).map((key) => {
+                : Object.keys(this.timeseriesAgentsUsage).map((key) => {
                       return {
-                          x: this.timeseriesAgentsRunning[key].x.map((t) =>
+                          x: this.timeseriesAgentsUsage[key].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesAgentsRunning[key].y,
+                          y: this.timeseriesAgentsUsage[key].y,
                           name: key,
                           type: 'line',
                           // mode: 'lines',

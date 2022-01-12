@@ -18,14 +18,14 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     plugins: [
         createPersistedState({
-            storage: window.sessionStorage
-        })
+            storage: window.sessionStorage,
+        }),
     ],
     state: () => ({
-        csrfToken: Cookies.get(axios.defaults.xsrfCookieName)
+        csrfToken: Cookies.get(axios.defaults.xsrfCookieName),
     }),
     getters: {
-        csrfToken: state => state.csrfToken
+        csrfToken: (state) => state.csrfToken,
     },
     modules: {
         user,
@@ -36,8 +36,8 @@ const store = new Vuex.Store({
         projects,
         datasets,
         workflows,
-        notifications
-    }
+        notifications,
+    },
 });
 
 export default store;
