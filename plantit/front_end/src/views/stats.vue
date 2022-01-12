@@ -494,7 +494,13 @@ export default {
                             type: 'scatter',
                         },
                     ];
-                    this.timeseriesTasksUsage = [response.data.tasks_usage];
+                    this.timeseriesTasksUsage = this.timeseriesTasksTotal = [
+                        {
+                            x: response.data.tasks_usage.map((u) => u[0]),
+                            y: response.data.tasks_usage.map((u) => u[1]),
+                            type: 'scatter',
+                        },
+                    ];;
                     this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
                             ([k, v], _) => [

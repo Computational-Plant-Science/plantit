@@ -775,8 +775,6 @@ export default {
             'notificationsUnread',
         ]),
         maintenance() {
-            let tz = moment.tz.guess();
-            alert(tz);
             let now = moment();
             return this.maintenanceWindows.find((w) => {
                 let start = moment(w.start);
@@ -1064,7 +1062,9 @@ export default {
             window.location.replace('/apis/v1/idp/cyverse_logout/');
         },
         prettify: function (date) {
-            return `${moment(date).fromNow()} (${moment(date).format(
+            let tz = moment.tz.guess();
+            let mom = moment(date).tz(tz);
+            return `${mom.fromNow()} (${mom.format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },

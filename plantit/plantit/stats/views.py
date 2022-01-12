@@ -1,13 +1,11 @@
 import json
 
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.http import JsonResponse, HttpResponseNotFound
 
-from plantit.agents.models import Agent
-from plantit.tasks.models import Task, TaskCounter, TaskStatus
-from plantit.utils import list_institutions, filter_online, get_total_counts get_user_timeseries, get_users_total_timeseries, get_tasks_total_timeseries, get_tasks_usage_timeseries, get_workflow_usage_timeseries, get_workflows_usage_timeseries, get_agents_usage_timeseries, get_stats_counts
 from plantit.redis import RedisClient
+from plantit.utils import get_institutions, get_total_counts, get_aggregate_timeseries, get_workflow_usage_timeseries, get_user_timeseries
 
 
 def institutions_info(_):
@@ -17,13 +15,13 @@ def institutions_info(_):
     if len(cached) != 0:
         institutions = [json.loads(redis.get(key)) for key in cached]
     else:
-        institutions = list_institutions()
+        institutions = get_institutions()
         for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
 
-    return JsonResponse(institutions)
+    return JsonResponse({'institutions': institutions})
 
 
-def total_counts(_):
+def aggregate_counts(_):
     redis = RedisClient.get()
     cached = redis.get("stats_counts")
 
@@ -31,20 +29,20 @@ def total_counts(_):
         counts = json.loads(cached)
     else:
         counts = get_total_counts()
-        redis.set("stats_counts", counts)
+        redis.set("stats_counts", json.dumps(counts))
 
     return JsonResponse(counts)
 
 
-def total_timeseries(_):
+def aggregate_timeseries(_):
     redis = RedisClient.get()
     cached = redis.get("total_timeseries")
 
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_total_timeseries()
-        redis.set("total_timeseries", series)
+        series = get_aggregate_timeseries()
+        redis.set("total_timeseries", json.dumps(series))
 
     return JsonResponse(series)
 
@@ -57,39 +55,24 @@ def workflow_timeseries(_, owner, name, branch):
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_workflow_timeseries(owner, name, branch)
+        series = get_workflow_usage_timeseries(owner, name, branch)
         redis.set(f"workflow_timeseries/{owner}/{name}/{branch}", json.dumps(series))
 
     return JsonResponse(series)
 
 
 @login_required
-def user_timeseries(request):
-    redis = RedisClient.get()
-    cached_user_running = redis.get(f"user_tasks_running/{request.user.username}")
-    cached_user_workflows_running = redis.get(f"workflows_running/{request.user.username}")
-    cached_user_agents_running = redis.get(f"agents_running/{request.user.username}")
+def user_timeseries(request, username):
+    try: user = User.objects.get(username=username)
+    except: return HttpResponseNotFound()
 
-    cached = redis.get(f"user_timeseries/{request.user.username}")
+    redis = RedisClient.get()
+    cached = redis.get(f"user_timeseries/{user.username}")
+
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_user_timeseries(request.user)
+        series = get_user_timeseries(user.username)
+        redis.set(f"user_timeseries/{user.username}", json.dumps(series))
 
-    return JsonResponse({
-        'user_tasks_running': {
-            'x': list(user_tasks_running.keys()),
-            'y': list(user_tasks_running.values()),
-            'type': 'scatter'
-        },
-        'user_workflows_running': {k: {
-            'x': list([kk for kk in v.keys()]),
-            'y': list([vv for vv in v.values()]),
-            'type': 'scatter'
-        } for k, v in user_workflows_running.items()},
-        'user_agents_running': {k: {
-            'x': list([kk for kk in v.keys()]),
-            'y': list([vv for vv in v.values()]),
-            'type': 'scatter'
-        } for k, v in user_agents_running.items()},
-    })
+    return JsonResponse(series)

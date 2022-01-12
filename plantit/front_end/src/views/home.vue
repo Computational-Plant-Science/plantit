@@ -399,7 +399,7 @@
                                     ><b-col>
                                         <Plotly
                                             v-if="
-                                                timeseriesUserTasksRunning !==
+                                                timeseriesUserTasksUsage !==
                                                 null
                                             "
                                             :data="tasksRunningPlotData"
@@ -411,7 +411,7 @@
                                     ><b-col
                                         ><Plotly
                                             v-if="
-                                                timeseriesUserWorkflowsRunning !==
+                                                timeseriesUserWorkflowsUsage !==
                                                 null
                                             "
                                             :data="workflowsRunningPlotData"
@@ -423,7 +423,7 @@
                                     ><b-col
                                         ><Plotly
                                             v-if="
-                                                timeseriesUserAgentsRunning !==
+                                                timeseriesUserAgentsUsage !==
                                                 null
                                             "
                                             :data="agentsRunningPlotData"
@@ -504,17 +504,17 @@ export default {
         return {
             crumbs: [],
             timeseriesUsers: [],
-            timeseriesTasks: [],
-            timeseriesTasksRunning: null,
-            timeseriesUserTasksRunning: null,
-            timeseriesUserWorkflowsRunning: null,
+            timeseriesTasksTotal: [],
+            timeseriesTasksUsage: null,
+            timeseriesUserTasksUsage: null,
+            timeseriesUserWorkflowsUsage: null,
             timeseriesAgentsRunning: null,
-            timeseriesUserAgentsRunning: null,
+            timeseriesUserAgentsUsage: null,
         };
     },
     async created() {
         this.crumbs = this.$route.meta.crumb;
-        await this.loadTimeseries();
+        await Promise.all([this.loadUserTimeseries(), this.loadAggregateTimeseries()]);
     },
     watch: {
         $route() {
@@ -525,20 +525,68 @@ export default {
         prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
         },
-        async loadTimeseries() {
+        async loadAggregateTimeseries() {
             await axios
                 .get('/apis/v1/stats/timeseries/')
                 .then((response) => {
-                    this.timeseriesUsers = [response.data.users];
-                    this.timeseriesTasks = [response.data.tasks];
-                    this.timeseriesTasksRunning = [response.data.tasks_running];
-                    this.timeseriesUserTasksRunning = [
-                        response.data.user_tasks_running,
+                    this.timeseriesUsers = [response.data.users_total];
+                    this.timeseriesTasksTotal = [
+                        {
+                            x: Object.keys(response.data.tasks_total),
+                            y: Object.values(response.data.tasks_total),
+                            type: 'scatter',
+                        },
                     ];
-                    this.timeseriesUserWorkflowsRunning =
-                        response.data.user_workflows_running;
-                    this.timeseriesUserAgentsRunning =
-                        response.data.user_agents_running;
+                    this.timeseriesTasksUsage = [
+                        {
+                            x: Object.keys(response.data.tasks_usage),
+                            y: Object.values(response.data.tasks_usage),
+                            type: 'scatter',
+                        },
+                    ];
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadUserTimeseries() {
+            await axios
+                .get(
+                    `/apis/v1/stats/timeseries/${this.profile.djangoProfile.username}/`
+                )
+                .then((response) => {
+                    this.timeseriesUserTasksUsage = [
+                        {
+                            x: Object.keys(response.data.tasks_usage),
+                            y: Object.values(response.data.tasks_usage),
+                            type: 'scatter',
+                        },
+                    ];
+                    this.timeseriesUserWorkflowsUsage = Object.fromEntries(
+                        Object.entries(response.data.workflows_usage).map(
+                            ([k, v], _) => [
+                                k,
+                                {
+                                    x: Object.keys(v),
+                                    y: Object.values(v),
+                                    type: 'scatter',
+                                },
+                            ]
+                        )
+                    );
+                    this.timeseriesUserAgentsUsage = Object.fromEntries(
+                        Object.entries(response.data.agents_usage).map(
+                            ([k, v], _) => [
+                                k,
+                                {
+                                    x: Object.keys(v),
+                                    y: Object.values(v),
+                                    type: 'scatter',
+                                },
+                            ]
+                        )
+                    );
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -725,14 +773,14 @@ export default {
             ];
         },
         tasksRunningPlotData() {
-            return this.timeseriesUserTasksRunning === null
+            return this.timeseriesUserTasksUsage === null
                 ? { x: [], y: [], type: 'scatter' }
                 : [
                       {
-                          x: this.timeseriesUserTasksRunning[0].x.map((t) =>
+                          x: this.timeseriesUserTasksUsage[0].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesUserTasksRunning[0].y,
+                          y: this.timeseriesUserTasksUsage[0].y,
                           type: 'scatter',
                           line: { color: '#d6df5D' },
                       },
@@ -820,15 +868,15 @@ export default {
             };
         },
         workflowsRunningPlotData() {
-            return this.timeseriesUserWorkflowsRunning === null
+            return this.timeseriesUserWorkflowsUsage === null
                 ? []
-                : Object.keys(this.timeseriesUserWorkflowsRunning).map(
+                : Object.keys(this.timeseriesUserWorkflowsUsage).map(
                       (key) => {
                           return {
-                              x: this.timeseriesUserWorkflowsRunning[key].x.map(
+                              x: this.timeseriesUserWorkflowsUsage[key].x.map(
                                   (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
                               ),
-                              y: this.timeseriesUserWorkflowsRunning[key].y,
+                              y: this.timeseriesUserWorkflowsUsage[key].y,
                               name: key,
                               type: 'line',
                           };
@@ -877,14 +925,14 @@ export default {
             };
         },
         agentsRunningPlotData() {
-            return this.timeseriesUserAgentsRunning === null
+            return this.timeseriesUserAgentsUsage === null
                 ? []
-                : Object.keys(this.timeseriesUserAgentsRunning).map((key) => {
+                : Object.keys(this.timeseriesUserAgentsUsage).map((key) => {
                       return {
-                          x: this.timeseriesUserAgentsRunning[key].x.map((t) =>
+                          x: this.timeseriesUserAgentsUsage[key].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesUserAgentsRunning[key].y,
+                          y: this.timeseriesUserAgentsUsage[key].y,
                           name: key,
                           type: 'line',
                       };

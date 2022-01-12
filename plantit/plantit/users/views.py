@@ -32,9 +32,7 @@ from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.misc.models import MaintenanceWindow
-from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, \
-    get_user_statistics, \
-    get_user_bundle
+from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, get_user_bundle
 
 logger = logging.getLogger(__name__)
 

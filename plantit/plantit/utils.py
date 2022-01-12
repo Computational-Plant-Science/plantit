@@ -16,7 +16,7 @@ from os import environ
 from os.path import isdir
 from os.path import join
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 from urllib.parse import quote_plus
 
 import binascii
@@ -2141,7 +2141,7 @@ def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:
 
 # stats
 
-def list_institutions() -> dict:
+def get_institutions() -> dict:
     annotations = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
     institutions = dict()
 
@@ -2167,10 +2167,10 @@ def list_institutions() -> dict:
     return institutions
 
 
-def get_total_counts():
+def get_total_counts() -> dict:
     redis = RedisClient.get()
     users = User.objects.count()
-    online = len(filter_online(users))  # TODO store this in the DB each time the user logs in
+    online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
     workflows = len(list(redis.scan_iter('workflows/*')))
     agents = Agent.objects.count()
     tasks = TaskCounter.load().count
@@ -2186,7 +2186,7 @@ def get_total_counts():
     }
 
 
-def get_aggregate_timeseries():
+def get_aggregate_timeseries() -> dict:
     users_total = get_users_total_timeseries()
     tasks_total = get_tasks_total_timeseries()
     tasks_usage = get_tasks_usage_timeseries()
@@ -2202,7 +2202,7 @@ def get_aggregate_timeseries():
     }
 
 
-def get_user_timeseries(user: User):
+def get_user_timeseries(user: User) -> dict:
     tasks_usage = get_tasks_usage_timeseries(user=user)
     workflows_usage = get_workflows_usage_timeseries(user)
     agents_usage = get_agents_usage_timeseries(user)
@@ -2214,15 +2214,15 @@ def get_user_timeseries(user: User):
     }
 
 
-def get_users_total_timeseries():
+def get_users_total_timeseries() -> List[Tuple[str, int]]:
     return [(user.profile.created.isoformat(), i + 1) for i, user in enumerate(User.objects.all().order_by('profile__created'))]
 
 
-def get_tasks_total_timeseries():
+def get_tasks_total_timeseries() -> List[Tuple[str, int]]:
     return [(task.created.isoformat(), i + 1) for i, task in enumerate(Task.objects.all().order_by('created')[:100])]
 
 
-def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None):
+def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -> dict:
     tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]  # TODO make limit configurable
     series = dict()
 
@@ -2245,7 +2245,7 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None):
     return series
 
 
-def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str):
+def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str) -> dict:
     tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
     series = dict()
 
@@ -2262,7 +2262,7 @@ def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workf
     return series
 
 
-def get_workflows_usage_timeseries(user: User = None):
+def get_workflows_usage_timeseries(user: User = None) -> dict:
     # TODO make limit configurable
     tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
     series = dict()
@@ -2282,7 +2282,7 @@ def get_workflows_usage_timeseries(user: User = None):
     return series
 
 
-def get_agent_usage_timeseries(name):
+def get_agent_usage_timeseries(name) -> dict:
     agent = Agent.objects.get(name=name)
     tasks = Task.objects.filter(agent=agent).order_by('-created')
     series = dict()
@@ -2299,7 +2299,7 @@ def get_agent_usage_timeseries(name):
     return series
 
 
-def get_agents_usage_timeseries(user: User = None):
+def get_agents_usage_timeseries(user: User = None) -> dict:
     # TODO make limit configurable
     tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
     series = dict()

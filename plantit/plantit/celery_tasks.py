@@ -13,18 +13,20 @@ from django.utils import timezone
 
 import plantit.terrain as terrain
 from plantit import settings
-from plantit.agents.models import AgentExecutor, Agent, AgentAuthentication
+from plantit.agents.models import AgentExecutor, Agent
 from plantit.celery import app
-from plantit.github import get_repo
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils import get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
+from plantit.utils import get_institutions, get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, \
+    configure_local_task_environment, \
+    execute_local_task, \
     submit_jobqueue_task, parse_time_limit_seconds, parse_task_auth_options, create_immediate_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
-    refresh_user_workflow_cache, refresh_org_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, get_users_timeseries, get_tasks_timeseries, get_tasks_running_timeseries, get_workflows_running_timeseries, get_agents_running_timeseries
+    refresh_user_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, \
+    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, \
+    get_total_counts, get_aggregate_timeseries, get_user_timeseries
 
 logger = get_task_logger(__name__)
 
@@ -455,33 +457,16 @@ def cleanup_task(self, guid: str, auth: dict):
 
 @app.task()
 def refresh_all_users_stats():
-    users = User.objects.all()
-    for user in users:
-        logger.info(f"Computing statistics for {user.username}")
-        stats = async_to_sync(calculate_user_statistics)(user)
-        redis = RedisClient.get()
-        redis.set(f"stats/{user.username}", json.dumps(stats))
-        redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
-
-    logger.info(f"Computing aggregate statistics for {user.username}")
-    users_series = get_users_timeseries()
-    tasks_series = get_tasks_timeseries()
-    tasks_running_series = get_tasks_running_timeseries(600)
-    workflows_running_series = get_workflows_running_timeseries()
-    agents_running_series = get_agents_running_timeseries()
-
-    now = datetime.now()
     redis = RedisClient.get()
-    redis.set(f"users_timeseries", json.dumps(users_series))
-    redis.set(f"users_timeseries_updated", now.timestamp())
-    redis.set(f"tasks_timeseries", json.dumps(tasks_series))
-    redis.set(f"tasks_timeseries_updated", now.timestamp())
-    redis.set(f"tasks_running", json.dumps(tasks_running_series))
-    redis.set(f"tasks_running_updated", now.timestamp())
-    redis.set(f"workflows_running", json.dumps(workflows_running_series))
-    redis.set(f"workflows_running_updated", now.timestamp())
-    redis.set(f"agents_running", json.dumps(agents_running_series))
-    redis.set(f"agents_running_updated", now.timestamp())
+
+    for user in User.objects.all():
+        logger.info(f"Computing statistics for {user.username}")
+        redis.set(f"stats/{user.username}", json.dumps(async_to_sync(calculate_user_statistics)(user)))
+        redis.set(f"user_timeseries/{user.username}", json.dumps(get_user_timeseries(user)))
+
+    logger.info(f"Computing aggregate statistics")
+    redis.set("stats_counts", json.dumps(get_total_counts()))
+    redis.set("total_timeseries", json.dumps(get_aggregate_timeseries()))
 
 
 @app.task()
@@ -512,7 +497,14 @@ def refresh_all_workflows():
 
 @app.task()
 def refresh_user_institutions():
-    repopulate_institutions_cache()
+    redis = RedisClient.get()
+    cached = list(redis.scan_iter(match=f"institutions/*"))
+
+    if len(cached) != 0:
+        institutions = [json.loads(redis.get(key)) for key in cached]
+    else:
+        institutions = get_institutions()
+        for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
 
 
 @app.task()
