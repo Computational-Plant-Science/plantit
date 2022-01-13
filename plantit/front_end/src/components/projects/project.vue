@@ -1059,6 +1059,49 @@
                         required
                     ></b-form-input>
                 </b-form-group>
+                <b-row>
+                    <b-col
+                        ><b-form-group
+                            ><b-form-input
+                                :class="
+                                    profile.darkMode
+                                        ? 'input-dark'
+                                        : 'input-light'
+                                "
+                                v-model="environmentParameterKey"
+                                placeholder="Enter a key"
+                                required
+                            ></b-form-input></b-form-group></b-col
+                    ><b-col
+                        ><b-form-group
+                            ><b-form-input
+                                :class="
+                                    profile.darkMode
+                                        ? 'input-dark'
+                                        : 'input-light'
+                                "
+                                v-model="environmentParameterValue"
+                                placeholder="Enter a value"
+                                required
+                            ></b-form-input></b-form-group
+                    ></b-col>
+                    <b-col
+                        ><b-button @click="addEnvironmentParameter"
+                            >Add</b-button
+                        ></b-col
+                    >
+                </b-row>
+                <b-row
+                    v-for="param in environmentParameters"
+                    v-bind:key="param.key"
+                    ><b-col>{{ param.key }}: {{ param.value }}</b-col
+                    ><b-col
+                        ><b-button
+                            @click="removeEnvironmentParameter(param.key)"
+                            >Remove</b-button
+                        ></b-col
+                    ></b-row
+                >
             </div>
         </b-modal>
         <b-modal
@@ -1113,7 +1156,7 @@ import { guid } from '@/utils';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
 import router from '@/router';
-import workflowblurb from '@/components/workflows/workflow-blurb.vue'
+import workflowblurb from '@/components/workflows/workflow-blurb.vue';
 import taskblurb from '@/components/tasks/task-blurb.vue';
 
 export default {
@@ -1155,9 +1198,32 @@ export default {
             studyToRemove: null,
             studyToEdit: null,
             deleting: false,
+
+            environmentParameterKey: '',
+            environmentParameterValue: '',
+            environmentParameters: {},
         };
     },
     methods: {
+        addEnvironmentParameter() {
+            if (
+                this.environmentParameterKey in
+                Object.keys(this.environmentParameters)
+            ) {
+                alert('This is a duplicate key');
+                return;
+            }
+            this.environmentParameters[this.environmentParameterKey] =
+                this.environmentParameterValue;
+        },
+        removeEnvironmentParameter(key) {
+            if (
+                this.environmentParameterKey in
+                Object.keys(this.environmentParameters)
+            ) {
+                this.environmentParameters.remove(key);
+            }
+        },
         showEditStudyModal(study) {
             this.studyToEdit = study;
             this.$bvModal.show('editStudy');
@@ -1232,6 +1298,10 @@ export default {
                     this.studyCulturalPractices !== ''
                         ? this.studyCulturalPractices
                         : this.studyToEdit.cultural_practices,
+                environment_parameters:
+                    Object.keys(this.environment_parameters).length > 0
+                        ? this.environment_parameters
+                        : this.studyToEdit.environment_parameters,
             };
             await axios({
                 method: 'post',
@@ -1565,7 +1635,7 @@ export default {
         },
         getWorkflows() {
             // return this.projectWorkflows[this.getProject.guid];
-          return this.getProject.workflows;
+            return this.getProject.workflows;
         },
         projectTasks() {
             return this.tasks.filter(
