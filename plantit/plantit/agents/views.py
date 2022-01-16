@@ -15,12 +15,19 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def list(request):
-    return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in Agent.objects.all()]})
+    # only return public agents and agents the requesting user is authorized to access
+    agents = [agent for agent in Agent.objects.all() if agent.public or request.user.username in [u.username for u in agent.users_authorized.all()]]
+    return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})
 
 
 @login_required
 def get(request, name):
-    try: agent = Agent.objects.get(name=name)
+    try:
+        agent = Agent.objects.get(name=name)
+
+        # if the requesting user doesn't own the agent and isn't on its
+        # list of authorized users, they're not authorized to access it
+        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
     return JsonResponse(agent_to_dict(agent, request.user))
 
@@ -28,14 +35,23 @@ def get(request, name):
 @login_required
 def exists(request, name):
     try:
-        Agent.objects.get(name=name)
+        agent = Agent.objects.get(name=name)
+
+        # if the requesting user doesn't own the agent and isn't on its
+        # list of authorized users, they're not authorized to access it
+        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return JsonResponse({'exists': False})
         return JsonResponse({'exists': True})
     except: return JsonResponse({'exists': False})
 
 
 @login_required
 def healthcheck(request, name):
-    try: agent = Agent.objects.get(name=name)
+    try:
+        agent = Agent.objects.get(name=name)
+
+        # if the requesting user doesn't own the agent and isn't on its
+        # list of authorized users, they're not authorized to access it
+        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
@@ -61,13 +77,26 @@ def healthcheck(request, name):
 
 @login_required
 def healthchecks(request, name):
+    try:
+        agent = Agent.objects.get(name=name)
+
+        # if the requesting user doesn't own the agent and isn't on its
+        # list of authorized users, they're not authorized to access it
+        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
+    except: return HttpResponseNotFound()
+
     redis = RedisClient.get()
-    checks = [json.loads(check) for check in redis.lrange(f"healthchecks/{name}", 0, -1)]
+    checks = [json.loads(check) for check in redis.lrange(f"healthchecks/{agent.name}", 0, -1)]
     return JsonResponse({'healthchecks': checks})
 
 
 @login_required
 def policies(request, name):
-    try: agent = Agent.objects.get(name=name)
+    try:
+        agent = Agent.objects.get(name=name)
+
+        # if the requesting user doesn't own the agent and isn't on its
+        # list of authorized users, they're not authorized to access it
+        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})

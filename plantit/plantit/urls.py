@@ -17,25 +17,22 @@ router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="plantit API",
-      default_version='v1',
-      description="The plantit REST API.",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="wbonelli@uga.edu"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny],
+    openapi.Info(
+        title="plantit API",
+        default_version='v1',
+        description="The plantit REST API.",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="wbonelli@uga.edu"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
 )
 
 urlpatterns = [
                   url('', include(router.urls)),
                   # url('auth/login/', login_view),
                   # url('auth/logout/', logout_view),
-                  re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-                  re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-                  re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
                   url('agents/', include("plantit.agents.urls")),
                   url('datasets/', include("plantit.datasets.urls")),
                   url('workflows/', include("plantit.workflows.urls")),
@@ -45,6 +42,9 @@ urlpatterns = [
                   url('notifications/', include("plantit.notifications.urls")),
                   url('feedback/', include("plantit.feedback.urls")),
                   url('miappe/', include("plantit.miappe.urls")),
+                  re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+                  re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+                  re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [path(r'ws/<username>/', UserEventConsumer.as_asgi())]

@@ -4557,7 +4557,6 @@ export default {
         ]),
         ...mapGetters('tasks', [
             'tasks',
-            'tasksByOwner',
             'task',
             'tasksLoading',
             'tasksDelayed',
@@ -4595,9 +4594,7 @@ export default {
             return this.agentsPermitted(this.profile.djangoProfile.username);
         },
         taskHistory() {
-            return this.$store.getters['tasks/tasksByOwner'](
-                this.profile.djangoProfile.username
-            );
+            return this.$store.getters['tasks/tasks'];
         },
         getWorkflow() {
             return this.workflow(this.owner, this.name, this.branch);

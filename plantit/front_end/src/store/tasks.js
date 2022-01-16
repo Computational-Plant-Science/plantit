@@ -60,13 +60,11 @@ export const tasks = {
         setRepeating({ commit }, tasks) {
             commit('setRepeating', tasks);
         },
-        async loadAll({ commit, rootState }) {
+        async loadAll({ commit }) {
             commit('setLoading', true);
             await Promise.all([
                 axios
-                    .get(
-                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/?page=1`
-                    )
+                    .get(`/apis/v1/tasks/?page=1`)
                     .then((response) => {
                         var guids = [];
                         var tasks = Array.prototype.slice.call(
@@ -95,13 +93,11 @@ export const tasks = {
             ]);
             commit('setLoading', false);
         },
-        async loadMore({ commit, rootState }, payload) {
+        async loadMore({ commit }, payload) {
             commit('setLoading', true);
             await Promise.all([
                 axios
-                    .get(
-                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/?page=${payload.page}`
-                    )
+                    .get(`/apis/v1/tasks/?page=${payload.page}`)
                     .then((response) => {
                         var guids = [];
                         var tasks = Array.prototype.slice.call(
@@ -130,13 +126,11 @@ export const tasks = {
             ]);
             commit('setLoading', false);
         },
-        async loadDelayed({ commit, rootState }) {
+        async loadDelayed({ commit }) {
             commit('setLoading', true);
             await Promise.all([
                 axios
-                    .get(
-                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/delayed/`
-                    )
+                    .get(`/apis/v1/tasks/delayed/`)
                     .then((response) => {
                         commit('setDelayed', response.data.tasks);
                     })
@@ -147,13 +141,11 @@ export const tasks = {
             ]);
             commit('setLoading', false);
         },
-        async loadRepeating({ commit, rootState }) {
+        async loadRepeating({ commit }) {
             commit('setLoading', true);
             await Promise.all([
                 axios
-                    .get(
-                        `/apis/v1/tasks/${rootState.user.profile.djangoProfile.username}/repeating/`
-                    )
+                    .get(`/apis/v1/tasks/repeating/`)
                     .then((response) => {
                         commit('setRepeating', response.data.tasks);
                     })
@@ -167,7 +159,7 @@ export const tasks = {
         refresh({ commit }, payload) {
             commit('setLoading', true);
             axios
-                .get(`/apis/v1/tasks/${payload.owner}/${payload.name}/`)
+                .get(`/apis/v1/tasks/${payload.guid}/`)
                 .then((response) => {
                     commit('addOrUpdate', response.data);
                     commit('setLoading', false);
@@ -189,18 +181,13 @@ export const tasks = {
         },
     },
     getters: {
-        task: (state) => (owner, name) => {
-            let found = state.tasks.find(
-                (t) => owner === t.owner && name === t.name
-            );
-            if (found !== undefined) return found;
-            return null;
+        task: (state) => (guid) => {
+            let found = state.tasks.find((t) => guid === t.guid);
+            return (found !== undefined) ? found : null;
         },
         tasks: (state) => (state.tasks === undefined ? [] : state.tasks),
         tasksDelayed: (state) => state.delayed,
         tasksRepeating: (state) => state.repeating,
-        tasksByOwner: (state) => (owner) =>
-            state.tasks.filter((t) => owner === t.owner),
         tasksRunning: (state) => state.tasks.filter((t) => !t.is_complete),
         tasksCompleted: (state) => state.tasks.filter((t) => t.is_complete),
         tasksSucceeded: (state) => state.tasks.filter((t) => t.is_success),

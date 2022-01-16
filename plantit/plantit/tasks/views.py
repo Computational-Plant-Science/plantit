@@ -11,9 +11,11 @@ from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest, StreamingHttpResponse, \
+    HttpResponseForbidden
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
 from paramiko.message import Message
 
 from plantit import settings
@@ -31,14 +33,22 @@ from plantit.utils import task_to_dict, create_task, parse_task_auth_options, ge
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyTypeChecker
 @login_required
+@swagger_auto_schema(method='post', auto_schema=None)
 def get_all_or_create(request):
-    workflow = json.loads(request.body.decode('utf-8'))
-
     if request.method == 'GET':
-        tasks = Task.objects.all()
-        return JsonResponse({'tasks': [task_to_dict(sub) for sub in tasks]})
+        tasks = Task.objects.filter(user=request.user)
+        paginator = Paginator(tasks, 20)
+        page = paginator.get_page(int(request.GET.get('page', 1)))
+
+        return JsonResponse({
+            'previous_page': page.has_previous() and page.previous_page_number() or None,
+            'next_page': page.has_next() and page.next_page_number() or None,
+            'tasks': [task_to_dict(task) for task in list(page)]
+        })
     elif request.method == 'POST':
+        workflow = json.loads(request.body.decode('utf-8'))
         if workflow['type'] == 'Now':
             if workflow['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
 
@@ -71,77 +81,30 @@ def get_all_or_create(request):
 
 
 @login_required
-def get_by_owner(request, owner):
-    try: user = User.objects.get(username=owner)
-    except: return HttpResponseNotFound()
-
-    tasks = Task.objects.filter(user=user)
-    paginator = Paginator(tasks, 20)
-    page = paginator.get_page(int(request.GET.get('page', 1)))
-
-    return JsonResponse({
-        'previous_page': page.has_previous() and page.previous_page_number() or None,
-        'next_page': page.has_next() and page.next_page_number() or None,
-        'tasks': [task_to_dict(task) for task in list(page)]
-    })
+def get_delayed(request):
+    return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @login_required
-def get_delayed_by_owner(request, owner):
-    try: user = User.objects.get(username=owner)
-    except: return HttpResponseNotFound()
-    return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=user, enabled=True)]})
+def get_repeating(request):
+    return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @login_required
-def get_repeating_by_owner(request, owner):
-    try: user = User.objects.get(username=owner)
-    except: return HttpResponseNotFound()
-    return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=user, enabled=True)]})
-
-
-@login_required
-def get_by_owner_and_name(request, owner, name):
+def get_task(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+
         return JsonResponse(task_to_dict(task))
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-
-@login_required
-def transfer_to_cyverse(request, owner, name):
-    body = json.loads(request.body.decode('utf-8'))
-    transfer_path = body['path']
-
-    # find the task
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-        auth = parse_task_auth_options(task, body['auth'])
-    except:
-        return HttpResponseNotFound()
-    if not task.is_complete: return HttpResponseBadRequest('task incomplete')
-
-    # compose command
-    command = f"plantit terrain push {transfer_path} -p {join(task.agent.workdir, task.workdir)} "
-    command = command + ' ' + ' '.join(['--include_name ' + name for name in get_included_by_name(task)])
-    command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_included_by_pattern(task)])
-    command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
-
-    # run command
-    ssh = get_task_ssh_client(task, auth)
-    with ssh:
-        for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
-            logger.info(f"[{task.agent.name}] {line}")
-
-    # update task
-    task.transfer_path = transfer_path
-    task.transferred = True
-    task.save()
-
-    return JsonResponse(task_to_dict(task))
+    except Task.DoesNotExist: return HttpResponseNotFound()
 
 
 # @login_required
@@ -167,13 +130,21 @@ def transfer_to_cyverse(request, owner, name):
 #         return HttpResponse(temp_file, content_type="applications/octet-stream")
 
 
+# noinspection PyTypeChecker
 @login_required
-def get_output_file(request, owner, name):
+@swagger_auto_schema(method='get', auto_schema=None)
+def download_output_file(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
@@ -203,170 +174,111 @@ def get_output_file(request, owner, name):
                     # return FileResponse(open(tf.name, 'rb'), content_type='application/zip', as_attachment=True)
 
 
+# noinspection PyTypeChecker
 @login_required
-def get_task_logs(request, owner, name):
+@swagger_auto_schema(method='get', auto_schema=None)
+def download_task_logs(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
 
     log_path = get_task_orchestrator_log_file_path(task)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
 @login_required
-def get_task_logs_content(request, owner, name):
+def get_task_logs(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
 
     log_path = get_task_orchestrator_log_file_path(task)
-    if not Path(log_path).is_file():
-        return HttpResponseNotFound()
+    if not Path(log_path).is_file(): return HttpResponseNotFound()
+    with open(log_path, 'r') as log_file: return JsonResponse({'lines': log_file.readlines()})
 
-    with open(log_path, 'r') as log_file:
-        return JsonResponse({'lines': log_file.readlines()})
+
+# noinspection PyTypeChecker
+@login_required
+@swagger_auto_schema(method='get', auto_schema=None)
+def download_scheduler_logs(request, guid):
+    try:
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
+    with open(get_task_scheduler_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
 
 
 @login_required
-def get_scheduler_logs(request, owner, name):
+def get_scheduler_logs(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
 
-    body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(task, body['auth'])
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
+    with open(get_task_scheduler_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
 
-    with open(get_task_scheduler_log_file_path(task)) as file:
-        return JsonResponse({'lines': file.readlines()})
 
-    # ssh = get_task_ssh_client(task, auth)
-    # workdir = join(task.agent.workdir, task.workdir)
-    # log_file = get_task_scheduler_log_file_name(task)
+# noinspection PyTypeChecker
+@login_required
+@swagger_auto_schema(method='get', auto_schema=None)
+def download_agent_logs(request, guid):
+    try:
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
 
-    # with ssh:
-    #     with ssh.client.open_sftp() as sftp:
-    #         stdin, stdout, stderr = ssh.client.exec_command(
-    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
-    #         errs = stderr.read()
-    #         if errs:
-    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
-    #         if not stdout.read().decode().strip() == 'exists':
-    #             return HttpResponseNotFound()
-
-    #         with tempfile.NamedTemporaryFile() as tf:
-    #             sftp.chdir(workdir)
-    #             sftp.get(log_file, tf.name)
-    #             return FileResponse(open(tf.name, 'rb'))
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
+    with open(get_task_agent_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
 
 
 @login_required
-def get_scheduler_logs_content(request, owner, name):
+def get_agent_logs(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
 
-    body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(task, body['auth'])
-
-    with open(get_task_scheduler_log_file_path(task)) as file:
-        return JsonResponse({'lines': file.readlines()})
-
-    # ssh = get_task_ssh_client(task, auth)
-    # workdir = join(task.agent.workdir, task.workdir)
-    # log_file = get_task_scheduler_log_file_name(task)
-
-    # with ssh:
-    #     with ssh.client.open_sftp() as sftp:
-    #         stdin, stdout, stderr = ssh.client.exec_command(
-    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
-    #         errs = stderr.read()
-    #         if errs:
-    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
-    #         if not stdout.read().decode().strip() == 'exists':
-    #             return HttpResponseNotFound()
-
-    #         with tempfile.NamedTemporaryFile() as tf:
-    #             sftp.chdir(workdir)
-    #             sftp.get(log_file, tf.name)
-    #             with open(tf.name, 'r') as log_file:
-    #                 return JsonResponse({'lines': log_file.readlines()})
-
-
-@login_required
-def get_agent_logs(request, owner, name):
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-    body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(task, body['auth'])
-
-    with open(get_task_agent_log_file_path(task)) as file:
-        return JsonResponse({'lines': file.readlines()})
-
-    # ssh = get_task_ssh_client(task, auth)
-    # workdir = join(task.agent.workdir, task.workdir)
-    # log_file = get_task_agent_log_file_name(task)
-
-    # with ssh:
-    #     with ssh.client.open_sftp() as sftp:
-    #         stdin, stdout, stderr = ssh.client.exec_command(
-    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
-    #         errs = stderr.read()
-    #         if errs:
-    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
-    #         if not stdout.read().decode().strip() == 'exists':
-    #             return HttpResponseNotFound()
-
-    #         with tempfile.NamedTemporaryFile() as tf:
-    #             sftp.chdir(workdir)
-    #             sftp.get(log_file, tf.name)
-    #             return FileResponse(open(tf.name, 'rb'))
-
-
-@login_required
-def get_agent_logs_content(request, owner, name):
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-    body = json.loads(request.body.decode('utf-8'))
-    auth = parse_task_auth_options(task, body['auth'])
-
-    with open(get_task_agent_log_file_path(task)) as file:
-        return JsonResponse({'lines': file.readlines()})
-
-    # ssh = get_task_ssh_client(task, auth)
-    # workdir = join(task.agent.workdir, task.workdir)
-    # log_file = get_task_agent_log_file_name(task)
-
-    # with ssh:
-    #     with ssh.client.open_sftp() as sftp:
-    #         stdin, stdout, stderr = ssh.client.exec_command(
-    #             'test -e {0} && echo exists'.format(join(workdir, log_file)))
-    #         errs = stderr.read()
-    #         if errs:
-    #             raise Exception(f"Failed to check existence of {log_file}: {errs}")
-    #         if not stdout.read().decode().strip() == 'exists':
-    #             return HttpResponseNotFound()
-
-    #         with tempfile.NamedTemporaryFile() as tf:
-    #             sftp.chdir(workdir)
-    #             sftp.get(log_file, tf.name)
-    #             with open(tf.name, 'r') as log_file:
-    #                 return JsonResponse({'lines': log_file.readlines()})
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
+    except Task.DoesNotExist: return HttpResponseNotFound()
+    with open(get_task_agent_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
 
 
 # @login_required
@@ -400,15 +312,14 @@ def get_agent_logs_content(request, owner, name):
 
 
 @login_required
-def cancel(request, owner, name):
+def cancel(request, guid):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
+        task = Task.objects.get(user=request.user, guid=guid)
     except:
         return HttpResponseNotFound()
 
     if task.is_complete:
-        return HttpResponse(f"User {owner}'s task {name} already completed")
+        return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
 
     if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
@@ -422,81 +333,56 @@ def cancel(request, owner, name):
     task.completed = now
     task.save()
 
-    msg = f"Cancelled user {owner}'s task {name}"
+    msg = f"Cancelled user {request.user.username}'s task {guid}"
     log_task_orchestrator_status(task, [msg])
     push_task_event(task)
     return JsonResponse({'canceled': True})
 
 
+# @login_required
+# def delete(request, owner, name):
+#     try:
+#         user = User.objects.get(username=owner)
+#         task = Task.objects.get(user=user, guid=name)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     task.delete()
+#     tasks = list(Task.objects.filter(user=user))
+#
+#     return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
+
+
 @login_required
-def delete(request, owner, name):
-    try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
-    except:
-        return HttpResponseNotFound()
-
-    task.delete()
-    tasks = list(Task.objects.filter(user=user))
-
-    return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
-
-
-@login_required
-def unschedule_delayed(request, owner, name):
-    try: task = DelayedTask.objects.get(user=request.user, name=name)
+def unschedule_delayed(request, guid):
+    try: task = DelayedTask.objects.get(user=request.user, name=guid)
     except: return HttpResponseNotFound()
     task.delete()
     return JsonResponse({'tasks': [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @login_required
-def unschedule_repeating(request, owner, name):
-    try: task = RepeatingTask.objects.get(user=request.user, name=name)
+def unschedule_repeating(request, guid):
+    try: task = RepeatingTask.objects.get(user=request.user, name=guid)
     except: return HttpResponseNotFound()
     task.delete()
     return JsonResponse({'tasks': [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @login_required
-def exists(request, owner, name):
+def exists(request, guid):
     try:
-        Task.objects.get(user=User.objects.get(username=owner), name=name)
+        task = Task.objects.get(guid=guid)
+        owns = request.user.username == task.user.username
+
+        # if the requesting user doesn't own the task and isn't on its
+        # associated project team, they're not authorized to access it
+        team = [u.username for u in task.project.team.all()]
+        if not owns and request.user.username not in team:
+            logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
+            return HttpResponseNotFound()
         return JsonResponse({'exists': True})
-    except Task.DoesNotExist:
-        return JsonResponse({'exists': True})
-
-
-@sync_to_async
-@login_required
-@csrf_exempt
-@async_to_sync
-async def status(request, owner, name):
-    try:
-        user = await sync_to_async(User.objects.get)(username=owner)
-        task = await sync_to_async(Task.objects.get)(user=user, name=name)
-    except Task.DoesNotExist:
-        return HttpResponseNotFound()
-
-    body = json.loads(request.body.decode('utf-8'))
-
-    for chunk in body['description'].split('<br>'):
-        task.status = TaskStatus.RUNNING
-        for line in chunk.split('\n'):
-            if 'FATAL' in line or int(body['state']) == 0:  # catch singularity build failures etc
-                task.status = TaskStatus.FAILURE
-            elif int(body['state']) == 6:  # catch completion
-                task.status = TaskStatus.SUCCESS
-
-            task.updated = timezone.now()
-            await sync_to_async(task.save)()
-            log_task_orchestrator_status(task, line)
-            await push_task_event(task)
-
-        task.updated = timezone.now()
-        await sync_to_async(task.save)()
-
-    return HttpResponse(status=200)
+    except Task.DoesNotExist: return JsonResponse({'exists': False})
 
 
 @login_required

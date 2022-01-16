@@ -1,43 +1,39 @@
-import subprocess
+import logging
+import json
 import logging
 import os
-import subprocess
-from datetime import datetime
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import jwt
-import json
 import requests
-from requests import HTTPError
-import traceback
-from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema
 from github import Github
+from requests import HTTPError
 from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.celery_tasks import refresh_user_workflows, refresh_user_stats
-from plantit.utils import get_csrf_token
+from plantit.celery_tasks import refresh_user_stats
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
-from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.misc.models import MaintenanceWindow
-from plantit.utils import list_users, get_user_cyverse_profile, get_user_private_key_path, get_or_create_user_keypair, get_user_bundle
+from plantit.utils import get_csrf_token
+from plantit.utils import list_users, get_user_cyverse_profile, get_or_create_user_keypair, get_user_bundle
 
 logger = logging.getLogger(__name__)
 
 
 class IDPViewSet(viewsets.ViewSet):
+    swagger_schema = None
     permission_classes = (AllowAny,)
     logger = logging.getLogger(__name__)
 
@@ -175,6 +171,7 @@ class IDPViewSet(viewsets.ViewSet):
         return redirect(f"/home/")
 
 
+# noinspection PyTypeChecker
 class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -184,7 +181,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def get_object(self):
         return self.request.user
 
+    @action(detail=False, methods=['get'])
+    def get_all(self, request):
+        return JsonResponse({'users': list_users()})
+
     @action(methods=['get'], detail=False)
+    @swagger_auto_schema(method='get', auto_schema=None)
     def acknowledge_first_login(self, request):
         user = self.get_object()
         user.profile.first_login = False
@@ -193,6 +195,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return HttpResponse(status=200)
 
     @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_push_notifications(self, request):
         user = request.user
         sns = SnsClient.get()
@@ -226,6 +229,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 return JsonResponse({'push_notifications': user.profile.push_notification_status})
 
     @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_hints(self, request):
         user = request.user
         user.profile.hints = not user.profile.hints
@@ -234,6 +238,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse({'hints': user.profile.hints})
 
     @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_dark_mode(self, request):
         user = request.user
         user.profile.dark_mode = not user.profile.dark_mode
@@ -244,10 +249,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         })
 
     @action(detail=False, methods=['get'])
-    def get_all(self, request):
-        return JsonResponse({'users': list_users()})
-
-    @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def get_current(self, request):
         user = request.user
 
@@ -297,7 +299,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         return JsonResponse(response)
 
-    action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def get_by_username(self, request):
         username = request.GET.get('username', None)
 
@@ -354,95 +357,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse(response)
 
     @action(detail=False, methods=['get'])
+    @swagger_auto_schema(method='get', auto_schema=None)
     def get_key(self, request):
         overwrite = request.GET.get('overwrite', False)
         public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
-
-    @action(detail=False, methods=['post'])
-    def check_connection(self, request):
-        try:
-            hostname = request.data['hostname']
-            port = int(request.data['port'])
-            username = request.data['username']
-        except:
-            return HttpResponseBadRequest()
-
-        if 'password' in request.data:
-            ssh = SSH(hostname, port=port, username=username, password=request.data['password'])
-        else:
-            pkey = str(get_user_private_key_path(request.user.username))
-            ssh = SSH(hostname, port=port, username=username, pkey=pkey)
-
-        subprocess.run(f"ssh-keyscan -H {hostname} >> ../config/ssh/known_hosts", shell=True)
-
-        with ssh:
-            try:
-                for line in execute_command(ssh=ssh, precommand=':', command='pwd', directory=None, allow_stderr=False):
-                    self.logger.info(line)
-                return JsonResponse({'success': True})
-            except:
-                return JsonResponse({'success': False})
-
-    @action(detail=False, methods=['post'])
-    def create_workdir(self, request):
-        try:
-            hostname = request.data['hostname']
-            port = int(request.data['port'])
-            username = request.data['username']
-            workdir = request.data.get('workdir', None)
-        except:
-            return HttpResponseBadRequest()
-
-        if 'password' in request.data:
-            ssh = SSH(hostname, port=port, username=username, password=request.data['password'])
-        else:
-            pkey = str(get_user_private_key_path(request.user.username))
-            self.logger.info(pkey)
-            ssh = SSH(hostname, port=port, username=username, pkey=pkey)
-
-        with ssh:
-            try:
-                for line in execute_command(ssh=ssh, precommand=':',
-                                            command=f"mkdir -p {workdir}/.plantit && cd {workdir}/.plantit && pwd",
-                                            allow_stderr=False):
-                    self.logger.info(line)
-                    if 'cannot' in line or '/.plantit' not in line:  # TODO are there other error cases we should catch here?
-                        return HttpResponse(line, status=500)
-                    else:
-                        return JsonResponse({'workdir': line.strip()})
-            except:
-                return JsonResponse({'workdir': False})
-
-    @action(detail=False, methods=['post'])
-    def check_executor(self, request):
-        try:
-            hostname = request.data['hostname']
-            username = request.data['username']
-            precommand = request.data['precommand']
-            executor = request.data['executor']  # TODO if this is jobqueue, check if scheduler exists
-            workdir = request.data['workdir']
-        except:
-            return HttpResponseBadRequest()
-
-        if 'password' in request.data:
-            ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
-        else:
-            ssh = SSH(hostname, port=22, username=username, pkey=str(get_user_private_key_path(request.user.username)))
-
-        with ssh:
-            output = []
-            try:
-                for line in execute_command(ssh=ssh, precommand=precommand, command='plantit ping', directory=workdir,
-                                            allow_stderr=False):
-                    output.append(line)
-                    self.logger.info(line)
-                return JsonResponse({
-                    'success': True,
-                    'output': output
-                })
-            except:
-                return JsonResponse({
-                    'success': False,
-                    'output': output
-                })

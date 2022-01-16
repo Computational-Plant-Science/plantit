@@ -64,7 +64,7 @@
                                     dismissible
                                     @dismissed="showFailedToCancelAlert = false"
                                 >
-                                    Failed to cancel task {{ getTask.name }}.
+                                    Failed to cancel task {{ getTask.guid }}.
                                 </b-alert>
                             </b-col>
                         </b-row>
@@ -78,7 +78,7 @@
                                     "
                                 >
                                     <i class="fas fa-tasks fa-fw"></i>
-                                    {{ getTask.name }}
+                                    {{ getTask.guid }}
                                 </h4></b-col
                             ><b-col class="m-0 ml-2 p-0">
                                 <h5>
@@ -1907,36 +1907,6 @@
             ></b-embed>
         </b-modal>
         <b-modal
-            id="authenticate"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            close
-            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.getTask.agent.name"
-            @ok="transferToCyVerse"
-            ok-variant="success"
-        >
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationUsername"
-                type="text"
-                placeholder="Your username"
-                required
-            ></b-form-input>
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationPassword"
-                type="password"
-                placeholder="Your password"
-                required
-            ></b-form-input>
-        </b-modal>
-        <b-modal
             id="authenticate-download"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -2048,7 +2018,6 @@ import router from '@/router';
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { guid } from '@/utils';
 import { Plotly } from 'vue-plotly';
 
 export default {
@@ -2108,56 +2077,6 @@ export default {
         },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
-        },
-        async preTransferToCyVerse(node) {
-            this.transferringPath = node.path;
-            if (this.mustAuthenticate) this.showAuthenticateModal();
-            else await this.transferToCyVerse(node);
-        },
-        async transferToCyVerse() {
-            this.transferring = true;
-            let data = {
-                path: this.transferringPath,
-            };
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.getTask.agent.user,
-                };
-            await axios({
-                method: 'post',
-                data: data,
-                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/transfer/`,
-            })
-                .then(async (response) => {
-                    this.hideTransferToCyVerseModal();
-                    this.transferred = true;
-                    this.transferring = false;
-                    await Promise.all([
-                        this.$store.dispatch('tasks/update', response.data),
-                        this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Scheduled transfer to CyVerse Data Store (${this.transferringPath})`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        }),
-                    ]);
-                })
-                .catch(async (error) => {
-                    this.hideTransferToCyVerseModal();
-                    this.transferring = false;
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to schedule transfer to CyVerse Data Store (${this.transferringPath})`,
-                        guid: guid().toString(),
-                        time: moment().format(),
-                    });
-                    throw error;
-                });
         },
         copyGUID() {
             const el = document.createElement('textarea');
@@ -2538,7 +2457,7 @@ export default {
             await axios({
                 method: 'post',
                 data: data,
-                url: `/apis/v1/tasks/${this.getTask.owner}/${this.getTask.name}/output/`,
+                url: `/apis/v1/tasks/${this.getTask.guid}/output/`,
                 config: { responseType: 'blob' },
             })
                 .then((response) => {
@@ -2578,7 +2497,7 @@ export default {
                 };
             await axios({
                 method: 'post',
-                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs_content/`,
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/`,
                 data: data,
             })
                 .then((response) => {
@@ -2602,7 +2521,7 @@ export default {
                 };
             await axios({
                 method: 'post',
-                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs_content/`,
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/`,
                 data: data,
             })
                 .then((response) => {
@@ -2616,7 +2535,7 @@ export default {
         downloadTaskLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/orchestrator_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/orchestrator/`
                 )
                 .then((response) => {
                     if (response && response.status === 404) {
@@ -2641,7 +2560,7 @@ export default {
         downloadSchedulerLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/scheduler_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/dl/`
                 )
                 .then((response) => {
                     if (response && response.status === 404) {
@@ -2666,7 +2585,7 @@ export default {
         downloadAgentLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/agent_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.name}/logs/agent/dl/`
                 )
                 .then((response) => {
                     if (response && response.status === 404) {
@@ -2688,34 +2607,27 @@ export default {
                     return error;
                 });
         },
-        getTextFile(file) {
-            if (!this.fileIsText(file.name)) return;
-            this.textContent = [];
-            axios
-                .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
-                )
-                .then((response) => {
-                    if (response.status === 200) {
-                        this.textContent = response.data.text;
-                    }
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    return error;
-                });
-        },
-    },
-    async mounted() {
-        // await this.$store.dispatch('tasks/refresh', {
-        //     owner: this.$router.currentRoute.params.owner,
-        //     name: this.$router.currentRoute.params.name
-        // });
-        // await Promise.all([this.getSchedulerLogs(), this.getAgentLogs()]);
+        // getTextFile(file) {
+        //     if (!this.fileIsText(file.name)) return;
+        //     this.textContent = [];
+        //     axios
+        //         .get(
+        //             `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/file_text/?path=${file.path}`
+        //         )
+        //         .then((response) => {
+        //             if (response.status === 200) {
+        //                 this.textContent = response.data.text;
+        //             }
+        //         })
+        //         .catch((error) => {
+        //             Sentry.captureException(error);
+        //             return error;
+        //         });
+        // },
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
+        ...mapGetters('workflows', ['workflow']),
         ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
         ...mapGetters('datasets', ['userDatasets', 'userDatasetsLoading']),
         timeseriesData() {
@@ -2734,12 +2646,6 @@ export default {
                 {
                     x: x,
                     y: y,
-                    // x: [
-                    //     moment(this.getTask.created).format(
-                    //         'YYYY-MM-DD HH:mm:ss'
-                    //     )
-                    // ],
-                    // y: [0],
                     hovertemplate: '<br>%{text}<br><extra></extra>',
                     text: [
                         `created ${this.prettify(this.getTask.created)}`,
@@ -2757,11 +2663,6 @@ export default {
                                 ? '#d6df5D'
                                 : 'rgb(255, 114, 114)',
                         ],
-                        // color: this.healthchecks.map(t =>
-                        //     t.healthy
-                        //         ? 'rgb(214, 223, 93)'
-                        //         : 'rgb(255, 114, 114)'
-                        // ),
                         line: {
                             color: '#e2e3b0',
                             width: 1,
@@ -2890,7 +2791,7 @@ export default {
         '$route.params.owner'() {
             // need to watch for route change to prompt reload
         },
-        '$route.params.name'() {
+        '$route.params.guid'() {
             // need to watch for route change to prompt reload
         },
         viewMode() {
