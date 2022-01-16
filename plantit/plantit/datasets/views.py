@@ -25,11 +25,12 @@ logger = logging.getLogger(__name__)
 @login_required
 def sharing(request):
     """
-    Get directories the current user is sharing.
+    Get collections the current user is sharing.
 
     :param request: The request
     :return: The response
     """
+
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
     return JsonResponse({'datasets': [dataset_access_policy_to_dict(policy) for policy in policies]})
 
@@ -39,11 +40,12 @@ def sharing(request):
 @async_to_sync
 async def shared(request):
     """
-    Get directories shared with the current user.
+    Get collections shared with the current user.
 
     :param request: The request
     :return: The response
     """
+
     policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
     paths = [policy.path for policy in policies]
     dirs = await terrain.get_dirs(paths, request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
@@ -54,6 +56,16 @@ async def shared(request):
 @login_required
 @async_to_sync
 async def share(request):
+    """
+    Share a collection with another user.
+
+    Args:
+        request: The request
+
+    Returns:
+
+    """
+
     owner = request.user
     body = json.loads(request.body.decode('utf-8'))
     guests = body['sharing']
@@ -103,10 +115,21 @@ async def share(request):
 
     return JsonResponse({'datasets': datasets})
 
+
 @sync_to_async
 @login_required
 @async_to_sync
 async def unshare(request):
+    """
+    Revoke a user's access to a collection.
+
+    Args:
+        request: The request
+
+    Returns:
+
+    """
+
     owner = request.user
     body = json.loads(request.body.decode('utf-8'))
     guest_username = body['user']
@@ -162,6 +185,16 @@ async def unshare(request):
 @login_required
 @async_to_sync
 async def create(request):
+    """
+    Create a new collection.
+
+    Args:
+        request: The request
+
+    Returns:
+
+    """
+
     owner = request.user
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
@@ -172,16 +205,18 @@ async def create(request):
 
     if project is not None and study is not None:
         try:
-            Investigation = await sync_to_async(Investigation.objects.get)(owner=owner, title=project['title'])
-            study = await sync_to_async(Study.objects.get)(Investigation=Investigation, title=study['title'])
+            investigation = await sync_to_async(Investigation.objects.get)(owner=owner, title=project['title'])
+            study = await sync_to_async(Study.objects.get)(Investigation=investigation, title=study['title'])
         except:
             logger.warning(traceback.format_exc())
             return HttpResponseNotFound()
 
-        if study.dataset_paths: study.dataset_paths.append(path)
-        else: study.dataset_paths = [path]
+        if study.dataset_paths:
+            study.dataset_paths.append(path)
+        else:
+            study.dataset_paths = [path]
         await sync_to_async(study.save)()
         logger.info(f"Bound {path} to project {project}, study {study}")
-        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(Investigation)})
+        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(investigation)})
     else:
         return JsonResponse({'path': path})

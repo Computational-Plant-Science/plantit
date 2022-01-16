@@ -10,6 +10,5 @@ urlpatterns = [
     path(r'<owner>/u/<name>/<branch>/', views.get),
     path(r'<owner>/u/<name>/<branch>/search/', views.search),
     path(r'<owner>/u/<name>/<branch>/refresh/', views.refresh),
-    path(r'<owner>/u/<name>/<branch>/readme/', views.readme),
     path(f'<owner>/u/<name>/<branch>/branches/', views.branches)
 ]
