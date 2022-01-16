@@ -113,7 +113,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'channels',
     'simple_history',
-    'cacheops'
+    'cacheops',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

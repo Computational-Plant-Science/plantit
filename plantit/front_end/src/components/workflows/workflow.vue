@@ -876,35 +876,6 @@
                                                         </b-row>
                                                     </b-col>
                                                 </b-row>
-                                                <b-row
-                                                    class="mb-3"
-                                                    v-if="
-                                                        getWorkflow.readme !==
-                                                            undefined &&
-                                                        getWorkflow.readme !==
-                                                            null
-                                                    "
-                                                    ><b-col>
-                                                        <div
-                                                            :class="
-                                                                profile.darkMode
-                                                                    ? 'theme-container-get_readme m-0 p-3'
-                                                                    : 'theme-container-light m-0 p-3'
-                                                            "
-                                                        >
-                                                            <br />
-                                                            <b-row>
-                                                                <b-col
-                                                                    ><vue-markdown
-                                                                        >{{
-                                                                            getWorkflow.readme
-                                                                        }}</vue-markdown
-                                                                    ></b-col
-                                                                >
-                                                            </b-row>
-                                                        </div>
-                                                    </b-col>
-                                                </b-row>
                                             </b-tab>
                                             <b-tab
                                                 title="Submit"
@@ -4557,7 +4528,6 @@ export default {
         ]),
         ...mapGetters('tasks', [
             'tasks',
-            'tasksByOwner',
             'task',
             'tasksLoading',
             'tasksDelayed',
@@ -4595,9 +4565,7 @@ export default {
             return this.agentsPermitted(this.profile.djangoProfile.username);
         },
         taskHistory() {
-            return this.$store.getters['tasks/tasksByOwner'](
-                this.profile.djangoProfile.username
-            );
+            return this.$store.getters['tasks/tasks'];
         },
         getWorkflow() {
             return this.workflow(this.owner, this.name, this.branch);

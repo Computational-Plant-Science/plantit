@@ -152,19 +152,12 @@
 </template>
 
 <script>
-import axios from 'axios';
-import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
-import { guid } from '@/utils';
 
 export default {
     name: 'agents',
-    data: function () {
-        return {
-            checkingConnection: false,
-        };
-    },
+    data: function () { return {}; },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('agents', ['agentsPermitted', 'agentsLoading']),
@@ -176,60 +169,6 @@ export default {
         },
     },
     methods: {
-        async checkAgentConnection() {
-            this.checkingConnection = true;
-            let data =
-                this.agentAuthentication === 'password'
-                    ? {
-                          hostname: this.agentHost,
-                          port: this.agentPort,
-                          username: this.agentUsername,
-                          password: this.authenticationPassword,
-                      }
-                    : {
-                          hostname: this.agentHost,
-                          port: this.agentPort,
-                          username: this.agentUsername,
-                      };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/users/check_connection/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(async (response) => {
-                    if (response.status === 200 && response.data.success) {
-                        this.agentConnectionComplete = true;
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Connection to ${this.agentName} succeeded`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                    } else {
-                        this.agentConnectionComplete = false;
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to connect to ${this.agentName}`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                    }
-                    this.checkingConnection = false;
-                })
-                .catch(async (error) => {
-                    Sentry.captureException(error);
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to connect to ${this.agentName}`,
-                        guid: guid().toString(),
-                        time: moment().format(),
-                    });
-                    this.agentConnectionComplete = false;
-                    this.checkingConnection = false;
-                    throw error;
-                });
-        },
         prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
@@ -240,9 +179,6 @@ export default {
         },
         isJobQueue(executor) {
             return executor !== 'Local';
-        },
-        isSLURM(executor) {
-            return executor === 'SLURM';
         },
     },
 };
