@@ -385,7 +385,8 @@ async def get_workflow(
             'config': bundle['config'],
             'repo': bundle['repo'],
             'validation': bundle['validation'],
-            'branch': branch
+            'branch': branch,
+            'example': owner == 'Computational-Plant-Science' and 'example' in name.lower()
         }
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
         return workflow
