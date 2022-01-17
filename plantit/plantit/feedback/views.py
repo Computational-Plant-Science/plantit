@@ -2,7 +2,8 @@ import json
 import pprint
 
 from django.conf import settings
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse
+from rest_framework.decorators import api_view
 
 from plantit.feedback.models import Feedback
 from plantit.sns import SnsClient
@@ -17,9 +18,9 @@ def submit_feedback(request):
     return HttpResponse()
 
 
-def download_tutorials(request):
-    return FileResponse(open(settings.TUTORIALS_FILE, 'rb'))
-
-
-def download_feedback_form(request):
-    return FileResponse(open(settings.FEEDBACK_FILE, 'rb'))
+# def download_tutorials(request):
+#     return FileResponse(open(settings.TUTORIALS_FILE, 'rb'))
+#
+#
+# def download_feedback_form(request):
+#     return FileResponse(open(settings.FEEDBACK_FILE, 'rb'))

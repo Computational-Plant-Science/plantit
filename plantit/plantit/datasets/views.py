@@ -6,23 +6,28 @@ import uuid
 
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
 
+import plantit.terrain as terrain
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
 from plantit.users.models import Profile
-from plantit.utils import dataset_access_policy_to_dict, project_to_dict, get_user_django_profile
-import plantit.terrain as terrain
+from plantit.utils import dataset_access_policy_to_dict, project_to_dict
 
 logger = logging.getLogger(__name__)
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['get'])
 def sharing(request):
     """
     Get collections the current user is sharing.
@@ -35,9 +40,12 @@ def sharing(request):
     return JsonResponse({'datasets': [dataset_access_policy_to_dict(policy) for policy in policies]})
 
 
+@swagger_auto_schema(methods='get')
 @sync_to_async
 @login_required
 @async_to_sync
+@login_required
+@api_view(['get'])
 async def shared(request):
     """
     Get collections shared with the current user.

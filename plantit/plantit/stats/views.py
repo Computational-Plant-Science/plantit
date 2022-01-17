@@ -3,12 +3,17 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound
+from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
 
 from plantit.redis import RedisClient
 from plantit.utils import get_institutions, get_total_counts, get_aggregate_timeseries, get_workflow_usage_timeseries, get_user_timeseries
 
 
+@swagger_auto_schema(methods='get')
+@login_required
+@api_view(['get'])
 def institutions_info(_):
     redis = RedisClient.get()
     cached = list(redis.scan_iter(match=f"institutions/*"))
@@ -22,6 +27,9 @@ def institutions_info(_):
     return JsonResponse({'institutions': institutions})
 
 
+@swagger_auto_schema(methods='get')
+@login_required
+@api_view(['get'])
 def aggregate_counts(_):
     redis = RedisClient.get()
     cached = redis.get("stats_counts")
@@ -35,6 +43,9 @@ def aggregate_counts(_):
     return JsonResponse(counts)
 
 
+@swagger_auto_schema(methods='get')
+@login_required
+@api_view(['get'])
 def aggregate_timeseries(_):
     redis = RedisClient.get()
     cached = redis.get("total_timeseries")
@@ -48,9 +59,7 @@ def aggregate_timeseries(_):
     return JsonResponse(series)
 
 
-# noinspection PyTypeChecker
 @login_required
-@swagger_auto_schema(method='get', auto_schema=None)
 def workflow_timeseries(_, owner, name, branch):
     redis = RedisClient.get()
     cached = redis.get(f"workflow_timeseries/{owner}/{name}/{branch}")
@@ -64,9 +73,7 @@ def workflow_timeseries(_, owner, name, branch):
     return JsonResponse(series)
 
 
-# noinspection PyTypeChecker
 @login_required
-@swagger_auto_schema(method='get', auto_schema=None)
 def user_timeseries(request, username):
     try: user = User.objects.get(username=username)
     except: return HttpResponseNotFound()

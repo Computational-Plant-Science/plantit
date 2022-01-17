@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound
 from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
 
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.utils import agent_to_dict, is_healthy
@@ -13,14 +15,18 @@ from plantit.redis import RedisClient
 logger = logging.getLogger(__name__)
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['GET'])
 def list(request):
     # only return public agents and agents the requesting user is authorized to access
     agents = [agent for agent in Agent.objects.all() if agent.public or request.user.username in [u.username for u in agent.users_authorized.all()]]
     return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['GET'])
 def get(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -32,7 +38,9 @@ def get(request, name):
     return JsonResponse(agent_to_dict(agent, request.user))
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['GET'])
 def exists(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -44,7 +52,9 @@ def exists(request, name):
     except: return JsonResponse({'exists': False})
 
 
+@swagger_auto_schema(methods='post')
 @login_required
+@api_view(['POST'])
 def healthcheck(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -75,7 +85,9 @@ def healthcheck(request, name):
     return JsonResponse(check)
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['GET'])
 def healthchecks(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -90,7 +102,9 @@ def healthchecks(request, name):
     return JsonResponse({'healthchecks': checks})
 
 
+@swagger_auto_schema(methods='get')
 @login_required
+@api_view(['GET'])
 def policies(request, name):
     try:
         agent = Agent.objects.get(name=name)

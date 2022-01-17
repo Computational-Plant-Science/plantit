@@ -80,10 +80,11 @@ export const agents = {
             return found !== undefined ? found : null;
         },
         agentsPermitted: (state) => (username) =>
-            // return public agents and private ones this user is authorized for
+            // return public agents, agents this user owns, and agents the user is guest authorized for
             state.agents.filter(
                 (a) =>
                     a.public ||
+                    a.role === 'admin' ||
                     a.users_authorized.some((u) => u.username === username)
             ),
         agentsLoading: (state) => state.loading,

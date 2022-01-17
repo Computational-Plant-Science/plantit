@@ -212,8 +212,8 @@ REST_FRAMEWORK = {
 TAGGIT_CASE_INSENSITIVE = True
 
 CACHEOPS_REDIS = {
-    'host': 'redis', # redis-server is on same machine
-    'port': 6379,    # default redis port
+    'host': 'redis',  # redis-server is on same machine
+    'port': 6379,  # default redis port
 }
 
 # Alternatively the redis connection can be defined using a URL:
@@ -231,3 +231,13 @@ CACHEOPS = {
     # Invalidation is still automatic
     # '*.*': {'ops': (), 'timeout': 60*60},
 }
+
+# SWAGGER_SETTINGS = {
+#     'SECURITY_DEFINITIONS': {
+#         'api_key': {
+#             'type': 'apiKey',
+#             'in': 'header',
+#             'name': 'Authorization'
+#         }
+#     },
+# }

@@ -1,4 +1,3 @@
-import logging
 import json
 import logging
 import os
@@ -171,8 +170,8 @@ class IDPViewSet(viewsets.ViewSet):
         return redirect(f"/home/")
 
 
-# noinspection PyTypeChecker
 class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
+    swagger_schema = None
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
@@ -186,7 +185,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse({'users': list_users()})
 
     @action(methods=['get'], detail=False)
-    @swagger_auto_schema(method='get', auto_schema=None)
     def acknowledge_first_login(self, request):
         user = self.get_object()
         user.profile.first_login = False
@@ -195,7 +193,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return HttpResponse(status=200)
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_push_notifications(self, request):
         user = request.user
         sns = SnsClient.get()
@@ -229,7 +226,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 return JsonResponse({'push_notifications': user.profile.push_notification_status})
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_hints(self, request):
         user = request.user
         user.profile.hints = not user.profile.hints
@@ -238,7 +234,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse({'hints': user.profile.hints})
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def toggle_dark_mode(self, request):
         user = request.user
         user.profile.dark_mode = not user.profile.dark_mode
@@ -249,7 +244,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         })
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def get_current(self, request):
         user = request.user
 
@@ -300,7 +294,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse(response)
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def get_by_username(self, request):
         username = request.GET.get('username', None)
 
@@ -357,7 +350,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return JsonResponse(response)
 
     @action(detail=False, methods=['get'])
-    @swagger_auto_schema(method='get', auto_schema=None)
     def get_key(self, request):
         overwrite = request.GET.get('overwrite', False)
         public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
