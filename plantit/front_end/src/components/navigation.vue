@@ -225,6 +225,23 @@
                             >Stats</span
                         ></b-nav-item
                     >
+                  <b-nav-item
+                        title="stats"
+                        href="https://stats.uptimerobot.com/yAgPxH7KNJ"
+                        class="mt-1"
+                        :link-class="
+                            profile.darkMode ? 'text-secondary' : 'text-dark'
+                        "
+                        ><span
+                            :class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
+                            >Status</span
+                        ></b-nav-item
+                    >
                     <b-nav-item
                         title="docs"
                         href="https://plantit.readthedocs.io/en/latest"

@@ -109,6 +109,18 @@
                                 >Stats</b-link
                             ></b-col
                         >
+                        <b-col md="auto" align-self="center"
+                            ><b-link
+                                href="https://stats.uptimerobot.com/yAgPxH7KNJ"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
+                                >Status</b-link
+                            ></b-col
+                        >
                         <b-col md="auto" align-self="center">
                             <b-link
                                 href="https://plantit.readthedocs.io/en/latest"
@@ -334,6 +346,9 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
+        uptimeRobotUrl() {
+            return process.env.UPTIME_ROBOT_URL;
+        },
         maintenance() {
             let now = moment();
             return this.maintenanceWindows.find((w) => {
