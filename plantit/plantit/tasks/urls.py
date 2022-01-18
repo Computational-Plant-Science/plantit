@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     path(r'search/<owner>/<workflow_name>/<page>/', views.search),
-    path(r'', views.get_all_or_create),
+    path(r'', views.get_or_create),
     path(r'delayed/', views.get_delayed),
     path(r'repeating/', views.get_repeating),
     path(r'<guid>/', views.get_task),

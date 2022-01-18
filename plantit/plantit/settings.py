@@ -137,7 +137,6 @@ CHANNEL_LAYERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'plantit.tasks.authentication.TaskTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 )
 

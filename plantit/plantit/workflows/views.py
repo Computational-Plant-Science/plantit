@@ -5,17 +5,16 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound
 
+import plantit.queries as q
 from plantit.github import get_repo, list_repo_branches, list_user_organizations
 from plantit.redis import RedisClient
 from plantit.users.models import Profile
-from plantit.utils import get_user_django_profile, list_public_workflows, get_workflow, \
-    list_user_projects, project_to_dict
 
 logger = logging.getLogger(__name__)
 
 
 def list_public(request):
-    return JsonResponse({'workflows': list_public_workflows()})
+    return JsonResponse({'workflows': q.list_public_workflows()})
 
 
 # TODO: when this (https://code.djangoproject.com/ticket/31949) gets merged, remove sync_to_async/async_to_sync hacks
@@ -34,7 +33,7 @@ async def list_user(request):
 @async_to_sync
 async def list_org(request):
     # TODO cache organization memberships so don't have to look up each time
-    profile = await get_user_django_profile(request.user)
+    profile = await q.get_user_django_profile(request.user)
     orgs = await list_user_organizations(profile.github_username, profile.github_token)
     redis = RedisClient.get()
     org_workflows = dict()
@@ -55,8 +54,8 @@ async def list_project(request):
     project_workflows = dict()
 
     # load workflows for each project
-    for project in (await list_user_projects(request.user)):
-        proj_dict = await sync_to_async(project_to_dict)(project)
+    for project in (await q.list_user_projects(request.user)):
+        proj_dict = await sync_to_async(q.project_to_dict)(project)
         workflows = [json.loads(wf) for wf in [redis.get(key) for key in [f"workflows/{name}" for name in proj_dict['workflows']]] if wf is not None]
         project_workflows[project.guid] = workflows
 
@@ -69,7 +68,7 @@ async def list_project(request):
 async def get(request, owner, name, branch):
     profile = await sync_to_async(Profile.objects.get)(user=request.user)
     invalidate = request.GET.get('invalidate', False)
-    workflow = await get_workflow(
+    workflow = await q.get_workflow(
         owner=owner,
         name=name,
         branch=branch,
@@ -89,7 +88,7 @@ async def get(request, owner, name, branch):
 @login_required
 @async_to_sync
 async def search(request, owner, name, branch):
-    profile = await get_user_django_profile(request.user)
+    profile = await q.get_user_django_profile(request.user)
     repository = await get_repo(owner, name, branch, profile.github_token)
     return HttpResponseNotFound() if repository is None else JsonResponse(repository)
 
@@ -99,8 +98,8 @@ async def search(request, owner, name, branch):
 @async_to_sync
 async def refresh(request, owner, name, branch):
     try:
-        profile = await get_user_django_profile(request.user)
-        workflow = await get_workflow(owner, name, branch, profile.github_token, profile.cyverse_access_token)
+        profile = await q.get_user_django_profile(request.user)
+        workflow = await q.get_workflow(owner, name, branch, profile.github_token, profile.cyverse_access_token)
     except: return HttpResponseNotFound()
     logger.info(f"Refreshed workflow {owner}/{name}/{branch}")
     return JsonResponse(workflow)
@@ -110,6 +109,6 @@ async def refresh(request, owner, name, branch):
 @login_required
 @async_to_sync
 async def branches(request, owner, name):
-    profile = await get_user_django_profile(request.user)
+    profile = await q.get_user_django_profile(request.user)
     repo_branches = await list_repo_branches(owner, name, profile.github_token)
     return JsonResponse({'branches': [branch['name'] for branch in repo_branches]})

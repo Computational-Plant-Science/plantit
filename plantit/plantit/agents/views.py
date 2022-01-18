@@ -8,8 +8,11 @@ from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+import plantit.healthchecks
+import plantit.utils.agents
+import plantit.queries as q
 from plantit.agents.models import Agent, AgentAccessPolicy
-from plantit.utils import agent_to_dict, is_healthy
+from plantit.healthchecks import is_healthy
 from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 def list(request):
     # only return public agents and agents the requesting user is authorized to access
     agents = [agent for agent in Agent.objects.all() if agent.public or request.user.username in [u.username for u in agent.users_authorized.all()]]
-    return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})
+    return JsonResponse({'agents': [q.agent_to_dict(agent, request.user) for agent in agents]})
 
 
 @swagger_auto_schema(methods='get')
@@ -35,7 +38,7 @@ def get(request, name):
         # list of authorized users, they're not authorized to access it
         if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
-    return JsonResponse(agent_to_dict(agent, request.user))
+    return JsonResponse(q.agent_to_dict(agent, request.user))
 
 
 @swagger_auto_schema(methods='get')
@@ -73,7 +76,7 @@ def healthcheck(request, name):
     }
 
     # persist health status to DB
-    agent.is_healthy = healthy
+    plantit.healthchecks.is_healthy = healthy
     agent.save()
 
     # update cache

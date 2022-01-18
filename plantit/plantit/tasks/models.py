@@ -1,5 +1,6 @@
 import json
 from itertools import chain
+from typing import TypedDict, List
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -7,9 +8,10 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
+from enum import Enum
 from taggit.managers import TaggableManager
 
-from plantit.agents.models import Agent, AgentExecutor
+from plantit.agents.models import Agent, AgentScheduler
 from plantit.miappe.models import Investigation, Study
 
 
@@ -120,7 +122,7 @@ class Task(models.Model):
 
     @property
     def is_jobqueue(self):
-        return self.agent.executor != AgentExecutor.LOCAL
+        return self.agent.scheduler != AgentScheduler.LOCAL
 
 
 class DelayedTask(PeriodicTask):
@@ -141,3 +143,61 @@ class RepeatingTask(PeriodicTask):
     workflow_branch = models.CharField(max_length=280, null=True, blank=True)
     workflow_image_url = models.URLField(null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
+
+
+class BindMount(TypedDict):
+    host_path: str
+    container_path: str
+
+
+class Parameter(TypedDict):
+    key: str
+    value: str
+
+
+class EnvironmentVariable(TypedDict):
+    key: str
+    value: str
+
+
+class Input(TypedDict, total=False):
+    kind: str
+    path: str
+    patterns: List[str]
+
+
+class InputKind(str, Enum):
+    FILE = 'file'
+    FILES = 'files'
+    DIRECTORY = 'directory'
+
+
+class FileChecksum(TypedDict):
+    file: str
+    checksum: str
+
+
+class PlantITCLIOptions(TypedDict, total=False):
+    workdir: str
+    image: str
+    command: str
+    input: Input
+    output: dict
+    parameters: List[Parameter]
+    env: List[EnvironmentVariable]
+    bind_mounts: List[BindMount]
+    checksums: List[FileChecksum]
+    log_file: str
+    jobqueue: dict
+    no_cache: bool
+    gpu: bool
+
+
+class PasswordTaskAuth(TypedDict):
+    username: str
+    password: str
+
+
+class KeyTaskAuth(TypedDict):
+    username: str
+    path: str

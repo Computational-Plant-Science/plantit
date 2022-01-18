@@ -8,8 +8,7 @@ from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
 
 
-class AgentExecutor(models.TextChoices):
-    LOCAL = 'local', gettext_lazy('Local')
+class AgentScheduler(models.TextChoices):
     SLURM = 'slurm', gettext_lazy('SLURM')
     PBS = 'pbs', gettext_lazy('PBS')
 
@@ -46,7 +45,7 @@ class Agent(models.Model):
     callbacks = models.BooleanField(default=True)
     job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
-    executor = models.CharField(max_length=10, choices=AgentExecutor.choices, default=AgentExecutor.LOCAL)
+    scheduler = models.CharField(max_length=10, choices=AgentScheduler.choices, default=AgentScheduler.SLURM)
     is_healthy = models.BooleanField(default=True, null=True, blank=True)
     users_authorized = models.ManyToManyField(User, related_name='agents_authorized', null=True, blank=True)
 
@@ -71,8 +70,4 @@ class AgentUsagePolicy(models.Model):
     # TODO: how to define usage policy?
     # first as number of successful submissions
     # later as CPU hours? total runtime? normalized by resources used?
-
-
-class AgentTask(PeriodicTask):
-    agent = models.ForeignKey(Agent, on_delete=models.CASCADE)
-    command = models.CharField(max_length=250, null=False, blank=False)
+    # https://github.com/Computational-Plant-Science/plantit/issues/236

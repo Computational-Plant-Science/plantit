@@ -3,12 +3,11 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound
-from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+import plantit.queries as q
 from plantit.redis import RedisClient
-from plantit.utils import get_institutions, get_total_counts, get_aggregate_timeseries, get_workflow_usage_timeseries, get_user_timeseries
 
 
 @swagger_auto_schema(methods='get')
@@ -21,7 +20,7 @@ def institutions_info(_):
     if len(cached) != 0:
         institutions = [json.loads(redis.get(key)) for key in cached]
     else:
-        institutions = get_institutions()
+        institutions = q.get_institutions()
         for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
 
     return JsonResponse({'institutions': institutions})
@@ -37,7 +36,7 @@ def aggregate_counts(_):
     if cached is not None:
         counts = json.loads(cached)
     else:
-        counts = get_total_counts()
+        counts = q.get_total_counts()
         redis.set("stats_counts", json.dumps(counts))
 
     return JsonResponse(counts)
@@ -53,7 +52,7 @@ def aggregate_timeseries(_):
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_aggregate_timeseries()
+        series = q.get_aggregate_timeseries()
         redis.set("total_timeseries", json.dumps(series))
 
     return JsonResponse(series)
@@ -67,7 +66,7 @@ def workflow_timeseries(_, owner, name, branch):
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_workflow_usage_timeseries(owner, name, branch)
+        series = q.get_workflow_usage_timeseries(owner, name, branch)
         redis.set(f"workflow_timeseries/{owner}/{name}/{branch}", json.dumps(series))
 
     return JsonResponse(series)
@@ -84,7 +83,7 @@ def user_timeseries(request, username):
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = get_user_timeseries(user.username)
+        series = q.get_user_timeseries(user.username)
         redis.set(f"user_timeseries/{user.username}", json.dumps(series))
 
     return JsonResponse(series)

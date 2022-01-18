@@ -16,11 +16,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
 import plantit.terrain as terrain
+import plantit.querias as q
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
 from plantit.users.models import Profile
-from plantit.utils import dataset_access_policy_to_dict, project_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def sharing(request):
     """
 
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
-    return JsonResponse({'datasets': [dataset_access_policy_to_dict(policy) for policy in policies]})
+    return JsonResponse({'datasets': [q.dataset_access_policy_to_dict(policy) for policy in policies]})
 
 
 @swagger_auto_schema(methods='get')
@@ -92,7 +92,7 @@ async def share(request):
         policy, created = await sync_to_async(DatasetAccessPolicy.objects.get_or_create)(owner=owner, guest=user, role=role, path=path)
         policies.append({
             'created': created,
-            'policy': await sync_to_async(dataset_access_policy_to_dict)(policy)
+            'policy': await sync_to_async(q.dataset_access_policy_to_dict)(policy)
         })
 
         notification = await sync_to_async(Notification.objects.create)(
@@ -118,7 +118,7 @@ async def share(request):
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
     for policy in (await sync_to_async(list)(policies)):
-        dataset = await sync_to_async(dataset_access_policy_to_dict)(policy)
+        dataset = await sync_to_async(q.dataset_access_policy_to_dict)(policy)
         datasets.append(dataset)
 
     return JsonResponse({'datasets': datasets})
@@ -183,7 +183,7 @@ async def unshare(request):
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
     for policy in (await sync_to_async(list)(policies)):
-        dataset = await sync_to_async(dataset_access_policy_to_dict)(policy)
+        dataset = await sync_to_async(q.dataset_access_policy_to_dict)(policy)
         datasets.append(dataset)
 
     return JsonResponse({'datasets': datasets})
@@ -225,6 +225,6 @@ async def create(request):
             study.dataset_paths = [path]
         await sync_to_async(study.save)()
         logger.info(f"Bound {path} to project {project}, study {study}")
-        return JsonResponse({'path': path, 'project': await sync_to_async(project_to_dict)(investigation)})
+        return JsonResponse({'path': path, 'project': await sync_to_async(q.project_to_dict)(investigation)})
     else:
         return JsonResponse({'path': path})

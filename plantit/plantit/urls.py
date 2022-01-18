@@ -12,10 +12,11 @@ from .consumers import UserEventConsumer
 
 router = routers.DefaultRouter()
 
-# user info and auth
+# auth and users APIs are the only ViewSets, everything else is methods
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
 
+# Swagger metadata
 schema_view = get_schema_view(
     openapi.Info(
         title="plantit API",
@@ -31,8 +32,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
                   url('', include(router.urls)),
-                  # url('auth/login/', login_view),
-                  # url('auth/logout/', logout_view),
+                  # rest of the APIs
                   url('agents/', include("plantit.agents.urls")),
                   url('datasets/', include("plantit.datasets.urls")),
                   url('workflows/', include("plantit.workflows.urls")),
@@ -42,9 +42,11 @@ urlpatterns = [
                   url('notifications/', include("plantit.notifications.urls")),
                   url('feedback/', include("plantit.feedback.urls")),
                   url('miappe/', include("plantit.miappe.urls")),
+                  # Swagger endpoints
                   re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
                   re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
                   re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+                  # why is favicon still not working ???
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [path(r'ws/<username>/', UserEventConsumer.as_asgi())]
