@@ -11,12 +11,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+import plantit.queries as q
 import plantit.terrain as terrain
-import plantit.querias as q
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification

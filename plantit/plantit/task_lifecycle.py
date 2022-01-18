@@ -13,26 +13,23 @@ import uuid
 from datetime import timedelta
 
 import yaml
-from asgiref.sync import async_to_sync, sync_to_async
-from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 
-from plantit import terrain as terrain
 from plantit.agents.models import Agent, AgentScheduler
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_logging import log_task_orchestrator_status
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event
 from plantit.task_scripts import compose_task_run_script, compose_task_launcher_script
-from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter
-from plantit.tasks.task_options import PlantITCLIOptions, InputKind
+from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, PlantITCLIOptions, InputKind
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import parse_task_eta, parse_time_limit_seconds, parse_task_job_id, \
     get_task_scheduler_log_file_path, get_task_scheduler_log_file_name
-from plantit.queries import get_task_user
 from plantit.task_configuration import parse_task_cli_options
 from plantit.keypairs import get_user_private_key_path
 
@@ -138,7 +135,8 @@ def create_delayed_task(user: User, workflow):
     if 'logo' in workflow['config']:
         logo_path = workflow['config']['logo']
         workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
-    else: workflow_image_url = None
+    else:
+        workflow_image_url = None
 
     task, created = DelayedTask.objects.get_or_create(
         user=user,
@@ -172,7 +170,8 @@ def create_repeating_task(user: User, workflow):
     if 'logo' in workflow['config']:
         logo_path = workflow['config']['logo']
         workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
-    else: workflow_image_url = None
+    else:
+        workflow_image_url = None
 
     task, created = RepeatingTask.objects.get_or_create(
         user=user,
@@ -192,19 +191,9 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
-def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
-    input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
-    msg = f"Found {len(input_files)} input file(s)"
-    log_task_orchestrator_status(task, [msg])
-    async_to_sync(push_task_event)(task)
-    logger.info(msg)
-
-    return input_files
-
-
 def configure_task_environment(task: Task, ssh: SSH):
     log_task_orchestrator_status(task, [f"Verifying configuration"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
 
     parse_errors, cli_options = parse_task_cli_options(task)
 
@@ -212,13 +201,13 @@ def configure_task_environment(task: Task, ssh: SSH):
 
     work_dir = join(task.agent.workdir, task.guid)
     log_task_orchestrator_status(task, [f"Creating working directory"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
 
     list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
     log_task_orchestrator_status(task, [f"Uploading task"])
     upload_task_script(task, ssh, cli_options)
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
 
 
 def upload_task_script(task: Task, ssh: SSH, options: PlantITCLIOptions):
@@ -474,19 +463,3 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
 
     logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
     return outputs
-
-
-async def push_task_event(task: Task):
-    user = await get_task_user(task)
-    await get_channel_layer().group_send(f"{user.username}", {
-        'type': 'task_event',
-        'task': await sync_to_async(task_to_dict)(task),
-    })
-
-
-def get_task_ssh_client(task: Task) -> SSH:
-    return SSH(
-        host=task.agent.hostname,
-        port=task.agent.port,
-        username=task.agent.username,
-        pkey=str(get_user_private_key_path(task.agent.user.username)))

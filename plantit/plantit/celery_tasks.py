@@ -13,6 +13,7 @@ from django.utils import timezone
 
 import plantit.healthchecks
 import plantit.terrain as terrain
+import plantit.queries as q
 import plantit.utils.agents
 from plantit import settings
 from plantit.healthchecks import is_healthy
@@ -24,7 +25,8 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
-    get_job_status, get_job_walltime, list_result_files, push_task_event, get_task_ssh_client
+    get_job_status, get_job_walltime, list_result_files
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event
 from plantit.task_logging import log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils.tasks import parse_time_limit_seconds
@@ -99,7 +101,7 @@ def prepare_task_environment(self, guid: str):
 
     try:
         log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
         configure_task_environment(task)
         return guid
     except Exception:
@@ -112,7 +114,7 @@ def prepare_task_environment(self, guid: str):
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
         logger.error(f"Failed to prepare environment for {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
         self.request.callbacks = None  # stop the task chain
 
 
@@ -136,7 +138,7 @@ def submit_task(self, guid: str):
             # schedule the job
             job_id = submit_task_to_scheduler(task, ssh)
             log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
             return guid
     except Exception:
         # mark task failed
@@ -150,7 +152,7 @@ def submit_task(self, guid: str):
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
         logger.error(f"Failed to submit {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
 
         # stop the task chain
         self.request.callbacks = None
@@ -174,7 +176,7 @@ def poll_task_status(self, guid: str):
         task.status = TaskStatus.FAILURE
         final_message = f"Job {task.job_id} failed"
         log_task_orchestrator_status(task, [final_message])
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
@@ -220,7 +222,7 @@ def poll_task_status(self, guid: str):
             list_task_results.s(guid).apply_async()
             final_message = f"Job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
 
             # push AWS SNS notification
             if task.user.profile.push_notification_status == 'enabled':
@@ -230,7 +232,7 @@ def poll_task_status(self, guid: str):
         else:
             # job is still running, schedule another round of polling
             log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
             poll_task_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration as e:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
@@ -242,14 +244,14 @@ def poll_task_status(self, guid: str):
             task.save()
             retry_seconds = 10
             log_task_orchestrator_status(task, [f"Job {task.job_id} not found, retrying in {retry_seconds} seconds"])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
             poll_task_status.s(guid).apply_async(countdown=retry_seconds)
             return
         else:
             # job is done, task is complete, now we can list results
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
             task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
             task.save()
@@ -270,7 +272,7 @@ def poll_task_status(self, guid: str):
         # there was an unexpected runtime exception somewhere, need to catch and log it
         final_message = f"Job {task.job_id} encountered unexpected error: {traceback.format_exc()}"
         log_task_orchestrator_status(task, [final_message])
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
@@ -307,11 +309,11 @@ def list_task_results(self, guid: str):
         workflow = json.loads(workflow)['config']
 
     log_task_orchestrator_status(task, [f"Retrieving logs"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
     get_task_remote_logs(task, ssh)
 
     log_task_orchestrator_status(task, [f"Retrieving results"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
     expected = list_result_files(task, workflow)
     found = [e for e in expected if e['exists']]
     redis.set(f"results/{task.guid}", json.dumps(found))
@@ -319,7 +321,7 @@ def list_task_results(self, guid: str):
     task.save()
 
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}, verifying data was transferred to CyVerse"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
     check_task_cyverse_transfer.s(guid).apply_async()
 
     return guid
@@ -352,7 +354,7 @@ def check_task_cyverse_transfer(self, guid: str, iteration: int = 0):
         task.save()
 
         log_task_orchestrator_status(task, [msg])
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
 
     cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
     cleanup_task.s(guid).apply_async(priority=2, countdown=cleanup_delay)
@@ -383,7 +385,7 @@ def cleanup_task(self, guid: str):
     task.save()
 
     log_task_orchestrator_status(task, [f"Cleaned up task {task.guid}"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
 
 
 @app.task()

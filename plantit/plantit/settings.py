@@ -203,7 +203,6 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.tasks.authentication.TaskTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

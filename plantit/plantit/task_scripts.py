@@ -12,12 +12,12 @@ from django.conf import settings
 
 from plantit import terrain as terrain
 from plantit.agents.models import AgentScheduler
+from plantit.task_resources import push_task_channel_event
+from plantit.task_logging import log_task_orchestrator_status
 
-from plantit.tasks.models import Task
-from plantit.tasks.task_options import PlantITCLIOptions, InputKind, EnvironmentVariable, BindMount, Parameter
-from plantit.utils.misc import format_bind_mount
+from plantit.tasks.models import Task, InputKind, PlantITCLIOptions, EnvironmentVariable, BindMount, Parameter
 from plantit.utils.agents import has_virtual_memory
-from plantit.task_lifecycle import list_input_files, push_task_event
+from plantit.utils.tasks import format_bind_mount
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,11 @@ def compose_task_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     if input is None: return ''
     kind = input['kind']
 
-    if input['kind'] != InputKind.FILE and 'patterns' in input:
+    if kind != InputKind.FILE and 'patterns' in input:
         # allow for both spellings of JPG
         patterns = [pattern.lower() for pattern in input['patterns']]
-        if 'jpg' in patterns and 'jpeg' not in patterns:
-            patterns.append("jpeg")
-        elif 'jpeg' in patterns and 'jpg' not in patterns:
-            patterns.append("jpg")
+        if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
+        elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
     else:
         patterns = []
 
@@ -262,51 +260,6 @@ def compose_task_singularity_command(
     return cmd
 
 
-def calculate_node_count(task: Task, inputs: List[str]):
-    node_count = min(len(inputs), task.agent.max_nodes)
-    return 1 if task.agent.launcher else (node_count if inputs is not None and not task.agent.job_array else 1)
-
-
-def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
-    # by default, use the suggested walltime provided in plantit.yaml
-    jobqueue = options['jobqueue']
-    split_time = jobqueue['walltime'].split(':')
-    hours = int(split_time[0])
-    minutes = int(split_time[1])
-    seconds = int(split_time[2])
-    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-    # if we have a manual (or preset) override, use that instead
-    if 'time' in task.workflow['config'] and 'limit' in task.workflow['config']['time'] and 'units' in task.workflow['config']['time']:
-        units = task.workflow['config']['time']['units']
-        limit = int(task.workflow['config']['time']['limit'])
-        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
-        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
-        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
-
-    # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
-    # need to compute suggested walltime as a function of workflow, agent, and number of inputs
-    # how to do this? cache suggestions for each combination independently?
-    # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
-    #
-    # a good first step might be to compute aggregate stats for runtimes per workflow per agent,
-    # to get a sense for the scaling of each as a function of inputs and resources available
-    #
-    # naive (bad) solution:
-    #   nodes = calculate_node_count(task, inputs)
-    #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
-
-    # round up to the nearest hour
-    job_walltime = ceil(walltime.total_seconds() / 60 / 60)
-    agent_walltime = int(int(task.agent.max_walltime) / 60)
-    hours = f"{min(job_walltime, agent_walltime)}"
-    if len(hours) == 1: hours = f"0{hours}"
-    adjusted_str = f"{hours}:00:00"
-
-    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.guid}")
-    return adjusted_str
-
-
 def compose_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = calculate_node_count(task, inputs)
     tasks = min(len(inputs), task.agent.max_cores)
@@ -323,7 +276,7 @@ def compose_task_resource_requests(task: Task, options: PlantITCLIOptions, input
         f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else jobqueue['memory']}")
     if 'walltime' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
         task.job_requested_walltime = walltime
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
@@ -433,3 +386,60 @@ def compose_task_launcher_script(task: Task, options: PlantITCLIOptions) -> List
         lines.append(command)
 
     return lines
+
+
+# utils
+
+def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
+    input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
+    msg = f"Found {len(input_files)} input file(s)"
+    log_task_orchestrator_status(task, [msg])
+    async_to_sync(push_task_channel_event)(task)
+    logger.info(msg)
+
+    return input_files
+
+
+def calculate_node_count(task: Task, inputs: List[str]):
+    node_count = min(len(inputs), task.agent.max_nodes)
+    return 1 if task.agent.launcher else (node_count if inputs is not None and not task.agent.job_array else 1)
+
+
+def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+    # by default, use the suggested walltime provided in plantit.yaml
+    jobqueue = options['jobqueue']
+    split_time = jobqueue['walltime'].split(':')
+    hours = int(split_time[0])
+    minutes = int(split_time[1])
+    seconds = int(split_time[2])
+    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+    # if we have a manual (or preset) override, use that instead
+    if 'time' in task.workflow['config'] and 'limit' in task.workflow['config']['time'] and 'units' in task.workflow['config']['time']:
+        units = task.workflow['config']['time']['units']
+        limit = int(task.workflow['config']['time']['limit'])
+        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
+        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
+        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
+
+    # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
+    # need to compute suggested walltime as a function of workflow, agent, and number of inputs
+    # how to do this? cache suggestions for each combination independently?
+    # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
+    #
+    # a good first step might be to compute aggregate stats for runtimes per workflow per agent,
+    # to get a sense for the scaling of each as a function of inputs and resources available
+    #
+    # naive (bad) solution:
+    #   nodes = calculate_node_count(task, inputs)
+    #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+    # round up to the nearest hour
+    job_walltime = ceil(walltime.total_seconds() / 60 / 60)
+    agent_walltime = int(int(task.agent.max_walltime) / 60)
+    hours = f"{min(job_walltime, agent_walltime)}"
+    if len(hours) == 1: hours = f"0{hours}"
+    adjusted_str = f"{hours}:00:00"
+
+    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.guid}")
+    return adjusted_str
