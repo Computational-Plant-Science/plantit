@@ -1,11 +1,11 @@
 from django.test import TestCase
 
-from plantit.task_configuration import validate_task_configuration
+from plantit.validation import validate_workflow_configuration
 
 
-class TasksUtilsTests(TestCase):
+class ValidationTests(TestCase):
     def test_validate_config_when_is_not_valid_missing_name(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
@@ -14,7 +14,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Missing attribute \'name\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_author(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
@@ -23,7 +23,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Missing attribute \'author\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_image(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'commands': 'echo "Hello, world!"'
@@ -32,7 +32,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Missing attribute \'image\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_commands(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -41,7 +41,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Missing attribute \'commands\'' in result[1])
 
     def test_validate_config_when_is_not_valid_name_wrong_type(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': True,
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -51,7 +51,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'name\' must be a str' in result[1])
 
     # def test_validate_config_when_is_not_valid_author_wrong_type(self):
-    #     result = validate_task_configuration({
+    #     result = validate_workflow_configuration({
     #         'name': 'Test Flow',
     #         'author': True,
     #         'image': 'docker://alpine',
@@ -61,7 +61,7 @@ class TasksUtilsTests(TestCase):
     #     self.assertTrue('Attribute \'author\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_image_wrong_type(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': True,
@@ -71,7 +71,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'image\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_commands_wrong_type(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -81,7 +81,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'commands\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_wrong_type(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': True,
@@ -92,7 +92,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_none(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': True,
@@ -103,7 +103,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_empty(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': True,
@@ -114,7 +114,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue('Attribute \'mount\' must not be empty' in result[1])
 
     def test_validate_config_when_is_valid_with_no_input_or_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -123,7 +123,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_no_input_and_empty_file_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -135,7 +135,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_no_input_and_nonempty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',

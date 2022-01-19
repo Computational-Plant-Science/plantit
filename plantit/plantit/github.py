@@ -9,7 +9,7 @@ import yaml
 from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
-from plantit.task_configuration import validate_task_configuration
+from plantit.validation import validate_workflow_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,6 @@ async def list_repositories(owner: str, token: str, timeout: int = 15) -> list:
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://api.github.com/users/{owner}/repos")
         jsn = response.json()
-        # if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']: raise ValueError(jsn['message'])
         if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
             logger.warning(jsn['message'])
             return []
@@ -97,26 +96,26 @@ async def list_repositories(owner: str, token: str, timeout: int = 15) -> list:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-def get_repo_readme(owner: str, name: str, token: str, timeout: int = 15) -> str:
-    # TODO refactor to use asyncx
-    try:
-        url = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
-        request = requests.get(url, timeout=timeout) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
-        file = request.json()
-        text = requests.get(file['download_url']).text
-        logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
-        return text
-    except:
-        try:
-            url = f"https://api.github.com/repos/{owner}/{name}/contents/README"
-            request = requests.get(url, timeout=timeout) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
-            file = request.json()
-            text = requests.get(file['download_url']).text
-            logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
-            return text
-        except:
+async def get_repo_readme(owner: str, name: str, token: str, timeout: int = 15) -> str:
+    # TODO: are there any other readme variants that GitHub recognizes?
+    url1 = f"https://api.github.com/repos/{owner}/{name}/contents/README"
+    url2 = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
+    headers = {"Authorization": f"token {token}"}
+    async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
+        tasks = [client.get(url).json() for url in [url1, url2]]
+        results = await asyncio.gather(*tasks)
+        response1 = results[0]
+        response2 = results[1]
+
+        if response1.status == 200: jsn = response1.json()
+        elif response2.status == 200: jsn = response2.json()
+        else:
             logger.warning(f"Failed to retrieve README for {owner}/{name}")
             return None
+
+        text = requests.get(jsn['download_url']).text
+        logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
+        return text
 
 
 @retry(
@@ -131,14 +130,9 @@ async def get_repo_config(owner: str, name: str, token: str, branch: str = 'mast
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-        # response = await client.get(
-        #     f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
-        #     else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
-        #                       headers={"Authorization": f"token {token}"})
         response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
         config = response.text
         logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
-        # config = await client.get(response.json()['download_url']).text
         return yaml.load(config)
 
 
@@ -147,7 +141,7 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]
     config = responses[1]
-    valid = validate_task_configuration(config, cyverse_token)
+    valid = validate_workflow_configuration(config, cyverse_token)
     if isinstance(valid, bool):
         return {
             'repo': repo,
@@ -183,6 +177,7 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
         workflows = []
         org_repos = await list_repositories(owner, token)
 
+        # TODO refactor to send reqs in parallel
         for repository in org_repos:
             branches = await list_repo_branches(owner, repository['name'], token)
             for branch in branches:
@@ -204,12 +199,11 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
 
                 try:
                     config = yaml.safe_load(response.text)
-                    validation = validate_task_configuration(config, token)
+                    validation = validate_workflow_configuration(config, token)
                     workflows.append({
                         'repo': repository,
                         'config': config,
                         'branch': branch,
-                        # 'readme': readme,
                         'validation': {
                             'is_valid': validation[0],
                             'errors': validation[1]
@@ -221,7 +215,6 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
                         'repo': repository,
                         'config': {},
                         'branch': branch,
-                        # 'readme': readme,
                         'validation': {
                             'is_valid': False,
                             'errors': [traceback.format_exc()]
@@ -264,12 +257,11 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
 
                 try:
                     config = yaml.safe_load(response.text)
-                    validation = validate_task_configuration(config, token)
+                    validation = validate_workflow_configuration(config, token)
                     workflows.append({
                         'repo': repository,
                         'config': config,
                         'branch': branch,
-                        # 'readme': readme,
                         'validation': {
                             'is_valid': validation[0],
                             'errors': validation[1]
@@ -280,7 +272,6 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
                         'repo': repository,
                         'config': {},
                         'branch': branch,
-                        # 'readme': readme,
                         'validation': {
                             'is_valid': False,
                             'errors': [traceback.format_exc()]
@@ -305,9 +296,7 @@ async def list_user_organizations(username: str, token: str, timeout: int = 15) 
         response = await client.get(f"https://api.github.com/users/{username}/orgs")
         if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
         jsn = response.json()
-        # if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']: raise ValueError(jsn['message'])
         if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
             logger.warning(jsn['message'])
             return []
         return jsn
-        # return response.json()

@@ -42,6 +42,7 @@ class SingletonModel(models.Model):
         return obj
 
 
+# for computing statistics; incremented every time a new task is created
 class TaskCounter(SingletonModel):
     count = models.PositiveBigIntegerField(default=0, null=False, blank=False)
 
@@ -125,6 +126,8 @@ class Task(models.Model):
         return self.agent.scheduler != AgentScheduler.LOCAL
 
 
+# scheduled tasks
+
 class DelayedTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
@@ -144,6 +147,8 @@ class RepeatingTask(PeriodicTask):
     workflow_image_url = models.URLField(null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
 
+
+# task options
 
 class BindMount(TypedDict):
     host_path: str
@@ -177,7 +182,7 @@ class FileChecksum(TypedDict):
     checksum: str
 
 
-class PlantITCLIOptions(TypedDict, total=False):
+class TaskOptions(TypedDict, total=False):
     workdir: str
     image: str
     command: str
@@ -191,13 +196,3 @@ class PlantITCLIOptions(TypedDict, total=False):
     jobqueue: dict
     no_cache: bool
     gpu: bool
-
-
-class PasswordTaskAuth(TypedDict):
-    username: str
-    password: str
-
-
-class KeyTaskAuth(TypedDict):
-    username: str
-    path: str

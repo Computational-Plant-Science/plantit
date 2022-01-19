@@ -26,8 +26,7 @@ from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
     get_job_status, get_job_walltime, list_result_files
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event
-from plantit.task_logging import log_task_orchestrator_status, get_task_remote_logs
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils.tasks import parse_time_limit_seconds
 

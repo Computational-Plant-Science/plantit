@@ -12,17 +12,16 @@ from django.conf import settings
 
 from plantit import terrain as terrain
 from plantit.agents.models import AgentScheduler
-from plantit.task_resources import push_task_channel_event
-from plantit.task_logging import log_task_orchestrator_status
+from plantit.task_resources import push_task_channel_event, log_task_orchestrator_status
 
-from plantit.tasks.models import Task, InputKind, PlantITCLIOptions, EnvironmentVariable, BindMount, Parameter
+from plantit.tasks.models import Task, InputKind, TaskOptions, EnvironmentVariable, BindMount, Parameter
 from plantit.utils.agents import has_virtual_memory
 from plantit.utils.tasks import format_bind_mount
 
 logger = logging.getLogger(__name__)
 
 
-def compose_task_pull_command(task: Task, options: PlantITCLIOptions) -> str:
+def compose_task_pull_command(task: Task, options: TaskOptions) -> str:
     if 'input' not in options: return ''
     input = options['input']
     if input is None: return ''
@@ -49,7 +48,7 @@ def compose_task_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     return command
 
 
-def compose_task_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
     commands = []
@@ -93,7 +92,7 @@ def compose_task_clean_commands(task: Task) -> str:
     return cmd
 
 
-def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
+def compose_task_zip_command(task: Task, options: TaskOptions) -> str:
     if 'output' in options:
         output = options['output']
     else:
@@ -142,7 +141,7 @@ def compose_task_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     return command
 
 
-def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
+def compose_task_push_command(task: Task, options: TaskOptions) -> str:
     command = ''
     if 'output' not in options: return command
     output = options['output']
@@ -180,7 +179,7 @@ def compose_task_push_command(task: Task, options: PlantITCLIOptions) -> str:
     return command
 
 
-def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: str) -> List[str]:
+def compose_task_run_script(task: Task, options: TaskOptions, template: str) -> List[str]:
     with open(template, 'r') as template_file:
         template_header = [line.strip() for line in template_file if line != '']
 
@@ -260,7 +259,7 @@ def compose_task_singularity_command(
     return cmd
 
 
-def compose_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
     nodes = calculate_node_count(task, inputs)
     tasks = min(len(inputs), task.agent.max_cores)
     task.inputs_detected = len(inputs)
@@ -301,7 +300,7 @@ def compose_task_resource_requests(task: Task, options: PlantITCLIOptions, input
     return commands
 
 
-def compose_task_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]:
+def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
     lines = []
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
@@ -390,7 +389,7 @@ def compose_task_launcher_script(task: Task, options: PlantITCLIOptions) -> List
 
 # utils
 
-def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
+def list_input_files(task: Task, options: TaskOptions) -> List[str]:
     input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
     msg = f"Found {len(input_files)} input file(s)"
     log_task_orchestrator_status(task, [msg])
@@ -405,7 +404,7 @@ def calculate_node_count(task: Task, inputs: List[str]):
     return 1 if task.agent.launcher else (node_count if inputs is not None and not task.agent.job_array else 1)
 
 
-def calculate_walltime(task: Task, options: PlantITCLIOptions, inputs: List[str]):
+def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     # by default, use the suggested walltime provided in plantit.yaml
     jobqueue = options['jobqueue']
     split_time = jobqueue['walltime'].split(':')

@@ -1,12 +1,12 @@
 from django.test import TestCase
 
-from plantit.task_configuration import validate_task_configuration
+from plantit.validation import validate_workflow_configuration
 from plantit.tokens import TerrainToken
 
 
 class TasksUtilsTests(TestCase):
     def test_validate_config_when_is_valid_with_input_file_and_empty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -17,7 +17,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_nonempty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -29,7 +29,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_empty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -41,7 +41,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_nonempty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -53,7 +53,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_empty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -65,7 +65,7 @@ class TasksUtilsTests(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_nonempty_output(self):
-        result = validate_task_configuration({
+        result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',

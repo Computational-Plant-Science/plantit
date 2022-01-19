@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 import logging
 from os import environ
-from os.path import join
+from os.path import join, isdir
 from pathlib import Path
 from typing import List
 
@@ -19,18 +19,18 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 
+from plantit import docker as docker
 from plantit.agents.models import Agent, AgentScheduler
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.task_logging import log_task_orchestrator_status
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.task_scripts import compose_task_run_script, compose_task_launcher_script
-from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, PlantITCLIOptions, InputKind
+from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, EnvironmentVariable, Parameter, \
+    Input
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import parse_task_eta, parse_time_limit_seconds, parse_task_job_id, \
-    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name
-from plantit.task_configuration import parse_task_cli_options
+    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount
 from plantit.keypairs import get_user_private_key_path
 
 logger = logging.getLogger(__name__)
@@ -210,7 +210,7 @@ def configure_task_environment(task: Task, ssh: SSH):
     async_to_sync(push_task_channel_event)(task)
 
 
-def upload_task_script(task: Task, ssh: SSH, options: PlantITCLIOptions):
+def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
     # task working directory
     work_dir = join(task.agent.workdir, task.workdir)
 
@@ -463,3 +463,196 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
 
     logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
     return outputs
+
+
+def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
+    config = task.workflow['config']
+    config['workdir'] = join(task.agent.workdir, task.guid)
+    config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
+
+    # set the output directory (if none is set, use the task working dir)
+    default_from = join(task.agent.workdir, task.workdir)
+    if 'output' in config:
+        if 'from' in config['output']:
+            if config['output']['from'] is not None and config['output']['from'] != '':
+                config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
+            else:
+                config['output']['from'] = default_from
+        else:
+            config['output']['from'] = default_from
+    else:
+        config['output'] = dict()
+        config['output']['from'] = default_from
+
+    if 'include' not in config['output']: config['output']['include'] = dict()
+    if 'patterns' not in config['output']['include']: config['output']['exclude']['patterns'] = []
+
+    # include task configuration file and scheduler logs
+    config['output']['include']['names'].append(f"{task.guid}.yaml")
+    config['output']['include']['patterns'].append("out")
+    config['output']['include']['patterns'].append("err")
+    config['output']['include']['patterns'].append("log")
+
+    if 'exclude' not in config['output']: config['output']['exclude'] = dict()
+    if 'names' not in config['output']['exclude']: config['output']['exclude']['names'] = []
+
+    # exclude template scripts
+    config['output']['exclude']['names'].append("template_task_local.sh")
+    config['output']['exclude']['names'].append("template_task_slurm.sh")
+    output = config['output']
+
+    errors = []
+    image = None
+    if not isinstance(config['image'], str):
+        errors.append('Attribute \'image\' must not be a str')
+    elif config['image'] == '':
+        errors.append('Attribute \'image\' must not be empty')
+    else:
+        image = config['image']
+        if 'docker' in image:
+            image_owner, image_name, image_tag = docker.parse_image_components(image)
+            if not docker.image_exists(image_name, image_owner, image_tag):
+                errors.append(f"Image '{image}' not found on Docker Hub")
+
+    work_dir = None
+    if not isinstance(config['workdir'], str):
+        errors.append('Attribute \'workdir\' must not be a str')
+    elif config['workdir'] == '':
+        errors.append('Attribute \'workdir\' must not be empty')
+    else:
+        work_dir = config['workdir']
+
+    command = None
+    if not isinstance(config['commands'], str):
+        errors.append('Attribute \'commands\' must not be a str')
+    elif config['commands'] == '':
+        errors.append('Attribute \'commands\' must not be empty')
+    else:
+        command = config['commands']
+
+    env = []
+    if 'env' in config:
+        if not all(var != '' for var in config['env']):
+            errors.append('Every environment variable must be non-empty')
+        else:
+            env = [EnvironmentVariable(
+                key=variable.rpartition('=')[0],
+                value=variable.rpartition('=')[2])
+                for variable in config['env']]
+
+    parameters = None
+    if 'parameters' in config:
+        if not all(['name' in param and
+                    param['name'] is not None and
+                    param['name'] != '' and
+                    'value' in param and
+                    param['value'] is not None and
+                    param['value'] != ''
+                    for param in config['parameters']]):
+            errors.append('Every parameter must have a non-empty \'name\' and \'value\'')
+        else:
+            parameters = [Parameter(key=param['name'], value=param['value']) for param in config['parameters']]
+
+    bind_mounts = None
+    if 'bind_mounts' in config:
+        if not all(mount_point != '' for mount_point in config['bind_mounts']):
+            errors.append('Every mount point must be non-empty')
+        else:
+            bind_mounts = [parse_bind_mount(work_dir, mount_point) for mount_point in config['bind_mounts']]
+
+    input = None
+    if 'input' in config:
+        if 'kind' not in config['input']:
+            errors.append("Section \'input\' must include attribute \'kind\'")
+        if 'path' not in config['input']:
+            errors.append("Section \'input\' must include attribute \'path\'")
+
+        kind = config['input']['kind']
+        path = config['input']['path']
+        if kind == 'file':
+            input = Input(path=path, kind='file')
+        elif kind == 'files':
+            input = Input(path=path, kind='files',
+                          patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
+        elif kind == 'directory':
+            input = Input(path=path, kind='directory',
+                          patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
+        else:
+            errors.append('Section \'input.kind\' must be \'file\', \'files\', or \'directory\'')
+
+    log_file = None
+    if 'log_file' in config:
+        log_file = config['log_file']
+        if not isinstance(log_file, str):
+            errors.append('Attribute \'log_file\' must be a str')
+        elif log_file.rpartition('/')[0] != '' and not isdir(log_file.rpartition('/')[0]):
+            errors.append('Attribute \'log_file\' must be a valid file path')
+
+    no_cache = None
+    if 'no_cache' in config:
+        no_cache = config['no_cache']
+        if not isinstance(no_cache, bool):
+            errors.append('Attribute \'no_cache\' must be a bool')
+
+    gpu = None
+    if 'gpu' in config:
+        gpu = config['gpu']
+        if not isinstance(gpu, bool):
+            errors.append('Attribute \'gpu\' must be a bool')
+
+    jobqueue = None
+    if 'jobqueue' in config:
+        jobqueue = config['jobqueue']
+        # if not (
+        #         'slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
+        #     raise ValueError(f"Unsupported jobqueue configuration: {jobqueue}")
+
+        if 'queue' in jobqueue:
+            if not isinstance(jobqueue['queue'], str):
+                errors.append('Section \'jobqueue\'.\'queue\' must be a str')
+        else:
+            jobqueue['queue'] = task.agent.queue
+        if 'project' in jobqueue:
+            if not isinstance(jobqueue['project'], str):
+                errors.append('Section \'jobqueue\'.\'project\' must be a str')
+        elif task.agent.project is not None and task.agent.project != '':
+            jobqueue['project'] = task.agent.project
+        if 'walltime' in jobqueue:
+            if not isinstance(jobqueue['walltime'], str):
+                errors.append('Section \'jobqueue\'.\'walltime\' must be a str')
+        else:
+            jobqueue['walltime'] = task.agent.max_walltime
+        if 'cores' in jobqueue:
+            if not isinstance(jobqueue['cores'], int):
+                errors.append('Section \'jobqueue\'.\'cores\' must be a int')
+        else:
+            jobqueue['cores'] = task.agent.max_cores
+        if 'processes' in jobqueue:
+            if not isinstance(jobqueue['processes'], int):
+                errors.append('Section \'jobqueue\'.\'processes\' must be a int')
+        else:
+            jobqueue['processes'] = task.agent.max_processes
+        if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
+            errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
+        elif task.agent.header_skip is not None and task.agent.header_skip != '':
+            jobqueue['header_skip'] = task.agent.header_skip
+        if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
+            errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
+
+    options = TaskOptions(
+        workdir=work_dir,
+        image=image,
+        command=command)
+
+    if input is not None: options['input'] = input
+    if output is not None: options['output'] = output
+    if parameters is not None: options['parameters'] = parameters
+    if env is not None: options['env'] = env
+    if bind_mounts is not None: options['bind_mounts'] = bind_mounts
+    # if checksums is not None: options['checksums'] = checksums
+    if log_file is not None: options['log_file'] = log_file
+    if jobqueue is not None: options['jobqueue'] = jobqueue
+    if no_cache is not None: options['no_cache'] = no_cache
+    if gpu is not None: options['gpus'] = task.agent.gpus
+
+    return errors, options

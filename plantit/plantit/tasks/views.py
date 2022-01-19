@@ -17,8 +17,7 @@ import plantit.queries as q
 from plantit import settings
 from plantit.agents.models import AgentScheduler
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event
-from plantit.task_logging import log_task_orchestrator_status
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status
 from plantit.utils.tasks import parse_time_limit_seconds, get_task_orchestrator_log_file_path, get_task_scheduler_log_file_path, \
