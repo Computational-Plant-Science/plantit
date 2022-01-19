@@ -1,12 +1,55 @@
 from os.path import join, isdir
 from typing import List
 
+import plantit.docker as docker
+import plantit.terrain as terrain
 from plantit.tasks.models import Task, PlantITCLIOptions, EnvironmentVariable, Parameter, Input
 from plantit.utils.tasks import parse_bind_mount
 
 
-def validate_task_configuration(config: dict, cyverse_token: str = None) -> (bool, List[str]):
+# TODO merge following 2 functions into 1 (returning configuration object and list of errors- infer validity by absence of errors)
+
+
+def validate_task_configuration(config: dict, terrain_token: str = None) -> (bool, List[str]):
+    """
+    Verifies that the given configuration is valid.
+    Note that this function is IO-bound and makes up to 2 network calls:
+        - checking Docker image availability on Docker Hub
+        - making sure Terrain collection or object exists
+
+    Args:
+        config: The task configuration
+        terrain_token: The token to authenticate with Terrain
+
+    Returns:
+
+    """
     errors = []
+    options = PlantITCLIOptions()
+
+    # workdir
+    # image
+    # command
+    # input
+    # output
+    # params
+    # env
+    # bind mounts
+    # checksums
+    # log_file
+    # gpu
+    # jobqueue
+    # no_cache
+    if input is not None: options['input'] = input
+    if output is not None: options['output'] = output
+    if parameters is not None: options['parameters'] = parameters
+    if env is not None: options['env'] = env
+    if bind_mounts is not None: options['bind_mounts'] = bind_mounts
+    # if checksums is not None: options['checksums'] = checksums
+    if log_file is not None: options['log_file'] = log_file
+    if jobqueue is not None: options['jobqueue'] = jobqueue
+    if no_cache is not None: options['no_cache'] = no_cache
+    if gpu is not None: options['gpus'] = task.agent.gpus
 
     # name (required)
     if 'name' not in config:
@@ -14,10 +57,12 @@ def validate_task_configuration(config: dict, cyverse_token: str = None) -> (boo
     elif type(config['name']) is not str:
         errors.append('Attribute \'name\' must be a str')
 
-    # author (optional)
-    if 'author' in config:
+    # author (required)
+    if 'author' not in config:
+        errors.append('Missing attribute \'author\'')
+    else:
         author = config['author']
-        if (type(author) is str and author == '') or (type(author) is list and not all(type(d) is str for d in author)):
+        if (type(config['author']) is str and config['author'] == '') or (type(author) is list and not all(type(d) is str for d in author)):
             errors.append('Attribute \'author\' must be a non-empty str or list of str')
 
     # image (required)
@@ -26,8 +71,8 @@ def validate_task_configuration(config: dict, cyverse_token: str = None) -> (boo
     elif type(config['image']) is not str:
         errors.append('Attribute \'image\' must be a str')
     else:
-        image_owner, image_name, image_tag = parse_image_components(config['image'])
-        if 'docker' in config['image'] and not image_exists(image_name, image_owner, image_tag):
+        image_owner, image_name, image_tag = docker.parse_image_components(config['image'])
+        if 'docker' in config['image'] and not docker.image_exists(image_name, image_owner, image_tag):
             errors.append(f"Image '{config['image']}' not found on Docker Hub")
 
     # commands (required)
@@ -70,8 +115,8 @@ def validate_task_configuration(config: dict, cyverse_token: str = None) -> (boo
         if 'path' not in config['input']:
             errors.append('Missing attribute \'input.path\'')
         if config['input']['path'] != '' and config['input']['path'] is not None:
-            if cyverse_token is None: raise ValueError(f"Terrain token not provided!")
-            cyverse_path_result = path_exists(config['input']['path'], cyverse_token)
+            if terrain_token is None: raise ValueError(f"Terrain token not provided!")
+            cyverse_path_result = terrain.path_exists(config['input']['path'], terrain_token)
             if type(cyverse_path_result) is bool and not cyverse_path_result:
                 errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
 
@@ -140,6 +185,7 @@ def validate_task_configuration(config: dict, cyverse_token: str = None) -> (boo
         if type(walltime) is str and not bool(pattern.match(walltime)):
             errors.append('Attribute \'walltime\' must have format XX:XX:XX')
 
+
     return (True, []) if len(errors) == 0 else (False, errors)
 
 
@@ -188,8 +234,8 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     else:
         image = config['image']
         if 'docker' in image:
-            image_owner, image_name, image_tag = parse_image_components(image)
-            if not image_exists(image_name, image_owner, image_tag):
+            image_owner, image_name, image_tag = docker.parse_image_components(image)
+            if not docker.image_exists(image_name, image_owner, image_tag):
                 errors.append(f"Image '{image}' not found on Docker Hub")
 
     work_dir = None
