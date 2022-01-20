@@ -212,7 +212,9 @@ def path_exists(path, token) -> Tuple[bool, str]:
                                        headers={"Authorization": f"Bearer {token}"})
             up_content = up_response.json()
             if up_response.status_code != 200:
-                if 'error_code' not in up_content:
+                if up_response.status_code == 401:
+                    raise ValueError(f"Not authorized for Terrain! (likely a bad token)")
+                elif 'error_code' not in up_content:
                     print(f"Unknown error: {up_content}")
                     return False, None
                 elif 'error_code' in up_content:

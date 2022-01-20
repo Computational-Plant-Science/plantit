@@ -20,7 +20,8 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
     errors = []
 
     # name (required)
-    if 'name' not in config: errors.append('Missing attribute \'name\'')
+    if 'name' not in config:
+        errors.append('Missing attribute \'name\'')
     elif type(config['name']) is not str:
         errors.append('Attribute \'name\' must be a str')
 
@@ -84,7 +85,8 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
             if path != '' and path is not None:
                 if type(path) is not str:
                     errors.append('Attribute \'input.path\' must be a str')
-                elif terrain_token is None: raise ValueError(f"Terrain token not provided!")
+                elif terrain_token is None:
+                    raise ValueError(f"Terrain token not provided!")
                 cyverse_path_exists, _ = terrain.path_exists(path, terrain_token)
                 if not cyverse_path_exists:
                     errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
@@ -157,6 +159,5 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
             errors.append('Attribute \'walltime\' must be a str')
         if type(walltime) is str and not bool(pattern.match(walltime)):
             errors.append('Attribute \'walltime\' must have format XX:XX:XX')
-
 
     return (True, []) if len(errors) == 0 else (False, errors)
