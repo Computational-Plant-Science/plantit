@@ -122,7 +122,44 @@ class ValidationTests(TestCase):
         })
         self.assertTrue(result)
 
-    def test_validate_config_when_is_valid_with_no_input_and_empty_file_output(self):
+    def test_validate_config_when_is_valid_with_no_input_and_empty_output(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'output': {}
+        })
+        self.assertTrue(result)
+
+    def test_validate_config_when_is_valid_with_no_input_path_and_empty_output(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'cat $INPUT',
+            'input': {
+                'kind': 'file'
+            },
+            'output': {}
+        })
+        self.assertTrue(result)
+
+    def test_validate_config_when_is_invalid_with_wrong_input_path_type_and_empty_output(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'cat $INPUT',
+            'input': {
+                'path': False,
+                'kind': 'file'
+            },
+            'output': {}
+        })
+        self.assertTrue(result)
+
+    def test_validate_config_when_is_valid_with_no_input_and_empty_output_path(self):
         result = validate_workflow_configuration({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',

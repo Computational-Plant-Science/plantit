@@ -7,7 +7,7 @@ from contextlib import closing
 from multiprocessing import Pool
 from os import environ, listdir
 from os.path import basename, join, isfile, isdir
-from typing import List
+from typing import List, Tuple
 
 import httpx
 import requests
@@ -198,7 +198,7 @@ def get_file(path: str, token: str) -> List[str]:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-def path_exists(path, token):
+def path_exists(path, token) -> Tuple[bool, str]:
     response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
                             headers={"Authorization": f"Bearer {token}"})
     content = response.json()
@@ -214,23 +214,23 @@ def path_exists(path, token):
             if up_response.status_code != 200:
                 if 'error_code' not in up_content:
                     print(f"Unknown error: {up_content}")
-                    return False
+                    return False, None
                 elif 'error_code' in up_content:
                     print(f"Error: {up_content['error_code']}")
-                    return False
+                    return False, None
             elif 'files' not in up_content:
                 print(f"Directory '{base}' does not exist")
-                return False
+                return False, None
             elif len(up_content['files']) != 1:
                 print(f"Multiple files found in directory '{base}' matching name '{file}'")
-                return False
+                return False, None
             elif up_content['files'][0]['label'] != file:
                 print(f"File '{file}' does not exist in directory '{base}'")
-                return False
+                return False, None
             else:
                 input_type = 'file'
         else:
-            return False
+            return False, None
     return True, input_type
 
 
