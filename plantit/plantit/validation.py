@@ -3,7 +3,7 @@ from typing import List
 from plantit import docker as docker, terrain as terrain
 
 
-def validate_workflow_configuration(config: dict, terrain_token: str = None) -> (bool, List[str]):
+def validate_workflow_configuration(config: dict) -> (bool, List[str]):
     """
     Verifies that the given configuration is valid.
     Note that this function is IO-bound and makes up to 2 network calls:
@@ -76,6 +76,9 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
     # legacy input format
     if 'from' in config:
         errors.append('Attribute \'from\' is deprecated; use an \'input\' section instead')
+
+    # TODO: use built-in terrain token
+    terrain_token = None
 
     # input
     if 'input' in config:

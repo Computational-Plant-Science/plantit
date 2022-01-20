@@ -142,7 +142,7 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]
     config = responses[1]
-    valid, errors = validate_workflow_configuration(config, cyverse_token)
+    valid, errors = validate_workflow_configuration(config)
     return {
         'repo': repo,
         'config': config,
@@ -190,7 +190,7 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
 
                 try:
                     config = yaml.safe_load(response.text)
-                    valid, errors = validate_workflow_configuration(config, token)
+                    valid, errors = validate_workflow_configuration(config)
                     workflows.append({
                         'repo': repository,
                         'config': config,
@@ -248,7 +248,7 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
 
                 try:
                     config = yaml.safe_load(response.text)
-                    valid, errors = validate_workflow_configuration(config, token)
+                    valid, errors = validate_workflow_configuration(config)
                     workflows.append({
                         'repo': repository,
                         'config': config,
