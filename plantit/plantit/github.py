@@ -131,6 +131,7 @@ async def get_repo_config(owner: str, name: str, token: str, branch: str = 'mast
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
+        response.raise_for_status()
         config = response.text
         logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
         return yaml.load(config)
