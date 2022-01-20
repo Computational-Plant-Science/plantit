@@ -81,7 +81,7 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
         # path
         if 'path' not in config['input']:
             errors.append('Missing attribute \'input.path\'')
-        if config['input']['path'] != '' and config['input']['path'] is not None:
+        elif config['input']['path'] != '' and config['input']['path'] is not None:
             if terrain_token is None: raise ValueError(f"Terrain token not provided!")
             cyverse_path_result = terrain.path_exists(config['input']['path'], terrain_token)
             if type(cyverse_path_result) is bool and not cyverse_path_result:
@@ -111,7 +111,7 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
         # path
         if 'path' not in config['output']:
             errors.append('Attribute \'output\' must include attribute \'path\'')
-        if config['output']['path'] is not None and type(config['output']['path']) is not str:
+        elif config['output']['path'] is not None and type(config['output']['path']) is not str:
             errors.append('Attribute \'output.path\' must be a str')
 
         # include
