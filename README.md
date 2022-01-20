@@ -24,9 +24,10 @@ Plant phenotyping automation in the browser.
 **Contents**
 
 - [About](#about)
-  - [Software & data discovery](#software--data-discovery)
-  - [Task orchestration](#task-orchestration)
-  - [Collaboration & metadata management](#collaboration--metadata-management)
+  - [Features](#features)
+    - [Software & data discovery](#software--data-discovery)
+    - [Task orchestration](#task-orchestration)
+    - [Collaboration & metadata management](#collaboration--metadata-management)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -43,7 +44,9 @@ Plant phenotyping automation in the browser.
 
 `plantit` is a science gateway for plant phenotyping. It aims to bring two user groups together: developers and users of phenotyping software. Though one individual may wear both hats, each likely has distinct concerns. `plantit` is free software-as-a-service for the former, and a free platform-as-a-service for the latter. Think of it as a conveyor belt for phenomics data science: devs can place some code on it, and it will be nicely packaged and delivered to researchers downstream, who can then use it to build insights.
 
-<img src="docs/media/roles.jpg?raw=true" style="position:relative;align="center"" />
+![](docs/media/roles.jpg)
+
+### Features
 
 The last decade has seen containers become nearly ubiquitous. Containerized software is a form of insulation against the rapid churn endemic to computing. `plantit` combines cloud code and data storage services (GitHub and CyVerse), online container registries (Docker Hub), the Singularity container runtime, and XSEDE supercomputing resources to provide a few core features:
 
@@ -51,21 +54,21 @@ The last decade has seen containers become nearly ubiquitous. Containerized soft
 - task orchestration: submit serial or parallel container workflows to clusters & supercomputers
 - collaboration & annotations: organize projects & metadata according to the MIAPPE standard
 
-### Software & data discovery
+#### Software & data discovery
 
 Like GitHub Actions, Travis CI, and other platforms, `plantit` automatically integrates with GitHub repositories. A `plantit.yaml` configuration file can be added to any public repository to make a container workflow available to researchers with a few clicks. `plantit` also plugs directly into your personal CyVerse Data Store and the public Data Commons.
 
-### Task orchestration
+#### Task orchestration
 
 `plantit` provides task scheduling as a service via browser UI (a REST API is [in development](https://github.com/Computational-Plant-Science/plantit/issues/256)).
 
-<img src="docs/media/cycle.jpg?raw=true" style="position:relative;align="center"" />
+![](docs/media/cycle.jpg)
 
 When a task is submitted, the browser client sends it to the `plantit` web server, which hands it to an internal queue feeding an asynchronous background worker. When the worker starts the task, a job script and Snakemake pipeline are generated and submitted to a cluster/supercomputer scheduler. Tasks can be submitted for execution as soon as possible, after a configurable delay, or on a periodic interval. The task lifecycle is a chain of actions, some of which trigger state transitions:
 
-<img src="docs/media/task.jpg?raw=true" style="position:relative;align="center"" />
+![](docs/media/task.jpg)
 
-### Collaboration & metadata management
+#### Collaboration & metadata management
 
 *This feature is under development.*
 
@@ -73,7 +76,7 @@ When a task is submitted, the browser client sends it to the `plantit` web serve
 
 ## Development
 
-Read on if you're interested in contributing to `plantit`.
+Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
 
 ### Requirements
 
@@ -112,9 +115,9 @@ This will start a number of containers:
 - `redis`: Redis instance (caching, Celery message broker)
 - `sandbox`: Ubuntu test environment
 
-The `plantit` architecture looks like this:
+The general architecture looks like this:
 
-<img src="docs/media/arch.jpg?raw=true" style="position:relative;align="center"" />
+![](docs/media/arch.jpg)
 
 The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into the site at least once (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
