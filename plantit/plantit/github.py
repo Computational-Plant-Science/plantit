@@ -142,25 +142,15 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
     responses = await asyncio.gather(*tasks, return_exceptions=True)
     repo = responses[0]
     config = responses[1]
-    valid = validate_workflow_configuration(config, cyverse_token)
-    if isinstance(valid, bool):
-        return {
-            'repo': repo,
-            'config': config,
-            'validation': {
-                'is_valid': True,
-                'errors': []
-            }
+    valid, errors = validate_workflow_configuration(config, cyverse_token)
+    return {
+        'repo': repo,
+        'config': config,
+        'validation': {
+            'is_valid': valid,
+            'errors': errors
         }
-    else:
-        return {
-            'repo': repo,
-            'config': config,
-            'validation': {
-                'is_valid': valid[0],
-                'errors': valid[1]
-            }
-        }
+    }
 
 
 @retry(
@@ -200,14 +190,14 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
 
                 try:
                     config = yaml.safe_load(response.text)
-                    validation = validate_workflow_configuration(config, token)
+                    valid, errors = validate_workflow_configuration(config, token)
                     workflows.append({
                         'repo': repository,
                         'config': config,
                         'branch': branch,
                         'validation': {
-                            'is_valid': validation[0],
-                            'errors': validation[1]
+                            'is_valid': valid,
+                            'errors': errors
                         },
                         'example': owner == 'Computational-Plant-Science' and 'example' in repository['name'].lower()
                     })
@@ -258,14 +248,14 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
 
                 try:
                     config = yaml.safe_load(response.text)
-                    validation = validate_workflow_configuration(config, token)
+                    valid, errors = validate_workflow_configuration(config, token)
                     workflows.append({
                         'repo': repository,
                         'config': config,
                         'branch': branch,
                         'validation': {
-                            'is_valid': validation[0],
-                            'errors': validation[1]
+                            'is_valid': valid,
+                            'errors': errors
                         }
                     })
                 except Exception:
