@@ -83,19 +83,21 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
             path = config['input']['path']
             if path != '' and path is not None:
                 if type(path) is not str:
-                    errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+                    errors.append('Attribute \'input.path\' must be a str')
                 elif terrain_token is None: raise ValueError(f"Terrain token not provided!")
-                cyverse_path_result = terrain.path_exists(config['input']['path'], terrain_token)
-                if type(cyverse_path_result) is bool and not cyverse_path_result:
-                    errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+                cyverse_path_exists, _ = terrain.path_exists(path, terrain_token)
+                if not cyverse_path_exists:
+                    errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
             else:
-                errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+                errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
 
         # kind
         if 'kind' not in config['input']:
             errors.append('Missing attribute \'input.kind\'')
-        if not (config['input']['kind'] == 'file' or config['input']['kind'] == 'files' or config['input']['kind'] == 'directory'):
-            errors.append('Attribute \'input.kind\' must be a string (either \'file\', \'files\', or \'directory\')')
+        else:
+            kind = config['input']['kind']
+            if not (kind == 'file' or kind == 'files' or kind == 'directory'):
+                errors.append('Attribute \'input.kind\' must be a string (either \'file\', \'files\', or \'directory\')')
 
         # legacy filetypes format
         if 'patterns' in config['input']:
