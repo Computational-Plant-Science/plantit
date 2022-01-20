@@ -79,12 +79,16 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
     # input
     if 'input' in config:
         # path
-        if 'path' not in config['input']:
-            errors.append('Missing attribute \'input.path\'')
-        elif config['input']['path'] != '' and config['input']['path'] is not None:
-            if terrain_token is None: raise ValueError(f"Terrain token not provided!")
-            cyverse_path_result = terrain.path_exists(config['input']['path'], terrain_token)
-            if type(cyverse_path_result) is bool and not cyverse_path_result:
+        if 'path' in config['input']:
+            path = config['input']['path']
+            if path != '' and path is not None:
+                if type(path) is not str:
+                    errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+                elif terrain_token is None: raise ValueError(f"Terrain token not provided!")
+                cyverse_path_result = terrain.path_exists(config['input']['path'], terrain_token)
+                if type(cyverse_path_result) is bool and not cyverse_path_result:
+                    errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+            else:
                 errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
 
         # kind
@@ -109,10 +113,10 @@ def validate_workflow_configuration(config: dict, terrain_token: str = None) -> 
     # output
     if 'output' in config:
         # path
-        if 'path' not in config['output']:
-            errors.append('Attribute \'output\' must include attribute \'path\'')
-        elif config['output']['path'] is not None and type(config['output']['path']) is not str:
-            errors.append('Attribute \'output.path\' must be a str')
+        if 'path' in config['output']:
+            path = config['output']['path']
+            if path is not None and type(path) is not str:
+                errors.append('Attribute \'output.path\' must be a str')
 
         # include
         if 'include' in config['output']:

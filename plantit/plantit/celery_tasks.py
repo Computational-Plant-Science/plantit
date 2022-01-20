@@ -466,7 +466,7 @@ def refresh_all_user_cyverse_tokens():
 @app.task()
 def agents_healthchecks():
     for agent in Agent.objects.all():
-        healthy, output = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
+        healthy, output = is_healthy(agent)
         plantit.healthchecks.is_healthy = healthy
         agent.save()
 
