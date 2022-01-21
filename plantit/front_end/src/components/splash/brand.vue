@@ -35,7 +35,7 @@
                                     style="
                                         max-width: 1.2rem;
                                         position: relative;
-                                        top: -8px;
+                                        top: -6px;
                                     "
                                     :src="require('../../assets/logo.png')"
                                     left
@@ -117,7 +117,9 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
+                                ><i
+                                    class="fas fa-satellite-dish fa-1x fa-fw"
+                                ></i
                                 >Status</b-link
                             ></b-col
                         >
@@ -210,14 +212,24 @@
                     <b-row>
                         <b-col md="auto">
                             <i class="text-theme mt-4 ml-1 text-left">
-                                <span>a browser gateway for </span
+                                <span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-theme'
+                                    "
+                                    >a browser gateway for </span
                                 ><span
-                                    class="text-theme"
+                                :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-theme'
+                                    "
                                     style="
                                         text-decoration: underline;
                                         text-decoration-color: #d6df5d;
                                     "
-                                    >HPC plant phenotyping
+                                    >plant phenomics
                                 </span>
                             </i></b-col
                         >
@@ -227,7 +239,8 @@
                 <b-row align-v="center" v-if="maintenance !== undefined"
                     ><b-col class="text-center" align-self="center"
                         ><b-alert variant="warning" :show="true"
-                            >CyVerse is undergoing maintenance scheduled to complete {{ prettify(maintenance.end) }}.</b-alert
+                            >CyVerse is undergoing maintenance scheduled to
+                            complete {{ prettify(maintenance.end) }}.</b-alert
                         ></b-col
                     >
                 </b-row>

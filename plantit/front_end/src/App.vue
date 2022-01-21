@@ -2,18 +2,18 @@
     <div
         id="app"
         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
-        style="width: 100vw; min-height: 100vh;"
+        style="width: 100vw; min-height: 100vh"
     >
         <b-container
             fluid
             class="m-0 p-0"
-            style="background-color: transparent;"
+            style="background-color: transparent"
         >
-            <navigation v-if="!isRootPath"></navigation>
+            <navigation class="mb-1" v-if="!isRootPath"></navigation>
             <router-view
-                :class="profile.darkMode ? 'theme-dark mt-1' : 'theme-light mt-1'"
+                v-bind:class="{ lightlinks: profile.darkMode }"
             ></router-view>
-            <br/>
+            <br />
         </b-container>
     </div>
 </template>
@@ -25,14 +25,14 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'App',
     components: {
-        navigation
+        navigation,
     },
     computed: {
         ...mapGetters('user', ['profile']),
         isRootPath() {
             return this.$route.path === '/';
-        }
-    }
+        },
+    },
 };
 </script>
 

@@ -57,19 +57,16 @@
                                 {{ context }}</span
                             >
                             <span v-else-if="context === 'Examples'">
-                              <i class="fas fa-thumbtack fa-fw"></i>
-                              {{ context }}
+                                <i class="fas fa-thumbtack fa-fw"></i>
+                                {{ context }}
                             </span>
                             <span v-else
                                 ><i class="fas fa-building fa-fw"></i>
                                 {{ context }}</span
                             >
                         </template>
-                        <b-dropdown-header
-                            >Default</b-dropdown-header
-                        >
-                      <b-dropdown-item
-                            @click="switchContext('Examples')"
+                        <b-dropdown-header>Default</b-dropdown-header>
+                        <b-dropdown-item @click="switchContext('Examples')"
                             ><i class="fas fa-thumbtack fa-fw"></i>
                             Examples</b-dropdown-item
                         >
@@ -85,9 +82,7 @@
                         >
 
                         <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-header
-                            >Organizations</b-dropdown-header
-                        >
+                        <b-dropdown-header>Organizations</b-dropdown-header>
                         <b-dropdown-item
                             @click="switchContext(org.login)"
                             v-for="org in profile.organizations"
@@ -99,10 +94,8 @@
                             ><i>None to show</i></b-dropdown-text
                         >
                         <b-dropdown-divider></b-dropdown-divider>
-                        <b-dropdown-header
-                            >Projects</b-dropdown-header
-                        >
-                      <b-dropdown-item
+                        <b-dropdown-header>Projects</b-dropdown-header>
+                        <b-dropdown-item
                             v-for="project in getProjects"
                             @click="switchContext(project.title)"
                             v-bind:key="project.guid"
@@ -127,8 +120,9 @@
                         placement="topleft"
                         target="switch-workflow-context"
                         title="Workflow Context"
-                        >Click here to toggle between example workflows, public workflows, organization-owned workflows, and
-                        your own personal workflow context.</b-popover
+                        >Click here to toggle between example workflows, public
+                        workflows, organization-owned workflows, and your own
+                        personal workflow context.</b-popover
                     >
                 </b-col>
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
@@ -207,8 +201,10 @@
                             getProjects.map((c) => c.title).includes(context)
                         "
                         >This project has no associated workflows yet.</span
-                    ><span v-else-if="context === 'Examples'">There are no example workflows to show.</span>
-              <span v-else
+                    ><span v-else-if="context === 'Examples'"
+                        >There are no example workflows to show.</span
+                    >
+                    <span v-else
                         >This organization has no workflow bindings yet.</span
                     ></b-col
                 ></b-row
@@ -280,14 +276,15 @@ export default {
                 this.getProjects.map((p) => p.title).includes(this.context)
             )
                 await this.$store.dispatch('workflows/refreshProject');
-            else if (this.context === 'Examples') await this.$store.dispatch('workflows/refreshPublic');
+            else if (this.context === 'Examples')
+                await this.$store.dispatch('workflows/refreshPublic');
             else await this.$store.dispatch('workflows/refreshOrg');
         },
         filterExamples(workflows) {
-          return workflows.filter(wf => wf.example);
+            return workflows.filter((wf) => wf.example);
         },
         excludeExamples(workflows) {
-          return workflows.filter(wf => !wf.example);
+            return workflows.filter((wf) => !wf.example);
         },
     },
     computed: {
@@ -327,7 +324,9 @@ export default {
                               (p) => p.title === this.context
                           )[0].guid
                       ]
-                    : this.context === 'Examples' ? this.filterExamples(this.publicWorkflows) : this.orgWorkflows[this.context]),
+                    : this.context === 'Examples'
+                    ? this.filterExamples(this.publicWorkflows)
+                    : this.orgWorkflows[this.context]),
             ].sort(this.sortWorkflows);
         },
         workflowsLoading() {

@@ -144,7 +144,7 @@
                                 style="
                                     max-width: 1.2rem;
                                     position: relative;
-                                    top: -8px;
+                                    top: -6px;
                                 "
                                 :src="require('../assets/logo.png')"
                                 left
@@ -175,7 +175,6 @@
                     <b-nav-item
                         title="about"
                         to="/about"
-                        class="mt-1 navtext"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -185,6 +184,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-question-circle fa-1x fa-fw"></i
                             >About</span
                         ></b-nav-item
@@ -211,7 +211,6 @@
                     <b-nav-item
                         title="stats"
                         to="/stats"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -221,14 +220,14 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-chart-bar fa-1x fa-fw"></i
                             >Stats</span
                         ></b-nav-item
                     >
-                  <b-nav-item
+                    <b-nav-item
                         title="stats"
                         href="https://stats.uptimerobot.com/yAgPxH7KNJ"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -238,6 +237,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
                             >Status</span
                         ></b-nav-item
@@ -245,11 +245,11 @@
                     <b-nav-item
                         title="docs"
                         href="https://plantit.readthedocs.io/en/latest"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
                         ><span
+                            style="font-size: 80%"
                             :class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -260,7 +260,6 @@
                     >
                     <b-nav-item
                         href="https://github.com/Computational-Plant-Science/plantit"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -272,6 +271,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fab fa-github fa-1x fa-fw"></i
                             >Github</span
                         >
@@ -562,11 +562,14 @@
                             Log Out
                         </b-dropdown-item>
                     </b-nav-item-dropdown>
-                    <b-nav-item href="/apis/v1/idp/cyverse_login/" v-else-if="maintenance === undefined">
+                    <b-nav-item
+                        href="/apis/v1/idp/cyverse_login/"
+                        v-else-if="maintenance === undefined"
+                    >
                         <b-button
                             variant="white"
                             block
-                            class="text-center mt-1"
+                            class="text-center"
                         >
                             Log in with
                             <b-img
@@ -1081,9 +1084,7 @@ export default {
         prettify: function (date) {
             let tz = moment.tz.guess();
             let mom = moment(date).tz(tz);
-            return `${mom.fromNow()} (${mom.format(
-                'MMMM Do YYYY, h:mm a'
-            )})`;
+            return `${mom.fromNow()} (${mom.format('MMMM Do YYYY, h:mm a')})`;
         },
         prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;

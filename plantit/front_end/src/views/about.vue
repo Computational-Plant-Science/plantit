@@ -25,38 +25,33 @@
             <b-row
                 ><b-col>
                     <p>
-                        plantIT is a science gateway for image-based plant
-                        phenotyping. It was preceded by &mdash; grew out of, as
-                        it were &mdash;
-                        <b-link
-                            href="http://dirt.cyverse.org/?q=welcome"
+                        <code>plantit</code> is a science gateway for
+                        image-based plant phenotyping: free
+                        software-as-a-service for HPC/HTC phenotyping in the
+                        browser. Registered users can access and annotate data
+                        stored in the CyVerse cloud and submit (possibly highly
+                        parallel) trait extraction pipelines, simulations, or
+                        other tasks to clusters and supercomputers, no
+                        programming experience required. It's also a
+                        platform-as-a-service for developers, closely integrated
+                        with GitHub and Docker. Add a
+                        <code>plantit.yaml</code> file to any public repository
+                        to integrate a container workflow, allowing researchers
+                        to deploy it to a cluster or supercomputer with a few
+                        clicks.
+                    </p>
+                    <p>
+                        <code>plantit</code> was preceded by &mdash; grew out
+                        of, as it were &mdash;
+                        <b-link href="http://dirt.cyverse.org/?q=welcome"
                             >DIRT</b-link
                         >
                         (<b>D</b>igital <b>I</b>maging of <b>R</b>oot
                         <b>T</b>raits), which measures traits of monocot and
                         dicot roots from user-uploaded images, making
                         high-throughput grid computing available via a web
-                        portal.
-                    </p>
-                    <p>
-                        plantIT is free software-as-a-service for HPC/HTC
-                        phenotyping in the browser. Registered users can access
-                        and annotate data stored in the CyVerse cloud and submit
-                        (possibly highly parallel) trait extraction pipelines,
-                        simulations, or other tasks to clusters and
-                        supercomputers, no programming experience required.
-                    </p>
-                    <p>
-                        plantIT is also a platform-as-a-service for programmers
-                        and developers, tightly integrated with GitHub and
-                        Docker. Add a <code>plantit.yaml</code> file to any
-                        public repository to integrate a container workflow,
-                        allowing researchers to deploy your code to a cluster or
-                        supercomputer with a few clicks.
-                    </p>
-                    <p>
-                        plantIT makes a number of algorithms available by
-                        default, including the original DIRT as well as
+                        portal. A number of algorithms are freely available by
+                        default, including the original <b>DIRT</b> as well as
                         <b-link
                             href="https://github.com/Computational-Plant-Science/3D_model_reconstruction_demo"
                             >DIRT3D</b-link
@@ -64,35 +59,13 @@
                         <b-link
                             href="https://academic.oup.com/plphys/article/187/2/739/6317839"
                             >(Liu et al 2021)</b-link
-                        >
-                        and other trait analysis workflows.
+                        >.
                     </p>
                     <p>
-                        plantIT is flexible enough to run most
-                        container-friendly workflows, but if you want to do
-                        genomics, a different tool (e.g.,
-                        <b-link href="https://genomevolution.org/CoGe/"
-                            >CoGe</b-link
-                        >
-                        or
-                        <b-link href="https://easygwas.ethz.ch/"
-                            >easyGWAS</b-link
-                        >) might be a better fit. Feel free to file bug reports,
-                        make suggestions, request features
-                        <b-link
-                            href="https://github.com/Computational-Plant-Science/plantit"
-                            >on GitHub</b-link
-                        >, or
-                        <b-link
-                            href="https://github.com/Computational-Plant-Science/plantit/discussions"
-                            >get in touch</b-link
-                        >
-                        regarding a use case.
-                    </p>
-                    <p>
-                        plantIT is like glue: it sits between things and binds
-                        them together. It is not any of the following
-                        technologies (although it employs several internally):
+                        <code>plantit</code> is like glue: it sits between
+                        things and binds them together. It is not any of the
+                        following technologies (although it employs several
+                        internally):
                     </p>
                     <ul>
                         <li>
@@ -150,17 +123,31 @@
                             >)
                         </li>
                     </ul>
+                    <p>
+                        <code>plantit</code> is flexible enough to run most
+                        container-friendly workflows, but if you want to do
+                        genomics, a different tool (e.g.,
+                        <b-link href="https://genomevolution.org/CoGe/"
+                            >CoGe</b-link
+                        >
+                        or
+                        <b-link href="https://easygwas.ethz.ch/"
+                            >easyGWAS</b-link
+                        >) might be a better fit. Feel free to file bug reports,
+                        make suggestions, request features
+                        <b-link
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            >on GitHub</b-link
+                        >, or
+                        <b-link
+                            href="https://github.com/Computational-Plant-Science/plantit/discussions"
+                            >get in touch</b-link
+                        >
+                        regarding a use case.
+                    </p>
                 </b-col>
             </b-row>
             <br />
-            <br />
-            <hr
-                :style="
-                    profile.darkMode
-                        ? 'border-top: 1px solid #dee2e6'
-                        : 'border-top: 1px solid #212529'
-                "
-            />
             <br />
             <br />
             <b-row class="text-center">
@@ -180,7 +167,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
@@ -240,7 +227,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                             ><template #default>
@@ -290,7 +277,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
@@ -344,6 +331,57 @@
                                 </b-button>
                             </template>
                         </b-card>
+                        <b-card
+                            class="text-center"
+                            style="min-width: 20rem"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            border-variant="transparent"
+                            :footer-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            footer-border-variant="white"
+                        >
+                            <template #default>
+                                <h5
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Obi Nnaduruaku
+                                </h5>
+                                <b
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Developer</b
+                                >
+                            </template>
+                            <template
+                                v-slot:footer
+                                style="background-color: white"
+                            >
+                                <b-button
+                                    class="mr-2 p-2"
+                                    variant="outline-dark"
+                                    href="https://github.com/obi9999n"
+                                >
+                                    <i class="fab fa-github fa-2x success"></i>
+                                </b-button>
+                                <b-button
+                                    class="mr-2 p-2"
+                                    variant="outline-dark"
+                                    href="https://www.linkedin.com/in/obi-nnaduruaku"
+                                >
+                                    <i
+                                        class="fab fa-linkedin fa-2x success"
+                                    ></i>
+                                </b-button>
+                            </template>
+                        </b-card>
                     </b-card-group>
                     <br />
                     <br />
@@ -366,7 +404,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
@@ -417,7 +455,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
@@ -461,7 +499,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
@@ -512,7 +550,7 @@
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="transparent"
                             :footer-bg-variant="
-                                profile.darkMode ? 'success' : 'white'
+                                profile.darkMode ? 'dark' : 'white'
                             "
                             footer-border-variant="white"
                         >
