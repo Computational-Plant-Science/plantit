@@ -43,7 +43,8 @@ def get_all_or_create(request):
             'tasks': [task_to_dict(task) for task in list(page)]
         })
     elif request.method == 'POST':
-        workflow = json.loads(request.body.decode('utf-8'))
+        workflow = json.loads(request.data)
+        # workflow = json.loads(request.body.decode('utf-8'))
         if workflow['type'] == 'Now':
             if workflow['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
 
