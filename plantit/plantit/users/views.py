@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema
 from github import Github
 from requests import HTTPError
 from requests.auth import HTTPBasicAuth
@@ -20,13 +19,14 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+import plantit.queries as q
 from plantit.celery_tasks import refresh_user_stats
+from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.utils import get_csrf_token
-from plantit.utils import list_users, get_user_cyverse_profile, get_or_create_user_keypair, get_user_bundle
+from plantit.utils.misc import get_csrf_token
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        return JsonResponse({'users': list_users()})
+        return JsonResponse({'users': q.list_users()})
 
     @action(methods=['get'], detail=False)
     def acknowledge_first_login(self, request):
@@ -279,7 +279,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         if request.user.profile.cyverse_access_token != '':
             # if we can't get a profile from CyVerse, log the user out ( sorry :/ )
-            try: response['cyverse_profile'] = get_user_cyverse_profile(request.user)
+            try: response['cyverse_profile'] = q.get_user_cyverse_profile(request.user)
             except (HTTPError, ValueError):
                 logout(request)
                 return redirect(
@@ -287,7 +287,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                     "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
         if request.user.profile.github_token != '' and user.profile.github_username != '':
-            bundle = get_user_bundle(request.user)
+            bundle = q.get_user_bundle(request.user)
             response['github_profile'] = bundle['github_profile']
             response['organizations'] = bundle['github_organizations']
 

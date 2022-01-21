@@ -5,7 +5,6 @@
                 <b-col>
                     <b-spinner
                         small
-                        v-if="tasksLoading"
                         label="Loading..."
                         :variant="profile.darkMode ? 'light' : 'dark'"
                         class="mr-1"
@@ -37,37 +36,6 @@
             <b-row>
                 <b-col>
                     <div v-if="!tasksLoading && getWorkflow.config">
-                        <b-row class="m-0 p-0">
-                            <b-col v-if="showCanceledAlert" class="m-0 p-0">
-                                <b-alert
-                                    :show="showCanceledAlert"
-                                    :variant="
-                                        canceledAlertMessage.includes(
-                                            'no longer running'
-                                        )
-                                            ? 'success'
-                                            : 'warning'
-                                    "
-                                    dismissible
-                                    @dismissed="showCanceledAlert = false"
-                                >
-                                    {{ canceledAlertMessage }}
-                                </b-alert>
-                            </b-col>
-                            <b-col
-                                v-if="showFailedToCancelAlert"
-                                class="m-0 p-0"
-                            >
-                                <b-alert
-                                    :show="showFailedToCancelAlert"
-                                    variant="danger"
-                                    dismissible
-                                    @dismissed="showFailedToCancelAlert = false"
-                                >
-                                    Failed to cancel task {{ getTask.guid }}.
-                                </b-alert>
-                            </b-col>
-                        </b-row>
                         <b-row class="m-0 p-0">
                             <b-col md="auto" align-self="end" class="m-0 p-0">
                                 <h4
@@ -271,7 +239,7 @@
                                 align-self="start"
                             >
                                 <b-button
-                                    :disabled="canceled"
+                                    :disabled="canceling"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -325,7 +293,7 @@
                                 align-self="start"
                             >
                                 <b-button
-                                    :disabled="canceled"
+                                    :disabled="canceling"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -339,7 +307,7 @@
                                     <i class="fas fa-times fa-fw"></i>
                                     Cancel<b-spinner
                                         small
-                                        v-if="canceled"
+                                        v-if="canceling"
                                         label="Loading..."
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
@@ -379,23 +347,6 @@
                                     ></b-spinner>
                                 </b-button>
                             </b-col>
-                            <!--<b-col
-                                v-if="getTask.is_complete"
-                                md="auto"
-                                class="m-0 mb-2"
-                                align-self="start"
-                            >
-                                <b-button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    title="Delete Task"
-                                    @click="showDeletePrompt"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                    Delete
-                                </b-button>
-                            </b-col>-->
                         </b-row>
                         <b-row>
                             <b-col>
@@ -699,7 +650,7 @@
                                                 align-v="center"
                                                 class="mt-2"
                                             >
-                                                <b-col class="text-left">
+                                                <b-col class="text-left" v-if="getTask.results_retrieved && getTask.output_files.length > 0">
                                                     <b
                                                         v-if="
                                                             getWorkflow.config
@@ -793,10 +744,10 @@
                                                         >{{
                                                             getTask.output_files
                                                                 .length
-                                                        }}</span
+                                                        }} results found</span
                                                     ><span
                                                         v-else-if="
-                                                            !getTask.status ===
+                                                            getTask.status !==
                                                             'running'
                                                         "
                                                         ><b-spinner
@@ -809,10 +760,9 @@
                                                         ></b-spinner>
                                                         Loading</span
                                                     >
-                                                    <span v-else>No</span>
-                                                    result(s) found
                                                     <br />
                                                 </b-col>
+                                                <b-col v-else align-self="center" class="text-center"><span class="text-center"><i class="far fa-folder-open fa-fw"></i> No results found</span></b-col>
                                                 <!--<b-col
                                                     md="auto"
                                                     align-self="end"
@@ -875,6 +825,9 @@
                                                     ></b-button>
                                                 </b-col>-->
                                                 <b-col
+                                                    v-if="
+                                                            getTask.results_retrieved && getTask.output_files !== undefined
+                                                        "
                                                     md="auto"
                                                     align-self="end"
                                                 >
@@ -991,6 +944,9 @@
                                                 <br />
                                             </b-row>
                                             <b-row
+                                                v-if="
+                                                            getTask.results_retrieved && getTask.output_files!== undefined
+                                                        "
                                                 v-show="viewMode !== 'Carousel'"
                                             >
                                                 <b-col
@@ -1065,6 +1021,7 @@
                                                 ></b-spinner>
                                             </b-row>
                                             <b-overlay
+
                                                 :show="downloading"
                                                 :variant="
                                                     profile.darkMode
@@ -1525,7 +1482,9 @@
                                                 </div>
                                             </b-overlay>
                                         </div>
-                                        <div class="m-3">
+                                        <div class="m-3" v-if="
+                                                            getTask.results_retrieved && getTask.output_files !== undefined
+                                                        ">
                                             <b-row
                                                 ><!--<b-col
                                                     v-if="
@@ -1648,7 +1607,7 @@
                                                                   .length
                                                             : '?'
                                                     }}
-                                                    result(s)
+                                                    results
                                                     transferred<b-progress
                                                         :value="
                                                             getTask.results_transferred
@@ -1847,25 +1806,6 @@
             </b-row>
         </b-container>
         <b-modal
-            id="remove"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            close
-            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            ok-variant="outline-danger"
-            title="Delete this task?"
-            @ok="remove"
-        >
-            <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                This cannot be undone.
-            </p>
-        </b-modal>
-        <b-modal
             ok-only
             :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
             :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
@@ -1906,104 +1846,6 @@
                 :src="thumbnailUrl"
             ></b-embed>
         </b-modal>
-        <b-modal
-            id="authenticate-download"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            close
-            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="
-                'Authenticate with ' + this.getTask.agent.name + ' to download'
-            "
-            @ok="downloadFile"
-            ok-variant="success"
-        >
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationUsername"
-                type="text"
-                placeholder="Your username"
-                required
-            ></b-form-input>
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationPassword"
-                type="password"
-                placeholder="Your password"
-                required
-            ></b-form-input>
-        </b-modal>
-        <b-modal
-            id="authenticate-cancel"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            close
-            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="
-                'Authenticate with ' + this.getTask.agent.name + ' to cancel'
-            "
-            @ok="cancel"
-            ok-variant="success"
-        >
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationUsername"
-                type="text"
-                placeholder="Your username"
-                required
-            ></b-form-input>
-            <b-form-input
-                :class="profile.darkMode ? 'input-dark' : 'input-light'"
-                v-model="authenticationPassword"
-                type="password"
-                placeholder="Your password"
-                required
-            ></b-form-input>
-        </b-modal>
-        <b-modal
-            size="lg"
-            id="transfer"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            close
-            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="`Transfer results to CyVerse`"
-            hide-footer
-        >
-            <div v-if="!transferring">
-                <p>Select a directory to transfer result files to.</p>
-                <datatree
-                    select="directory"
-                    :create="true"
-                    :upload="false"
-                    :download="false"
-                    @selectNode="preTransferToCyVerse"
-                    :node="userDatasets"
-                ></datatree>
-            </div>
-            <div v-else>
-                <b-spinner
-                    small
-                    :variant="profile.darkMode ? 'light' : 'dark'"
-                ></b-spinner>
-                Transferring results to {{ transferringPath }}...
-            </div>
-        </b-modal>
     </div>
 </template>
 
@@ -2015,6 +1857,7 @@ import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
+import { guid } from '@/utils';
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -2037,7 +1880,7 @@ export default {
             // action flags
             downloading: false,
             restarted: false,
-            canceled: false,
+            canceling: false,
             // user data
             userData: null,
             // walltime
@@ -2053,10 +1896,6 @@ export default {
             thumbnailUrl: '',
             thumbnailTitle: '',
             thumbnailDoneLoading: false,
-            // alerts
-            canceledAlertMessage: '',
-            showCanceledAlert: false,
-            showFailedToCancelAlert: false,
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
             render: true,
             authenticationUsername: '',
@@ -2112,7 +1951,7 @@ export default {
                 i <= this.outputFilePage * this.outputPageSize
             )
                 // return `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`;
-                return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+                return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.guid}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function (date) {
@@ -2170,7 +2009,7 @@ export default {
             const loader = new PLYLoader();
             var comp = {};
             loader.load(
-                `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
+                `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.guid}/3d_model/?path=${f.name}`,
                 function (geometry) {
                     geometry.computeVertexNormals();
 
@@ -2309,72 +2148,42 @@ export default {
         refresh() {
             this.$store.dispatch('tasks/refresh', {
                 owner: this.$router.currentRoute.params.owner,
-                name: this.$router.currentRoute.params.name,
+                name: this.$router.currentRoute.params.guid,
             });
         },
-        preCancel() {
-            if (this.mustAuthenticate)
-                this.$bvModal.show('authenticate-cancel');
-            else this.cancel();
-        },
         async cancel() {
-            this.canceled = true;
-            this.$bvModal.hide('authenticate-cancel');
-            var data = {};
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.getTask.agent.user,
-                };
+            this.canceling = true;
             await axios({
                 method: 'post',
-                url: `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`,
-                data: data,
+                url: `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/cancel/`,
+                data: {},
             })
-                .then((response) => {
-                    this.canceled = false;
-                    if (response.status === 200) {
-                        this.showCanceledAlert = true;
-                        this.canceledAlertMessage = response.data;
-                    } else {
-                        this.showFailedToCancelAlert = true;
-                    }
-                })
-                .catch((error) => {
-                    this.canceled = false;
-                    Sentry.captureException(error);
-                    return error;
-                });
-        },
-        remove() {
-            axios
-                .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
-                )
                 .then(async (response) => {
+                    this.canceling = false;
                     if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'tasks/setAll',
-                            response.data.tasks
-                        );
-                        await router.push({
-                            name: 'tasks',
+                      await this.$store.dispatch('tasks/addOrUpdate', response.data);
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Canceled task ${this.$router.currentRoute.params.guid}`,
+                            guid: guid().toString(),
                         });
                     } else {
-                        this.showFailedToDeleteAlert = true;
+                      await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to cancel task ${this.$router.currentRoute.params.guid}`,
+                            guid: guid().toString(),
+                        });
                     }
                 })
-                .catch((error) => {
-                    Sentry.captureException(error);
+                .catch(async (error) => {
+                    this.canceling = false;
+                    await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to cancel task ${this.$router.currentRoute.params.guid}`,
+                            guid: guid().toString(),
+                        });
                     return error;
                 });
-        },
-        showDeletePrompt() {
-            this.$bvModal.show('remove');
         },
         restart() {
             this.restarted = true;
@@ -2398,7 +2207,7 @@ export default {
                         name: 'task',
                         params: {
                             owner: response.data.owner,
-                            name: response.data.name,
+                            name: response.data.guid,
                         },
                     });
                 })
@@ -2430,30 +2239,15 @@ export default {
         },
         viewFile(file) {
             this.thumbnailName = file;
-            this.thumbnailUrl = `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
+            this.thumbnailUrl = `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/thumbnail/?path=${file}`;
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
-        },
-        preDownloadFile(file) {
-            this.fileToDownload = file;
-            if (this.mustAuthenticate)
-                this.$bvModal.show('authenticate-download');
-            else this.downloadFile();
         },
         async downloadFile() {
             this.downloading = true;
             let data = {
                 path: this.fileToDownload,
             };
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.getTask.agent.user,
-                };
             await axios({
                 method: 'post',
                 data: data,
@@ -2464,8 +2258,6 @@ export default {
                     if (response && response.status === 404) {
                         return;
                     }
-
-                    this.$bvModal.hide('authenticate-download');
 
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
@@ -2480,26 +2272,11 @@ export default {
                 .catch((error) => {
                     Sentry.captureException(error);
                     this.downloading = false;
-                    this.$bvModal.hide('authenticate-download');
                     return error;
                 });
         },
         async getSchedulerLogs() {
-            var data = {};
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.getTask.agent.user,
-                };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/`,
-                data: data,
-            })
+            await axios.get(`/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/`)
                 .then((response) => {
                     this.schedulerLogs = response.data.lines;
                 })
@@ -2509,21 +2286,7 @@ export default {
                 });
         },
         async getAgentLogs() {
-            var data = {};
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword,
-                };
-            else
-                data['auth'] = {
-                    username: this.getTask.agent.user,
-                };
-            await axios({
-                method: 'post',
-                url: `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/`,
-                data: data,
-            })
+            await axios.get(`/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/`)
                 .then((response) => {
                     this.agentLogs = response.data.lines;
                 })
@@ -2585,7 +2348,7 @@ export default {
         downloadAgentLogs() {
             axios
                 .get(
-                    `/apis/v1/tasks/${this.$router.currentRoute.params.name}/logs/agent/dl/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/dl/`
                 )
                 .then((response) => {
                     if (response && response.status === 404) {
@@ -2710,10 +2473,7 @@ export default {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },
         getTask() {
-            let task = this.task(
-                this.$router.currentRoute.params.owner,
-                this.$router.currentRoute.params.name
-            );
+            let task = this.task(this.$router.currentRoute.params.guid);
             if (task !== undefined && task !== null) return task;
             return null;
         },
@@ -2762,11 +2522,11 @@ export default {
             );
         },
         taskLogFileName() {
-            return `${this.$router.currentRoute.params.name}.plantit.log`;
+            return `${this.$router.currentRoute.params.guid}.plantit.log`;
         },
         containerLogFileName() {
             return `${
-                this.$router.currentRoute.params.name
+                this.$router.currentRoute.params.guid
             }.${this.getTask.agent.name.toLowerCase()}.log`;
         },
         mustAuthenticate() {

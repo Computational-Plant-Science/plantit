@@ -125,16 +125,16 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0 pt-2 pb-1"
+            class="logo"
             style="min-height: 35px; max-height: 35px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
-            <b-collapse class="m-0 p-0" is-nav>
-                <b-navbar-nav class="m-0 p-0 overflow-hidden" align="center"
+            <b-collapse is-nav align="center">
+                <b-navbar-nav class="overflow-hidden" align="center"
                     ><b-nav-item class="overflow-hidden" href="/">
-                        <h4
+                        <h5
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-theme'
                             "
@@ -142,16 +142,16 @@
                         >
                             <b-img
                                 style="
-                                    max-width: 1.2rem;
+                                    max-width: 1rem;
                                     position: relative;
-                                    top: -8px;
+                                    top: -5px;
                                 "
                                 :src="require('../assets/logo.png')"
                                 left
                                 class="m-0 p-0"
                             ></b-img
                             >plant<small
-                                class="mb-3 text-success"
+                                class="text-success"
                                 style="
                                     text-decoration: underline;
                                     text-shadow: 1px 1px 2px black;
@@ -170,12 +170,12 @@
                                                 class="fas fa-spinner"
                                                 v-else
                                             ></i></b-badge></small></small
-                            ></small></h4
+                            ></small></h5
                     ></b-nav-item>
+                    <b-row align-v="center" class="pl-3 pr-3">
                     <b-nav-item
                         title="about"
                         to="/about"
-                        class="mt-1 navtext"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -185,6 +185,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-question-circle fa-1x fa-fw"></i
                             >About</span
                         ></b-nav-item
@@ -211,7 +212,6 @@
                     <b-nav-item
                         title="stats"
                         to="/stats"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -221,14 +221,14 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-chart-bar fa-1x fa-fw"></i
                             >Stats</span
                         ></b-nav-item
                     >
-                  <b-nav-item
+                    <b-nav-item
                         title="stats"
                         href="https://stats.uptimerobot.com/yAgPxH7KNJ"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -238,6 +238,7 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
                             >Status</span
                         ></b-nav-item
@@ -245,11 +246,11 @@
                     <b-nav-item
                         title="docs"
                         href="https://plantit.readthedocs.io/en/latest"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
                         ><span
+                            style="font-size: 80%"
                             :class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -260,7 +261,6 @@
                     >
                     <b-nav-item
                         href="https://github.com/Computational-Plant-Science/plantit"
-                        class="mt-1"
                         :link-class="
                             profile.darkMode ? 'text-secondary' : 'text-dark'
                         "
@@ -272,10 +272,12 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
+                            style="font-size: 80%"
                             ><i class="fab fa-github fa-1x fa-fw"></i
                             >Github</span
                         >
                     </b-nav-item>
+                    </b-row>
                     <!--<b-nav-item
                             href="#"
                             class="mt-2"
@@ -562,18 +564,22 @@
                             Log Out
                         </b-dropdown-item>
                     </b-nav-item-dropdown>
-                    <b-nav-item href="/apis/v1/idp/cyverse_login/" v-else-if="maintenance === undefined">
+                    <b-nav-item
+                        href="/apis/v1/idp/cyverse_login/"
+                        v-else-if="maintenance === undefined"
+                    >
                         <b-button
                             variant="white"
                             block
-                            class="text-center mt-1"
+                            size="sm"
+                            class="text-center"
                         >
                             Log in with
                             <b-img
                                 :src="
                                     require('@/assets/sponsors/cyversebw-notext.png')
                                 "
-                                height="18px"
+                                height="14px"
                                 alt="Cyverse"
                             ></b-img>
                             <b>CyVerse</b>
@@ -827,9 +833,13 @@ export default {
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
 
-        // no need to load user model if we're in about or stats view
+        // no need to load all user data if we're in about or stats view
         if (this.$route.name === 'about' || this.$route.name === 'stats') {
-            await this.getVersion();
+            await Promise.all([
+                this.getVersion(),
+                 this.$store.dispatch('workflows/loadPublic'),
+                // this.$store.dispatch('datasets/loadPublic'),
+            ]);
             return;
         }
 
@@ -1081,9 +1091,7 @@ export default {
         prettify: function (date) {
             let tz = moment.tz.guess();
             let mom = moment(date).tz(tz);
-            return `${mom.fromNow()} (${mom.format(
-                'MMMM Do YYYY, h:mm a'
-            )})`;
+            return `${mom.fromNow()} (${mom.format('MMMM Do YYYY, h:mm a')})`;
         },
         prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;

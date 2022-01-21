@@ -11,22 +11,24 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+import plantit.healthchecks
 import plantit.terrain as terrain
+import plantit.queries as q
+import plantit.utils.agents
 from plantit import settings
-from plantit.agents.models import AgentExecutor, Agent
+from plantit.healthchecks import is_healthy
+from plantit.agents.models import AgentScheduler, Agent
+from plantit.queries import get_workflow, refresh_user_workflow_cache, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
+    refresh_user_cyverse_tokens
 from plantit.celery import app
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
+from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
+    get_job_status, get_job_walltime, list_result_files
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils import get_institutions, get_workflow, log_task_orchestrator_status, push_task_event, get_task_ssh_client, \
-    configure_local_task_environment, \
-    execute_local_task, \
-    submit_jobqueue_task, parse_time_limit_seconds, parse_task_auth_options, create_immediate_task, \
-    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_remote_logs, get_task_result_files, \
-    refresh_user_workflow_cache, refresh_online_user_orgs_workflow_cache, calculate_user_statistics, \
-    configure_jobqueue_task_environment, check_logs_for_progress, is_healthy, refresh_user_cyverse_tokens, refresh_online_users_workflow_cache, \
-    get_total_counts, get_aggregate_timeseries, get_user_timeseries
+from plantit.utils.tasks import parse_time_limit_seconds
 
 logger = get_task_logger(__name__)
 
@@ -48,19 +50,15 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
         logger.error(traceback.format_exc())
         return
 
+    # create task
     task = create_immediate_task(user, workflow)
     if delayed_id is not None: task.delayed_id = delayed_id
     task.save()
-    task_time_limit = parse_time_limit_seconds(task.workflow['config']['time'])
-    step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-    auth = parse_task_auth_options(task, task.workflow['auth'])
 
-    # submit pipeline
-    (prepare_task_environment.s(task.guid, auth) | \
-     submit_task.s(auth) | \
-     poll_task_status.s(auth)).apply_async(
-        soft_time_limit=task_time_limit if task.agent.executor == AgentExecutor.LOCAL else step_time_limit,
-        priority=1)
+    # submit task chain
+    (prepare_task_environment.s(task.guid) | \
+     submit_task.s() | \
+     poll_task_status.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS), priority=1)
 
 
 @app.task(track_started=True)
@@ -71,23 +69,19 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
         logger.error(traceback.format_exc())
         return
 
+    # create task
     task = create_immediate_task(user, workflow)
     if repeating_id is not None: task.delayed_id = repeating_id
     task.save()
-    task_time_limit = parse_time_limit_seconds(task.workflow['config']['time'])
-    step_time_limit = int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-    auth = parse_task_auth_options(task, task.workflow['auth'])
 
-    # submit pipeline
-    (prepare_task_environment.s(task.guid, auth) | \
-     submit_task.s(auth) | \
-     poll_task_status.s(auth)).apply_async(
-        soft_time_limit=task_time_limit if task.agent.executor == AgentExecutor.LOCAL else step_time_limit,
-        priority=1)
+    # submit task chain
+    (prepare_task_environment.s(task.guid) | \
+     submit_task.s() | \
+     poll_task_status.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS), priority=1)
 
 
 @app.task(track_started=True, bind=True)
-def prepare_task_environment(self, guid: str, auth: dict):
+def prepare_task_environment(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -95,15 +89,9 @@ def prepare_task_environment(self, guid: str, auth: dict):
         return
 
     try:
-        print(auth)
-        ssh = get_task_ssh_client(task, auth)
-        with ssh:
-            log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
-            async_to_sync(push_task_event)(task)
-
-            local = task.agent.executor == AgentExecutor.LOCAL
-            if local: configure_local_task_environment(task, ssh)
-            else: configure_jobqueue_task_environment(task, ssh, auth)
+        log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
+        async_to_sync(push_task_channel_event)(task)
+        configure_task_environment(task)
         return guid
     except Exception:
         task.status = TaskStatus.FAILURE
@@ -115,12 +103,12 @@ def prepare_task_environment(self, guid: str, auth: dict):
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
         logger.error(f"Failed to prepare environment for {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
-        async_to_sync(push_task_event)(task)
-        self.request.callbacks = None # stop the task chain
+        async_to_sync(push_task_channel_event)(task)
+        self.request.callbacks = None  # stop the task chain
 
 
 @app.task(track_started=True, bind=True)
-def submit_task(self, guid: str, auth: dict):
+def submit_task(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -128,57 +116,39 @@ def submit_task(self, guid: str, auth: dict):
         self.request.callbacks = None  # stop the task chain
         return
 
-    local = task.agent.executor == AgentExecutor.LOCAL
+    # mark the task running
     task.status = TaskStatus.RUNNING
-    task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
+    task.celery_task_id = self.request.id  # set the Celery task's ID so user can cancel
     task.save()
 
     try:
-        ssh = get_task_ssh_client(task, auth)
-
+        ssh = get_task_ssh_client(task)
         with ssh:
-            if local:
-                log_task_orchestrator_status(task, [f"Invoking executable"])
-                async_to_sync(push_task_event)(task)
-
-                execute_local_task(task, ssh)
-                task.status = TaskStatus.SUCCESS
-                task.save()
-
-                message = f"Task {task.guid} succeeded"
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_event)(task)
-
-                if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-                check_logs_for_progress(task)
-            else:
-                log_task_orchestrator_status(task, [f"Submitting job script"])
-                async_to_sync(push_task_event)(task)
-
-                job_id = submit_jobqueue_task(task, ssh)
-
-                log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
-                async_to_sync(push_task_event)(task)
-
+            # schedule the job
+            job_id = submit_task_to_scheduler(task, ssh)
+            log_task_orchestrator_status(task, [f"Scheduled task as job {job_id}"])
+            async_to_sync(push_task_channel_event)(task)
             return guid
     except Exception:
+        # mark task failed
         task.status = TaskStatus.FAILURE
         now = timezone.now()
         task.updated = now
         task.completed = now
         task.save()
 
+        # log status and update the client
         error = traceback.format_exc()
         log_task_orchestrator_status(task, [f"Failed with error: {error}"])
-        logger.error(f"Failed to {'run' if local else 'submit'} {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
-        async_to_sync(push_task_event)(task)
-        self.request.callbacks = None  # stop the task chain
+        logger.error(f"Failed to submit {task.user.username}'s task {task.guid} on {task.agent.name}: {error}")
+        async_to_sync(push_task_channel_event)(task)
+
+        # stop the task chain
+        self.request.callbacks = None
 
 
 @app.task(bind=True)
-def poll_task_status(self, guid: str, auth: dict):
+def poll_task_status(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -195,54 +165,33 @@ def poll_task_status(self, guid: str, auth: dict):
         task.status = TaskStatus.FAILURE
         final_message = f"Job {task.job_id} failed"
         log_task_orchestrator_status(task, [final_message])
-        async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
+        async_to_sync(push_task_channel_event)(task)
+        cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
 
+        # push AWS SNS notification
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
         return guid
 
-    # if the task already completed
-    local = task.agent.executor == AgentExecutor.LOCAL
-    if local:
-        if task.status == TaskStatus.SUCCESS:
-            ssh = get_task_ssh_client(task, auth)
-            get_task_remote_logs(task, ssh)
-
-            check_logs_for_progress(task)
-
-            list_task_results.s(guid, auth).apply_async()
-            final_message = f"{task.agent.executor} task {task.guid} completed"
-            log_task_orchestrator_status(task, [final_message])
-            async_to_sync(push_task_event)(task)
-
-            if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
-
-            return guid
-        if task.status == TaskStatus.FAILURE:
-            self.request.callbacks = None  # stop the task chain
-            return
-
-    # otherwise poll the scheduler for its status
+    # otherwise poll the scheduler for job status and walltime and update the task
     try:
-        check_logs_for_progress(task)
-
-        job_status = get_jobqueue_task_job_status(task, auth)
-        job_walltime = get_jobqueue_task_job_walltime(task, auth)
+        check_job_logs_for_progress(task)
+        job_status = get_job_status(task)
+        job_walltime = get_job_walltime(task)
         task.job_status = job_status
         task.job_consumed_walltime = job_walltime
-
         now = timezone.now()
         task.updated = now
         task.save()
 
-        ssh = get_task_ssh_client(task, auth)
+        # get remote log files
+        ssh = get_task_ssh_client(task)
         get_task_remote_logs(task, ssh)
 
+        # mark task status according to job status
         if job_status == 'COMPLETED':
             task.completed = now
             task.status = TaskStatus.SUCCESS
@@ -255,67 +204,78 @@ def poll_task_status(self, guid: str, auth: dict):
         elif job_status == 'TIMEOUT':
             task.completed = now
             task.status = TaskStatus.TIMEOUT
-
         task.save()
+
         if task.is_complete:
-            list_task_results.s(guid, auth).apply_async()
+            # job is done, task is complete, now we can list results
+            list_task_results.s(guid).apply_async()
             final_message = f"Job {task.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
             log_task_orchestrator_status(task, [final_message])
-            async_to_sync(push_task_event)(task)
+            async_to_sync(push_task_channel_event)(task)
 
+            # push AWS SNS notification
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
             return guid
         else:
+            # job is still running, schedule another round of polling
             log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
-            async_to_sync(push_task_event)(task)
-            poll_task_status.s(guid, auth).apply_async(countdown=refresh_delay)
+            async_to_sync(push_task_channel_event)(task)
+            poll_task_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration as e:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
+            # we probably just created the task and
+            # it's not visible in the scheduler yet
+            # just wait a few seconds and try again
             now = timezone.now()
             task.updated = now
             task.save()
-
             retry_seconds = 10
             log_task_orchestrator_status(task, [f"Job {task.job_id} not found, retrying in {retry_seconds} seconds"])
-            async_to_sync(push_task_event)(task)
-            poll_task_status.s(guid, auth).apply_async(countdown=retry_seconds)
+            async_to_sync(push_task_channel_event)(task)
+            poll_task_status.s(guid).apply_async(countdown=retry_seconds)
             return
         else:
+            # job is done, task is complete, now we can list results
             final_message = f"Job {task.job_id} succeeded"
             log_task_orchestrator_status(task, [final_message])
-            async_to_sync(push_task_event)(task)
-            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
+            async_to_sync(push_task_channel_event)(task)
+            cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
             task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
             task.save()
 
+            # push AWS SNS notification
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
             return guid
     except:
+        # mark the task failed
         task.status = TaskStatus.FAILURE
         now = timezone.now()
         task.updated = now
         task.completed = now
         task.save()
 
+        # there was an unexpected runtime exception somewhere, need to catch and log it
         final_message = f"Job {task.job_id} encountered unexpected error: {traceback.format_exc()}"
         log_task_orchestrator_status(task, [final_message])
-        async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay, priority=2)
+        async_to_sync(push_task_channel_event)(task)
+        cleanup_task.s(guid).apply_async(countdown=cleanup_delay, priority=2)
         task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
         task.save()
 
+        # push AWS SNS notification
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
-        self.request.callbacks = None  # stop the task chain
+        # stop the task chain
+        self.request.callbacks = None
 
 
 @app.task(bind=True)
-def list_task_results(self, guid: str, auth: dict):
+def list_task_results(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -324,7 +284,7 @@ def list_task_results(self, guid: str, auth: dict):
         return
 
     redis = RedisClient.get()
-    ssh = get_task_ssh_client(task, auth)
+    ssh = get_task_ssh_client(task)
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}")
 
     if workflow is None:
@@ -338,26 +298,26 @@ def list_task_results(self, guid: str, auth: dict):
         workflow = json.loads(workflow)['config']
 
     log_task_orchestrator_status(task, [f"Retrieving logs"])
-    async_to_sync(push_task_event)(task)
+    async_to_sync(push_task_channel_event)(task)
     get_task_remote_logs(task, ssh)
 
     log_task_orchestrator_status(task, [f"Retrieving results"])
-    async_to_sync(push_task_event)(task)
-    expected = get_task_result_files(task, workflow, auth)
+    async_to_sync(push_task_channel_event)(task)
+    expected = list_result_files(task, workflow)
     found = [e for e in expected if e['exists']]
     redis.set(f"results/{task.guid}", json.dumps(found))
     task.results_retrieved = True
     task.save()
 
     log_task_orchestrator_status(task, [f"Expected {len(expected)} result(s), found {len(found)}, verifying data was transferred to CyVerse"])
-    async_to_sync(push_task_event)(task)
-    check_task_cyverse_transfer.s(guid=guid, auth=auth).apply_async()
+    async_to_sync(push_task_channel_event)(task)
+    check_task_cyverse_transfer.s(guid).apply_async()
 
     return guid
 
 
 @app.task(bind=True)
-def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0):
+def check_task_cyverse_transfer(self, guid: str, iteration: int = 0):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -373,7 +333,7 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         logger.warning(f"Expected {len(expected)} results but found {len(actual)}")
         if iteration < 5:
             logger.warning(f"Checking again in 30 seconds (iteration {iteration})")
-            check_task_cyverse_transfer.s(guid, auth, iteration + 1).apply_async(countdown=30)
+            check_task_cyverse_transfer.s(guid, iteration + 1).apply_async(countdown=30)
     else:
         msg = f"Transfer to CyVerse directory {path} completed"
         logger.info(msg)
@@ -383,16 +343,16 @@ def check_task_cyverse_transfer(self, guid: str, auth: dict, iteration: int = 0)
         task.save()
 
         log_task_orchestrator_status(task, [msg])
-        async_to_sync(push_task_event)(task)
+        async_to_sync(push_task_channel_event)(task)
 
     cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
-    cleanup_task.s(guid, auth).apply_async(priority=2, countdown=cleanup_delay)
+    cleanup_task.s(guid).apply_async(priority=2, countdown=cleanup_delay)
 
     return guid
 
 
 @app.task(bind=True)
-def cleanup_task(self, guid: str, auth: dict):
+def cleanup_task(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -405,7 +365,7 @@ def cleanup_task(self, guid: str, auth: dict):
 
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
     command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
-    ssh = get_task_ssh_client(task, auth)
+    ssh = get_task_ssh_client(task)
     with ssh:
         for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
             logger.info(f"[{task.agent.name}] {line}")
@@ -414,45 +374,7 @@ def cleanup_task(self, guid: str, auth: dict):
     task.save()
 
     log_task_orchestrator_status(task, [f"Cleaned up task {task.guid}"])
-    async_to_sync(push_task_event)(task)
-
-
-# @app.task()
-# def clean_agent_singularity_cache(agent_name: str):
-#     try:
-#         agent = Agent.objects.get(name=agent_name)
-#     except:
-#         logger.warning(f"Agent {agent_name} does not exist")
-#         return
-#
-#     ssh = SSH(agent.hostname, agent.port, agent.username)
-#     with ssh:
-#         for line in execute_command(
-#                 ssh_client=ssh,
-#                 pre_command=agent.pre_commands,
-#                 command="singularity cache clean",
-#                 directory=agent.workdir,
-#                 allow_stderr=True):
-#             logger.info(line)
-
-
-# @app.task()
-# def execute_agent_command(agent_name: str, command: str, pre_command: str = None):
-#     try:
-#         agent = Agent.objects.get(name=agent_name)
-#     except:
-#         logger.warning(f"Agent {agent_name} does not exist")
-#         return
-#
-#     ssh = SSH(agent.hostname, agent.port, agent.username)
-#     with ssh:
-#         for line in execute_command(
-#                 ssh_client=ssh,
-#                 pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
-#                 command=command,
-#                 directory=agent.workdir,
-#                 allow_stderr=True):
-#             logger.info(line)
+    async_to_sync(push_task_channel_event)(task)
 
 
 @app.task()
@@ -461,12 +383,12 @@ def refresh_all_users_stats():
 
     for user in User.objects.all():
         logger.info(f"Computing statistics for {user.username}")
-        redis.set(f"stats/{user.username}", json.dumps(async_to_sync(calculate_user_statistics)(user)))
-        redis.set(f"user_timeseries/{user.username}", json.dumps(get_user_timeseries(user)))
+        redis.set(f"stats/{user.username}", json.dumps(async_to_sync(q.calculate_user_statistics)(user)))
+        redis.set(f"user_timeseries/{user.username}", json.dumps(q.get_user_timeseries(user)))
 
     logger.info(f"Computing aggregate statistics")
-    redis.set("stats_counts", json.dumps(get_total_counts()))
-    redis.set("total_timeseries", json.dumps(get_aggregate_timeseries()))
+    redis.set("stats_counts", json.dumps(q.get_total_counts()))
+    redis.set("total_timeseries", json.dumps(q.get_aggregate_timeseries()))
 
 
 @app.task()
@@ -478,7 +400,7 @@ def refresh_user_stats(username: str):
         return
 
     logger.info(f"Aggregating statistics for {user.username}")
-    stats = async_to_sync(calculate_user_statistics)(user)
+    stats = async_to_sync(q.calculate_user_statistics)(user)
     redis = RedisClient.get()
     redis.set(f"stats/{user.username}", json.dumps(stats))
     redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
@@ -498,13 +420,8 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     redis = RedisClient.get()
-    cached = list(redis.scan_iter(match=f"institutions/*"))
-
-    if len(cached) != 0:
-        institutions = [json.loads(redis.get(key)) for key in cached]
-    else:
-        institutions = get_institutions()
-        for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
+    institutions = q.get_institutions()
+    for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
 
 
 @app.task()
@@ -534,8 +451,8 @@ def refresh_all_user_cyverse_tokens():
 @app.task()
 def agents_healthchecks():
     for agent in Agent.objects.all():
-        healthy, output = is_healthy(agent, {'username': agent.user.username, 'port': agent.port})
-        agent.is_healthy = healthy
+        healthy, output = is_healthy(agent)
+        plantit.healthchecks.is_healthy = healthy
         agent.save()
 
         redis = RedisClient.get()
@@ -543,10 +460,10 @@ def agents_healthchecks():
         checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
         if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
         check = {
-                'timestamp': timezone.now().isoformat(),
-                'healthy': healthy,
-                'output': output
-            }
+            'timestamp': timezone.now().isoformat(),
+            'healthy': healthy,
+            'output': output
+        }
         redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
 
 
@@ -560,7 +477,6 @@ def stranded_task_sweep():
         if (now - task.updated).total_seconds() > (2 * period):
             logger.warning(f"Found possibly stranded task: {task.guid}")
             # TODO for now, flag these in the UI for the user to debug manually
-            # it's a bad idea to persist auth info anywhere beyond the task invocation chain, so we can't poll agent status
 
 
 class TerrainToken:
@@ -590,10 +506,12 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
-    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens for users with running tasks', priority=1)
+    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(),
+                             name='refresh CyVerse tokens for users with running tasks', priority=1)
 
     # refresh user institution geocoding info
-    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions', priority=2)
+    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions',
+                             priority=2)
 
     # aggregate usage stats for each user
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics', priority=2)

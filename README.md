@@ -23,26 +23,70 @@ Plant phenotyping automation in the browser.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Contents**
 
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [Development](#development)
-    - [Tests](#tests)
-  - [Production](#production)
-    - [SSL Certificates](#ssl-certificates)
-- [Environment variables](#environment-variables)
-- [Deployment targets](#deployment-targets)
+- [About](#about)
+  - [Features](#features)
+    - [Software & data discovery](#software--data-discovery)
+    - [Task orchestration](#task-orchestration)
+    - [Collaboration & metadata management](#collaboration--metadata-management)
+- [Development](#development)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+    - [Setting up a development environment](#setting-up-a-development-environment)
+      - [Running tests](#running-tests)
+    - [Deploying to production](#deploying-to-production)
+      - [SSL Certificates](#ssl-certificates)
+  - [Configuring environment variables](#configuring-environment-variables)
+  - [Configuring deployment targets](#configuring-deployment-targets)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Requirements
+## About
 
-The following are required to run `PlantIT` in a Unix environment:
+`plantit` is a science gateway for plant phenotyping. It aims to bring two user groups together: developers and users of phenotyping software. Though one individual may wear both hats, each likely has distinct concerns. `plantit` is free software-as-a-service for the former, and a free platform-as-a-service for the latter. Think of it as a conveyor belt for phenomics data science: devs can place some code on it, and it will be nicely packaged and delivered to researchers downstream, who can then use it to build insights.
+
+![](docs/media/roles.jpg)
+
+### Features
+
+The last decade has seen containers become nearly ubiquitous. Containerized software is a form of insulation against the rapid churn endemic to computing. `plantit` combines cloud code and data storage services (GitHub and CyVerse), online container registries (Docker Hub), the Singularity container runtime, and XSEDE supercomputing resources to provide a few core features:
+
+- software & data discovery: explore tools and data or publish code to the research community
+- task orchestration: submit serial or parallel container workflows to clusters & supercomputers
+- collaboration & annotations: organize projects & metadata according to the MIAPPE standard
+
+#### Software & data discovery
+
+Like GitHub Actions, Travis CI, and other platforms, `plantit` automatically integrates with GitHub repositories. A `plantit.yaml` configuration file can be added to any public repository to make a container workflow available to researchers with a few clicks. `plantit` also plugs directly into your personal CyVerse Data Store and the public Data Commons.
+
+#### Task orchestration
+
+`plantit` provides task scheduling as a service via browser UI (a REST API is [in development](https://github.com/Computational-Plant-Science/plantit/issues/256)).
+
+![](docs/media/cycle.jpg)
+
+When a task is submitted, the browser client sends it to the `plantit` web server, which hands it to an internal queue feeding an asynchronous background worker. When the worker starts the task, a job script and Snakemake pipeline are generated and submitted to a cluster/supercomputer scheduler. Tasks can be submitted for execution as soon as possible, after a configurable delay, or on a periodic interval. The task lifecycle is a chain of actions, some of which trigger state transitions:
+
+![](docs/media/task.jpg)
+
+#### Collaboration & metadata management
+
+*This feature is under development.*
+
+`plantit` allows datasets to be annotated according to the MIAPPE standard. Workflows, tasks, datasets, and teammates can also be grouped according to project, allowing collaborators to configure visibility and form private teams.a
+
+## Development
+
+Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
+
+### Requirements
+
+The following are required to develop or deploy `plantit` in a Unix environment:
 
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)
 - Python 2.7+
 
-## Installation
+### Installation
 
 First, clone the repository:
 
@@ -50,7 +94,7 @@ First, clone the repository:
 git clone https://github.com/Computational-Plant-Science/plantit.git
 ```
 
-### Development
+#### Setting up a development environment
 
 To set up a new (or restore a clean) development environment, run `scripts/bootstrap.sh` from the project root (you may need to use `chmod +x` first). You can use the `-n` option to disable the Docker build cache. This command will:
 
@@ -71,6 +115,10 @@ This will start a number of containers:
 - `redis`: Redis instance (caching, Celery message broker)
 - `sandbox`: Ubuntu test environment
 
+The general architecture looks like this:
+
+![](docs/media/arch.jpg)
+
 The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into the site at least once (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
 ```python
@@ -85,11 +133,11 @@ You can also run `./scripts/configure-superuser.sh -u <your CyVerse username>` t
 
 Note that the bootstrap script will not clear migrations. To restore to a totally clean database state, you will need to remove all `*.py` files from the `plantit/plantit/migrations` directory (except for `__init__.py`).
 
-#### Tests
+##### Running tests
 
 Once the containers are up, tests can be run with `docker-compose -f docker-compose.dev.yml exec plantit ./manage.py test`.
 
-### Production
+#### Deploying to production
 
 In production configuration, NGINX serves static assets and reverse-proxies Django via Gunicorn (both in the same container).
 
@@ -119,11 +167,23 @@ At this point the following containers should be running:
 - `postgres`: PostgreSQL database
 - `celery`: Celery background worker
 - `redis`: Redis instance
-- `sandbox`: Ubuntu test environment
 
-#### SSL Certificates
+##### SSL Certificates
 
-PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://certbot.eff.org/) for SSL certification. The production configuration includes a `certbot` container which can be used to request new or renew existing certificates from Let's Encrypt. Standard certificates last 90 days. To request a new certificate, run:
+PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://certbot.eff.org/) for SSL certification. The production configuration includes a `certbot` container which can be used to request new or renew existing certificates from Let's Encrypt. Standard certificates last 90 days.
+
+In production the `certbot` container is configured by default to automatically renew certs when necessary:
+
+```yaml
+certbot:
+  image: certbot/certbot
+  volumes:
+    - ./config/certbot/conf:/etc/letsencrypt/
+    - ./config/certbot/www:/var/www/certbot
+  entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
+```
+
+To manually request a new certificate, run:
 
 ```shell
 docker-compose -f docker-compose.prod.yml run certbot
@@ -138,7 +198,7 @@ docker-compose -f docker-compose.prod.yml restart
 
 Use the `--dry-run` flag with any command to test without writing anything to disk.
 
-## Environment variables
+### Configuring environment variables
 
 Docker will read environment variables in the following format from a file named `.env` in the project root directory (if the file exists):
 
@@ -172,7 +232,6 @@ DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=<your django admin username>
 DJANGO_ADMIN_PASSWORD=<your django admin password>
 DJANGO_ADMIN_EMAIL=<your django admin email>
-TASKS_TEMPLATE_SCRIPT_LOCAL=/code/scripts/template_local_run.sh
 TASKS_TEMPLATE_SCRIPT_SLURM=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
@@ -237,6 +296,14 @@ Some variables must be reconfigured for production environments (`scripts/deploy
 - `DJANGO_SECURE_SSL_REDIRECT` should be set to `True`
 - `DJANGO_API_URL` should point to the host's IP or FQDN
 
-## Deployment targets
+### Configuring deployment targets
 
-Deployment targets may be configured via the Django admin interface or directly via the UI. The [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) package must be installed and invokable on deployment targets. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
+Deployment targets may be configured programmatically or with the Django admin interface. An agent is an abstraction of a computing resource, such as a cluster or supercomputer. `plantit` interacts with agents via key-authenticated SSH and requires the SLURM scheduler to be installed. (Support for additional schedulers is in development.)
+
+#### Python
+
+TODO
+
+#### Admin site
+
+First make sure you're logged into the site, then navigate to the admin interface at `http://localhost:3000/admin/` (`https://<host>/admin/` in production). Select the `Agents` tab on the left side of the screen, then `Add Agent`.

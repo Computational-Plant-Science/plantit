@@ -261,7 +261,7 @@
                                                 </h5>
                                                 <i
                                                     class="fas fa-spinner"
-                                                    v-if="userDatasetsLoading"
+                                                    v-if="userDatasets === undefined || userDatasets.folders === undefined"
                                                 ></i
                                                 ><b v-else>{{
                                                     userDatasets.folders.length

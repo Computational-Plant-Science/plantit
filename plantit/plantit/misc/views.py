@@ -1,12 +1,12 @@
 from django.http import JsonResponse
 from django.utils import timezone
 
+import plantit.queries as q
 from plantit.misc.models import NewsUpdate, MaintenanceWindow
-from plantit.utils import update_to_dict
 
 
 def updates(request):
-    return JsonResponse({'updates': [update_to_dict(u) for u in list(NewsUpdate.objects.all().order_by('created'))]})
+    return JsonResponse({'updates': [q.update_to_dict(u) for u in list(NewsUpdate.objects.all().order_by('created'))]})
 
 
 def maintenance_windows(request):

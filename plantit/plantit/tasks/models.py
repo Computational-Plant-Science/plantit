@@ -1,5 +1,6 @@
 import json
 from itertools import chain
+from typing import TypedDict, List
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -7,9 +8,10 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
+from enum import Enum
 from taggit.managers import TaggableManager
 
-from plantit.agents.models import Agent, AgentExecutor
+from plantit.agents.models import Agent, AgentScheduler
 from plantit.miappe.models import Investigation, Study
 
 
@@ -40,6 +42,7 @@ class SingletonModel(models.Model):
         return obj
 
 
+# for computing statistics; incremented every time a new task is created
 class TaskCounter(SingletonModel):
     count = models.PositiveBigIntegerField(default=0, null=False, blank=False)
 
@@ -118,10 +121,8 @@ class Task(models.Model):
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
     job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
-    @property
-    def is_jobqueue(self):
-        return self.agent.executor != AgentExecutor.LOCAL
 
+# scheduled tasks
 
 class DelayedTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
@@ -141,3 +142,53 @@ class RepeatingTask(PeriodicTask):
     workflow_branch = models.CharField(max_length=280, null=True, blank=True)
     workflow_image_url = models.URLField(null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
+
+
+# task options
+
+class BindMount(TypedDict):
+    host_path: str
+    container_path: str
+
+
+class Parameter(TypedDict):
+    key: str
+    value: str
+
+
+class EnvironmentVariable(TypedDict):
+    key: str
+    value: str
+
+
+class Input(TypedDict, total=False):
+    kind: str
+    path: str
+    patterns: List[str]
+
+
+class InputKind(str, Enum):
+    FILE = 'file'
+    FILES = 'files'
+    DIRECTORY = 'directory'
+
+
+class FileChecksum(TypedDict):
+    file: str
+    checksum: str
+
+
+class TaskOptions(TypedDict, total=False):
+    workdir: str
+    image: str
+    command: str
+    input: Input
+    output: dict
+    parameters: List[Parameter]
+    env: List[EnvironmentVariable]
+    bind_mounts: List[BindMount]
+    checksums: List[FileChecksum]
+    log_file: str
+    jobqueue: dict
+    no_cache: bool
+    gpu: bool

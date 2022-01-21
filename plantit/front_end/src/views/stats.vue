@@ -49,7 +49,6 @@
                                 </h1>
                                 <b-spinner
                                     v-else
-                                    type="grow"
                                     label="Loading..."
                                     variant="secondary"
                                 ></b-spinner>
@@ -75,22 +74,24 @@
                                 :layout="usersPlotLayout"
                             ></Plotly>
                             <br />
-                            <h1 v-if="onlineCount >= 0" class="text-success">
-                                {{ onlineCount }}
-                            </h1>
-                            <b-spinner
+                        <span text-center>
+                            <h1 class="text-success">
+                                <span v-if="onlineCount >= 0">{{ onlineCount }}</span>
+                              <b-spinner
                                 v-else
-                                type="grow"
                                 label="Loading..."
                                 variant="secondary"
                             ></b-spinner
+                            >
+                            </h1>
+                            </b-spinner
                             ><b-badge
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
                                 ><i class="fas fa-signal fa-fw"></i>
                                 Online</b-badge
-                            ></b-tab
+                        ></span></b-tab
                         >
                         <b-tab
                             title="Workflows"
@@ -104,18 +105,15 @@
                             "
                             ><template #title
                                 ><h1
-                                    v-if="workflowCount >= 0"
                                     class="text-success text-center"
                                 >
-                                    {{ workflowCount }}
-                                </h1>
-                                <b-spinner
+                                    <span v-if="workflowCount >= 0">{{ workflowCount }}</span><b-spinner
                                     v-else
-                                    type="grow"
                                     label="Loading..."
                                     variant="secondary"
-                                ></b-spinner
-                                ><b-button
+                                ></b-spinner>
+                                </h1>
+                                <b-button
                                     :variant="
                                         activeTab === 1
                                             ? profile.darkMode
@@ -140,16 +138,7 @@
                                     ></Plotly
                                 ></b-col>
                             </b-row>
-                            <hr />
-                            <h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                            >
-                                Public Workflows ({{ publicWorkflows.length }})
-                            </h5>
+                            <br />
                             <b-card-group deck columns
                                 ><b-card
                                     :bg-variant="
@@ -166,8 +155,8 @@
                                         profile.darkMode ? 'white' : 'dark'
                                     "
                                     class="overflow-hidden text-left p-2"
-                                    v-for="workflow in publicWorkflows"
-                                    v-bind:key="workflow.config.name"
+                                    v-for="workflow in workflows"
+                                    v-bind:key="workflow.config.name + '/' + workflow.branch.name"
                                     no-body
                                     style="min-width: 50rem"
                                     ><blurb
@@ -175,19 +164,42 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
-                            <br />
-                            <h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                            >
-                                Public Workflow Developers ({{
-                                    publicWorkflowDevelopers.length
-                                }})
-                            </h5>
-                            <b-card-group
+                          </b-tab
+                        >
+                      <b-tab title="Developers" :title-link-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            :class="
+                                profile.darkMode
+                                    ? 'theme-dark m-0 p-3'
+                                    : 'theme-light m-0 p-3'
+                            "><template #title
+                                ><h1
+                                    class="text-success text-center"
+                                >
+                                    <span v-if="developers.length >= 0">{{ developers.length }}</span>
+                        <b-spinner
+                                    v-else
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner>
+                                </h1>
+                                <b-button
+                                    :variant="
+                                        activeTab === 2
+                                            ? profile.darkMode
+                                                ? 'outline-success'
+                                                : 'success'
+                                            : profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    v-b-tooltip.hover
+                                    title="Developers"
+                                    ><i class="fas fa-code fa-fw"></i>
+                                    Developers</b-button
+                                ></template
+                            ><b-card-group
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -203,7 +215,7 @@
                                         profile.darkMode ? 'white' : 'dark'
                                     "
                                     class="overflow-hidden text-left p-2"
-                                    v-for="user in publicWorkflowDevelopers"
+                                    v-for="user in developers"
                                     v-bind:key="user"
                                     ><b-row
                                         ><b-col
@@ -220,65 +232,14 @@
                                                 {{ user }}</b-link
                                             ></b-col
                                         ><b-col md="auto">{{
-                                            publicWorkflows.filter(
+                                            workflows.filter(
                                                 (wf) =>
                                                     wf.repo.owner.login === user
                                             ).length
                                         }}</b-col></b-row
                                     ></b-card
-                                ></b-card-group
-                            ></b-tab
-                        >
-                        <b-tab
-                            title="Agents"
-                            :title-link-class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            :class="
-                                profile.darkMode
-                                    ? 'theme-dark m-0 p-3'
-                                    : 'theme-light m-0 p-3'
-                            "
-                            ><template #title
-                                ><h1
-                                    v-if="agentCount >= 0"
-                                    class="text-success text-center"
-                                >
-                                    {{ agentCount }}
-                                </h1>
-                                <b-spinner
-                                    v-else
-                                    type="grow"
-                                    label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner
-                                ><b-button
-                                    :variant="
-                                        activeTab === 2
-                                            ? profile.darkMode
-                                                ? 'outline-success'
-                                                : 'success'
-                                            : profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    v-b-tooltip.hover
-                                    :title="`Agents`"
-                                    ><i class="fas fa-server fa-fw"></i>
-                                    Agents</b-button
-                                ></template
-                            >
-                            <b-row>
-                                <b-col
-                                    ><Plotly
-                                        v-if="timeseriesAgentsUsage !== null"
-                                        :data="agentsRunningPlotData"
-                                        :layout="agentsRunningPlotLayout"
-                                    ></Plotly
-                                ></b-col>
-                            </b-row>
-                        </b-tab>
-                        <b-tab
+                                ></b-card-group></b-tab>
+                      <b-tab
                             title="Tasks"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -290,18 +251,17 @@
                             "
                             ><template #title
                                 ><h1
-                                    v-if="taskCount >= 0"
                                     class="text-success text-center"
                                 >
-                                    {{ taskCount }}
-                                </h1>
-                                <b-spinner
+                                    <span v-if="taskCount >= 0">{{ taskCount }}</span>
+                        <b-spinner
                                     v-else
-                                    type="grow"
                                     label="Loading..."
                                     variant="secondary"
-                                ></b-spinner
-                                ><b-button
+                                >
+                        </b-spinner>
+                                </h1>
+                                <b-button
                                     :variant="
                                         activeTab === 3
                                             ? profile.darkMode
@@ -380,10 +340,8 @@ export default {
             timeseriesTasksTotal: [],
             timeseriesTasksUsage: null,
             timeseriesWorkflowsUsage: null,
-            timeseriesAgentsUsage: null,
             onlineCount: -1,
             workflowCount: -1,
-            agentCount: -1,
             taskCount: -1,
             runningCount: -1,
             institutions: [],
@@ -496,26 +454,14 @@ export default {
                     ];
                     this.timeseriesTasksUsage = this.timeseriesTasksTotal = [
                         {
-                            x: response.data.tasks_usage.map((u) => u[0]),
-                            y: response.data.tasks_usage.map((u) => u[1]),
+                            x: Object.keys(response.data.tasks_usage).map((k) => response.data.tasks_usage[k][0]),
+                            y: Object.keys(response.data.tasks_usage).map((k) => response.data.tasks_usage[k][1]),
                             type: 'scatter',
                         },
-                    ];;
+                    ];
                     this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
-                            ([k, v], _) => [
-                                k,
-                                {
-                                    x: Object.keys(v),
-                                    y: Object.values(v),
-                                    type: 'scatter',
-                                },
-                            ]
-                        )
-                    );
-                    this.timeseriesAgentsUsage = Object.fromEntries(
-                        Object.entries(response.data.agents_usage).map(
-                            ([k, v], _) => [
+                            ([k, v]) => [
                                 k,
                                 {
                                     x: Object.keys(v),
@@ -562,9 +508,12 @@ export default {
             'publicWorkflows',
             'publicWorkflowsLoading',
         ]),
-        publicWorkflowDevelopers() {
+        workflows() {
+            return this.publicWorkflows.filter((wf) => !wf.example);
+        },
+        developers() {
             return Array.from(
-                new Set(this.publicWorkflows.map((wf) => wf.repo.owner.login))
+                new Set(this.workflows.map((wf) => wf.repo.owner.login))
             );
         },
         darkMode() {
@@ -776,63 +725,6 @@ export default {
                   });
         },
         workflowsRunningPlotLayout() {
-            return {
-                font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                },
-                autosize: true,
-                title: {
-                    text: 'Usage',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                legend: {
-                    // orientation: 'h',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                xaxis: {
-                    showgrid: false,
-                    showline: true,
-                    linecolor: 'rgb(102, 102, 102)',
-                    titlefont: {
-                        font: {
-                            color: 'rgb(204, 204, 204)',
-                        },
-                    },
-                    tickfont: {
-                        font: {
-                            color: 'rgb(102, 102, 102)',
-                        },
-                    },
-                },
-                yaxis: {
-                    dtick: 1,
-                    showticklabels: false,
-                },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-            };
-        },
-        agentsRunningPlotData() {
-            return this.timeseriesAgentsUsage === null
-                ? []
-                : Object.keys(this.timeseriesAgentsUsage).map((key) => {
-                      return {
-                          x: this.timeseriesAgentsUsage[key].x.map((t) =>
-                              moment(t).format('YYYY-MM-DD HH:mm:ss')
-                          ),
-                          y: this.timeseriesAgentsUsage[key].y,
-                          name: key,
-                          type: 'line',
-                          // mode: 'lines',
-                          // line: { shape: 'spline' },
-                      };
-                  });
-        },
-        agentsRunningPlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',

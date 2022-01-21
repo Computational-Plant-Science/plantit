@@ -69,11 +69,11 @@
                     name: 'task',
                     params: {
                         owner: task.owner,
-                        name: task.name,
+                        name: task.guid,
                     },
                 }"
                 replace
-                >{{ task.name }}</b-link
+                >{{ task.guid}}</b-link
             >
             <span v-if="project && task.project !== null">
                 <br />

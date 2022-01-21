@@ -9,8 +9,8 @@ from django.utils.dateparse import parse_date
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+import plantit.queries as q
 from plantit.miappe.models import EnvironmentParameter, ExperimentalFactor, Study, Investigation
-from plantit.utils import project_to_dict
 
 
 @swagger_auto_schema(methods='get')
@@ -36,7 +36,7 @@ def suggested_experimental_factors(request):
 def list_or_create(request):
     if request.method == 'GET':
         team = request.GET.get('team', None)
-        projects = [project_to_dict(project) for project in
+        projects = [q.project_to_dict(project) for project in
                     (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
@@ -45,7 +45,7 @@ def list_or_create(request):
         description = body['description'] if 'description' in body else None
         if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
         project = Investigation.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
-        return JsonResponse(project_to_dict(project))
+        return JsonResponse(q.project_to_dict(project))
 
 
 @swagger_auto_schema(methods='get')
@@ -54,7 +54,7 @@ def list_or_create(request):
 def list_by_owner(request, owner):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-    projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+    projects = [q.project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
     return JsonResponse({'projects': projects})
 
 
@@ -67,13 +67,13 @@ def get_or_delete(request, owner, title):
     if request.method == 'GET':
         try:
             project = Investigation.objects.get(owner=request.user, title=title)
-            return JsonResponse(project_to_dict(project))
+            return JsonResponse(q.project_to_dict(project))
         except:
             return HttpResponseNotFound()
     elif request.method == 'DELETE':
         project = Investigation.objects.get(owner=request.user, title=title)
         project.delete()
-        projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+        projects = [q.project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
         return JsonResponse({'projects': projects})
 
 
@@ -109,7 +109,7 @@ def add_team_member(request, owner, title):
     project.team.add(user)
     project.save()
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(q.project_to_dict(project))
 
 
 @swagger_auto_schema(methods='post')
@@ -131,7 +131,7 @@ def remove_team_member(request, owner, title):
     project.team.remove(user)
     project.save()
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(q.project_to_dict(project))
 
 
 @swagger_auto_schema(methods='post')
@@ -152,7 +152,7 @@ def add_study(request, owner, title):
         return HttpResponseNotFound()
 
     study = Study.objects.create(investigation=project, title=study_title, guid=guid, description=study_description)
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(q.project_to_dict(project))
 
 
 @swagger_auto_schema(methods='post')
@@ -175,7 +175,7 @@ def remove_study(request, owner, title):
         return HttpResponseNotFound()
 
     study.delete()
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(q.project_to_dict(project))
 
 
 @swagger_auto_schema(methods='post')
@@ -247,4 +247,4 @@ def edit_study(request, owner, title):
     study.cultural_practices = study_cultural_practices
     study.save()
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(q.project_to_dict(project))

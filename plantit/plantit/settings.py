@@ -27,6 +27,8 @@ assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIR
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
 assert 'CYVERSE_CLIENT_SECRET' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_SECRET"
 assert 'CYVERSE_TOKEN_REFRESH_MINUTES' in os.environ, f"{missing_variable}: CYVERSE_TOKEN_REFRESH_MINUTES"
+assert 'CYVERSE_USERNAME' in os.environ, f"{missing_variable}: CYVERSE_USERNAME"
+assert 'CYVERSE_PASSWORD' in os.environ, f"{missing_variable}: CYVERSE_PASSWORD"
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_CLIENT_ID' in os.environ, f"{missing_variable}: GITHUB_CLIENT_ID"
@@ -46,6 +48,8 @@ CELERYD_TASK_SOFT_TIME_LIMIT = 60
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
 CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')
+CYVERSE_USERNAME = os.environ.get('CYVERSE_USERNAME')
+CYVERSE_PASSWORD = os.environ.get('CYVERSE_PASSWORD')
 API_URL = os.environ.get('DJANGO_API_URL')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 DEBUG = os.environ.get('DJANGO_DEBUG')
@@ -137,7 +141,6 @@ CHANNEL_LAYERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'plantit.tasks.authentication.TaskTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -204,7 +207,6 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.tasks.authentication.TaskTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

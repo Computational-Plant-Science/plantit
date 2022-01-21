@@ -11,7 +11,7 @@
         >
             <template slot="header" style="border: none">
                 <br />
-                <b-container>
+                <b-container v-if="userCount >= 0">
                     <b-row>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="userCount >= 0" class="text-success">
