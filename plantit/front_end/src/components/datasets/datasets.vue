@@ -82,7 +82,7 @@
                             ></b-spinner
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
-                        ><b-popover
+                        ><
                             v-if="profile.hints"
                             triggers="hover"
                             placement="bottom"
