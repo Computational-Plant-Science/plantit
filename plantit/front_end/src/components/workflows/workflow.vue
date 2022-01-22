@@ -4384,18 +4384,26 @@ export default {
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
+                      this.submitting = false;
+                      if (response.data.created) {
                         await this.$store.dispatch(
                             'tasks/addOrUpdate',
-                            response.data
+                            response.data.task
                         );
                         await router.push({
-                            name: 'task',
-                            params: {
-                                owner: this.profile.djangoProfile.username,
-                                name: taskName,
-                            },
+                          name: 'task',
+                          params: {
+                            owner: this.profile.djangoProfile.username,
+                            guid: this.taskGuid,
+                          },
                         });
-                        this.submitting = false;
+                      } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to submit task ${this.taskGuid}`,
+                            guid: guid().toString(),
+                        });
+                      }
                     })
                     .catch((error) => {
                         Sentry.captureException(error);

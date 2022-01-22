@@ -121,10 +121,6 @@ class Task(models.Model):
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
     job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
-    @property
-    def is_jobqueue(self):
-        return self.agent.scheduler != AgentScheduler.LOCAL
-
 
 # scheduled tasks
 

@@ -1,6 +1,9 @@
 from typing import List
 
+from django.conf import settings
+
 from plantit import docker as docker, terrain as terrain
+from plantit.tokens import TerrainToken
 
 
 def validate_workflow_configuration(config: dict) -> (bool, List[str]):
@@ -88,10 +91,7 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
             if path != '' and path is not None:
                 if type(path) is not str:
                     errors.append('Attribute \'input.path\' must be a str')
-                elif terrain_token is None:
-                    raise ValueError(f"Terrain token not provided!")
-                cyverse_path_exists, _ = terrain.path_exists(path, terrain_token)
-                if not cyverse_path_exists:
+                elif not terrain.path_exists(path, TerrainToken.get()):
                     errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
             else:
                 errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')

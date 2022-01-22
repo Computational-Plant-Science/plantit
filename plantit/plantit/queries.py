@@ -594,7 +594,10 @@ def get_total_counts() -> dict:
     redis = RedisClient.get()
     users = User.objects.count()
     online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
-    workflows = len(list(redis.scan_iter('workflows/*')))
+    wfs = [json.loads(wf) for wf in redis.scan_iter('workflows/*')]
+    devs = list(set([wf['repo']['owner']['login']] for wf in wfs))
+    workflows = len(wfs)
+    developers = len(devs)
     agents = Agent.objects.count()
     tasks = TaskCounter.load().count
     running = len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
@@ -603,6 +606,7 @@ def get_total_counts() -> dict:
         'users': users,
         'online': online,
         'workflows': workflows,
+        'developers': developers,
         'agents': agents,
         'tasks': tasks,
         'running': running

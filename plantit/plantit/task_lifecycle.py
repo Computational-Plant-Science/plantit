@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 import logging
+import traceback
 from os import environ
 from os.path import join, isdir
 from pathlib import Path
@@ -26,7 +27,8 @@ from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.task_scripts import compose_task_run_script, compose_task_launcher_script
-from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, EnvironmentVariable, Parameter, \
+from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
+    EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import parse_task_eta, parse_time_limit_seconds, parse_task_job_id, \
@@ -191,7 +193,7 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
-def configure_task_environment(task: Task, ssh: SSH):
+def configure_task_environment(task: Task):
     log_task_orchestrator_status(task, [f"Verifying configuration"])
     async_to_sync(push_task_channel_event)(task)
 
@@ -203,11 +205,12 @@ def configure_task_environment(task: Task, ssh: SSH):
     log_task_orchestrator_status(task, [f"Creating working directory"])
     async_to_sync(push_task_channel_event)(task)
 
-    list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
-
-    log_task_orchestrator_status(task, [f"Uploading task"])
-    upload_task_script(task, ssh, cli_options)
-    async_to_sync(push_task_channel_event)(task)
+    ssh = get_task_ssh_client(task)
+    with ssh:
+        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
+        log_task_orchestrator_status(task, [f"Uploading task"])
+        upload_task_script(task, ssh, cli_options)
+        async_to_sync(push_task_channel_event)(task)
 
 
 def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
@@ -232,9 +235,7 @@ def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
 
     # compose the task script, write a temporary local copy, then transfer it to the deployment target
     with tempfile.NamedTemporaryFile() as task_script:
-        lines = compose_task_run_script(task, options, environ.get(
-            'TASKS_TEMPLATE_SCRIPT_LOCAL') if task.agent.scheduler == AgentScheduler.LOCAL else environ.get(
-            'TASKS_TEMPLATE_SCRIPT_SLURM'))
+        lines = compose_task_run_script(task, options, environ.get('TASKS_TEMPLATE_SCRIPT_SLURM'))
         for line in lines: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
         logger.info(os.stat(task_script.name))
@@ -296,8 +297,8 @@ def submit_task_to_scheduler(task: Task, ssh: SSH) -> str:
 def cancel_task(task: Task):
     ssh = get_task_ssh_client(task)
     with ssh:
-        if task.agent.scheduler != AgentScheduler.LOCAL:
-            lines = []
+        lines = []
+        try:
             for line in execute_command(
                     ssh=ssh,
                     precommand=':',
@@ -309,13 +310,20 @@ def cancel_task(task: Task):
 
             if task.job_id is None or not any([task.job_id in r for r in lines]):
                 return  # run doesn't exist, so no need to cancel
+        except:
+            logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
+            return
 
-            # TODO support PBS/other scheduler cancellation commands, not just SLURM
-            execute_command(
-                ssh=ssh,
-                precommand=':',
-                command=f"scancel {task.job_id}",
-                directory=join(task.agent.workdir, task.workdir))
+        # TODO support PBS/other scheduler cancellation commands, not just SLURM
+        if task.job_id is not None:
+            try:
+                execute_command(
+                    ssh=ssh,
+                    precommand=':',
+                    command=f"scancel {task.job_id}",
+                    directory=join(task.agent.workdir, task.workdir))
+            except:
+                logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
 
 
 def check_job_logs_for_progress(task: Task):
@@ -425,7 +433,7 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
     included_by_name.append(f"{task.guid}.zip")  # zip file
     if not task.agent.launcher:
         included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    if task.agent.scheduler != AgentScheduler.LOCAL and task.job_id is not None and task.job_id != '':
+    if task.job_id is not None and task.job_id != '':
         included_by_name.append(f"plantit.{task.job_id}.out")
         included_by_name.append(f"plantit.{task.job_id}.err")
     included_by_pattern = (
@@ -461,7 +469,8 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
                             'exists': True
                         })
 
-    logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
+    logger.info(
+        f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
     return outputs
 
 

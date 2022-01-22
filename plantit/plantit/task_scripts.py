@@ -192,8 +192,7 @@ def compose_task_run_script(task: Task, options: TaskOptions, template: str) -> 
     else:
         inputs = []
 
-    local = task.agent.scheduler == AgentScheduler.LOCAL
-    resource_requests = [] if local else compose_task_resource_requests(task, options, inputs)
+    resource_requests = compose_task_resource_requests(task, options, inputs)
     cli_pull = compose_task_pull_command(task, options)
     cli_run = compose_task_run_commands(task, options, inputs)
     cli_clean = compose_task_clean_commands(task)

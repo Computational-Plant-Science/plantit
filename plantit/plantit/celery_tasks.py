@@ -55,15 +55,10 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     if delayed_id is not None: task.delayed_id = delayed_id
     task.save()
 
-    # calculate soft time limit
-    time_limit = parse_time_limit_seconds(task.workflow['config']['time']) \
-        if task.agent.scheduler == AgentScheduler.LOCAL \
-        else int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-
     # submit task chain
     (prepare_task_environment.s(task.guid) | \
-     submit_task.s(task.guid) | \
-     poll_task_status.s(task.guid)).apply_async(soft_time_limit=time_limit, priority=1)
+     submit_task.s() | \
+     poll_task_status.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS), priority=1)
 
 
 @app.task(track_started=True)
@@ -79,15 +74,10 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
     if repeating_id is not None: task.delayed_id = repeating_id
     task.save()
 
-    # calculate soft time limit
-    time_limit = parse_time_limit_seconds(task.workflow['config']['time']) \
-        if task.agent.scheduler == AgentScheduler.LOCAL \
-        else int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
-
     # submit task chain
     (prepare_task_environment.s(task.guid) | \
-     submit_task.s(task.guid) | \
-     poll_task_status.s(task.guid)).apply_async(soft_time_limit=time_limit, priority=1)
+     submit_task.s() | \
+     poll_task_status.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS), priority=1)
 
 
 @app.task(track_started=True, bind=True)
@@ -128,7 +118,7 @@ def submit_task(self, guid: str):
 
     # mark the task running
     task.status = TaskStatus.RUNNING
-    task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
+    task.celery_task_id = self.request.id  # set the Celery task's ID so user can cancel
     task.save()
 
     try:
@@ -136,7 +126,7 @@ def submit_task(self, guid: str):
         with ssh:
             # schedule the job
             job_id = submit_task_to_scheduler(task, ssh)
-            log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
+            log_task_orchestrator_status(task, [f"Scheduled task as job {job_id}"])
             async_to_sync(push_task_channel_event)(task)
             return guid
     except Exception:
@@ -430,13 +420,8 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     redis = RedisClient.get()
-    cached = list(redis.scan_iter(match=f"institutions/*"))
-
-    if len(cached) != 0:
-        institutions = [json.loads(redis.get(key)) for key in cached]
-    else:
-        institutions = q.get_institutions()
-        for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
+    institutions = q.get_institutions()
+    for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
 
 
 @app.task()

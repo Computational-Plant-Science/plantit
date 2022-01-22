@@ -198,42 +198,105 @@ def get_file(path: str, token: str) -> List[str]:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-def path_exists(path, token) -> Tuple[bool, str]:
-    response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
-                            headers={"Authorization": f"Bearer {token}"})
-    content = response.json()
-    input_type = 'directory'
+def path_exists(path, token) -> bool:
+    """
+    Checks whether a collection (directory) or object (file) exists at the given path.
+
+    Args:
+        path: The path
+        token: The authentication token
+
+    Returns: True if the path exists, otherwise False
+    """
+
+    data = {'paths': [path]}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json;charset=utf-8"}
+    response = requests.post("https://de.cyverse.org/terrain/secured/filesystem/exists", data=json.dumps(data), headers=headers)
+
+    # before invoking `raise_for_status` and bubbling an exception up,
+    # try to decode the response and check the reason for failure
     if response.status_code != 200:
-        if 'error_code' not in content or ('error_code' in content and content['error_code'] == 'ERR_DOES_NOT_EXIST'):
-            path_split = path.rpartition('/')
-            base = path_split[0]
-            file = path_split[2]
-            up_response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={base}",
-                                       headers={"Authorization": f"Bearer {token}"})
-            up_content = up_response.json()
-            if up_response.status_code != 200:
-                if up_response.status_code == 401:
-                    raise ValueError(f"Not authorized for Terrain! (likely a bad token)")
-                elif 'error_code' not in up_content:
-                    print(f"Unknown error: {up_content}")
-                    return False, None
-                elif 'error_code' in up_content:
-                    print(f"Error: {up_content['error_code']}")
-                    return False, None
-            elif 'files' not in up_content:
-                print(f"Directory '{base}' does not exist")
-                return False, None
-            elif len(up_content['files']) != 1:
-                print(f"Multiple files found in directory '{base}' matching name '{file}'")
-                return False, None
-            elif up_content['files'][0]['label'] != file:
-                print(f"File '{file}' does not exist in directory '{base}'")
-                return False, None
-            else:
-                input_type = 'file'
-        else:
-            return False, None
-    return True, input_type
+        try:
+            content = response.json()
+            print(f"Bad response when checking if path '{path}' exists: {content}")
+        finally: pass
+
+    response.raise_for_status()
+    content = response.json()
+    if 'paths' not in content: raise ValueError(f"No paths on response: {content}")
+    if path not in content['paths'].keys(): return False
+    return content['paths'][path]
+
+
+    # response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
+    #                         headers={"Authorization": f"Bearer {token}"})
+    # content = response.json()
+    # input_type = 'directory'
+    # if response.status_code != 200:
+
+    #     # the path wasn't found
+    #     if 'error_code' in content and content['error_code'] == 'ERR_DOES_NOT_EXIST':
+    #         print(f"Path does not exist: {path}")
+    #         return False, None
+
+    #     if 'error_code' in content
+
+    #     if 'error_code' not in content or ('error_code' in content and content['error_code'] == 'ERR_DOES_NOT_EXIST'):
+    #         # split the path into name and full path of parent directory
+    #         path_split = path.rpartition('/')
+    #         parent = path_split[0]
+    #         name = path_split[2]
+
+    #         # send the request
+    #         up_response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={parent}",
+    #                                    headers={"Authorization": f"Bearer {token}"})
+
+    #         # there are a few reasons we might have a bad response, handle them separately
+    #         if up_response.status_code != 200:
+    #             # catch 401s, they likely mean the terrain token used to invoke this method is expired or invalid
+    #             if up_response.status_code == 401:
+    #                 raise ValueError(f"Not authorized for Terrain! (likely a bad token)")
+
+    #             # try to read the response, but it might not exist
+    #             try:
+    #                 up_content = up_response.json()
+    #                 if 'error_code' not in up_content:
+    #                     print(f"Error response: {up_content}")
+    #                     return False, None
+    #                 else:
+    #                     print(f"Error: {up_content['error_code']}")
+    #                     return False, None
+    #             except:
+    #                 print(f"Bad response from Terrain (status {response.status_code})")
+    #                 return False, None
+
+    #         # likewise there are a few different cases for a successful response
+    #         else:
+    #             up_content = response.json()
+
+    #             # parent directory (collection) wasn't found
+    #             if 'files' not in up_content:
+    #                 print(f"Directory '{parent}' does not exist")
+    #                 return False, None
+
+    #             # TODO: test this endpoint with various paths to figure out if we need the following...
+
+    #             # multiple matches were found (how? is this even a possible response? make sure)
+    #             elif len(up_content['files']) != 1:
+    #                 print(f"Multiple files found in directory '{parent}' matching name '{name}'")
+    #                 return False, None
+
+    #             # we found a match, but it has a different name (why would this happen?)
+    #             elif up_content['files'][0]['label'] != name:
+    #                 print(f"File '{name}' does not exist in directory '{parent}'")
+    #                 return False, None
+
+    #             # we found a good match
+    #             else:
+    #                 input_type = 'file'
+    #     else:
+    #         return False, None
+    # return True, input_type
 
 
 @retry(

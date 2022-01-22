@@ -153,7 +153,7 @@
                                 <b-list-group class="text-left m-0 p-0 mt-1">
                                     <delayedtaskblurb
                                         v-for="task in tasksDelayed"
-                                        v-bind:key="task.name"
+                                        v-bind:key="task.guid"
                                         :task="task"
                                     ></delayedtaskblurb>
                                 </b-list-group>
@@ -185,7 +185,7 @@
                                 <b-list-group class="text-left m-0 p-0 mt-1">
                                     <repeatingtaskblurb
                                         v-for="task in tasksRepeating"
-                                        v-bind:key="task.name"
+                                        v-bind:key="task.guid"
                                         :task="task"
                                     ></repeatingtaskblurb>
                                 </b-list-group>
@@ -699,59 +699,12 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        showRemovePrompt(task) {
-            this.$bvModal.show('remove ' + task.name);
-        },
         async refresh() {
             await Promise.all([
                 this.$store.dispatch('tasks/loadAll'),
                 this.$store.dispatch('tasks/loadDelayed'),
                 this.$store.dispatch('tasks/loadRepeating'),
             ]);
-        },
-        async remove(task) {
-            await axios
-                .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        await Promise.all([
-                            this.$store.dispatch(
-                                'tasks/setAll',
-                                response.data.tasks
-                            ),
-                            this.$store.dispatch('alerts/add', {
-                                variant: 'success',
-                                message: `Deleted task ${task.name}`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            }),
-                        ]);
-                        if (
-                            this.$router.currentRoute.name === 'task' &&
-                            task.name === this.$router.currentRoute.params.name
-                        )
-                            router.push({
-                                name: 'tasks',
-                            });
-                    } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to delete ${task.name}`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                    }
-                })
-                .catch(async (error) => {
-                    Sentry.captureException(error);
-                    await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to delete task`,
-                        guid: guid().toString(),
-                        time: moment().format(),
-                    });
-                    return error;
-                });
         },
     },
     computed: {

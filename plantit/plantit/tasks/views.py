@@ -1,12 +1,14 @@
 import json
 import logging
 import tempfile
+import traceback
 from os.path import join
 from pathlib import Path
 
 from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
 from django.utils import timezone
@@ -20,7 +22,8 @@ from plantit.task_lifecycle import create_immediate_task, create_delayed_task, c
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status
-from plantit.utils.tasks import parse_time_limit_seconds, get_task_orchestrator_log_file_path, get_task_scheduler_log_file_path, \
+from plantit.utils.tasks import parse_time_limit_seconds, get_task_orchestrator_log_file_path, \
+    get_task_scheduler_log_file_path, \
     get_task_agent_log_file_path
 
 logger = logging.getLogger(__name__)
@@ -44,39 +47,37 @@ def get_or_create(request):
             'tasks': [q.task_to_dict(task) for task in list(page)]
         })
     elif request.method == 'POST':
-        # load workflow configuration
-        workflow = json.loads(request.body.decode('utf-8'))
+        task_config = request.data
 
         # if it's not delayed or repeating, start the task chain now
-        if workflow['type'] == 'Now':
-            if workflow['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
+        if task_config['type'] == 'Now':
+            if task_config['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
 
             # create task
-            task = create_immediate_task(request.user, workflow)
-
-            # calculate soft time limit
-            time_limit = parse_time_limit_seconds(task.workflow['config']['time']) \
-                if task.agent.scheduler == AgentScheduler.LOCAL \
-                else int(settings.TASKS_STEP_TIME_LIMIT_SECONDS)
+            task = create_immediate_task(request.user, task_config)
 
             # submit task chain
             (prepare_task_environment.s(task.guid) | \
-             submit_task.s(task.guid) | \
-             poll_task_status.s(task.guid)).apply_async(soft_time_limit=time_limit, priority=1)
+             submit_task.s() | \
+             poll_task_status.s()).apply_async(
+                countdown=5,  # TODO: make initial delay configurable
+                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS),
+                priority=1)
 
             created = True
             task_dict = q.task_to_dict(task)
 
         # otherwise submit delayed or repeating task
-        elif workflow['type'] == 'After':
-            task, created = create_delayed_task(request.user, workflow)
+        elif task_config['type'] == 'After':
+            task, created = create_delayed_task(request.user, task_config)
             task_dict = q.delayed_task_to_dict(task)
-        elif workflow['type'] == 'Every':
-            task, created = create_repeating_task(request.user, workflow)
+        elif task_config['type'] == 'Every':
+            task, created = create_repeating_task(request.user, task_config)
             task_dict = q.repeating_task_to_dict(task)
 
-        # currently we only support immediate, delayed, and periodict (repeating) tasks
-        else: raise ValueError(f"Unsupported task type (expected: Now, After, or Every)")
+        # currently we only support immediate, delayed, and periodic (repeating) tasks
+        else:
+            raise ValueError(f"Unsupported task type (expected: Now, After, or Every)")
 
         return JsonResponse({
             'created': created,
@@ -88,14 +89,16 @@ def get_or_create(request):
 @login_required
 @api_view(['GET'])
 def get_delayed(request):
-    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in
+                                   DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def get_repeating(request):
-    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in
+                                   RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @swagger_auto_schema(methods='get')
@@ -114,7 +117,8 @@ def get_task(request, guid):
             return HttpResponseNotFound()
 
         return JsonResponse(q.task_to_dict(task))
-    except Task.DoesNotExist: return HttpResponseNotFound()
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
 
 
 # @login_required
@@ -153,7 +157,8 @@ def download_output_file(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
@@ -195,7 +200,8 @@ def download_task_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
 
     log_path = get_task_orchestrator_log_file_path(task)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
@@ -215,11 +221,13 @@ def get_task_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
 
     log_path = get_task_orchestrator_log_file_path(task)
     if not Path(log_path).is_file(): return HttpResponseNotFound()
-    with open(log_path, 'r') as log_file: return JsonResponse({'lines': log_file.readlines()})
+    with open(log_path, 'r') as log_file:
+        return JsonResponse({'lines': log_file.readlines()})
 
 
 @login_required
@@ -235,8 +243,10 @@ def download_scheduler_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
-    with open(get_task_scheduler_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+    with open(get_task_scheduler_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
 
 
 @swagger_auto_schema(methods='get')
@@ -253,8 +263,10 @@ def get_scheduler_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
-    with open(get_task_scheduler_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+    with open(get_task_scheduler_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
 
 
 @login_required
@@ -270,8 +282,10 @@ def download_agent_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
-    with open(get_task_agent_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+    with open(get_task_agent_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
 
 
 @swagger_auto_schema(methods='get')
@@ -288,18 +302,13 @@ def get_agent_logs(request, guid):
         if not owns and request.user.username not in team:
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
-    except Task.DoesNotExist: return HttpResponseNotFound()
-    with open(get_task_agent_log_file_path(task)) as file: return JsonResponse({'lines': file.readlines()})
+    except Task.DoesNotExist:
+        return HttpResponseNotFound()
+    with open(get_task_agent_log_file_path(task)) as file:
+        return JsonResponse({'lines': file.readlines()})
 
 
-@swagger_auto_schema(methods='post')
-@login_required
-@api_view(['POST'])
-def cancel(request, guid):
-    try: task = Task.objects.get(user=request.user, guid=guid)
-    except: return HttpResponseNotFound()
-    if task.is_complete: return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
-
+def __cancel(task: Task):
     # cancel the task and mark it canceled
     cancel_task(task)
     now = timezone.now()
@@ -308,10 +317,30 @@ def cancel(request, guid):
     task.completed = now
     task.save()
 
-    msg = f"Cancelled user {request.user.username}'s task {guid}"
+    msg = f"Cancelled user {task.user.username}'s task {task.guid}"
     log_task_orchestrator_status(task, [msg])
     push_task_channel_event(task)
-    return JsonResponse({'canceled': True})
+
+
+@swagger_auto_schema(methods='post')
+@login_required
+@api_view(['POST'])
+def cancel(request, guid):
+    try:
+        task = Task.objects.get(user=request.user, guid=guid)
+    except MultipleObjectsReturned:
+        tasks = list(Task.objects.filter(user=request.user, guid=guid))
+        logger.warning(f"Found {len(tasks)} tasks for user {request.user.username} matching GUID {guid}")
+        for task in tasks: __cancel(task)
+        return HttpResponseBadRequest()
+    except:
+        return HttpResponseNotFound()
+
+    if task.is_complete:
+        return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
+
+    __cancel(task)
+    return JsonResponse(q.task_to_dict(task))
 
 
 # TODO switch to post
@@ -319,12 +348,15 @@ def cancel(request, guid):
 @login_required
 @api_view(['GET'])
 def unschedule_delayed(request, guid):
-    try: task = DelayedTask.objects.get(user=request.user, name=guid)
-    except: return HttpResponseNotFound()
+    try:
+        task = DelayedTask.objects.get(user=request.user, name=guid)
+    except:
+        return HttpResponseNotFound()
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in
+                                   DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
 # TODO switch to post
@@ -332,12 +364,15 @@ def unschedule_delayed(request, guid):
 @login_required
 @api_view(['GET'])
 def unschedule_repeating(request, guid):
-    try: task = RepeatingTask.objects.get(user=request.user, name=guid)
-    except: return HttpResponseNotFound()
+    try:
+        task = RepeatingTask.objects.get(user=request.user, name=guid)
+    except:
+        return HttpResponseNotFound()
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in
+                                   RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
 @swagger_auto_schema(methods='get')
@@ -355,7 +390,8 @@ def exists(request, guid):
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
         return JsonResponse({'exists': True})
-    except Task.DoesNotExist: return JsonResponse({'exists': False})
+    except Task.DoesNotExist:
+        return JsonResponse({'exists': False})
 
 
 @swagger_auto_schema(methods='get')
@@ -379,8 +415,10 @@ def search(request, owner, workflow_name, page):
 @api_view(['GET'])
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
-    try: tasks = DelayedTask.objects.filter(user=user)
-    except: return HttpResponseNotFound()
+    try:
+        tasks = DelayedTask.objects.filter(user=user)
+    except:
+        return HttpResponseNotFound()
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
@@ -392,8 +430,10 @@ def search_delayed(request, owner, workflow_name):
 @api_view(['GET'])
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
-    try: tasks = RepeatingTask.objects.filter(user=user)
-    except: return HttpResponseNotFound()
+    try:
+        tasks = RepeatingTask.objects.filter(user=user)
+    except:
+        return HttpResponseNotFound()
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]

@@ -167,11 +167,23 @@ At this point the following containers should be running:
 - `postgres`: PostgreSQL database
 - `celery`: Celery background worker
 - `redis`: Redis instance
-- `sandbox`: Ubuntu test environment
 
 ##### SSL Certificates
 
-PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://certbot.eff.org/) for SSL certification. The production configuration includes a `certbot` container which can be used to request new or renew existing certificates from Let's Encrypt. Standard certificates last 90 days. To request a new certificate, run:
+PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://certbot.eff.org/) for SSL certification. The production configuration includes a `certbot` container which can be used to request new or renew existing certificates from Let's Encrypt. Standard certificates last 90 days.
+
+In production the `certbot` container is configured by default to automatically renew certs when necessary:
+
+```yaml
+certbot:
+  image: certbot/certbot
+  volumes:
+    - ./config/certbot/conf:/etc/letsencrypt/
+    - ./config/certbot/www:/var/www/certbot
+  entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
+```
+
+To manually request a new certificate, run:
 
 ```shell
 docker-compose -f docker-compose.prod.yml run certbot
@@ -220,7 +232,6 @@ DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=<your django admin username>
 DJANGO_ADMIN_PASSWORD=<your django admin password>
 DJANGO_ADMIN_EMAIL=<your django admin email>
-TASKS_TEMPLATE_SCRIPT_LOCAL=/code/scripts/template_local_run.sh
 TASKS_TEMPLATE_SCRIPT_SLURM=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
@@ -287,4 +298,12 @@ Some variables must be reconfigured for production environments (`scripts/deploy
 
 ### Configuring deployment targets
 
-Deployment targets may be configured via the Django admin interface or directly via the UI. The [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) package must be installed and invokable on deployment targets. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
+Deployment targets may be configured programmatically or with the Django admin interface. An agent is an abstraction of a computing resource, such as a cluster or supercomputer. `plantit` interacts with agents via key-authenticated SSH and requires the SLURM scheduler to be installed. (Support for additional schedulers is in development.)
+
+#### Python
+
+TODO
+
+#### Admin site
+
+First make sure you're logged into the site, then navigate to the admin interface at `http://localhost:3000/admin/` (`https://<host>/admin/` in production). Select the `Agents` tab on the left side of the screen, then `Add Agent`.

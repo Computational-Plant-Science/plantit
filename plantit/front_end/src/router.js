@@ -265,7 +265,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: ':owner/:name',
+                            path: ':owner/:guid',
                             name: 'task',
                             props: true,
                             component: task,
@@ -361,10 +361,10 @@ router.beforeEach(async (to, from, next) => {
         });
     }
     if (to.name === 'task') {
-        to.meta.title = `Task: ${to.params.owner}/${to.params.name}`;
+        to.meta.title = `Task: ${to.params.owner}/${to.params.guid}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.owner}/${to.params.name}`
+            text: `${to.params.owner}/${to.params.guid}`
         });
     }
     if (to.name === 'agent') {
