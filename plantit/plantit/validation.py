@@ -1,7 +1,5 @@
 from typing import List
 
-from django.conf import settings
-
 from plantit import docker as docker, terrain as terrain
 from plantit.tokens import TerrainToken
 
@@ -79,9 +77,6 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
     # legacy input format
     if 'from' in config:
         errors.append('Attribute \'from\' is deprecated; use an \'input\' section instead')
-
-    # TODO: use built-in terrain token
-    terrain_token = None
 
     # input
     if 'input' in config:

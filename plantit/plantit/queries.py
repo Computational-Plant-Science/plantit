@@ -612,7 +612,7 @@ def get_total_counts() -> dict:
     redis = RedisClient.get()
     users = User.objects.count()
     online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
-    wfs = [json.loads(wf) for wf in redis.scan_iter('workflows/*') if wf is not None]
+    wfs = [json.loads(redis.get(key)) for key in redis.scan_iter('workflows/*')]
     devs = list(set([wf['repo']['owner']['login']] for wf in wfs))
     workflows = len(wfs)
     developers = len(devs)

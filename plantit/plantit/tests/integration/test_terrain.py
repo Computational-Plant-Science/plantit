@@ -21,4 +21,3 @@ class TerrainTest(TestCase):
     def test_throws_error_when_terrain_token_is_invalid(self):
         with self.assertRaises(RetryError):
             path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay', 'not a token')
-

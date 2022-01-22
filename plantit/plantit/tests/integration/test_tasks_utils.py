@@ -13,7 +13,7 @@ class TasksUtilsTests(TestCase):
             'commands': 'echo "Hello, world!"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', 'kind' : 'file'},
             'output': {'path': ''}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_nonempty_output(self):
@@ -25,7 +25,7 @@ class TasksUtilsTests(TestCase):
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
                       'kind': 'file'},
             'output': {'path': 'outputdir'}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_empty_output(self):
@@ -37,7 +37,7 @@ class TasksUtilsTests(TestCase):
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
                       'kind': 'files'},
             'output': {'path': ''}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_nonempty_output(self):
@@ -49,7 +49,7 @@ class TasksUtilsTests(TestCase):
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
                       'kind': 'files'},
             'output': {'path': 'outputdir'}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_empty_output(self):
@@ -61,7 +61,7 @@ class TasksUtilsTests(TestCase):
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
                       'kind': 'directory'},
             'output': {'path': ''}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_nonempty_output(self):
@@ -73,5 +73,5 @@ class TasksUtilsTests(TestCase):
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
                       'kind': 'directory'},
             'output': {'path': 'outputdir'}
-        }, TerrainToken.get())
+        })
         self.assertTrue(result)
