@@ -40,10 +40,6 @@ def compose_task_pull_command(task: Task, options: TaskOptions) -> str:
               f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
               f""f" --terrain_token {task.user.profile.cyverse_access_token}"
 
-    if task.agent.callbacks:
-        callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
-        command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
-
     logger.debug(f"Using pull command: {command}")
     return command
 
@@ -66,10 +62,6 @@ def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str
 
         if docker_username is not None and docker_password is not None:
             command += f" --docker_username {docker_username} --docker_password {docker_password}"
-
-        if task.agent.callbacks:
-            callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
-            command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
         commands.append(command)
 

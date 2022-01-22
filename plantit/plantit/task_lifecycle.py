@@ -308,7 +308,7 @@ def cancel_task(task: Task):
                 logger.info(line)
                 lines.append(line)
 
-            if task.job_id is None or not any([task.job_id in r for r in lines]):
+            if task.job_id is None and not any([task.job_id in r for r in lines]):
                 return  # run doesn't exist, so no need to cancel
         except:
             logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")

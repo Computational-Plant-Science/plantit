@@ -1,7 +1,7 @@
 <template>
     <b-container
         fluid
-        class="m-0 mt-3 p-3"
+        class="m-0 mt-2 p-3"
         style="background-color: transparent"
     >
         <div v-if="profileLoading">
@@ -224,7 +224,6 @@
                                                 </h4>
                                             </b-col>
                                         </b-row>
-                                        <hr />
                                         <b-row>
                                             <b-col md="auto" class="mt-3">
                                                 <h5
@@ -260,7 +259,12 @@
                                                 </h5>
                                                 <i
                                                     class="fas fa-spinner"
-                                                    v-if="userDatasets === undefined || userDatasets.folders === undefined"
+                                                    v-if="
+                                                        userDatasets ===
+                                                            undefined ||
+                                                        userDatasets.folders ===
+                                                            undefined
+                                                    "
                                                 ></i
                                                 ><b v-else>{{
                                                     userDatasets.folders.length
@@ -373,7 +377,7 @@
                                         </b-row>
                                     </b-col>
                                 </b-row>
-                                <br />
+                                <hr />
                                 <b-row align-v="start">
                                     <b-col md="auto">
                                         <h4
@@ -387,49 +391,60 @@
                                         </h4>
                                     </b-col>
                                 </b-row>
+                                <div v-if="anyRecentUsageStats">
+                                    <b-row>
+                                        <b-col
+                                            ><Plotly
+                                                v-if="tasks.length > 0"
+                                                :data="taskTimeseriesData"
+                                                :layout="taskTimeseriesLayout"
+                                            ></Plotly></b-col
+                                        ><b-col>
+                                            <Plotly
+                                                v-if="
+                                                    timeseriesUserTasksUsage !==
+                                                    null
+                                                "
+                                                :data="tasksRunningPlotData"
+                                                :layout="tasksRunningPlotLayout"
+                                            ></Plotly> </b-col
+                                    ></b-row>
+                                    <br />
+                                    <b-row
+                                        ><b-col
+                                            ><Plotly
+                                                v-if="
+                                                    timeseriesUserWorkflowsUsage !==
+                                                    null
+                                                "
+                                                :data="workflowsRunningPlotData"
+                                                :layout="
+                                                    workflowsRunningPlotLayout
+                                                "
+                                            ></Plotly></b-col
+                                    ></b-row>
+                                    <br />
+                                    <b-row
+                                        ><b-col
+                                            ><Plotly
+                                                v-if="
+                                                    timeseriesUserAgentsUsage !==
+                                                    null
+                                                "
+                                                :data="agentsRunningPlotData"
+                                                :layout="
+                                                    agentsRunningPlotLayout
+                                                "
+                                            ></Plotly></b-col
+                                    ></b-row>
+                                </div>
+                                <b-row v-else
+                                    ><b-col
+                                        >You haven't run any tasks
+                                        recently.</b-col
+                                    ></b-row
+                                >
                                 <hr />
-                                <b-row>
-                                    <b-col
-                                        ><Plotly
-                                            v-if="tasks.length > 0"
-                                            :data="taskTimeseriesData"
-                                            :layout="taskTimeseriesLayout"
-                                        ></Plotly></b-col
-                                    ><b-col>
-                                        <Plotly
-                                            v-if="
-                                                timeseriesUserTasksUsage !==
-                                                null
-                                            "
-                                            :data="tasksRunningPlotData"
-                                            :layout="tasksRunningPlotLayout"
-                                        ></Plotly> </b-col
-                                ></b-row>
-                                <br />
-                                <b-row
-                                    ><b-col
-                                        ><Plotly
-                                            v-if="
-                                                timeseriesUserWorkflowsUsage !==
-                                                null
-                                            "
-                                            :data="workflowsRunningPlotData"
-                                            :layout="workflowsRunningPlotLayout"
-                                        ></Plotly></b-col
-                                ></b-row>
-                                <br />
-                                <b-row
-                                    ><b-col
-                                        ><Plotly
-                                            v-if="
-                                                timeseriesUserAgentsUsage !==
-                                                null
-                                            "
-                                            :data="agentsRunningPlotData"
-                                            :layout="agentsRunningPlotLayout"
-                                        ></Plotly></b-col
-                                ></b-row>
-                                <br />
                                 <b-row align-v="start">
                                     <b-col md="auto">
                                         <h4
@@ -443,8 +458,7 @@
                                         </h4>
                                     </b-col>
                                 </b-row>
-                                <hr />
-                                <b-row>
+                                <b-row v-if="anyCumulativeUsageStats">
                                     <b-col>
                                         <Plotly
                                             v-if="
@@ -466,9 +480,8 @@
                                         ></Plotly></b-col
                                     ><b-col
                                         v-if="
-                                            profile.stats.project_usage !==
-                                                undefined &&
-                                            profile.stats.project_usage !== null
+                                            profile.stats.project_usage.labels
+                                                .length > 0
                                         "
                                     >
                                         <Plotly
@@ -480,11 +493,18 @@
                                             :layout="projectPlotLayout"
                                         ></Plotly> </b-col
                                 ></b-row>
+                                <b-row v-else
+                                    ><b-col
+                                        >You haven't run any tasks yet.</b-col
+                                    ></b-row
+                                >
                             </b-col>
                         </b-row>
-                    </div> </b-col
-            ></b-row></div
-    ></b-container>
+                    </div>
+                </b-col></b-row
+            >
+        </div></b-container
+    >
 </template>
 
 <script>
@@ -513,7 +533,10 @@ export default {
     },
     async created() {
         this.crumbs = this.$route.meta.crumb;
-        await Promise.all([this.loadUserTimeseries(), this.loadAggregateTimeseries()]);
+        await Promise.all([
+            this.loadUserTimeseries(),
+            this.loadAggregateTimeseries(),
+        ]);
     },
     watch: {
         $route() {
@@ -564,7 +587,7 @@ export default {
                     ];
                     this.timeseriesUserWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
-                            ([k, v], _) => [
+                            ([k, v]) => [
                                 k,
                                 {
                                     x: Object.keys(v),
@@ -576,7 +599,7 @@ export default {
                     );
                     this.timeseriesUserAgentsUsage = Object.fromEntries(
                         Object.entries(response.data.agents_usage).map(
-                            ([k, v], _) => [
+                            ([k, v]) => [
                                 k,
                                 {
                                     x: Object.keys(v),
@@ -613,6 +636,21 @@ export default {
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', ['userWorkflows', 'userWorkflowsLoading']),
         ...mapGetters('projects', ['userProjects', 'othersProjects']),
+        anyRecentUsageStats() {
+            return (
+                this.timeseriesUserTasksUsage === null ||
+                this.timeseriesUserTasksUsage[0].x.length > 0 ||
+                Object.keys(this.timeseriesUserWorkflowsUsage).length > 0 ||
+                Object.keys(this.timeseriesUserAgentsUsage).length > 0
+            );
+        },
+        anyCumulativeUsageStats() {
+            return (
+                this.profile.stats.workflow_usage.labels.length > 0 ||
+                this.profile.stats.agent_usage.labels.length > 0 ||
+                this.profile.stats.project_usage.labels.length > 0
+            );
+        },
         isRootPath() {
             return this.$route.name === 'home';
         },
@@ -869,18 +907,16 @@ export default {
         workflowsRunningPlotData() {
             return this.timeseriesUserWorkflowsUsage === null
                 ? []
-                : Object.keys(this.timeseriesUserWorkflowsUsage).map(
-                      (key) => {
-                          return {
-                              x: this.timeseriesUserWorkflowsUsage[key].x.map(
-                                  (t) => moment(t).format('YYYY-MM-DD HH:mm:ss')
-                              ),
-                              y: this.timeseriesUserWorkflowsUsage[key].y,
-                              name: key,
-                              type: 'line',
-                          };
-                      }
-                  );
+                : Object.keys(this.timeseriesUserWorkflowsUsage).map((key) => {
+                      return {
+                          x: this.timeseriesUserWorkflowsUsage[key].x.map((t) =>
+                              moment(t).format('YYYY-MM-DD HH:mm:ss')
+                          ),
+                          y: this.timeseriesUserWorkflowsUsage[key].y,
+                          name: key,
+                          type: 'line',
+                      };
+                  });
         },
         workflowsRunningPlotLayout() {
             return {
@@ -889,7 +925,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    // text: 'Workflows',
+                    text: 'Workflows',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },

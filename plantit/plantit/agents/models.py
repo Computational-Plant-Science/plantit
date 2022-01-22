@@ -42,7 +42,6 @@ class Agent(models.Model):
     disabled = models.BooleanField(default=False)
     public = models.BooleanField(default=False)
     logo = models.URLField(null=True, blank=True)
-    callbacks = models.BooleanField(default=True)
     job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
     scheduler = models.CharField(max_length=10, choices=AgentScheduler.choices, default=AgentScheduler.SLURM)

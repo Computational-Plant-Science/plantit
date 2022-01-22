@@ -9,7 +9,7 @@
             class="m-0 p-0"
             style="background-color: transparent"
         >
-            <navigation class="mb-1" v-if="!isRootPath"></navigation>
+            <navigation v-if="!isRootPath"></navigation>
             <router-view
                 v-bind:class="{ lightlinks: profile.darkMode }"
             ></router-view>

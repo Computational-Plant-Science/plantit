@@ -1071,7 +1071,7 @@
                                 v-b-tooltip.hover
                                 title="Use this section to define any additional variables."
                             >
-                                Additioinal Variables
+                                Additional Variables
                             </h5>
                         </div>
                     </b-col>
