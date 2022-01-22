@@ -629,6 +629,9 @@ def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
         if 'walltime' in jobqueue:
             if not isinstance(jobqueue['walltime'], str):
                 errors.append('Section \'jobqueue\'.\'walltime\' must be a str')
+        elif 'time' in jobqueue:
+            if not isinstance(jobqueue['time'], str):
+                errors.append('Section \'jobqueue\'.\'time\' must be a str (note that \'time\' is also deprecated, please use \'walltime\' instead')
         else:
             jobqueue['walltime'] = task.agent.max_walltime
         if 'cores' in jobqueue:

@@ -23,7 +23,8 @@
                                 require('../../assets/logos/cyverse_bright.png')
                             "
                         ></b-img></b-col
-                ><b-col></b-col><b-col align-self="center" class="mb-1" md="auto">
+                    ><b-col></b-col
+                    ><b-col align-self="center" class="mb-1" md="auto">
                         <b-dropdown
                             dropleft
                             id="switch-dataset-context"
@@ -87,10 +88,11 @@
                             placement="bottom"
                             target="refresh-datasets"
                             title="Refresh Datasets"
-                            >Click here to refresh your view of the data store.</b-popover
+                            >Click here to refresh your view of the data
+                            store.</b-popover
                         ></b-col
                     >
-                    </b-row>
+                </b-row>
                 <b-row v-if="publicContext">
                     <b-col
                         ><b-row v-if="publicDatasetsLoading" class="text-center"
@@ -153,7 +155,8 @@
                                 placement="topleft"
                                 target="yours"
                                 title="Your datasets"
-                                >Click here to view your own datasets.</b-popover
+                                >Click here to view your own
+                                datasets.</b-popover
                             >
                             <b-button
                                 id="yours"

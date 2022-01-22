@@ -44,8 +44,8 @@ To make sure your **Workflow** can take full advantage of the resources made ava
 
 ```yaml
 jobqueue:
-  time: "01:00:00"
-  mem: "1GB"
+  walltime: "01:00:00"
+  memory: "1GB"
   processes: 1
   cores: 1
 ```

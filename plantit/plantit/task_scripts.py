@@ -270,9 +270,10 @@ def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: Lis
     commands = []
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
-    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(
-        f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else jobqueue['memory']}")
-    if 'walltime' in jobqueue:
+    if 'memory' in jobqueue or 'mem' in jobqueue and not has_virtual_memory(task.agent):
+        memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
+        commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
+    if 'walltime' in jobqueue or 'time' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
         async_to_sync(push_task_channel_event)(task)
         task.job_requested_walltime = walltime
@@ -406,7 +407,8 @@ def calculate_node_count(task: Task, inputs: List[str]):
 def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     # by default, use the suggested walltime provided in plantit.yaml
     jobqueue = options['jobqueue']
-    split_time = jobqueue['walltime'].split(':')
+    walltime = jobqueue['walltime' if 'walltime' in jobqueue else 'time']
+    split_time = walltime.split(':')
     hours = int(split_time[0])
     minutes = int(split_time[1])
     seconds = int(split_time[2])
