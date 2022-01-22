@@ -113,7 +113,7 @@
                                 >Add</b-button
                             ><b-popover
                                 :show.sync="profile.hints"
-                                triggers="manual"
+                                triggers="hover"
                                 placement="bottomleft"
                                 target="add-study"
                                 title="Create Study"
@@ -389,7 +389,7 @@
                                 >Add</b-button
                             ><b-popover
                                 :show.sync="profile.hints"
-                                triggers="manual"
+                                triggers="hover"
                                 placement="bottomleft"
                                 target="add-member"
                                 title="Add Team Member"
@@ -407,7 +407,15 @@
                         ><b-col align-self="center"
                             ><b-img
                                 v-if="avatarUrl(member) !== ''"
-                                class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
+                                class="
+                                    avatar
+                                    m-0
+                                    mb-1
+                                    mr-2
+                                    p-0
+                                    github-hover
+                                    logo
+                                "
                                 style="
                                     width: 2rem;
                                     height: 2rem;
@@ -1059,6 +1067,21 @@
                         required
                     ></b-form-input>
                 </b-form-group>
+                <hr />
+                <b-row>
+                    <b-col>
+                        <div class="a-var-title mb-2">
+                            <h5
+                                id="additional-variables"
+                                v-b-tooltip.hover
+                                title="Use this section to define any additional variables."
+                            >
+                                Additioinal Variables
+                            </h5>
+                        </div>
+                    </b-col>
+                </b-row>
+
                 <b-row>
                     <b-col
                         ><b-form-group
@@ -1091,13 +1114,20 @@
                         ></b-col
                     >
                 </b-row>
+                <b-row>
+                    <b-col> <u>Key/Variable</u> </b-col>
+                    <b-col> <u>Value</u></b-col>
+                    <b-col></b-col>
+                </b-row>
+
                 <b-row
-                    v-for="param in environmentParameters"
-                    v-bind:key="param.key"
-                    ><b-col>{{ param.key }}: {{ param.value }}</b-col
-                    ><b-col
-                        ><b-button
-                            @click="removeEnvironmentParameter(param.key)"
+                    v-for="key in Object.keys(environmentParameters)"
+                    v-bind:key="key"
+                    class="mb-3"
+                    ><b-col>{{ key }}</b-col>
+                    <b-col> {{ environmentParameters[key] }}</b-col>
+                    <b-col
+                        ><b-button @click="removeEnvironmentParameter(key)"
                             >Remove</b-button
                         ></b-col
                     ></b-row
@@ -1213,15 +1243,19 @@ export default {
                 alert('This is a duplicate key');
                 return;
             }
-            this.environmentParameters[this.environmentParameterKey] =
-                this.environmentParameterValue;
+
+            this.$set(
+                this.environmentParameters,
+                this.environmentParameterKey,
+                this.environmentParameterValue
+            );
+
+            (this.environmentParameterKey = ''),
+                (this.environmentParameterValue = '');
         },
         removeEnvironmentParameter(key) {
-            if (
-                this.environmentParameterKey in
-                Object.keys(this.environmentParameters)
-            ) {
-                this.environmentParameters.remove(key);
+            if (key in this.environmentParameters) {
+                this.$delete(this.environmentParameters, key);
             }
         },
         showEditStudyModal(study) {
@@ -1745,4 +1779,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.a-var-title {
+    display: flex;
+    justify-content: center;
+}
+</style>
