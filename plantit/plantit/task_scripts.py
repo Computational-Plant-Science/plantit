@@ -270,7 +270,7 @@ def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: Lis
     commands = []
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
-    if 'memory' in jobqueue or 'mem' in jobqueue and not has_virtual_memory(task.agent):
+    if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
         memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
         commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
     if 'walltime' in jobqueue or 'time' in jobqueue:
