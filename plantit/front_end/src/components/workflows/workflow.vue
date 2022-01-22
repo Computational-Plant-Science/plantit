@@ -806,10 +806,7 @@
                                                                             ><code
                                                                                 >{{
                                                                                     ' ' +
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .jobqueue
-                                                                                        .walltime
+                                                                                    walltime
                                                                                 }}</code
                                                                             ></b
                                                                         >
@@ -824,10 +821,7 @@
                                                                             ><code
                                                                                 >{{
                                                                                     ' ' +
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .jobqueue
-                                                                                        .memory
+                                                                                    memory
                                                                                 }}</code
                                                                             ></b
                                                                         >
@@ -2336,10 +2330,7 @@
                                                                                                                 agent.max_mem
                                                                                                             ) >=
                                                                                                                 parseInt(
-                                                                                                                    getWorkflow
-                                                                                                                        .config
-                                                                                                                        .jobqueue
-                                                                                                                        .memory
+                                                                                                                    memory
                                                                                                                 ) &&
                                                                                                             parseInt(
                                                                                                                 agent.max_mem
@@ -4273,8 +4264,7 @@ export default {
             if (this.getWorkflow.config.jobqueue === undefined) return false;
             return (
                 (parseInt(agent.max_mem) !== -1 &&
-                    parseInt(agent.max_mem) <
-                        parseInt(this.getWorkflow.config.jobqueue.memory)) ||
+                    parseInt(agent.max_mem) < parseInt(this.memory)) ||
                 parseInt(agent.max_cores) <
                     parseInt(this.getWorkflow.config.jobqueue.cores) ||
                 parseInt(agent.max_processes) <
@@ -4384,26 +4374,26 @@ export default {
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
-                      this.submitting = false;
-                      if (response.data.created) {
-                        await this.$store.dispatch(
-                            'tasks/addOrUpdate',
-                            response.data.task
-                        );
-                        await router.push({
-                          name: 'task',
-                          params: {
-                            owner: this.profile.djangoProfile.username,
-                            guid: this.taskGuid,
-                          },
-                        });
-                      } else {
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to submit task ${this.taskGuid}`,
-                            guid: guid().toString(),
-                        });
-                      }
+                        this.submitting = false;
+                        if (response.data.created) {
+                            await this.$store.dispatch(
+                                'tasks/addOrUpdate',
+                                response.data.task
+                            );
+                            await router.push({
+                                name: 'task',
+                                params: {
+                                    owner: this.profile.djangoProfile.username,
+                                    guid: this.taskGuid,
+                                },
+                            });
+                        } else {
+                            await this.$store.dispatch('alerts/add', {
+                                variant: 'danger',
+                                message: `Failed to submit task ${this.taskGuid}`,
+                                guid: guid().toString(),
+                            });
+                        }
                     })
                     .catch((error) => {
                         Sentry.captureException(error);
@@ -4541,6 +4531,20 @@ export default {
             'tasksDelayed',
             'tasksRepeating',
         ]),
+        walltime() {
+            return this.getWorkflow.config.jobqueue.walltime !== undefined
+                ? this.getWorkflow.config.jobqueue.walltime
+                : this.getWorkflow.config.jobqueue.time !== undefined
+                ? this.getWorkflow.config.jobqueue.time
+                : null;
+        },
+        memory() {
+            return this.getWorkflow.config.jobqueue.memory !== undefined
+                ? this.getWorkflow.config.jobqueue.memory
+                : this.getWorkflow.config.jobqueue.mem !== undefined
+                ? this.getWorkflow.config.jobqueue.mem
+                : null;
+        },
         delayedTasks() {
             return this.tasksDelayed.filter(
                 (t) =>
