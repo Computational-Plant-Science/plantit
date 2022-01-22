@@ -69,7 +69,7 @@
                     name: 'task',
                     params: {
                         owner: task.owner,
-                        name: task.guid,
+                        guid: task.guid,
                     },
                 }"
                 replace
