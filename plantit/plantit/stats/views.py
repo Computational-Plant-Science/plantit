@@ -17,7 +17,7 @@ def institutions_info(_):
     redis = RedisClient.get()
     cached = list(redis.scan_iter(match=f"institutions/*"))
     if len(cached) > 0:
-        institutions = [json.loads(institution) for institution in cached if institution is not None]
+        institutions = [json.loads(redis.get(institution)) for institution in cached if institution is not None]
     else:
         institutions = q.get_institutions()
         for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
