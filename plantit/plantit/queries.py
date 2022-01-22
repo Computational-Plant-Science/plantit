@@ -23,6 +23,7 @@ from plantit.agents.models import Agent, AgentRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
 from plantit.misc.models import NewsUpdate
+from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskCounter, TaskStatus
 from plantit.users.models import Profile
 from plantit.utils.misc import del_none
@@ -248,6 +249,15 @@ def agent_to_dict(agent: Agent, username: str = None) -> dict:
 
     if agent.user is not None: mapped['user'] = agent.user.username
     return mapped
+
+
+def dataset_access_policy_to_dict(policy: DatasetAccessPolicy):
+    return {
+        'owner': policy.owner.username,
+        'guest': policy.guest.username,
+        'path': policy.path,
+        'role': policy.role.value
+    }
 
 
 def task_to_dict(task: Task) -> dict:
