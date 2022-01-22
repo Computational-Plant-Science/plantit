@@ -40,7 +40,7 @@ def list_or_create(request):
                     (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
-        body = json.loads(request.body.decode('utf-8'))
+        body = request.data
         title = body['title']
         description = body['description'] if 'description' in body else None
         if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
@@ -97,7 +97,7 @@ def add_team_member(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
-    body = json.loads(request.body.decode('utf-8'))
+    body = request.data
     username = body['username']
 
     try:
@@ -119,7 +119,7 @@ def remove_team_member(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
-    body = json.loads(request.body.decode('utf-8'))
+    body = request.data
     username = body['username']
 
     try:
@@ -141,7 +141,7 @@ def add_study(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
-    body = json.loads(request.body.decode('utf-8'))
+    body = request.data
     study_title = body['title']
     study_description = body['description']
     guid = f"{request.user.username}-{title.replace(' ', '-')}-{study_title.replace(' ', '-')}"
@@ -165,7 +165,7 @@ def remove_study(request, owner, title):
         print(owner)
         return HttpResponseForbidden()
 
-    body = json.loads(request.body.decode('utf-8'))
+    body = request.data
     study_title = body['title']
 
     try:
@@ -185,7 +185,7 @@ def edit_study(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
-    body = json.loads(request.body.decode('utf-8'))
+    body = request.data
     study_title = body['title']
     study_start_date = parse_date(body['start_date'])
     study_end_date = parse_date(body['end_date']) if 'end_date' in body and body['end_date'] is not None else None

@@ -112,7 +112,7 @@
                                 ><i v-else class="fas fa-plus mr-1"></i
                                 >Add</b-button
                             ><b-popover
-                                :show.sync="profile.hints"
+                                v-if="profile.hints"
                                 triggers="hover"
                                 placement="bottomleft"
                                 target="add-study"
@@ -373,7 +373,7 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Add a team member"
-                                @click="specifyTeamMember(getProject)"
+                                @click="specifyTeamMember()"
                                 class="ml-0 mt-0 mr-0"
                             >
                                 <b-spinner
@@ -388,7 +388,7 @@
                                 ><i v-else class="fas fa-plus mr-1"></i
                                 >Add</b-button
                             ><b-popover
-                                :show.sync="profile.hints"
+                                v-if="profile.hints"
                                 triggers="hover"
                                 placement="bottomleft"
                                 target="add-member"
@@ -403,19 +403,11 @@
                     >
                     <b-row
                         v-for="member in getProject.team"
-                        v-bind:key="member.id"
+                        v-bind:key="member.username"
                         ><b-col align-self="center"
                             ><b-img
-                                v-if="avatarUrl(member) !== ''"
-                                class="
-                                    avatar
-                                    m-0
-                                    mb-1
-                                    mr-2
-                                    p-0
-                                    github-hover
-                                    logo
-                                "
+                                v-if="avatarUrl(member) !== undefined"
+                                class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
                                 style="
                                     width: 2rem;
                                     height: 2rem;
@@ -426,8 +418,9 @@
                                 rounded="circle"
                                 :src="avatarUrl(member)"
                             ></b-img>
+                            <i v-else class="far fa-user fa-fw mr-1"></i>
                             <b>{{ member.name }}</b>
-                            ({{ member.id }}),
+                            ({{ member.username }}),
                             <span>{{ member.affiliation }}</span></b-col
                         ><b-col class="ml-0" md="auto" align-self="center"
                             ><b-button
@@ -436,7 +429,9 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 :title="
-                                    'Remove ' + member.id + ' from this project'
+                                    'Remove ' +
+                                    member.username +
+                                    ' from this project'
                                 "
                                 @click="showRemoveTeamMemberModal(member)"
                             >
@@ -717,7 +712,7 @@
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             :title="`Remove ${
                 this.teamMemberToRemove !== null
-                    ? this.teamMemberToRemove.id
+                    ? this.teamMemberToRemove.username
                     : 'team member'
             }?`"
             @ok="removeTeamMember"
@@ -1428,12 +1423,15 @@ export default {
                 });
         },
         avatarUrl(user) {
-            let found = this.otherUsers.find((u) => u.username === user.id);
+            let found = this.otherUsers.find(
+                (u) => u.username === user.username
+            );
             if (found === undefined) return undefined;
+            if (found.github_profile === undefined) return undefined;
+            if (found.github_profile.avatar_url === '') return undefined;
             return found.github_profile.avatar_url;
         },
-        specifyTeamMember(project) {
-            this.selectedProject = project;
+        specifyTeamMember() {
             this.$bvModal.show('addTeamMember');
         },
         showRemoveTeamMemberModal(member) {
@@ -1488,7 +1486,7 @@ export default {
         async removeTeamMember() {
             this.removingTeamMember = true;
             let user = this.teamMemberToRemove;
-            let data = { username: user.id };
+            let data = { username: user.username };
             await axios({
                 method: 'post',
                 url: `/apis/v1/miappe/${this.getProject.owner}/${this.getProject.title}/remove_team_member/`,
@@ -1503,13 +1501,13 @@ export default {
                         );
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Removed team member ${user.id} from project ${this.getProject.title}`,
+                            message: `Removed team member ${user.username} from project ${this.getProject.title}`,
                             guid: guid().toString(),
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: `Failed to remove team member ${user.id} from project ${this.getProject.title}`,
+                            message: `Failed to remove team member ${user.username} from project ${this.getProject.title}`,
                             guid: guid().toString(),
                         });
                     }
@@ -1520,7 +1518,7 @@ export default {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
-                        message: `Failed to remove team member ${user.id} from project ${this.getProject.title}`,
+                        message: `Failed to remove team member ${user.username} from project ${this.getProject.title}`,
                         guid: guid().toString(),
                     });
                     this.removingTeamMember = false;
@@ -1768,11 +1766,9 @@ export default {
             return this.allUsers.filter(
                 (u) =>
                     u.username !== this.profile.djangoProfile.username &&
-                    ((this.projectSelected &&
-                        !this.selectedProject.team.some(
-                            (ua) => ua.id === u.username
-                        )) ||
-                        !this.projectSelected)
+                    !this.getProject.team.some(
+                        (ua) => ua.username === u.username
+                    )
             );
         },
     },

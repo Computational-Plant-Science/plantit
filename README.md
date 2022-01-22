@@ -10,7 +10,7 @@
             >IT</small>
 </h1>
 
-Plant phenotyping automation in the browser.
+HPC/HTC plant phenotyping in the browser
 
 ![commit](https://github.com/Computational-Plant-Science/plantit/workflows/commit/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
@@ -24,9 +24,10 @@ Plant phenotyping automation in the browser.
 **Contents**
 
 - [About](#about)
+  - [Motivation](#motivation)
   - [Features](#features)
+    - [Workflow orchestration](#workflow-orchestration)
     - [Software & data discovery](#software--data-discovery)
-    - [Task orchestration](#task-orchestration)
     - [Collaboration & metadata management](#collaboration--metadata-management)
 - [Development](#development)
   - [Requirements](#requirements)
@@ -37,30 +38,34 @@ Plant phenotyping automation in the browser.
       - [SSL Certificates](#ssl-certificates)
   - [Configuring environment variables](#configuring-environment-variables)
   - [Configuring deployment targets](#configuring-deployment-targets)
+    - [Python](#python)
+    - [Admin site](#admin-site)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## About
 
-`plantit` is a science gateway for plant phenotyping. It aims to bring two user groups together: developers and users of phenotyping software. Though one individual may wear both hats, each likely has distinct concerns. `plantit` is free software-as-a-service for the former, and a free platform-as-a-service for the latter. Think of it as a conveyor belt for phenomics data science: devs can place some code on it, and it will be nicely packaged and delivered to researchers downstream, who can then use it to build insights.
+`plantit` is a science gateway for plant phenomics: a continuous delivery platform for developers and a browser portal to clusters and supercomputers for researchers. (Of course a single individual may wear both hats.)
+
+### Motivation
+
+`plantit` aims to automate a number of tasks incidental to the real aim of computational science: accessible, portable, reproducible workflows for data-driven insight. To deploy resource-intensive, high-throughput computational pipelines, researchers must often learn to navigate the notoriously fickle, rapidly shifting world of software. This imposes barriers to entry and diverts attention from the things scientists really they care about. While computer programming is likely a useful skill in any discipline, the aim of scientific software should be to liberate researchers from tedious, repetitive, tasks (this is what computers are for!) and free up time and attention for the problem domain.
 
 ![](docs/media/roles.jpg)
 
 ### Features
 
-The last decade has seen containers become nearly ubiquitous. Containerized software is a form of insulation against the rapid churn endemic to computing. `plantit` combines cloud code and data storage services (GitHub and CyVerse), online container registries (Docker Hub), the Singularity container runtime, and XSEDE supercomputing resources to provide a few core features:
+`plantit` combines cloud source code management, data storage, and container registry services ([GitHub](https://github.com/), [CyVerse](https://cyverse.org/), and [Docker Hub](https://hub.docker.com/)), the [Singularity](https://sylabs.io/) container runtime, and [XSEDE](https://www.xsede.org/) supercomputing resources to streamline the delivery and deployment of computational pipelines.
 
-- software & data discovery: explore tools and data or publish code to the research community
-- task orchestration: submit serial or parallel container workflows to clusters & supercomputers
-- collaboration & annotations: organize projects & metadata according to the MIAPPE standard
+`plantit` provides users a few core capabilities:
 
-#### Software & data discovery
+- workflow orchestration: submit container workflows to HPC/HTC clusters or supercomputers
+- software & data discovery: explore tools & data or publish code to the research community
+- metadata & annotations: contextualize data according to emerging standards (e.g., MIAPPE)
 
-Like GitHub Actions, Travis CI, and other platforms, `plantit` automatically integrates with GitHub repositories. A `plantit.yaml` configuration file can be added to any public repository to make a container workflow available to researchers with a few clicks. `plantit` also plugs directly into your personal CyVerse Data Store and the public Data Commons.
+#### Workflow orchestration
 
-#### Task orchestration
-
-`plantit` provides task scheduling as a service via browser UI (a REST API is [in development](https://github.com/Computational-Plant-Science/plantit/issues/256)).
+`plantit` provides task scheduling as a service via an easy-to-use browser UI (a REST API is [in development](https://github.com/Computational-Plant-Science/plantit/issues/256)). It works like this: developers encapsulate a computational workflow in a container and publish it to `plantit`. Subsequently researchers can submit the workflow to a supercomputer with a click &mdash; `plantit` handles data transfers and interfaces with cluster schedulers, obviating the need to write job scripts by hand or manually load data into and out of computing environments.
 
 ![](docs/media/cycle.jpg)
 
@@ -68,11 +73,15 @@ When a task is submitted, the browser client sends it to the `plantit` web serve
 
 ![](docs/media/task.jpg)
 
-#### Collaboration & metadata management
+#### Software & data discovery
+
+Like GitHub Actions, Travis CI, and other CI/CD platforms, `plantit` automatically integrates with GitHub. A `plantit.yaml` configuration file can be added to any public repository to make a container workflow available to researchers with a few clicks. `plantit` also plugs directly into the [CyVerse Data Store](https://www.cyverse.org/data-store) and the public [Data Commons](https://www.cyverse.org/data-commons).
+
+#### Metadata & annotations
 
 *This feature is under development.*
 
-`plantit` allows datasets to be annotated according to the MIAPPE standard. Workflows, tasks, datasets, and teammates can also be grouped according to project, allowing collaborators to configure visibility and form private teams.a
+`plantit` allows datasets to be annotated according to the MIAPPE standard. Workflows, tasks, datasets, and teammates can also be grouped according to project, allowing collaborators to configure visibility and form private teams.
 
 ## Development
 

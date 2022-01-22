@@ -576,7 +576,7 @@ def person_to_dict(user: User, role: str) -> dict:
     return {
         'name': f"{user.first_name} {user.last_name}",
         'email': user.email,
-        'id': user.username,
+        'username': user.username,
         'affiliation': user.profile.institution,
         'role': role,
     }
@@ -613,7 +613,7 @@ def get_total_counts() -> dict:
     users = User.objects.count()
     online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
     wfs = [json.loads(redis.get(key)) for key in redis.scan_iter('workflows/*')]
-    devs = list(set([wf['repo']['owner']['login']] for wf in wfs))
+    devs = list(set([wf['repo']['owner']['login'] for wf in wfs]))
     workflows = len(wfs)
     developers = len(devs)
     agents = Agent.objects.count()
