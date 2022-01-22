@@ -190,15 +190,22 @@ def refresh_user_cache():
     RedisClient.get().set(f"users_updated", timezone.now().timestamp())
 
 
+def has_github_info(profile: Profile):
+    return profile.github_token is not None and \
+           profile.github_token != '' and \
+           profile.github_username is not None and \
+           profile.github_username != ''
+
+
 def get_user_bundle(user: User):
-    if not user.profile.github_username:
+    profile = Profile.objects.get(user=user)
+    if not has_github_info(profile):
         return {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
     else:
-        # TODO in the long run we should probably hide all model access/caching behind a data layer, but for now cache here
         redis = RedisClient.get()
         cached = redis.get(f"users/{user.username}")
         if cached is not None: return json.loads(cached)
@@ -208,7 +215,7 @@ def get_user_bundle(user: User):
                     'username': user.username,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
-                    'github_username': user.profile.github_username,
+                    'github_username': profile.github_username,
                     'github_profile': github_profile,
                     'github_organizations': github_organizations,
                 } if 'login' in github_profile else {
@@ -424,7 +431,6 @@ def get_user_cyverse_profile(user: User) -> dict:
     profile = terrain.get_profile(user.username, user.profile.cyverse_access_token)
     if profile is None: raise ValueError(f"User {user.username} has no CyVerse profile")
 
-    # only write back to DB if we change anything
     altered = False
     if profile['first_name'] != user.first_name:
         user.first_name = profile['first_name']
@@ -436,6 +442,7 @@ def get_user_cyverse_profile(user: User) -> dict:
         user.profile.institution = profile['institution']
         altered = True
 
+    # only write to DB if we change anything (avoids a network call if we don't need one)
     if altered:
         user.profile.save()
         user.save()
@@ -444,21 +451,32 @@ def get_user_cyverse_profile(user: User) -> dict:
 
 
 def refresh_user_cyverse_tokens(user: User):
-    access_token, refresh_token = terrain.refresh_tokens(username=user.username,
-                                                         refresh_token=user.profile.cyverse_refresh_token)
+    access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
     user.profile.cyverse_access_token = access_token
     user.profile.cyverse_refresh_token = refresh_token
     user.profile.save()
     user.save()
 
 
-async def get_user_github_profile(user: User):
+async def get_user_github_profile(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return dict()
+
     return await github.get_profile(profile.github_username, profile.github_token)
 
 
-async def get_user_github_organizations(user: User):
+async def get_user_github_organizations(user: User) -> List[dict]:
     profile = await sync_to_async(Profile.objects.get)(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return []
+
     return await github.list_user_organizations(profile.github_username, profile.github_token)
 
 
@@ -594,7 +612,7 @@ def get_total_counts() -> dict:
     redis = RedisClient.get()
     users = User.objects.count()
     online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
-    wfs = [json.loads(wf) for wf in redis.scan_iter('workflows/*')]
+    wfs = [json.loads(wf) for wf in redis.scan_iter('workflows/*') if wf is not None]
     devs = list(set([wf['repo']['owner']['login']] for wf in wfs))
     workflows = len(wfs)
     developers = len(devs)

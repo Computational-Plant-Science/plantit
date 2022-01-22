@@ -309,8 +309,8 @@
                         placement="bottomleft"
                         >Welcome!
                         <hr />
-                        The <i class="fas fa-question fa-fw"></i> icon in the
-                        navigation bar indicates hints are enabled. Click
+                        An <i class="fas fa-question fa-fw"></i> icon in the
+                        navigation bar indicates hints are enabled. To see hints, click
                         <b-badge
                             :variant="
                                 profile.darkMode ? 'outline-dark' : 'light'

@@ -223,7 +223,7 @@ CACHEOPS_REDIS = {
 
 CACHEOPS = {
     # cache User.objects.get() calls and all other plantit model gets for 15 minutes
-    'auth.user': {'ops': 'get', 'timeout': 60 * 15},
+    # 'auth.user': {'ops': 'get', 'timeout': 60 * 15, 'cache_on_save': True},
     'plantit.*': {'ops': 'get', 'timeout': 60 * 15},
 
     # Enable manual caching on all other models with default timeout of an hour

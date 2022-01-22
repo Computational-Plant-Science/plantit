@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 import jwt
 import requests
+from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
@@ -162,9 +163,10 @@ class IDPViewSet(viewsets.ViewSet):
 
         token = parse_qs(response.text)['access_token'][0]
         user = self.get_object()
-        user.profile.github_username = Github(token).get_user().login
-        user.profile.github_token = token
-        user.profile.save()
+        profile = Profile.objects.get(user=user)
+        profile.github_username = Github(token).get_user().login
+        profile.github_token = token
+        profile.save()
         user.save()
 
         return redirect(f"/home/")
@@ -286,10 +288,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                     "https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
                     "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
-        if request.user.profile.github_token != '' and user.profile.github_username != '':
-            bundle = q.get_user_bundle(request.user)
-            response['github_profile'] = bundle['github_profile']
-            response['organizations'] = bundle['github_organizations']
+        profile = Profile.objects.get(user=request.user)
+        if q.has_github_info(profile):
+            github_profile = async_to_sync(q.get_user_github_profile)(user)
+            github_organizations = async_to_sync(q.get_user_github_organizations)(user)
+            response['github_profile'] = github_profile
+            response['organizations'] = github_organizations
 
         return JsonResponse(response)
 

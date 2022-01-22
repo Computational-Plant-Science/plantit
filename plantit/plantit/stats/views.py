@@ -16,13 +16,11 @@ from plantit.redis import RedisClient
 def institutions_info(_):
     redis = RedisClient.get()
     cached = list(redis.scan_iter(match=f"institutions/*"))
-
-    if len(cached) != 0:
-        institutions = [json.loads(redis.get(key)) for key in cached]
+    if len(cached) > 0:
+        institutions = [json.loads(institution) for institution in cached if institution is not None]
     else:
         institutions = q.get_institutions()
-        for i in institutions: redis.set(f"institutions/{i['name']}", json.dumps(i))
-
+        for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
     return JsonResponse({'institutions': institutions})
 
 
@@ -83,7 +81,7 @@ def user_timeseries(request, username):
     if cached is not None:
         series = json.loads(cached)
     else:
-        series = q.get_user_timeseries(user.username)
+        series = q.get_user_timeseries(user)
         redis.set(f"user_timeseries/{user.username}", json.dumps(series))
 
     return JsonResponse(series)

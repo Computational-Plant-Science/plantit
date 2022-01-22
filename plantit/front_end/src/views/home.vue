@@ -46,8 +46,7 @@
                                 : require('../assets/logos/github_black.png')
                         "
                     ></b-img>
-                    account.<br />Click the button below (or in the navigation
-                    bar) to log in.<br /><br /><b-button
+                    account.<br />Click the button below to log in.<br /><br /><b-button
                         class="mt-1 text-left"
                         variant="warning"
                         size="md"

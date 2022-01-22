@@ -32,13 +32,11 @@ async def list_user(request):
 @login_required
 @async_to_sync
 async def list_org(request):
-    # TODO cache organization memberships so don't have to look up each time
-    profile = await q.get_user_django_profile(request.user)
-    orgs = await list_user_organizations(profile.github_username, profile.github_token)
+    orgs = await q.get_user_github_organizations(request.user)
     redis = RedisClient.get()
-    org_workflows = dict()
 
     # load workflows for each org
+    org_workflows = dict()
     for org in orgs:
         org_name = org['login']
         org_workflows[org_name] = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
