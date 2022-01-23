@@ -1,7 +1,7 @@
 import json
 import logging
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import quote_plus
@@ -582,10 +582,13 @@ def person_to_dict(user: User, role: str) -> dict:
     }
 
 
+# usage stats/demographics info
+
 def get_institutions() -> dict:
     annotations = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
     institutions = dict()
 
+    # TODO use asyncx to send these requests in parallel
     for ann in annotations:
         name = ann['institution']
         count = ann['institution__count']
@@ -663,10 +666,12 @@ def get_users_total_timeseries() -> List[Tuple[str, int]]:
     return [(user.profile.created.isoformat(), i + 1) for i, user in enumerate(User.objects.all().order_by('profile__created'))]
 
 
+# TODO: this is horrifically expensive as task count grows, refactor
 def get_tasks_total_timeseries() -> List[Tuple[str, int]]:
     return [(task.created.isoformat(), i + 1) for i, task in enumerate(Task.objects.all().order_by('created')[:100])]
 
 
+# TODO: refactor like below
 def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -> dict:
     tasks = Task.objects.all() if user is None else Task.objects.filter(user=user).order_by('-completed')[:100]  # TODO make limit configurable
     series = dict()
@@ -690,6 +695,7 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -
     return series
 
 
+# TODO: refactor like below
 def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str) -> dict:
     tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
     series = dict()
@@ -708,25 +714,39 @@ def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workf
 
 
 def get_workflows_usage_timeseries(user: User = None) -> dict:
-    # TODO make limit configurable
-    tasks = (Task.objects.filter(workflow__config__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created'))[:100]
+    # get stats moving window width from settings
+    window_width_days = settings.STATS_WINDOW_WIDTH_DAYS
+
+    # starting date of window
+    start = timezone.now().date() - timedelta(days=window_width_days)
+
+    # if a user is provided, filter only tasks owned by that user, otherwise public tasks
+    tasks = Task.objects.filter(workflow__config__public=True, created__gte=start) if user is None else Task.objects.filter(user=user, created__gte=start)
+    tasks = tasks.order_by('-created')  # chronological order by start time
+
+    # to store timeseries (key is workflow owner/name/branch, value is series)
     series = dict()
 
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
+    # return empty if no tasks
+    if len(tasks) == 0: return series
 
-    # count tasks per workflow
-    for task in tasks:
-        workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
-        if workflow not in series: series[workflow] = dict()
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series[workflow]: series[workflow][timestamp] = 0
-        series[workflow][timestamp] = series[workflow][timestamp] + 1
+    # loop over days from start date to now and count tasks occurring per workflow on each day
+    for date in (start + timedelta(days=n) for n in range(window_width_days)):
+        # tasks created on this date
+        tasks_today = tasks.filter(created__date=date)
+
+        # count tasks per workflow
+        for task in tasks_today:
+            workflow = f"{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}"
+            if workflow not in series: series[workflow] = dict()
+            timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+            if timestamp not in series[workflow]: series[workflow][timestamp] = 0
+            series[workflow][timestamp] = series[workflow][timestamp] + 1
 
     return series
 
 
+# TODO: refactor like above
 def get_agent_usage_timeseries(name) -> dict:
     agent = Agent.objects.get(name=name)
     tasks = Task.objects.filter(agent=agent).order_by('-created')
@@ -744,8 +764,8 @@ def get_agent_usage_timeseries(name) -> dict:
     return series
 
 
+# TODO: refactor like above
 def get_agents_usage_timeseries(user: User = None) -> dict:
-    # TODO make limit configurable
     tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
     series = dict()
 

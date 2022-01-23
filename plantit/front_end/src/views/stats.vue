@@ -463,7 +463,7 @@ export default {
                             type: 'scatter',
                         },
                     ];
-                    this.timeseriesTasksUsage = this.timeseriesTasksTotal = [
+                    this.timeseriesTasksUsage = [
                         {
                             x: Object.keys(response.data.tasks_usage).map(
                                 (k) => k

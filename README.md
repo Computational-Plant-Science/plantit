@@ -244,6 +244,7 @@ TASKS_TEMPLATE_SCRIPT_SLURM=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
 USERS_STATS_REFRESH_MINUTES=10
+STATS_WINDOW_WIDTH_DAYS=30
 MORE_USERS=/code/more_users.json
 AGENT_KEYS=/code/agent_keys
 WORKFLOWS_CACHE=/code/workflows.json
