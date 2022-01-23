@@ -117,12 +117,12 @@
                             <p
                                 :class="
                                     profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
+                                        ? 'text-light p-3'
+                                        : 'text-dark p-3'
                                 "
                                 v-if="filtered.length === 0"
                             >
-                                You haven't submitted any tasks yet.
+                                No tasks found.
                             </p>
                             <div v-else class="ml-2 mr-2">
                                 <b-row

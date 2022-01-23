@@ -48,6 +48,8 @@ def get_or_create(request):
         })
     elif request.method == 'POST':
         task_config = request.data
+        from pprint import pprint
+        pprint(task_config)
 
         # if it's not delayed or repeating, start the task chain now
         if task_config['type'] == 'Now':

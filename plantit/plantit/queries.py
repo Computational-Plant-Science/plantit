@@ -595,7 +595,7 @@ def count_institutions():
 async def get_institutions() -> dict:
     # count members per institution
     counts = await sync_to_async(count_institutions)()
-    member_counts = {i['institution']: i['institution_count'] for i in counts}
+    member_counts = {i['institution'].lower(): i['institution__count'] for i in counts}
 
     # get institution information (send all the requests concurrently)
     # TODO: need to make sure this doesn't exceed the free plan rate limit
@@ -606,7 +606,7 @@ async def get_institutions() -> dict:
     for result in results:
         # reconstruct institution name with proper capitalization from Mapbox result
         # TODO: are there any edge cases this might fail for?
-        name = ' '.join([word.capitalize() for word in result['query']])
+        name = ' '.join(result['query'])
 
         # if Mapbox returned no results, we can't return geocode information
         if len(result['features']) == 0:
@@ -689,9 +689,8 @@ def get_users_total_timeseries() -> List[Tuple[str, int]]:
     return [(user.profile.created.isoformat(), i + 1) for i, user in enumerate(User.objects.all().order_by('profile__created'))]
 
 
-# TODO: this is horrifically expensive as task count grows, refactor
 def get_tasks_total_timeseries() -> List[Tuple[str, int]]:
-    return [(task.created.isoformat(), i + 1) for i, task in enumerate(Task.objects.all().order_by('created')[:100])]
+    return [(task.created.isoformat(), i + 1) for i, task in enumerate(Task.objects.all().values('created').order_by('created')[:100])]
 
 
 # TODO: refactor like below

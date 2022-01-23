@@ -870,7 +870,7 @@ export default {
                 },
                 autosize: true,
                 title: {
-                    text: 'Tasks Running',
+                    text: 'Task Usage',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
