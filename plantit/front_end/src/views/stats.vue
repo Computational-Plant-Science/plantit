@@ -41,17 +41,16 @@
                             "
                         >
                             <template #title>
-                                <h1
-                                    v-if="userCount >= 0"
-                                    class="text-success text-center"
-                                >
-                                    {{ userCount }}
+                                <h1 class="text-success text-center">
+                                    <span v-if="userCount >= 0">{{
+                                        userCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
                                 </h1>
-                                <b-spinner
-                                    v-else
-                                    label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner>
                                 <b-button
                                     :variant="
                                         activeTab === 0
@@ -74,24 +73,27 @@
                                 :layout="usersPlotLayout"
                             ></Plotly>
                             <br />
-                        <span text-center>
-                            <h1 class="text-success">
-                                <span v-if="onlineCount >= 0">{{ onlineCount }}</span>
-                              <b-spinner
-                                v-else
-                                label="Loading..."
-                                variant="secondary"
-                            ></b-spinner
-                            >
-                            </h1>
-                            </b-spinner
-                            ><b-badge
-                                :variant="
-                                    profile.darkMode ? 'outline-light' : 'white'
-                                "
-                                ><i class="fas fa-signal fa-fw"></i>
-                                Online</b-badge
-                        ></span></b-tab
+                            <span text-center>
+                                <h1 class="text-success">
+                                    <span v-if="onlineCount >= 0">{{
+                                        onlineCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                </h1>
+                                ><b-badge
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    ><i class="fas fa-signal fa-fw"></i>
+                                    Online</b-badge
+                                ></span
+                            ></b-tab
                         >
                         <b-tab
                             title="Workflows"
@@ -104,14 +106,15 @@
                                     : 'theme-light m-0 p-3'
                             "
                             ><template #title
-                                ><h1
-                                    class="text-success text-center"
-                                >
-                                    <span v-if="workflowCount >= 0">{{ workflowCount }}</span><b-spinner
-                                    v-else
-                                    label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner>
+                                ><h1 class="text-success text-center">
+                                    <span v-if="workflowCount >= 0">{{
+                                        workflowCount
+                                    }}</span
+                                    ><b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
                                 </h1>
                                 <b-button
                                     :variant="
@@ -156,7 +159,11 @@
                                     "
                                     class="overflow-hidden text-left p-2"
                                     v-for="workflow in workflows"
-                                    v-bind:key="workflow.config.name + '/' + workflow.branch.name"
+                                    v-bind:key="
+                                        workflow.config.name +
+                                        '/' +
+                                        workflow.branch.name
+                                    "
                                     no-body
                                     style="min-width: 50rem"
                                     ><blurb
@@ -164,25 +171,27 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
-                          </b-tab
-                        >
-                      <b-tab title="Developers" :title-link-class="
+                        </b-tab>
+                        <b-tab
+                            title="Developers"
+                            :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                             :class="
                                 profile.darkMode
                                     ? 'theme-dark m-0 p-3'
                                     : 'theme-light m-0 p-3'
-                            "><template #title
-                                ><h1
-                                    class="text-success text-center"
-                                >
-                                    <span v-if="developers.length >= 0">{{ developers.length }}</span>
-                        <b-spinner
-                                    v-else
-                                    label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner>
+                            "
+                            ><template #title
+                                ><h1 class="text-success text-center">
+                                    <span v-if="developers.length >= 0">{{
+                                        developers.length
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
                                 </h1>
                                 <b-button
                                     :variant="
@@ -238,8 +247,10 @@
                                             ).length
                                         }}</b-col></b-row
                                     ></b-card
-                                ></b-card-group></b-tab>
-                      <b-tab
+                                ></b-card-group
+                            ></b-tab
+                        >
+                        <b-tab
                             title="Tasks"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -250,16 +261,16 @@
                                     : 'theme-light m-0 p-3'
                             "
                             ><template #title
-                                ><h1
-                                    class="text-success text-center"
-                                >
-                                    <span v-if="taskCount >= 0">{{ taskCount }}</span>
-                        <b-spinner
-                                    v-else
-                                    label="Loading..."
-                                    variant="secondary"
-                                >
-                        </b-spinner>
+                                ><h1 class="text-success text-center">
+                                    <span v-if="taskCount >= 0">{{
+                                        taskCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    >
+                                    </b-spinner>
                                 </h1>
                                 <b-button
                                     :variant="
@@ -454,8 +465,12 @@ export default {
                     ];
                     this.timeseriesTasksUsage = this.timeseriesTasksTotal = [
                         {
-                            x: Object.keys(response.data.tasks_usage).map((k) => response.data.tasks_usage[k][0]),
-                            y: Object.keys(response.data.tasks_usage).map((k) => response.data.tasks_usage[k][1]),
+                            x: Object.keys(response.data.tasks_usage).map(
+                                (k) => k
+                            ),
+                            y: Object.keys(response.data.tasks_usage).map(
+                                (k) => response.data.tasks_usage[k]
+                            ),
                             type: 'scatter',
                         },
                     ];
@@ -616,16 +631,26 @@ export default {
             //     return { x: [], y: [], type: 'scatter' };
             return this.timeseriesTasksUsage === null
                 ? [{ x: [], y: [], type: 'scatter' }]
-                : [
-                      {
-                          x: this.timeseriesTasksUsage[0].x.map((t) =>
+                : Object.keys(this.timeseriesTasksUsage).map((key) => {
+                      return {
+                          x: this.timeseriesTasksUsage[key].x.map((t) =>
                               moment(t).format('YYYY-MM-DD HH:mm:ss')
                           ),
-                          y: this.timeseriesTasksUsage[0].y,
-                          type: 'scatter',
-                          line: { color: '#d6df5D' },
-                      },
-                  ];
+                          y: this.timeseriesTasksUsage[key].y,
+                          name: key,
+                          type: 'line',
+                      };
+                  });
+            // : [
+            //       {
+            //           x: this.timeseriesTasksUsage[0].x.map((t) =>
+            //               moment(t).format('YYYY-MM-DD HH:mm:ss')
+            //           ),
+            //           y: this.timeseriesTasksUsage[0].y,
+            //           type: 'scatter',
+            //           line: { color: '#d6df5D' },
+            //       },
+            //   ];
         },
         tasksPlotLayout() {
             return {
