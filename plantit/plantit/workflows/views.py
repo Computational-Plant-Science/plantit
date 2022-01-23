@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 
 from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required

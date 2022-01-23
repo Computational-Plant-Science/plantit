@@ -1,8 +1,11 @@
+from pprint import pprint
+
 from django.test import TestCase
 
 import plantit.queries as q
 
 
-class SSHClientTests(TestCase):
+class QueriesTests(TestCase):
     async def test_get_institutions(self):
-        pass
+        institutions = await q.get_institutions()
+        pprint(institutions)

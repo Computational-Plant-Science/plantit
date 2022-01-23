@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import traceback
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -290,10 +291,13 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         profile = Profile.objects.get(user=request.user)
         if q.has_github_info(profile):
-            github_profile = async_to_sync(q.get_user_github_profile)(user)
-            github_organizations = async_to_sync(q.get_user_github_organizations)(user)
-            response['github_profile'] = github_profile
-            response['organizations'] = github_organizations
+            try:
+                github_profile = async_to_sync(q.get_user_github_profile)(user)
+                github_organizations = async_to_sync(q.get_user_github_organizations)(user)
+                response['github_profile'] = github_profile
+                response['organizations'] = github_organizations
+            except:
+                logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
 
         return JsonResponse(response)
 

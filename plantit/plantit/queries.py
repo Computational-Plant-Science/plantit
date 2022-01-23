@@ -588,10 +588,14 @@ def person_to_dict(user: User, role: str) -> dict:
 # usage stats/demographics info
 
 
+def count_institutions():
+    return list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
+
+
 async def get_institutions() -> dict:
     # count members per institution
-    member_counts = {i['institution']: i['institution_count'] for i in
-                     (Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))}
+    counts = await sync_to_async(count_institutions)()
+    member_counts = {i['institution']: i['institution_count'] for i in counts}
 
     # get institution information (send all the requests concurrently)
     # TODO: need to make sure this doesn't exceed the free plan rate limit

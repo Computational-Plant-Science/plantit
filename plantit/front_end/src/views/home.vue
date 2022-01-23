@@ -47,7 +47,7 @@
                         "
                     ></b-img>
                     account.<br />Click the button below to log in.<br /><br /><b-button
-                        class="mt-1 text-left"
+                        class="mt-1 text-left text-dark"
                         variant="warning"
                         size="md"
                         href="/apis/v1/idp/github_request_identity/"
