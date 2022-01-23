@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponseNotFound
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+import plantit.mapbox
 import plantit.queries as q
 from plantit.redis import RedisClient
 
@@ -13,13 +14,13 @@ from plantit.redis import RedisClient
 @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['get'])
-def institutions_info(_):
+async def institutions_info(_):
     redis = RedisClient.get()
     cached = list(redis.scan_iter(match=f"institutions/*"))
     if len(cached) > 0:
         institutions = [json.loads(redis.get(institution)) for institution in cached if institution is not None]
     else:
-        institutions = q.get_institutions()
+        institutions = await q.get_institutions()
         for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
     return JsonResponse({'institutions': institutions})
 

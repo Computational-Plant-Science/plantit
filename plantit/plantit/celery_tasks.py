@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 import plantit.healthchecks
+import plantit.mapbox
 import plantit.terrain as terrain
 import plantit.queries as q
 import plantit.utils.agents
@@ -420,7 +421,7 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     redis = RedisClient.get()
-    institutions = q.get_institutions()
+    institutions = async_to_sync(q.get_institutions)()
     for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
 
 

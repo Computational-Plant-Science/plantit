@@ -118,7 +118,7 @@ def list_dir(path: str, token: str) -> List[str]:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_dirs(paths: List[str], token: str, timeout: int = 15) -> List[dict]:
+async def get_dirs(paths: List[str], token: str, timeout: int = 15):
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}" for path in paths]
     headers = {
         "Authorization": f"Bearer {token}",

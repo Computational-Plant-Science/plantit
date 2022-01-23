@@ -1,14 +1,13 @@
+import asyncio
 import json
 import logging
-from collections import Counter
+from collections import Counter, namedtuple
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
-from urllib.parse import quote_plus
 
 import jwt
 import numpy as np
-import requests
 from asgiref.sync import sync_to_async, async_to_sync
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -17,6 +16,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 import plantit.terrain as terrain
+import plantit.mapbox as mapbox
 from plantit import github as github
 from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentRole
@@ -212,13 +212,13 @@ def get_user_bundle(user: User):
         github_profile = async_to_sync(get_user_github_profile)(user)
         github_organizations = async_to_sync(get_user_github_organizations)(user)
         bundle = {
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'github_username': profile.github_username,
-                    'github_profile': github_profile,
-                    'github_organizations': github_organizations,
-                } if 'login' in github_profile else {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'github_username': profile.github_username,
+            'github_profile': github_profile,
+            'github_organizations': github_organizations,
+        } if 'login' in github_profile else {
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
@@ -272,7 +272,8 @@ def task_to_dict(task: Task) -> dict:
     if Path(orchestrator_log_file_path).is_file():
         with open(orchestrator_log_file_path, 'r') as log:
             orchestrator_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
-    else: orchestrator_logs = []
+    else:
+        orchestrator_logs = []
 
     # try:
     #     AgentAccessPolicy.objects.get(user=task.user, agent=task.agent, role__in=[AgentRole.admin, AgentRole.guest])
@@ -315,7 +316,7 @@ def task_to_dict(task: Task) -> dict:
         'workflow_image_url': task.workflow_image_url,
         'input_path': task.workflow['config']['input']['path'] if 'input' in task.workflow['config'] else None,
         'output_path': task.workflow['config']['output']['to'] if (
-                    'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
+                'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,
         'is_success': task.is_success,
@@ -482,8 +483,10 @@ async def get_user_github_organizations(user: User) -> List[dict]:
 
 @sync_to_async
 def filter_tasks(user: User, completed: bool = None):
-    if completed is not None and completed: tasks = Task.objects.filter(user=user, completed__isnull=False)
-    else: tasks = Task.objects.filter(user=user)
+    if completed is not None and completed:
+        tasks = Task.objects.filter(user=user, completed__isnull=False)
+    else:
+        tasks = Task.objects.filter(user=user)
     return list(tasks)
 
 
@@ -584,31 +587,47 @@ def person_to_dict(user: User, role: str) -> dict:
 
 # usage stats/demographics info
 
-def get_institutions() -> dict:
-    annotations = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
-    institutions = dict()
 
-    # TODO use asyncx to send these requests in parallel
-    for ann in annotations:
-        name = ann['institution']
-        count = ann['institution__count']
-        place = quote_plus(name)
-        response = requests.get(
-            f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
-        content = response.json()
-        feature = content['features'][0]
-        feature['id'] = name
-        feature['properties'] = {
-            'name': name,
-            'count': count
-        }
-        institutions[name] = {
-            'institution': name,
-            'count': count,
-            'geocode': feature
-        }
+async def get_institutions() -> dict:
+    # count members per institution
+    member_counts = {i['institution']: i['institution_count'] for i in
+                     (Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))}
+
+    # get institution information (send all the requests concurrently)
+    # TODO: need to make sure this doesn't exceed the free plan rate limit
+    tasks = [mapbox.get_institution(k, settings.MAPBOX_TOKEN) for k in member_counts.keys()]
+    results = await asyncio.gather(*tasks)
+
+    institutions = dict()
+    for result in results:
+        # reconstruct institution name with proper capitalization from Mapbox result
+        # TODO: are there any edge cases this might fail for?
+        name = ' '.join([word.capitalize() for word in result['query']])
+
+        # if Mapbox returned no results, we can't return geocode information
+        if len(result['features']) == 0:
+            logger.warning(f"No results from Mapbox for institution: {name}")
+            institutions[name] = {
+                'institution': name,
+                'count': member_counts[name],
+                'geocode': None
+            }
+        # if we got results, pick the top one
+        else:
+            feature = result['features'][0]
+            feature['id'] = name
+            feature['properties'] = {
+                'name': name,
+                'count': member_counts[name]
+            }
+            institutions[name] = {
+                'institution': name,
+                'count': member_counts[name],
+                'geocode': feature
+            }
 
     return institutions
+
 
 
 def get_total_counts() -> dict:
@@ -697,7 +716,8 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -
 
 # TODO: refactor like below
 def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str) -> dict:
-    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name, workflow__branch__name=workflow_branch)
+    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name,
+                                workflow__branch__name=workflow_branch)
     series = dict()
 
     # return early if no tasks
@@ -708,20 +728,21 @@ def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workf
     for task in tasks:
         timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
         if timestamp not in series: series[timestamp] = 0
-        series[timestamp] = series [timestamp] + 1
+        series[timestamp] = series[timestamp] + 1
 
     return series
 
 
 def get_workflows_usage_timeseries(user: User = None) -> dict:
     # get stats moving window width from settings
-    window_width_days = settings.STATS_WINDOW_WIDTH_DAYS
+    window_width_days = int(settings.STATS_WINDOW_WIDTH_DAYS)
 
     # starting date of window
     start = timezone.now().date() - timedelta(days=window_width_days)
 
     # if a user is provided, filter only tasks owned by that user, otherwise public tasks
-    tasks = Task.objects.filter(workflow__config__public=True, created__gte=start) if user is None else Task.objects.filter(user=user, created__gte=start)
+    tasks = Task.objects.filter(workflow__config__public=True, created__gte=start) if user is None else Task.objects.filter(user=user,
+                                                                                                                            created__gte=start)
     tasks = tasks.order_by('-created')  # chronological order by start time
 
     # to store timeseries (key is workflow owner/name/branch, value is series)
@@ -766,7 +787,8 @@ def get_agent_usage_timeseries(name) -> dict:
 
 # TODO: refactor like above
 def get_agents_usage_timeseries(user: User = None) -> dict:
-    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[
+                                                                                              :100]
     series = dict()
 
     # return early if no tasks
@@ -805,7 +827,7 @@ async def calculate_user_statistics(user: User) -> dict:
     used_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
                    [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
     used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
-                    [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
+                     [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
     used_agents_counter = Counter(used_agents)
     used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
     unique_used_agents = list(np.unique(used_agents))
