@@ -93,7 +93,6 @@ The following are required to develop or deploy `plantit` in a Unix environment:
 
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)
-- Python 2.7+
 
 ### Installation
 
