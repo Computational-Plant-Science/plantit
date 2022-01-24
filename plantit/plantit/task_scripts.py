@@ -143,8 +143,8 @@ def compose_task_push_command(task: Task, options: TaskOptions) -> str:
     if 'to' in output and output['to'] is not None:
         command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
-        # command = command + ' ' + ' '.join(['--include_name ' + name for name in get_included_by_name(task)])
-        # command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_included_by_pattern(task)])
+        # command = command + ' ' + ' '.join(['--include_name ' + name for name in get_output_included_names(task)])
+        # command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_output_included_patterns(task)])
         # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
         if 'include' in output:

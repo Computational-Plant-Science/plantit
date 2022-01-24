@@ -29,7 +29,7 @@ from plantit.task_lifecycle import create_immediate_task, configure_task_environ
     get_job_status, get_job_walltime, list_result_files
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils.tasks import parse_time_limit_seconds
+from plantit.utils.tasks import parse_task_time_limit
 
 logger = get_task_logger(__name__)
 

@@ -44,37 +44,66 @@ def get_task_scheduler_log_file_path(task: Task):
     return join(os.environ.get('TASKS_LOGS'), get_task_scheduler_log_file_name(task))
 
 
-def get_included_by_name(task: Task) -> List[str]:
-    included_by_name = (
-        (task.workflow['output']['include']['names'] if 'names' in task.workflow['output'][
-            'include'] else [])) if 'output' in task.workflow else []
-    included_by_name.append(f"{task.guid}.zip")  # zip file
-    if not task.agent.launcher: included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    included_by_name.append(f"plantit.{task.job_id}.out")
-    included_by_name.append(f"plantit.{task.job_id}.err")
+def get_output_included_names(task: Task) -> List[str]:
+    try:
+        included = list(task.workflow['output']['include']['names'])
+    except:
+        included = []
 
-    return included_by_name
+    # default inclusions: scheduler log files and zip file
+    included.append(f"{task.guid}.zip")
+    included.append(f"plantit.{task.job_id}.out")
+    included.append(f"plantit.{task.job_id}.err")
 
-
-def get_included_by_pattern(task: Task) -> List[str]:
-    included_by_pattern = (task.workflow['output']['include']['patterns'] if 'patterns' in task.workflow['output'][
-        'include'] else []) if 'output' in task.workflow else []
-    included_by_pattern.append('.out')
-    included_by_pattern.append('.err')
-    included_by_pattern.append('.zip')
-
-    return included_by_pattern
+    return included
 
 
-def should_transfer_results(task: Task) -> bool:
-    return 'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']
+def get_output_included_patterns(task: Task) -> List[str]:
+    try:
+        return list(task.workflow['output']['include']['patterns'])
+    except:
+        return []
 
 
-def parse_task_walltime(walltime) -> timedelta:
+def has_output_target(task: Task) -> bool:
+    """
+    Determines whether the given task has a target CyVerse collection to transfer results to
+
+    Args:
+        task: The task
+
+    Returns: True if the task has a target collection, otherwise false
+    """
+
+    try:
+        target = task.workflow['output']['to']
+        return isinstance(target, str) and target != ''
+    except:
+        return False
+
+
+def parse_task_walltime(walltime: str) -> timedelta:
+    """
+    Converts a walltime string (format HH:MM:SS) to a timedelta
+
+    Args:
+        walltime: The walltime string
+
+    Returns: The timedelta
+
+    """
     time_split = walltime.split(':')
-    time_hours = int(time_split[0])
-    time_minutes = int(time_split[1])
-    time_seconds = int(time_split[2])
+
+    # if we don't have 3 elements, or if they can't be parsed as ints, the walltime string is malformed
+    error = ValueError(f"Malformed walltime string (required format: HH:MM:SS): {walltime}")
+    if len(time_split) != 3: raise error
+    try:
+        time_hours = int(time_split[0])
+        time_minutes = int(time_split[1])
+        time_seconds = int(time_split[2])
+    except ValueError:
+        raise error
+
     return timedelta(hours=time_hours, minutes=time_minutes, seconds=time_seconds)
 
 
@@ -92,34 +121,80 @@ def parse_task_time(data: dict) -> datetime:
 
 
 def parse_task_eta(data: dict) -> (datetime, int):
-    delay_value = data['delayValue']
-    delay_units = data['delayUnits']
+    """
+    Parses the dictionary for the delayed or repeating task's ETA (datetime and seconds from now)
 
-    if delay_units == 'Seconds':
-        seconds = int(delay_value)
-    elif delay_units == 'Minutes':
-        seconds = int(delay_value) * 60
-    elif delay_units == 'Hours':
-        seconds = int(delay_value) * 60 * 60
-    elif delay_units == 'Days':
-        seconds = int(delay_value) * 60 * 60 * 24
-    else:
-        raise ValueError(f"Unsupported delay units (expected: Seconds, Minutes, Hours, or Days)")
+    Args:
+        data: The dictionary, including 'delay' and 'units' attributes
 
+    Returns: The ETA (datetime) and seconds from now
+
+    """
+    delay = data.get('delay', None)
+    units = data.get('units', None)
+
+    if delay is None: raise ValueError(f"Missing 'value' attribute")
+    if units is None: units = 'seconds'  # use seconds by default
+
+    # web UI might send capitalized units
+    units = units.lower()
+
+    try: delay = int(delay)
+    except: raise ValueError(f"Failed to parse 'delay' as integer")
+
+    # convert delay to seconds
+    if units == 'seconds': seconds = delay
+    elif units == 'minutes': seconds = delay * 60
+    elif units == 'hours': seconds = delay * 60 * 60
+    elif units == 'days': seconds = delay * 60 * 60 * 24
+    else: raise ValueError(f"Unsupported units (expected: seconds, minutes, hours, or days)")
+
+    # calculate time task should start
     now = timezone.now()
     eta = now + timedelta(seconds=seconds)
 
     return eta, seconds
 
 
-def parse_time_limit_seconds(time):
-    time_limit = time['limit']
-    time_units = time['units']
-    seconds = time_limit
-    if time_units == 'Days':
-        seconds = seconds * 60 * 60 * 24
-    elif time_units == 'Hours':
-        seconds = seconds * 60 * 60
-    elif time_units == 'Minutes':
-        seconds = seconds * 60
+def parse_task_time_limit(data: dict):
+    """
+    Parses the dictionary for the task's time limit in total seconds
+
+    Args:
+        data: The dictionary, including 'limit' and 'units' attributes
+
+    Returns: The time limit (in seconds)
+
+    """
+    limit = data.get('limit', None)
+    units = data.get('units', None)
+
+    if limit is None: raise ValueError(f"Missing 'limit' attribute")
+    if units is None: units = 'seconds'  # use seconds by default
+
+    # web UI might send capitalized units
+    units = units.lower()
+
+    try: limit = int(limit)
+    except: raise ValueError(f"Failed to parse 'limit' as integer")
+
+    # convert limit to seconds
+    if units == 'seconds': seconds = limit
+    elif units == 'minutes': seconds = limit * 60
+    elif units == 'hours': seconds = limit * 60 * 60
+    elif units == 'days': seconds = limit * 60 * 60 * 24
+    else: raise ValueError(f"Unsupported units (expected: seconds, minutes, hours, or days)")
+
     return seconds
+
+
+def parse_task_miappe_info(data: dict):
+    try:
+        project = data['project']
+        if 'study' in data:
+            study = data['study']
+            return project, study
+        else:
+            return project, None
+    except:
+        return None, None

@@ -22,7 +22,7 @@ from plantit.task_lifecycle import create_immediate_task, create_delayed_task, c
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.celery_tasks import prepare_task_environment, submit_task, poll_task_status
-from plantit.utils.tasks import parse_time_limit_seconds, get_task_orchestrator_log_file_path, \
+from plantit.utils.tasks import parse_task_time_limit, get_task_orchestrator_log_file_path, \
     get_task_scheduler_log_file_path, \
     get_task_agent_log_file_path
 
@@ -47,13 +47,14 @@ def get_or_create(request):
             'tasks': [q.task_to_dict(task) for task in list(page)]
         })
     elif request.method == 'POST':
+        # get the task configuration from the request
         task_config = request.data
-        from pprint import pprint
-        pprint(task_config)
 
-        # if it's not delayed or repeating, start the task chain now
+        # if this is an immediate task, submit it now
         if task_config['type'] == 'Now':
-            if task_config['config'].get('task_guid', None) is None: return HttpResponseBadRequest()
+            # GUIDs for immediate tasks must be set from the client (for now... TODO: is this necessary?)
+            if task_config['config'].get('guid', None) is None:
+                return HttpResponseBadRequest()
 
             # create task
             task = create_immediate_task(request.user, task_config)

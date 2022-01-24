@@ -31,8 +31,8 @@ from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, T
     EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.misc import del_none
-from plantit.utils.tasks import parse_task_eta, parse_time_limit_seconds, parse_task_job_id, \
-    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount
+from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, \
+    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
 from plantit.keypairs import get_user_private_key_path
 
 logger = logging.getLogger(__name__)
@@ -41,23 +41,28 @@ logger = logging.getLogger(__name__)
 def create_task(username: str,
                 agent_name: str,
                 workflow: dict,
-                branch: dict,
-                name: str = None,
+                miappe: dict,
                 guid: str = None,
-                project: str = None,
-                study: str = None):
-    repo_owner = workflow['repo']['owner']['login']
-    repo_name = workflow['repo']['name']
-    repo_branch = branch['name']
+                name: str = None):
+
+    # parse GitHub repo info
+    repo_owner = workflow['repo']['owner']
+    repo_name = workflow['repo']['owner']
+    repo_branch = workflow['repo']['branch']
+
+    # get the submitting user and selected agent
     agent = Agent.objects.get(name=agent_name)
     user = User.objects.get(username=username)
-    if guid is None: guid = str(uuid.uuid4())  # if the browser client hasn't set a GUID, create one
-    now = timezone.now()
 
-    time_limit = parse_time_limit_seconds(workflow['config']['time'])
+    # if the browser client hasn't set a GUID, create one
+    if guid is None: guid = str(uuid.uuid4())
+
+    # get time limit and calculate due time (after which task will timeout)
+    time_limit = parse_task_time_limit(workflow['config']['time'])
     logger.info(f"Using task time limit {time_limit}s")
     due_time = timezone.now() + timedelta(seconds=time_limit)
 
+    now = timezone.now()
     task = Task.objects.create(
         guid=guid,
         name=guid if name is None else name,
@@ -74,6 +79,7 @@ def create_task(username: str,
         token=binascii.hexlify(os.urandom(20)).decode())
 
     # add MIAPPE info
+    project, study = parse_task_miappe_info(miappe)
     if project is not None: task.project = Investigation.objects.get(owner=user, title=project)
     if study is not None: task.study = Study.objects.get(project=task.project, title=study)
 
@@ -86,6 +92,7 @@ def create_task(username: str,
     task.workdir = f"{task.guid}/"  # use GUID for working directory name
     task.save()
 
+    # increment task count for aggregate statistics
     counter = TaskCounter.load()
     counter.count = counter.count + 1
     counter.save()
@@ -93,49 +100,48 @@ def create_task(username: str,
     return task
 
 
-def create_immediate_task(user: User, workflow):
-    repo_owner = workflow['repo']['owner']['login']
-    repo_name = workflow['repo']['name']
-    repo_branch = workflow['branch']['name']
+def create_immediate_task(user: User, config):
+    # set submission time so we can persist configuration
+    # and show recent submissions to the user in the UI
+    config['timestamp'] = timezone.now().isoformat()
 
+    # parse GitHub repo info
+    repo_owner = config['repo']['owner']
+    repo_name = config['repo']['name']
+    repo_branch = config['repo']['branch']
+
+    # persist task configuration
     redis = RedisClient.get()
-    last_config = workflow.copy()
-    del last_config['auth']
-    last_config['timestamp'] = timezone.now().isoformat()
-    redis.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(last_config))
+    redis.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(config))
 
-    config = workflow['config']
-    branch = workflow['branch']
-    task_guid = config.get('task_guid', None) if workflow['type'] == 'Now' else str(uuid.uuid4())
-    task_name = task_guid
-    # task_name = config.get('task_name', None)
+    guid = config.get('guid', None) if config['type'] == 'Now' else str(uuid.uuid4())
+    name = config.get('name', None)
 
-    agent = Agent.objects.get(name=config['agent']['name'])
+    agent = Agent.objects.get(name=config['agent'])
     task = create_task(
         username=user.username,
         agent_name=agent.name,
-        workflow=workflow,
-        branch=branch,
-        name=task_name if task_name is not None and task_name != '' else task_guid,
-        guid=task_guid,
-        project=workflow['miappe']['project']['title'] if workflow['miappe']['project'] is not None else None,
-        study=workflow['miappe']['study']['title'] if workflow['miappe']['study'] is not None else None)
+        workflow=config['workflow'],
+        miappe=config['miappe'],
+        name=name if name is not None and name != '' else guid,
+        guid=guid)
 
     return task
 
 
-def create_delayed_task(user: User, workflow):
+def create_delayed_task(user: User, config):
     now = timezone.now().timestamp()
     id = f"{user.username}-delayed-{now}"
-    eta, seconds = parse_task_eta(workflow)
+    eta, seconds = parse_task_eta(config['eta'])
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
 
-    repo_owner = workflow['repo']['owner']['login']
-    repo_name = workflow['repo']['name']
-    repo_branch = workflow['branch']['name']
+    # parse GitHub repo info
+    repo_owner = config['repo']['owner']
+    repo_name = config['repo']['name']
+    repo_branch = config['repo']['branch']
 
-    if 'logo' in workflow['config']:
-        logo_path = workflow['config']['logo']
+    if 'logo' in config['config']:
+        logo_path = config['config']['logo']
         workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
     else:
         workflow_image_url = None
@@ -151,7 +157,7 @@ def create_delayed_task(user: User, workflow):
         workflow_image_url=workflow_image_url,
         name=id,
         task='plantit.celery_tasks.create_and_submit_delayed',
-        args=json.dumps([user.username, workflow, id]))
+        args=json.dumps([user.username, config, id]))
 
     # manually refresh task schedule
     PeriodicTasks.changed(task)
@@ -162,7 +168,7 @@ def create_delayed_task(user: User, workflow):
 def create_repeating_task(user: User, workflow):
     now = timezone.now().timestamp()
     id = f"{user.username}-repeating-{now}"
-    eta, seconds = parse_task_eta(workflow)
+    eta, seconds = parse_task_eta(workflow['eta'])
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
 
     repo_owner = workflow['repo']['owner']['login']

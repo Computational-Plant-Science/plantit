@@ -4273,6 +4273,8 @@ export default {
             // TODO walltime
         },
         async onStart() {
+            this.submitting = true;
+
             // prepare configuration
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/tasks/status/';
@@ -4343,34 +4345,31 @@ export default {
                 config.output.include.names = Array.from(
                     this.outputSelectedNames
                 );
-
-                // config.output.patterns =
-                //     this.outputSelectedPatterns.length > 0
-                //         ? this.outputSelectedPatterns
-                //         : this.output.filetypes;
-                // if (!this.outputDataset) delete config.output['to'];
             }
             if (this.getWorkflow.config.logo !== null)
                 config.logo = this.getWorkflow.config.logo;
 
-            this.submitting = true;
+            var postData = {
+                type: this.submitType,
+                workflow: config,
+                repo: {
+                    owner: this.getWorkflow.repo.owner.login,
+                    name: this.getWorkflow.repo.name,
+                    branch: this.getWorkflow.branch.name,
+                },
+                miappe: {}
+            };
+
+            if (this.selectedProject !== null) {
+                postData['miappe']['project'] = this.selectedProject.title;
+                postData['miappe']['study'] = this.selectedStudy.title;
+            }
+
             if (this.submitType === 'Now')
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
-                    data: {
-                        repo: this.getWorkflow.repo,
-                        branch: this.getWorkflow.branch,
-                        config: config,
-                        type: this.submitType,
-                        auth: {
-                            username: this.selectedAgent.username,
-                        },
-                        miappe: {
-                            project: this.selectedProject,
-                            study: this.selectedStudy,
-                        },
-                    },
+                    data: postData,
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
@@ -4400,25 +4399,15 @@ export default {
                         this.submitting = false;
                         throw error;
                     });
-            else if (this.submitType === 'After')
+            else if (this.submitType === 'After') {
+                postData['eta'] = {
+                    units: this.delayUnits,
+                    delay: this.delayValue,
+                };
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
-                    data: {
-                        repo: this.getWorkflow.repo,
-                        branch: this.getWorkflow.branch,
-                        config: config,
-                        type: this.submitType,
-                        auth: {
-                            username: this.selectedAgent.username,
-                        },
-                        miappe: {
-                            project: this.selectedProject,
-                            study: this.selectedStudy,
-                        },
-                        delayUnits: this.delayUnits,
-                        delayValue: this.delayValue,
-                    },
+                    data: postData,
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
@@ -4453,25 +4442,15 @@ export default {
                         this.submitting = false;
                         throw error;
                     });
-            else if (this.submitType === 'Every')
+            } else if (this.submitType === 'Every') {
+                postData['eta'] = {
+                    units: this.delayUnits,
+                    delay: this.delayValue,
+                };
                 await axios({
                     method: 'post',
                     url: `/apis/v1/tasks/`,
-                    data: {
-                        repo: this.getWorkflow.repo,
-                        branch: this.getWorkflow.branch,
-                        config: config,
-                        type: this.submitType,
-                        auth: {
-                            username: this.selectedAgent.username,
-                        },
-                        miappe: {
-                            project: this.selectedProject,
-                            study: this.selectedStudy,
-                        },
-                        delayUnits: this.delayUnits,
-                        delayValue: this.delayValue,
-                    },
+                    data: postData,
                     headers: { 'Content-Type': 'application/json' },
                 })
                     .then(async (response) => {
@@ -4506,6 +4485,7 @@ export default {
                         this.submitting = false;
                         throw error;
                     });
+            }
         },
     },
     watch: {

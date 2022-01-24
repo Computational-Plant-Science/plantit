@@ -51,7 +51,7 @@ class Task(models.Model):
     class Meta:
         ordering = ['-created']
 
-    guid = models.CharField(max_length=50, null=False, blank=False)
+    guid = models.CharField(max_length=50, null=False, blank=False, unique=True)
     name = models.CharField(max_length=250, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.SET_NULL)

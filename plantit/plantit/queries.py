@@ -27,7 +27,7 @@ from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskCounter, TaskStatus
 from plantit.users.models import Profile
 from plantit.utils.misc import del_none
-from plantit.utils.tasks import get_task_orchestrator_log_file_path, should_transfer_results
+from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
 
 logger = logging.getLogger(__name__)
 
@@ -324,7 +324,7 @@ def task_to_dict(task: Task) -> dict:
         'is_cancelled': task.is_cancelled,
         'is_timeout': task.is_timeout,
         'result_previews_loaded': task.previews_loaded,
-        'result_transfer': should_transfer_results(task),
+        'result_transfer': has_output_target(task),
         'results_retrieved': task.results_retrieved,
         'results_transferred': task.results_transferred,
         'cleaned_up': task.cleaned_up,
