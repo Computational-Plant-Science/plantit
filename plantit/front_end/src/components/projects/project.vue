@@ -1231,11 +1231,10 @@ export default {
     },
     methods: {
         addEnvironmentParameter() {
-            if (
-                this.environmentParameterKey in
-                Object.keys(this.environmentParameters)
-            ) {
+            if (this.environmentParameterKey in this.environmentParameters) {
                 alert('This is a duplicate key');
+                this.environmentParameterKey = '';
+                this.environmentParameterValue = '';
                 return;
             }
 
@@ -1340,10 +1339,7 @@ export default {
             })
                 .then(async (response) => {
                     if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'projects/addOrUpdate',
-                            response.data
-                        );
+                        await this.$store.dispatch('', response.data);
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Updated study ${this.studyToEdit.title}`,
