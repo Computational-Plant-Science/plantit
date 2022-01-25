@@ -85,9 +85,9 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
                 if type(path) is not str:
                     errors.append('Attribute \'input.path\' must be a str')
                 elif not terrain.path_exists(path, TerrainToken.get()):
-                    errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
+                    errors.append('Attribute \'input.path\' must a valid path in the CyVerse Data Store')
             else:
-                errors.append('Attribute \'input.path\' must be either empty or a valid path in the CyVerse Data Store')
+                errors.append('Attribute \'input.path\' must be a valid path in the CyVerse Data Store')
 
         # kind
         if 'kind' not in config['input']:
