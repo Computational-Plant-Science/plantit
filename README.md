@@ -63,7 +63,7 @@ This can all be done in the browser (a REST API is [currently in development](ht
 
 An instantiation of a `plantit` workflow is called a *task*. When a task is submitted from the browser client, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is essentially just a chain of callbacks, some of which trigger state transitions.
 
-Architecture | Task Lifecycle    |            Task Detail             | Call Stack | 
+Architecture | Task Lifecycle    |            Task Detail             | Cluster Orchestration | 
 |:---------:|:----------------------------:|:-------------------------------------:|:-----------------------:|
 ![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) | ![](docs/media/stack.jpg) 
 
