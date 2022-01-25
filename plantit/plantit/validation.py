@@ -26,10 +26,8 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
     elif type(config['name']) is not str:
         errors.append('Attribute \'name\' must be a str')
 
-    # author (required)
-    if 'author' not in config:
-        errors.append('Missing attribute \'author\'')
-    else:
+    # author (optional)
+    if 'author' in config:
         author = config['author']
         if (type(config['author']) is str and config['author'] == '') or (type(author) is list and not all(type(d) is str for d in author)):
             errors.append('Attribute \'author\' must be a non-empty str or list of str')
