@@ -26,7 +26,7 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
-    get_job_status, get_job_walltime, list_result_files
+    get_job_status, get_job_walltime, list_result_files, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils.tasks import parse_task_time_limit
@@ -220,10 +220,16 @@ def poll_task_status(self, guid: str):
 
             return guid
         else:
-            # job is still running, schedule another round of polling
-            log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}"])
-            async_to_sync(push_task_channel_event)(task)
-            poll_task_status.s(guid).apply_async(countdown=refresh_delay)
+            # if task is past its due time, cancel it
+            if now > task.due_time:
+                log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status} (walltime {job_walltime}) is past its due time {str(task.due_time)}"])
+                async_to_sync(push_task_channel_event)(task)
+                cancel_task(task)
+            # otherwise schedule another round of polling
+            else:
+                log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status} (walltime {job_walltime})"])
+                async_to_sync(push_task_channel_event)(task)
+                poll_task_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration as e:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
             # we probably just created the task and

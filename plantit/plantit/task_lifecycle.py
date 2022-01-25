@@ -62,10 +62,13 @@ def create_immediate_task(user: User, config):
     # get the agent this task should be submitted on
     agent = Agent.objects.get(name=config['agent'])
 
-    # get time limit and calculate due time
-    time_limit = parse_task_time_limit(config['time'])
-    logger.info(f"Using task time limit {time_limit}s")
-    due_time = timezone.now() + timedelta(seconds=time_limit)
+    # if we have a time limit, calculate due time
+    time = config.get('time', None)
+    if time is not None:
+        time_limit = parse_task_time_limit()
+        logger.info(f"Using task time limit {time_limit}s")
+        due_time = timezone.now() + timedelta(seconds=time_limit)
+    else: due_time = None
 
     # create the task right meow
     now = timezone.now()
@@ -87,7 +90,7 @@ def create_immediate_task(user: User, config):
     # add MIAPPE info, if we have any
     project, study = parse_task_miappe_info(config['miappe'])
     if project is not None: task.project = Investigation.objects.get(owner=user, title=project)
-    if study is not None: task.study = Study.objects.get(project=task.project, title=study)
+    if study is not None: task.study = Study.objects.get(investigation=task.project, title=study)
 
     # add repo logo
     if 'logo' in config['workflow']:

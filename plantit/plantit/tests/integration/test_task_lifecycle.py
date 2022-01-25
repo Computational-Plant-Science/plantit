@@ -71,3 +71,7 @@ class TaskLifecycleTests(TestCase):
         self.assertEqual(task.agent, agent)
         self.assertEqual(task.project, project)
         self.assertEqual(task.study, study)
+        tags = [str(tag) for tag in task.tags.all()]
+        self.assertEqual(len(tags), 2)
+        self.assertTrue('testing' in tags)
+        self.assertTrue('123' in tags)
