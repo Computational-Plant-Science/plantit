@@ -38,68 +38,6 @@ from plantit.keypairs import get_user_private_key_path
 logger = logging.getLogger(__name__)
 
 
-def create_task(username: str,
-                agent_name: str,
-                workflow: dict,
-                miappe: dict,
-                guid: str = None,
-                name: str = None):
-
-    # parse GitHub repo info
-    repo_owner = workflow['repo']['owner']
-    repo_name = workflow['repo']['owner']
-    repo_branch = workflow['repo']['branch']
-
-    # get the submitting user and selected agent
-    agent = Agent.objects.get(name=agent_name)
-    user = User.objects.get(username=username)
-
-    # if the browser client hasn't set a GUID, create one
-    if guid is None: guid = str(uuid.uuid4())
-
-    # get time limit and calculate due time (after which task will timeout)
-    time_limit = parse_task_time_limit(workflow['config']['time'])
-    logger.info(f"Using task time limit {time_limit}s")
-    due_time = timezone.now() + timedelta(seconds=time_limit)
-
-    now = timezone.now()
-    task = Task.objects.create(
-        guid=guid,
-        name=guid if name is None else name,
-        user=user,
-        workflow=workflow,
-        workflow_owner=repo_owner,
-        workflow_name=repo_name,
-        workflow_branch=repo_branch,
-        agent=agent,
-        status=TaskStatus.CREATED,
-        created=now,
-        updated=now,
-        due_time=due_time,
-        token=binascii.hexlify(os.urandom(20)).decode())
-
-    # add MIAPPE info
-    project, study = parse_task_miappe_info(miappe)
-    if project is not None: task.project = Investigation.objects.get(owner=user, title=project)
-    if study is not None: task.study = Study.objects.get(project=task.project, title=study)
-
-    # add repo logo
-    if 'logo' in workflow['config']:
-        logo_path = workflow['config']['logo']
-        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/master/{logo_path}"
-
-    for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
-    task.workdir = f"{task.guid}/"  # use GUID for working directory name
-    task.save()
-
-    # increment task count for aggregate statistics
-    counter = TaskCounter.load()
-    counter.count = counter.count + 1
-    counter.save()
-
-    return task
-
-
 def create_immediate_task(user: User, config):
     # set submission time so we can persist configuration
     # and show recent submissions to the user in the UI
@@ -114,17 +52,56 @@ def create_immediate_task(user: User, config):
     redis = RedisClient.get()
     redis.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(config))
 
+    # get the task GUID and name
     guid = config.get('guid', None) if config['type'] == 'Now' else str(uuid.uuid4())
     name = config.get('name', None)
 
+    # if the browser client hasn't set a GUID, create one
+    if guid is None: guid = str(uuid.uuid4())
+
+    # get the agent this task should be submitted on
     agent = Agent.objects.get(name=config['agent'])
-    task = create_task(
-        username=user.username,
-        agent_name=agent.name,
+
+    # get time limit and calculate due time
+    time_limit = parse_task_time_limit(config['time'])
+    logger.info(f"Using task time limit {time_limit}s")
+    due_time = timezone.now() + timedelta(seconds=time_limit)
+
+    # create the task right meow
+    now = timezone.now()
+    task = Task.objects.create(
+        guid=guid,
+        name=guid if name is None or name == '' else name,
+        user=user,
         workflow=config['workflow'],
-        miappe=config['miappe'],
-        name=name if name is not None and name != '' else guid,
-        guid=guid)
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        agent=agent,
+        status=TaskStatus.CREATED,
+        created=now,
+        updated=now,
+        due_time=due_time,
+        token=binascii.hexlify(os.urandom(20)).decode())
+
+    # add MIAPPE info, if we have any
+    project, study = parse_task_miappe_info(config['miappe'])
+    if project is not None: task.project = Investigation.objects.get(owner=user, title=project)
+    if study is not None: task.study = Study.objects.get(project=task.project, title=study)
+
+    # add repo logo
+    if 'logo' in config['workflow']:
+        logo_path = config['workflow']['logo']
+        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/master/{logo_path}"
+
+    for tag in config['tags']: task.tags.add(tag)  # add task tags
+    task.workdir = f"{task.guid}/"  # use GUID for working directory name
+    task.save()
+
+    # increment task count for aggregate statistics
+    counter = TaskCounter.load()
+    counter.count = counter.count + 1
+    counter.save()
 
     return task
 

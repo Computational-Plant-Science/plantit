@@ -4276,8 +4276,6 @@ export default {
             this.submitting = true;
 
             // prepare configuration
-            this.params['config'] = {};
-            this.params['config']['api_url'] = '/apis/v1/tasks/status/';
             let agent = this.selectedAgent;
             let taskName = this.taskName === '' ? this.taskGuid : this.taskName;
             let config = {
@@ -4294,16 +4292,12 @@ export default {
                     limit: this.timeLimit,
                     units: this.timeLimitUnits,
                 },
-                // iterations: this.iterations
             };
             if ('jobqueue' in this.getWorkflow.config)
                 config['jobqueue'] = this.getWorkflow.config.jobqueue;
             if ('env' in this.getWorkflow.config)
                 config['env'] = this.getWorkflow.config.env;
-            else if (
-                this.getWorkflow.config.jobqueue === undefined &&
-                this.selectedAgent.executor !== 'Local'
-            )
+            else if (this.getWorkflow.config.jobqueue === undefined)
                 // default jobqueue request
                 config['jobqueue'] = {
                     walltime: '01:00:00',
@@ -4314,8 +4308,6 @@ export default {
                 };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
-            // if ('branch' in this.getWorkflow)
-            //     config['branch'] = this.getWorkflow.branch;
             if (this.getWorkflow.config.mount !== null)
                 config['bind_mounts'] = this.getWorkflow.config.mount;
             if (this.input !== undefined && this.input.path) {

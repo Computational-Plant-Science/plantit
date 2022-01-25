@@ -242,7 +242,7 @@ def agent_to_dict(agent: Agent, username: str = None) -> dict:
         'max_cores': agent.max_cores,
         'max_processes': agent.max_processes,
         'queue': agent.queue,
-        'project': agent.project,
+        # 'project': agent.project,  # don't want to reveal this to end users
         'workdir': agent.workdir,
         'executor': agent.scheduler,
         'disabled': agent.disabled,

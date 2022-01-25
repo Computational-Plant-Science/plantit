@@ -25,22 +25,23 @@
 To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
 
 ```yaml
-name: Hello Groot
-author: Groot
-public: True                  # should this workflow be visible to other users of PlantIT?
-clone: False                  # should this workflow's repository be cloned to the deployment target before running?
-image: docker://alpine        # the Docker image your workflow's container(s) will be built from
-commands: echo "I am Groot!"  # your code's entry point
+name: Hello Groot             # (optional but encouraged)
+author: Groot                 # (optional but encouraged)
+public: True                  # visible to other users of PlantIT? (required)
+image: docker://alpine        # Docker image to use (required)
+commands: echo "I am Groot!"  # your entry point (required)
 ```
 
 Certain environment variables will be configured in the Singularity container runtime, in case you need to reference them in your startup command. These are:
 
 - WORKDIR: the current working directory
+- INPUT: the path to an input file or directory
+- OUTPUT: the path to the directory results will be written to
 - INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
 
 ### Jobqueue deployment targets
 
-To make sure your **Workflow** can take full advantage of the resources made available by cluster or supercomputer schedulers, add a `jobqueue` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1GB of memory for 1 hour:
+To make sure your workflow can take full advantage of cluster resources, add a `jobqueue` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1 GB of memory for 1 hour:
 
 ```yaml
 jobqueue:
@@ -50,19 +51,25 @@ jobqueue:
   cores: 1
 ```
 
-Note that some deployment targets may be equipped with virtual memory and ignore specified `mem` values.
+#### Walltime
 
-##### GPU mode
+When a `plantit` task is submitted, values provided for the `jobqueue.walltime` attribute will be passed through transparently to the selected deployment target's scheduler. The `plantit` web UI will timestamp each task submission,  If such a time limit is provided at submission time, `plantit` will attempt to cancel your task if it fails to complete before the time limit has elapsed.
 
-To indicate that your workflow can take advantage of GPUs (only available on select deployment targets) add a `gpu: True` line to your configuration file. The environment variable `GPU_MODE` will be set to `true` in your workflow's runtime environment if the workflow is deployed to a cluster with GPU support; otherwise `GPU_MODE` will be `false`.
+#### Virtual memory
 
-#### Timeouts and other errors
+Note that some deployment targets (namely the default public agent, [TACC's Stampede2](https://www.tacc.utexas.edu/systems/stampede2)) are equipped with virtual memory. For tasks deployed to agents with virtual memory, `plantit` will ignore values provided for the `jobqueue.memory` attribute and defer to the cluster scheduler: on Stampede2, for instance, all tasks have access to 98GB of RAM.
 
-Workflows may fail if they do not complete within the requested `time`, if they exceed their memory allotment, or for a variety of reasons. Errors may be difficult to debug from the PlantIT web interface. Be sure to test workflows manually on any intended deployment target prior to deploying with PlantIT.
+#### Default resource requests
+
+If you do not provide a `jobqueue` section in your `plantit.yaml`, tasks deployed to any agent will request 1 hour of walltime, 10 GB of RAM, 1 process, and 1 core.
+
+### GPU mode
+
+To indicate that your workflow can take advantage of GPUs (only available on select deployment targets) add a `gpu: True` line to your configuration file. When deployed to environments with GPUs, your task will have access to an environment variable `GPUS`, set to the number of GPU devices provided by the host.
 
 ### Parameters
 
-To parametrize your **Workflow**, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
+To parametrize your workflow, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
 
 ```yaml
 name: Hello Who?
@@ -76,57 +83,42 @@ params:
    type: string
 ```
 
-This will cause the value of `message`, specified by the user in the browser, to be substituted into the `command` at runtime.
+This will cause the value of `message`, specified in the `plantit` web UI at task submission time, to be substituted for `$MESSAGE` in the `command` at runtime.
 
-Note that PlantIT parameters are explicitly typed. The following parameter types are supported:
+Four parameter types are supported by `plantit`:
 
 - `string`
 - `select`
 - `number`
 - `boolean`
 
-For example, a workflow with one of each parameter type might have the following `params` section:
+See the `Computational-Plant-Science/plantit-example-parameters` workflow [on GitHub](https://github.com/Computational-Plant-Science/plantit-example-parameters/blob/master/plantit.yaml) for an example of how to use parameters.
+
+#### Default parameter values
+
+To provide default values for your workflow's parameters, you can use a `default` attribute. For instance:
 
 ```yaml
-...
 params:
-  - name: String
-    type: string
-    default: Hello, world!
-  - name: Select
-    type: select
-    options:
-      - Option 1
-      - Option 2
-    default: Option 1
-  - name: Number
-    type: number
-    default: 42
-    step: 1
-    min: 0
-    max: 100
-  - name: Boolean
-    type: boolean
-    default: False
+ - name: message
+   type: string
+   default: 'Hello, world!'
 ```
 
-#### Default values
-
-To provide default values for your workflow's parameters, you can use a `default` attribute (see above).
 
 ### Workflow input/output
 
-PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your **Workflow**, add `from` and `to` attributes to your configuration.
+`plantit` can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) or [Data Commons](https://cyverse.org/data-commons) onto the file system in your deployment environment, then push results back to the Data Store after your task completes. To configure inputs and outputs for a workflow, add `input` and `output` attributes to your configuration.
 
-#### Workflow input
+#### Workflow inputs
 
-If your workflow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this workflow operates on a single `file`, multiple `files`, or an entire `directory`. For example:
+If your workflow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this workflow operates on a single `file`, multiple `files`, or an entire `directory`.
 
 ##### Input types (`file`, `files`, and `directory`)
 
 To indicate that your workflow should pull a single file from the Data Store and spawn a single container to process it, use `kind: file`. To pull a directory from the Data Store and spawn a container for each file, use `kind: files`. To pull a directory and spawn a single container to process it, use `kind: directory`.
 
-It's generally a good idea for `path` to reference a community-released or curated public dataset in the CyVerse Data Commons, so prospective users can test your workflow on real data. For instance, a simple workflow which operates on a single file:
+It's generally a good idea for `path` to reference a community-released or curated public dataset in the CyVerse Data Commons, so prospective users can test your workflow on real data. For instance, the `plantit.yaml` for a workflow which operates on a single file might have the following `input` section
 
 ```yaml
 input:
@@ -142,21 +134,23 @@ To specify which filetypes your workflow is permitted to accept, add a `filetype
 input:
   path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
   kind: file
-  patterns:
+  filetypes:
     - txt
 ```
 
-Any values provided to `patterns` will be joined (with `,`) and substituted for `$PATTERNS` in your workflow's command. Use this to inform your code which filetypes to expect, e.g.:
+Any values provided to `filetypes` will be joined (with `,`) and substituted for `FILETYPES` in your workflow's command. Use this to inform your code which filetypes to expect, for example:
 
 ```yaml
-commands: ls "$INPUT"/*.{"$PATTERNS"} >> things_cow_say.txt
+commands: ls "$INPUT"/*.{"FILETYPES"} >> things_cow_say.txt
 input:
   path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
   kind: file
-  patterns:
+  filetypes:
     - txt
     - md     
 ```
+
+*Note that while the `input.path` and `input.filetypes` attributes are optional, you must provide a `kind` attribute if you provide an `input` section.*
 
 #### Workflow output
 
@@ -186,16 +180,14 @@ output:
 
 If only an `include` section is provided, only the file patterns and names specified will be included. If only an `exclude` section is present, all files except the patterns and names specified will be included. If you provide both `include` and `exclude` sections, the `include` rules will first be applied to generate a subset of files, which will then be filtered by the `exclude` rules.
 
-#### A super simple example
+### A super simple example
 
-The following workflow prints the content of an input file and then writes it to an output file (located in the same working directory):
+The following workflow prints the content of an input file and then writes it to an output file located in the same working directory.
 
 ```yaml
 name: Hello File
-author: 
 image: docker://alpine
 public: True
-clone: False
 commands: cat "$INPUT" && cat "$INPUT" >> cowsaid.txt
 input:
   from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
@@ -206,5 +198,3 @@ output:
     names:                              
       - cowsaid.txt
 ```
-
-PlantIT will prompt users of your workflow to select an input file from the CyVerse Data Store, providing the given shared file as a default.

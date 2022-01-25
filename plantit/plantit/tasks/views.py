@@ -49,9 +49,14 @@ def get_or_create(request):
     elif request.method == 'POST':
         # get the task configuration from the request
         task_config = request.data
+        task_type = task_config.get('type', None)
+
+        # a task type must be configured
+        if task_type is None: return HttpResponseBadRequest()
+        else: task_type = task_type.lower()
 
         # if this is an immediate task, submit it now
-        if task_config['type'] == 'Now':
+        if task_type == 'now':
             # GUIDs for immediate tasks must be set from the client (for now... TODO: is this necessary?)
             if task_config['config'].get('guid', None) is None:
                 return HttpResponseBadRequest()
@@ -71,10 +76,10 @@ def get_or_create(request):
             task_dict = q.task_to_dict(task)
 
         # otherwise submit delayed or repeating task
-        elif task_config['type'] == 'After':
+        elif task_type == 'after':
             task, created = create_delayed_task(request.user, task_config)
             task_dict = q.delayed_task_to_dict(task)
-        elif task_config['type'] == 'Every':
+        elif task_type == 'every':
             task, created = create_repeating_task(request.user, task_config)
             task_dict = q.repeating_task_to_dict(task)
 
