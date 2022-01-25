@@ -13,15 +13,6 @@ class ValidationTests(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Missing attribute \'name\'' in result[1])
 
-    def test_validate_config_when_is_not_valid_missing_author(self):
-        result = validate_workflow_configuration({
-            'name': 'Test Flow',
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        })
-        self.assertFalse(result[0])
-        self.assertTrue('Missing attribute \'author\'' in result[1])
-
     def test_validate_config_when_is_not_valid_missing_image(self):
         result = validate_workflow_configuration({
             'name': 'Test Flow',

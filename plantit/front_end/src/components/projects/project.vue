@@ -1669,7 +1669,7 @@ export default {
             return this.tasks.filter(
                 (t) =>
                     t.project !== null &&
-                    t.project.name === this.getProject.name
+                    t.project.guid === this.getProject.guid
             );
         },
         ownsProject() {
