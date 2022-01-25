@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative; height: 100px" />
+<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative; height: 150px" />
 
 <h3 align="center" style="text-decoration: underline;">
         plant<small
@@ -106,10 +106,6 @@ This will start a number of containers:
 - `flower`: Flower web UI for Celery (`http://localhost:5555`)
 - `redis`: Redis instance (caching, Celery message broker)
 - `sandbox`: Ubuntu test environment
-
-The general architecture looks like this:
-
-![](docs/media/arch.jpg)
 
 The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into the site at least once (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
