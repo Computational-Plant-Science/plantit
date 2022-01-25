@@ -1759,6 +1759,7 @@
                                                                                                 </b-col>
                                                                                             </b-row>
                                                                                             <b-alert
+                                                                                                v-if="input.kind !== 'directory'"
                                                                                                 class="mt-1"
                                                                                                 :variant="
                                                                                                     inputFiletypeSelected
@@ -1780,6 +1781,34 @@
                                                                                                 <i
                                                                                                     v-if="
                                                                                                         inputFiletypeSelected
+                                                                                                    "
+                                                                                                    class="fas fa-check text-success"
+                                                                                                ></i>
+                                                                                                <i
+                                                                                                    v-else
+                                                                                                    class="fas fa-exclamation text-danger"
+                                                                                                ></i>
+                                                                                            </b-alert>
+                                                                                            <b-alert
+                                                                                                v-else
+                                                                                                class="mt-1"
+                                                                                                :variant="
+                                                                                                    inputValid
+                                                                                                        ? 'success'
+                                                                                                        : 'danger'
+                                                                                                "
+                                                                                                :show="
+                                                                                                    true
+                                                                                                "
+                                                                                                >Selected:
+                                                                                                {{
+                                                                                                    inputValid
+                                                                                                        ? selectedInput.path
+                                                                                                        : 'None'
+                                                                                                }}
+                                                                                                <i
+                                                                                                    v-if="
+                                                                                                        inputValid
                                                                                                     "
                                                                                                     class="fas fa-check text-success"
                                                                                                 ></i>
@@ -4563,16 +4592,16 @@ export default {
         workflowLoading() {
             return this.publicWorkflowsLoading || this.userWorkflowsLoading;
         },
-        scheduledTime: function () {
+        scheduledTime() {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${
                 this.delayValue
             } ${this.delayUnits.toLowerCase()}`;
             // else return `${this.parseCronTime(this.crontime)}`;  TODO allow direct cron editing
         },
-        workflowKey: function () {
+        workflowKey() {
             return `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`;
         },
-        inputFiletypeSelected: function () {
+        inputFiletypeSelected() {
             return this.inputSelectedPatterns.some((pattern) => pattern !== '');
         },
         taskNameExists() {
@@ -4604,8 +4633,8 @@ export default {
                     this.getWorkflow.config.input.kind !== undefined &&
                     this.input.path !== '' &&
                     this.input.kind !== '' &&
-                    this.inputFiletypeSelected &&
-                    this.selectedInput !== null
+                    this.selectedInput !== null &&
+                    ((this.input.kind !== 'directory' && this.inputFiletypeSelected) || this.input.kind === 'directory')
                 );
             return true;
         },
