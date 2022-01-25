@@ -1,21 +1,20 @@
 <div align="center">
 
-<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative;top: 75px" />
+<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative;top: 50px; height: 50px" />
 
-<h1 align="center"
-    style="text-decoration: underline;">
+<h3 align="center" style="text-decoration: underline;">
         plant<small
             class="mb-3 text-success"
             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000; color: #d6df5D"
-            >IT</small>
-</h1>
+            >it</small>
+</h3>
 
 HPC/HTC plant phenotyping in the browser
 
 ![commit](https://github.com/Computational-Plant-Science/plantit/workflows/commit/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/plantit/badge/?version=latest)](https://plantit.readthedocs.io/en/latest/?badge=latest)
-[![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit)
+[![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=master)](https://coveralls.io/github/Computational-Plant-Science/plantit?branch=master)
 
 </div>
 
@@ -25,10 +24,8 @@ HPC/HTC plant phenotyping in the browser
 
 - [About](#about)
   - [Motivation](#motivation)
-  - [Features](#features)
-    - [Workflow orchestration](#workflow-orchestration)
-    - [Software & data discovery](#software--data-discovery)
-    - [Collaboration & metadata management](#collaboration--metadata-management)
+  - [Overview](#overview)
+  - [Architecture](#architecture)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -45,43 +42,32 @@ HPC/HTC plant phenotyping in the browser
 
 ## About
 
-`plantit` is a science gateway for plant phenomics: a continuous delivery platform for developers and a browser portal to clusters and supercomputers for researchers. (Of course a single individual may wear both hats.)
+`plantit` is a science gateway for image-based plant phenotyping. It's simultaneously a portal to supercomputing clusters for researchers and a continuous delivery tool for developers. (Of course one may wear both hats.)
 
 ### Motivation
 
-`plantit` aims to automate a number of tasks incidental to the real aim of computational science: accessible, portable, reproducible workflows for data-driven insight. To deploy resource-intensive, high-throughput computational pipelines, researchers must often learn to navigate the notoriously fickle, rapidly shifting world of software. This imposes barriers to entry and diverts attention from the things scientists really they care about. While computer programming is likely a useful skill in any discipline, the aim of scientific software should be to liberate researchers from tedious, repetitive, tasks (this is what computers are for!) and free up time and attention for the problem domain.
+`plantit` streamlines the deployment of phenotyping software to high-performance computing environments. Though this task's implementation details are likely incidental to the concerns of nearly everyone, it is growing increasingly necessary: plant phenomics is becoming a "big data" science for which single-purpose desktop GUI application are no longer sufficient. High-throughput phenotyping is resource-intensive and typically demands institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Research software should insulate its users from this, freeing up time and attention for the problem domain. This is what computers are for!
 
 ![](docs/media/roles.jpg)
 
-### Features
+### Overview
 
-`plantit` combines cloud source code management, data storage, and container registry services ([GitHub](https://github.com/), [CyVerse](https://cyverse.org/), and [Docker Hub](https://hub.docker.com/)), the [Singularity](https://sylabs.io/) container runtime, and [XSEDE](https://www.xsede.org/) supercomputing resources to streamline the delivery and deployment of computational pipelines.
+In a sentence: `plantit` transfers data from the [CyVerse](https://cyverse.org/) cloud to an [XSEDE](https://www.xsede.org/) [supercomputer](https://www.tacc.utexas.edu/systems/stampede2), runs [Singularity](https://sylabs.io/) container workflows on it, and sends the results back to CyVerse. (It will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) be able to omit the transfers and operate on datasets parked on the cluster filesystem.) You can choose which workflow to apply to which data, submit and monitor the task, and download results from a web browser. You can bring your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). You can submit your task immediately, or schedule it to run after a delay or on a periodic interval. You can also bind your own workflow by packaging it into a [Docker](https://www.docker.com/) image published on [Docker Hub](https://hub.docker.com/), then [adding a `plantit.yaml` configuration file](https://plantit.readthedocs.io/en/latest/md/developer_docs/defining_workflows.html) to any public GitHub repo (like [GitHub Actions](https://github.com/features/actions) or [Travis CI](https://www.travis-ci.com/)).
 
-`plantit` provides users a few core capabilities:
+Aside from its core competency as a portal to HPC/HTC, `plantit` provides a few extra features:
 
-- workflow orchestration: submit container workflows to HPC/HTC clusters or supercomputers
-- software & data discovery: explore tools & data or publish code to the research community
-- metadata & annotations: contextualize data according to emerging standards (e.g., MIAPPE)
+- sharing/collaboration: share datasets and workflows with a private team or the entire research community
+- metadata/provenance: contextualize data according to the emerging [MIAPPE](https://www.miappe.org/) conventions ([under development](https://github.com/Computational-Plant-Science/plantit/issues/41))
 
-#### Workflow orchestration
+This can all be done in the browser (a REST API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256)).
 
-`plantit` provides task scheduling as a service via an easy-to-use browser UI (a REST API is [in development](https://github.com/Computational-Plant-Science/plantit/issues/256)). It works like this: developers encapsulate a computational workflow in a container and publish it to `plantit`. Subsequently researchers can submit the workflow to a supercomputer with a click &mdash; `plantit` handles data transfers and interfaces with cluster schedulers, obviating the need to write job scripts by hand or manually load data into and out of computing environments.
+### Architecture
 
-![](docs/media/cycle.jpg)
+An instantiation of a `plantit` workflow is called a *task*. When a task is submitted from the browser client, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is essentially just a chain of callbacks, some of which trigger state transitions.
 
-When a task is submitted, the browser client sends it to the `plantit` web server, which hands it to an internal queue feeding an asynchronous background worker. When the worker starts the task, a job script and Snakemake pipeline are generated and submitted to a cluster/supercomputer scheduler. Tasks can be submitted for execution as soon as possible, after a configurable delay, or on a periodic interval. The task lifecycle is a chain of actions, some of which trigger state transitions:
-
-![](docs/media/task.jpg)
-
-#### Software & data discovery
-
-Like GitHub Actions, Travis CI, and other CI/CD platforms, `plantit` automatically integrates with GitHub. A `plantit.yaml` configuration file can be added to any public repository to make a container workflow available to researchers with a few clicks. `plantit` also plugs directly into the [CyVerse Data Store](https://www.cyverse.org/data-store) and the public [Data Commons](https://www.cyverse.org/data-commons).
-
-#### Metadata & annotations
-
-*This feature is under development.*
-
-`plantit` allows datasets to be annotated according to the MIAPPE standard. Workflows, tasks, datasets, and teammates can also be grouped according to project, allowing collaborators to configure visibility and form private teams.
+Architecture | Task Lifecycle    |            Task Detail             | Call Stack | 
+|:---------:|:----------------------------:|:-------------------------------------:|:-----------------------:|
+![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) | ![](docs/media/stack.jpg) 
 
 ## Development
 

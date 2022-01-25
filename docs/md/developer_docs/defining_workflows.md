@@ -5,16 +5,18 @@
 - [Defining Workflows](#defining-workflows)
   - [The `plantit.yaml` file](#the-plantityaml-file)
     - [Jobqueue deployment targets](#jobqueue-deployment-targets)
-        - [GPU mode](#gpu-mode)
-      - [Timeouts and other errors](#timeouts-and-other-errors)
+      - [Walltime](#walltime)
+      - [Virtual memory](#virtual-memory)
+      - [Default resource requests](#default-resource-requests)
+    - [GPU mode](#gpu-mode)
     - [Parameters](#parameters)
-      - [Default values](#default-values)
+      - [Default parameter values](#default-parameter-values)
     - [Workflow input/output](#workflow-inputoutput)
-      - [Workflow input](#workflow-input)
+      - [Workflow inputs](#workflow-inputs)
         - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
         - [Input filetypes](#input-filetypes)
       - [Workflow output](#workflow-output)
-      - [A super simple example](#a-super-simple-example)
+    - [A super simple example](#a-super-simple-example)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
