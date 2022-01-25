@@ -4249,7 +4249,7 @@ export default {
 
             // if we have pre-configured values for this flow, populate them
             if ('last_config' in this.getWorkflow) {
-                let flowConfig = this.getWorkflow['last_config']['config'];
+                let flowConfig = this.getWorkflow['last_config'];
                 this.params =
                     flowConfig.parameters !== undefined
                         ? flowConfig.parameters

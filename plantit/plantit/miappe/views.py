@@ -1,5 +1,6 @@
 import json
 import uuid
+import logging
 
 import yaml
 from django.contrib.auth.decorators import login_required
@@ -11,6 +12,8 @@ from rest_framework.decorators import api_view
 
 import plantit.queries as q
 from plantit.miappe.models import EnvironmentParameter, ExperimentalFactor, Study, Investigation
+
+logger = logging.getLogger(__name__)
 
 
 @swagger_auto_schema(methods='get')
@@ -209,21 +212,6 @@ def edit_study(request, owner, title):
         project = Investigation.objects.get(owner=request.user, title=title)
         study = Study.objects.get(investigation=project, title=study_title)
         environment_parameters = list(EnvironmentParameter.objects.filter(study=study))
-        experimental_factors = list(ExperimentalFactor.objects.filter(study=study))
-
-        # TODO: pending environment params and experimental factor support
-
-        for ep in study_environment_parameters:
-            print(ep['name'], ep['value'])  # debugging
-            if any(p.name == ep['name'] for p in environment_parameters):
-                # TODO update existing value
-                pass
-
-        for ef in study_experimental_factors:
-            print(ef['name'], ef['value'])  # debugging
-            if any(f.name == ep['name'] for f in experimental_factors):
-                # TODO update existing value
-                pass
     except:
         return HttpResponseNotFound()
 
@@ -246,5 +234,14 @@ def edit_study(request, owner, title):
     study.growth_facility_type = study_growth_facility_type
     study.cultural_practices = study_cultural_practices
     study.save()
+
+    for existing in environment_parameters:
+        existing.delete()
+
+    for name, value in study_environment_parameters.items():
+        EnvironmentParameter.objects.create(
+            name=name,
+            value=value,
+            study=study)
 
     return JsonResponse(q.project_to_dict(project))

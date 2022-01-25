@@ -5,13 +5,13 @@ from plantit.validation import validate_workflow_configuration
 
 class ValidationTests(TestCase):
     def test_validate_config_when_is_not_valid_missing_name(self):
-        result = validate_workflow_configuration({
+        valid, errors = validate_workflow_configuration({
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         })
-        self.assertFalse(result[0])
-        self.assertTrue('Missing attribute \'name\'' in result[1])
+        self.assertFalse(valid)
+        self.assertTrue('Missing attribute \'name\'' in errors)
 
     def test_validate_config_when_is_not_valid_missing_image(self):
         result = validate_workflow_configuration({

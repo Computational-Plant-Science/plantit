@@ -1327,8 +1327,8 @@ export default {
                         ? this.studyCulturalPractices
                         : this.studyToEdit.cultural_practices,
                 environment_parameters:
-                    Object.keys(this.environment_parameters).length > 0
-                        ? this.environment_parameters
+                    Object.keys(this.environmentParameters).length > 0
+                        ? this.environmentParameters
                         : this.studyToEdit.environment_parameters,
             };
             await axios({
@@ -1339,12 +1339,17 @@ export default {
             })
                 .then(async (response) => {
                     if (response.status === 200) {
-                        await this.$store.dispatch('', response.data);
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Updated study ${this.studyToEdit.title}`,
-                            guid: guid().toString(),
-                        });
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'projects/addOrUpdate',
+                                response.data
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Updated study ${this.studyToEdit.title}`,
+                                guid: guid().toString(),
+                            }),
+                        ]);
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
