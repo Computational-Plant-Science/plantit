@@ -46,7 +46,7 @@ HPC/HTC plant phenotyping in the browser
 
 ### Motivation
 
-`plantit` streamlines the deployment of phenotyping software to high-performance computing environments. Though this task's implementation details are likely incidental to the concerns of nearly everyone, it is growing increasingly necessary: plant phenomics is becoming a "big data" science for which single-purpose desktop GUI application are no longer sufficient. High-throughput phenotyping is resource-intensive and typically demands institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Research software should insulate its users from this, freeing up time and attention for the problem domain. This is what computers are for!
+`plantit` streamlines the deployment of phenotyping software to high-performance computing environments. Though this task's implementation details are likely incidental to the concerns of nearly everyone, it is growing increasingly necessary: plant phenomics is becoming a "big data" science for which single-purpose desktop GUI applications are no longer sufficient. High-throughput phenotyping is resource-intensive and typically demands institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Research software should insulate its users from this, freeing up time and attention for the problem domain. This is what computers are for!
 
 ### Overview
 
