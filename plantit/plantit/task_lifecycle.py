@@ -31,7 +31,7 @@ from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, T
     EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.misc import del_none
-from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, \
+from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns \
     get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
 from plantit.keypairs import get_user_private_key_path
 
@@ -414,17 +414,8 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
     """
 
     # TODO factor out into method
-    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
-        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{task.guid}.zip")  # zip file
-    if not task.agent.launcher:
-        included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    if task.job_id is not None and task.job_id != '':
-        included_by_name.append(f"plantit.{task.job_id}.out")
-        included_by_name.append(f"plantit.{task.job_id}.err")
-    included_by_pattern = (
-        workflow['output']['include']['patterns'] if 'patterns' in workflow['output'][
-            'include'] else []) if 'output' in workflow else []
+    included_by_name = get_output_included_names(workflow)
+    included_by_pattern = get_output_included_patterns(workflow)
 
     ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)

@@ -52,8 +52,9 @@ def get_output_included_names(task: Task) -> List[str]:
 
     # default inclusions: scheduler log files and zip file
     included.append(f"{task.guid}.zip")
-    included.append(f"plantit.{task.job_id}.out")
-    included.append(f"plantit.{task.job_id}.err")
+    if task.job_id is not None and task.job_id != '':
+        included.append(f"plantit.{task.job_id}.out")
+        included.append(f"plantit.{task.job_id}.err")
 
     return included
 

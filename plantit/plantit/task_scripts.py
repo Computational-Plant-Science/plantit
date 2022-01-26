@@ -143,10 +143,6 @@ def compose_task_push_command(task: Task, options: TaskOptions) -> str:
     if 'to' in output and output['to'] is not None:
         command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
-        # command = command + ' ' + ' '.join(['--include_name ' + name for name in get_output_included_names(task)])
-        # command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in get_output_included_patterns(task)])
-        # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
-
         if 'include' in output:
             if 'patterns' in output['include']:
                 patterns = list(output['include']['patterns'])
@@ -225,7 +221,7 @@ def compose_task_singularity_command(
 
     cmd = ''
     if env is not None:
-        if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}={v['value']}" for v in env])
+        if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}=\"{v['value']}\"" for v in env])
         cmd += ' '
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
@@ -233,10 +229,7 @@ def compose_task_singularity_command(
     for parameter in parameters:
         key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
-        cmd += f" SINGULARITYENV_{key}={val}"
-        # logger.debug(f"Replacing '{key}' with '{val}'")
-        # cmd = cmd.replace(f"${key}", val)
-        # cmd = f"SINGULARITYENV_{key}={val} " + cmd
+        cmd += f" SINGULARITYENV_{key}=\"{val}\""
     cmd += f" singularity exec --home {work_dir}"
     if bind_mounts is not None and len(bind_mounts) > 0:
         cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
