@@ -4509,7 +4509,9 @@ export default {
             // add MIAPPE project/study, if selected
             if (this.selectedProject !== null) {
                 postData['miappe']['project'] = this.selectedProject.title;
-                postData['miappe']['study'] = this.selectedStudy.title;
+
+                if (this.selectedStudy !== null)
+                    postData['miappe']['study'] = this.selectedStudy.title;
             }
 
             // submit the task
