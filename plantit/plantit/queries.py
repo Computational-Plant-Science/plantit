@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 def get_project_workflows(project: Investigation):
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 'projects' in wf and project.guid in wf['projects']]
+                 'projects' in wf['config'] and project.guid in wf['config']['projects']]
     return workflows
 
 
@@ -127,7 +127,7 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 'public' in wf and wf['public']]
+                 'public' in wf['config'] and wf['config']['public']]
     return workflows
 
 
