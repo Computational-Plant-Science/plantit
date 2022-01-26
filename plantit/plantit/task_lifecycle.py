@@ -31,7 +31,7 @@ from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, T
     EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.misc import del_none
-from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns \
+from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns, \
     get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
 from plantit.keypairs import get_user_private_key_path
 
