@@ -612,7 +612,7 @@ export default {
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
+                    if (error.response !== undefined && error.response.status === 500) throw error;
                 });
         },
     },

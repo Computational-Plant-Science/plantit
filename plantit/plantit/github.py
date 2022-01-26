@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -32,6 +33,7 @@ async def get_profile(owner: str, token: str, timeout: int = 15) -> dict:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -56,6 +58,7 @@ async def get_repo(owner: str, name: str, token: str, timeout: int = 15) -> dict
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -72,6 +75,7 @@ async def list_repo_branches(owner: str, name: str, token: str, timeout: int = 1
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -91,6 +95,7 @@ async def list_repositories(owner: str, token: str, timeout: int = 15) -> list:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -119,6 +124,7 @@ async def get_repo_readme(owner: str, name: str, token: str, timeout: int = 15) 
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -154,6 +160,7 @@ async def get_repo_bundle(owner: str, name: str, branch: str, github_token: str,
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -180,7 +187,7 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
                     })
 
                 if response.status_code == 404:
-                    logger.info(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
@@ -216,6 +223,7 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -273,6 +281,7 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(

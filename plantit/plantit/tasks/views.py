@@ -51,14 +51,14 @@ def get_or_create(request):
         task_config = request.data
         task_type = task_config.get('type', None)
 
-        # a task type must be configured
+        # task type must be configured
         if task_type is None: return HttpResponseBadRequest()
         else: task_type = task_type.lower()
 
         # if this is an immediate task, submit it now
         if task_type == 'now':
             # GUIDs for immediate tasks must be set from the client (for now... TODO: is this necessary?)
-            if task_config['config'].get('guid', None) is None:
+            if task_config.get('guid', None) is None:
                 return HttpResponseBadRequest()
 
             # create task

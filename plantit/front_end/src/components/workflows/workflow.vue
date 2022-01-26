@@ -1335,6 +1335,7 @@
                                                                                                         timeLimitUnits
                                                                                                     }}</template
                                                                                                 ><b-dropdown-item
+                                                                                                    class="darklinks"
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Minutes'
@@ -1342,6 +1343,7 @@
                                                                                                     "
                                                                                                     >Minutes</b-dropdown-item
                                                                                                 ><b-dropdown-item
+                                                                                                    class="darklinks"
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Hours'
@@ -1349,6 +1351,7 @@
                                                                                                     "
                                                                                                     >Hours</b-dropdown-item
                                                                                                 ><b-dropdown-item
+                                                                                                    class="darklinks"
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Days'
@@ -1759,7 +1762,10 @@
                                                                                                 </b-col>
                                                                                             </b-row>
                                                                                             <b-alert
-                                                                                                v-if="input.kind !== 'directory'"
+                                                                                                v-if="
+                                                                                                    input.kind !==
+                                                                                                    'directory'
+                                                                                                "
                                                                                                 class="mt-1"
                                                                                                 :variant="
                                                                                                     inputFiletypeSelected
@@ -2239,10 +2245,7 @@
                                                                                                     : ''
                                                                                             }}<i
                                                                                                 v-if="
-                                                                                                    selectedAgent !==
-                                                                                                        null &&
-                                                                                                    selectedAgent.name !==
-                                                                                                        ''
+                                                                                                    agentValid
                                                                                                 "
                                                                                                 class="fas fa-check text-success fa-fw ml-1"
                                                                                             ></i>
@@ -3207,6 +3210,7 @@
                                                                                 }}
                                                                             </template>
                                                                             <b-dropdown-item
+                                                                                class="darklinks"
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Now'
@@ -3214,6 +3218,7 @@
                                                                                 >Now</b-dropdown-item
                                                                             >
                                                                             <b-dropdown-item
+                                                                                class="darklinks"
                                                                                 @click="
                                                                                     submitType =
                                                                                         'After'
@@ -3221,6 +3226,7 @@
                                                                                 >After</b-dropdown-item
                                                                             >
                                                                             <b-dropdown-item
+                                                                                class="darklinks"
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Every'
@@ -4301,212 +4307,223 @@ export default {
             );
             // TODO walltime
         },
+        async submitImmediate(data) {
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(async (response) => {
+                    this.submitting = false;
+                    if (response.data.created) {
+                        await this.$store.dispatch(
+                            'tasks/addOrUpdate',
+                            response.data.task
+                        );
+                        await router.push({
+                            name: 'task',
+                            params: {
+                                owner: this.profile.djangoProfile.username,
+                                guid: this.taskGuid,
+                            },
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to submit task ${this.taskGuid} to ${data.agent}`,
+                            guid: guid().toString(),
+                        });
+                    }
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    this.submitting = false;
+                    throw error;
+                });
+        },
+        async submitDelayed(data) {
+            data['eta'] = {
+                units: this.delayUnits,
+                delay: this.delayValue,
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(async (response) => {
+                    if (response.status === 200 && response.data.created) {
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'tasks/addDelayed',
+                                response.data.task
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Scheduled task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            }),
+                        ]);
+                    } else
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                            guid: guid().toString(),
+                            time: moment().format(),
+                        });
+                    this.submitting = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                        guid: guid().toString(),
+                        time: moment().format(),
+                    });
+                    this.submitting = false;
+                    throw error;
+                });
+        },
+        async submitRepeating(data) {
+            data['eta'] = {
+                units: this.delayUnits,
+                delay: this.delayValue,
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(async (response) => {
+                    if (response.status === 200 && response.data.created) {
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'tasks/addRepeating',
+                                response.data.task
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            }),
+                        ]);
+                    } else
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                            guid: guid().toString(),
+                            time: moment().format(),
+                        });
+                    this.submitting = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to schedule repeating task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                        guid: guid().toString(),
+                        time: moment().format(),
+                    });
+                    this.submitting = false;
+                    throw error;
+                });
+        },
         async onStart() {
             this.submitting = true;
 
-            // prepare configuration
-            let agent = this.selectedAgent;
-            let taskName = this.taskName === '' ? this.taskGuid : this.taskName;
-            let config = {
+            // rebuild workflow configuration
+            let workflow = {
                 name: this.getWorkflow.config.name,
                 public: this.getWorkflow.config.public,
-                task_name: taskName,
-                task_guid: this.taskGuid,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
-                agent: agent,
                 commands: this.getWorkflow.config.commands,
                 tags: this.tags,
-                time: {
-                    limit: this.timeLimit,
-                    units: this.timeLimitUnits,
-                },
+                logo: this.getWorkflow.config.logo,
+                gpu: this.getWorkflow.config.gpu,
+                env: this.getWorkflow.config.env,
+                bind_mounts: this.getWorkflow.config.mount,
+                jobqueue:
+                    this.getWorkflow.config.jobqueue !== undefined
+                        ? this.getWorkflow.config.jobqueue
+                        : {
+                              walltime: '01:00:00',
+                              memory: '10GB',
+                              processes: 1,
+                              cores: 1,
+                          },
             };
-            if ('jobqueue' in this.getWorkflow.config)
-                config['jobqueue'] = this.getWorkflow.config.jobqueue;
-            if ('env' in this.getWorkflow.config)
-                config['env'] = this.getWorkflow.config.env;
-            else if (this.getWorkflow.config.jobqueue === undefined)
-                // default jobqueue request
-                config['jobqueue'] = {
-                    walltime: '01:00:00',
-                    memory: '10GB',
-                    processes: 1,
-                    cores: 1,
-                    queue: agent.queue,
-                };
-            if ('gpu' in this.getWorkflow.config)
-                config['gpu'] = this.getWorkflow.config.gpu;
-            if (this.getWorkflow.config.mount !== null)
-                config['bind_mounts'] = this.getWorkflow.config.mount;
+
+            // configure user-selected inputs
             if (this.input !== undefined && this.input.path) {
-                config.input = this.input;
-                config.input.patterns =
+                workflow.input = this.input;
+                workflow.input.patterns =
                     this.inputSelectedPatterns.length > 0
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
             }
+
+            // configure user-selected outputs
             if (this.output !== undefined && this.output.to) {
-                config.output = {};
-                config.output['to'] = this.output.to;
+                workflow.output = {};
+                workflow.output['to'] = this.output.to;
                 if (
                     this.getWorkflow.config.output !== undefined &&
                     this.getWorkflow.config.output.path !== undefined
                 )
-                    config.output['from'] = this.getWorkflow.config.output.path;
-                else config.output['from'] = '';
-                if (config.output.include === undefined)
-                    config.output['include'] = {
+                    workflow.output['from'] =
+                        this.getWorkflow.config.output.path;
+                else workflow.output['from'] = '';
+                if (workflow.output.include === undefined)
+                    workflow.output['include'] = {
                         patterns: [],
                         names: [],
                     };
-                config.output.include.patterns = Array.from(
+                workflow.output.include.patterns = Array.from(
                     this.outputSelectedPatterns
                 );
-                config.output.include.names = Array.from(
+                workflow.output.include.names = Array.from(
                     this.outputSelectedNames
                 );
             }
-            if (this.getWorkflow.config.logo !== null)
-                config.logo = this.getWorkflow.config.logo;
 
+            // compose the request body
             var postData = {
+                name: this.taskName === '' ? this.taskGuid : this.taskName,
+                guid: this.taskGuid,
                 type: this.submitType,
-                workflow: config,
+                time: {
+                    limit: this.timeLimit,
+                    units: this.timeLimitUnits,
+                },
+                workflow: workflow,
                 repo: {
                     owner: this.getWorkflow.repo.owner.login,
                     name: this.getWorkflow.repo.name,
                     branch: this.getWorkflow.branch.name,
                 },
-                miappe: {}
+                agent: this.selectedAgent.name,
+                miappe: {},
             };
 
+            // add MIAPPE project/study, if selected
             if (this.selectedProject !== null) {
                 postData['miappe']['project'] = this.selectedProject.title;
                 postData['miappe']['study'] = this.selectedStudy.title;
             }
 
-            if (this.submitType === 'Now')
-                await axios({
-                    method: 'post',
-                    url: `/apis/v1/tasks/`,
-                    data: postData,
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                    .then(async (response) => {
-                        this.submitting = false;
-                        if (response.data.created) {
-                            await this.$store.dispatch(
-                                'tasks/addOrUpdate',
-                                response.data.task
-                            );
-                            await router.push({
-                                name: 'task',
-                                params: {
-                                    owner: this.profile.djangoProfile.username,
-                                    guid: this.taskGuid,
-                                },
-                            });
-                        } else {
-                            await this.$store.dispatch('alerts/add', {
-                                variant: 'danger',
-                                message: `Failed to submit task ${this.taskGuid}`,
-                                guid: guid().toString(),
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        Sentry.captureException(error);
-                        this.submitting = false;
-                        throw error;
-                    });
-            else if (this.submitType === 'After') {
-                postData['eta'] = {
-                    units: this.delayUnits,
-                    delay: this.delayValue,
-                };
-                await axios({
-                    method: 'post',
-                    url: `/apis/v1/tasks/`,
-                    data: postData,
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                    .then(async (response) => {
-                        if (response.status === 200 && response.data.created) {
-                            await this.$store.dispatch(
-                                'tasks/addDelayed',
-                                response.data.task
-                            );
-                            await this.$store.dispatch('alerts/add', {
-                                variant: 'success',
-                                message: `Scheduled task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            });
-                        } else
-                            await this.$store.dispatch('alerts/add', {
-                                variant: 'danger',
-                                message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            });
-                        this.submitting = false;
-                    })
-                    .catch(async (error) => {
-                        Sentry.captureException(error);
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                        this.submitting = false;
-                        throw error;
-                    });
-            } else if (this.submitType === 'Every') {
-                postData['eta'] = {
-                    units: this.delayUnits,
-                    delay: this.delayValue,
-                };
-                await axios({
-                    method: 'post',
-                    url: `/apis/v1/tasks/`,
-                    data: postData,
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                    .then(async (response) => {
-                        if (response.status === 200 && response.data.created) {
-                            await this.$store.dispatch(
-                                'tasks/addRepeating',
-                                response.data.task
-                            );
-                            await this.$store.dispatch('alerts/add', {
-                                variant: 'success',
-                                message: `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            });
-                        } else
-                            await this.$store.dispatch('alerts/add', {
-                                variant: 'danger',
-                                message: `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                                guid: guid().toString(),
-                                time: moment().format(),
-                            });
-                        this.submitting = false;
-                    })
-                    .catch(async (error) => {
-                        Sentry.captureException(error);
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to schedule repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`,
-                            guid: guid().toString(),
-                            time: moment().format(),
-                        });
-                        this.submitting = false;
-                        throw error;
-                    });
-            }
+            // submit the task
+            if (this.submitType === 'Now') await this.submitImmediate(postData);
+            else if (this.submitType === 'After')
+                await this.submitDelayed(postData);
+            else if (this.submitType === 'Every')
+                await this.submitRepeating(postData);
         },
     },
     watch: {
@@ -4634,7 +4651,9 @@ export default {
                     this.input.path !== '' &&
                     this.input.kind !== '' &&
                     this.selectedInput !== null &&
-                    ((this.input.kind !== 'directory' && this.inputFiletypeSelected) || this.input.kind === 'directory')
+                    ((this.input.kind !== 'directory' &&
+                        this.inputFiletypeSelected) ||
+                        this.input.kind === 'directory')
                 );
             return true;
         },
@@ -4649,14 +4668,18 @@ export default {
             return this.output.to !== '';
             // return true;
         },
-        canSubmit: function () {
+        agentValid() {
+            return (
+                this.selectedAgent !== null && this.selectedAgent.name !== ''
+            );
+        },
+        canSubmit() {
             return (
                 this.nameValid &&
                 this.paramsValid &&
                 this.inputValid &&
                 this.outputValid &&
-                this.selectedAgent !== null &&
-                this.selectedAgent.name !== ''
+                this.agentValid
             );
         },
         workflowRunningPlotData() {

@@ -239,9 +239,6 @@ def edit_study(request, owner, title):
         existing.delete()
 
     for name, value in study_environment_parameters.items():
-        EnvironmentParameter.objects.create(
-            name=name,
-            value=value,
-            study=study)
+        EnvironmentParameter.objects.create(name=name, value=value, study=study)
 
     return JsonResponse(q.project_to_dict(project))

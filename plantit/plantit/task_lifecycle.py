@@ -65,7 +65,7 @@ def create_immediate_task(user: User, config):
     # if we have a time limit, calculate due time
     time = config.get('time', None)
     if time is not None:
-        time_limit = parse_task_time_limit()
+        time_limit = parse_task_time_limit(time)
         logger.info(f"Using task time limit {time_limit}s")
         due_time = timezone.now() + timedelta(seconds=time_limit)
     else: due_time = None

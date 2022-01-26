@@ -51,6 +51,7 @@ def list_files(path,
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -67,6 +68,7 @@ def get_profile(username: str, access_token: str) -> dict:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -94,6 +96,7 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -113,6 +116,7 @@ def list_dir(path: str, token: str) -> List[str]:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -139,6 +143,7 @@ async def create_dir(path: str, token: str, timeout: int = 15):
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -155,6 +160,7 @@ async def share_dir(dir: dict, token: str, timeout: int = 15):
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -172,6 +178,7 @@ async def unshare_dir(path: str, token: str, timeout: int = 15):
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -193,6 +200,7 @@ def get_file(path: str, token: str) -> List[str]:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
@@ -300,6 +308,7 @@ def path_exists(path, token) -> bool:
 
 
 @retry(
+    reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(

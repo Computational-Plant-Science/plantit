@@ -131,8 +131,8 @@ export const user = {
                     commit('setProfileLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
-                    else if (error.response.status === 401) {
-                        // if we get a 401, log the user out
+                    else if (error.response.status === 401 || error.response.status === 403) {
+                        // if we get a 401 or 403, log the user out
                         sessionStorage.clear();
                         window.location.replace('/apis/v1/idp/cyverse_logout/');
                     }

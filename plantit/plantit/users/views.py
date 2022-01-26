@@ -283,11 +283,13 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if request.user.profile.cyverse_access_token != '':
             # if we can't get a profile from CyVerse, log the user out ( sorry :/ )
             try: response['cyverse_profile'] = q.get_user_cyverse_profile(request.user)
-            except (HTTPError, ValueError):
-                logout(request)
-                return redirect(
-                    "https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
-                    "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
+            except (HTTPError, ValueError) as e:
+                if '403' in str(e) or 'no CyVerse profile' in str(e):
+                    logout(request)
+                    return redirect(
+                        "https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
+                        "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
+                else: raise
 
         profile = Profile.objects.get(user=request.user)
         if q.has_github_info(profile):
