@@ -97,22 +97,22 @@ def compose_task_zip_command(task: Task, options: TaskOptions) -> str:
         output['exclude']['patterns'] = dict()
 
     # merge output patterns and files from workflow config
-    config = task.workflow['config']
+    config = task.workflow
     if 'output' in config:
         if 'include' in config['output']:
             if 'patterns' in config['output']['include']:
                 output['include']['patterns'] = list(
-                    set(output['include']['patterns'] + task.workflow['config']['output']['include']['patterns']))
+                    set(output['include']['patterns'] + config['output']['include']['patterns']))
             if 'names' in config['output']['include']:
                 output['include']['names'] = list(
-                    set(output['include']['names'] + task.workflow['config']['output']['include']['names']))
+                    set(output['include']['names'] + config['output']['include']['names']))
         if 'exclude' in config['output']:
             if 'patterns' in config['output']['exclude']:
                 output['exclude']['patterns'] = list(
-                    set(output['exclude']['patterns'] + task.workflow['config']['output']['exclude']['patterns']))
+                    set(output['exclude']['patterns'] + config['output']['exclude']['patterns']))
             if 'names' in config['output']['exclude']:
                 output['exclude']['names'] = list(
-                    set(output['exclude']['names'] + task.workflow['config']['output']['exclude']['names']))
+                    set(output['exclude']['names'] + config['output']['exclude']['names']))
 
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
@@ -407,9 +407,9 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
     # if we have a manual (or preset) override, use that instead
-    if 'time' in task.workflow['config'] and 'limit' in task.workflow['config']['time'] and 'units' in task.workflow['config']['time']:
-        units = task.workflow['config']['time']['units']
-        limit = int(task.workflow['config']['time']['limit'])
+    if 'time' in task.workflow and 'limit' in task.workflow['time'] and 'units' in task.workflow['time']:
+        units = task.workflow['time']['units']
+        limit = int(task.workflow['time']['limit'])
         if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
         elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
         elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)

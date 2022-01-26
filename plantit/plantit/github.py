@@ -248,7 +248,7 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
                     })
 
                 if response.status_code == 404:
-                    logger.info(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")

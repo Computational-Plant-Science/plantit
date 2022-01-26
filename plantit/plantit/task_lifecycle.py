@@ -155,8 +155,8 @@ def create_repeating_task(user: User, workflow):
     repo_name = workflow['repo']['name']
     repo_branch = workflow['branch']['name']
 
-    if 'logo' in workflow['config']:
-        logo_path = workflow['config']['logo']
+    if 'logo' in workflow:
+        logo_path = workflow['logo']
         workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
     else:
         workflow_image_url = None
@@ -461,7 +461,7 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
 
 
 def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
-    config = task.workflow['config']
+    config = task.workflow
     config['workdir'] = join(task.agent.workdir, task.guid)
     config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
 

@@ -2168,10 +2168,7 @@
                                                                                 : 'white'
                                                                         "
                                                                         :border-variant="
-                                                                            selectedAgent !==
-                                                                                null &&
-                                                                            selectedAgent.name !==
-                                                                                ''
+                                                                            agentValid
                                                                                 ? 'success'
                                                                                 : 'secondary'
                                                                         "
@@ -2237,10 +2234,7 @@
                                                                                             "
                                                                                         >
                                                                                             {{
-                                                                                                selectedAgent !==
-                                                                                                    null &&
-                                                                                                selectedAgent.name !==
-                                                                                                    ''
+                                                                                                agentValid
                                                                                                     ? selectedAgent.name
                                                                                                     : ''
                                                                                             }}<i
@@ -4255,17 +4249,17 @@ export default {
 
             // if we have pre-configured values for this flow, populate them
             if ('last_config' in this.getWorkflow) {
-                let flowConfig = this.getWorkflow['last_config'];
+                let lastConfig = this.getWorkflow['last_config'];
                 this.params =
-                    flowConfig.parameters !== undefined
-                        ? flowConfig.parameters
+                    lastConfig.parameters !== undefined
+                        ? lastConfig.parameters
                         : this.params;
-                if (flowConfig.input !== undefined)
-                    this.input = flowConfig.input;
-                if (flowConfig.output !== undefined)
-                    this.output = flowConfig.output;
-                if (flowConfig.agent !== undefined)
-                    this.selectedAgent = flowConfig.agent;
+                if (lastConfig.input !== undefined)
+                    this.input = lastConfig.input;
+                if (lastConfig.output !== undefined)
+                    this.output = lastConfig.output;
+                if (lastConfig.agent !== undefined)
+                    this.selectedAgent = lastConfig.agent;
             }
 
             if (
@@ -4444,7 +4438,6 @@ export default {
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 commands: this.getWorkflow.config.commands,
-                tags: this.tags,
                 logo: this.getWorkflow.config.logo,
                 gpu: this.getWorkflow.config.gpu,
                 env: this.getWorkflow.config.env,
@@ -4502,6 +4495,7 @@ export default {
                     limit: this.timeLimit,
                     units: this.timeLimitUnits,
                 },
+                tags: this.tags,
                 workflow: workflow,
                 repo: {
                     owner: this.getWorkflow.repo.owner.login,

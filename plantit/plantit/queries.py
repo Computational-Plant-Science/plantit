@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 def get_project_workflows(project: Investigation):
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 'projects' in wf['config'] and project.guid in wf['config']['projects']]
+                 'projects' in wf and project.guid in wf['projects']]
     return workflows
 
 
@@ -127,7 +127,7 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 def list_public_workflows() -> List[dict]:
     redis = RedisClient.get()
     workflows = [wf for wf in [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')] if
-                 'public' in wf['config'] and wf['config']['public']]
+                 'public' in wf and wf['public']]
     return workflows
 
 
@@ -314,9 +314,8 @@ def task_to_dict(task: Task) -> dict:
         'workflow_name': task.workflow_name,
         'workflow_branch': task.workflow_branch,
         'workflow_image_url': task.workflow_image_url,
-        'input_path': task.workflow['config']['input']['path'] if 'input' in task.workflow['config'] else None,
-        'output_path': task.workflow['config']['output']['to'] if (
-                'output' in task.workflow['config'] and 'to' in task.workflow['config']['output']) else None,
+        'input_path': task.workflow['input']['path'] if 'input' in task.workflow else None,
+        'output_path': task.workflow['output']['to'] if ('output' in task.workflow and 'to' in task.workflow['output']) else None,
         'tags': [str(tag) for tag in task.tags.all()],
         'is_complete': task.is_complete,
         'is_success': task.is_success,
@@ -817,7 +816,7 @@ async def calculate_user_statistics(user: User) -> dict:
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
     owned_workflows = [
-        f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}"
+        f"{workflow['repo']['owner']['login']}/{workflow['name'] if 'name' in workflow else '[unnamed]'}"
         for
         workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]

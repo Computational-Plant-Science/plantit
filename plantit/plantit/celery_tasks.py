@@ -332,7 +332,7 @@ def check_task_cyverse_transfer(self, guid: str, iteration: int = 0):
         self.request.callbacks = None  # stop the task chain
         return
 
-    path = task.workflow['config']['output']['to']
+    path = task.workflow['output']['to']
     actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
     expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}"))]
 
