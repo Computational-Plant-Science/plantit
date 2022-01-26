@@ -2235,7 +2235,7 @@
                                                                                         >
                                                                                             {{
                                                                                                 agentValid
-                                                                                                    ? selectedAgent.name
+                                                                                                    ? selectedAgent
                                                                                                     : ''
                                                                                             }}<i
                                                                                                 v-if="
@@ -4287,7 +4287,7 @@ export default {
             this.loadSelectedOutput(node.path);
         },
         agentSelected(agent) {
-            this.selectedAgent = agent;
+            this.selectedAgent = agent.name;
         },
         agentUnsupported(agent) {
             if (this.getWorkflow.config.jobqueue === undefined) return false;
@@ -4502,7 +4502,7 @@ export default {
                     name: this.getWorkflow.repo.name,
                     branch: this.getWorkflow.branch.name,
                 },
-                agent: this.selectedAgent.name,
+                agent: this.selectedAgent,
                 miappe: {},
             };
 
@@ -4666,7 +4666,7 @@ export default {
         },
         agentValid() {
             return (
-                this.selectedAgent !== null && this.selectedAgent.name !== ''
+                this.selectedAgent !== null && this.selectedAgent !== ''
             );
         },
         canSubmit() {

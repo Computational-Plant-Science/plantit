@@ -292,17 +292,6 @@ def list_task_results(self, guid: str):
 
     redis = RedisClient.get()
     ssh = get_task_ssh_client(task)
-    workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}/{task.workflow_branch}")
-
-    if workflow is None:
-        workflow = async_to_sync(get_workflow)(
-            task.workflow_owner,
-            task.workflow_name,
-            task.workflow_branch,
-            task.user.profile.github_token,
-            task.user.profile.cyverse_access_token)['config']
-    else:
-        workflow = json.loads(workflow)['config']
 
     log_task_orchestrator_status(task, [f"Retrieving logs"])
     async_to_sync(push_task_channel_event)(task)
@@ -310,7 +299,7 @@ def list_task_results(self, guid: str):
 
     log_task_orchestrator_status(task, [f"Retrieving results"])
     async_to_sync(push_task_channel_event)(task)
-    expected = list_result_files(task, workflow)
+    expected = list_result_files(task)
     found = [e for e in expected if e['exists']]
     redis.set(f"results/{task.guid}", json.dumps(found))
     task.results_retrieved = True

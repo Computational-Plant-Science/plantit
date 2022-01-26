@@ -401,21 +401,20 @@ def get_job_status(task: Task) -> str:
                 return status
 
 
-def list_result_files(task: Task, workflow: dict) -> List[dict]:
+def list_result_files(task: Task) -> List[dict]:
     """
     Lists result files expected to be produced by the given task (assumes the task has completed). Returns a dict with form `{'name': <name>, 'path': <full path>, 'exists': <True or False>}`
 
     Args:
         task: The task
-        workflow: The task's workflow
 
     Returns: Files expected to be produced by the task
 
     """
 
     # TODO factor out into method
-    included_by_name = get_output_included_names(workflow)
-    included_by_pattern = get_output_included_patterns(workflow)
+    included_by_name = get_output_included_names(task)
+    included_by_pattern = get_output_included_patterns(task)
 
     ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
@@ -446,8 +445,7 @@ def list_result_files(task: Task, workflow: dict) -> List[dict]:
                             'exists': True
                         })
 
-    logger.info(
-        f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
+    logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
     return outputs
 
 
