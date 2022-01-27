@@ -380,11 +380,11 @@ def refresh_all_users_stats():
     for user in User.objects.all():
         logger.info(f"Computing statistics for {user.username}")
         redis.set(f"stats/{user.username}", json.dumps(async_to_sync(q.calculate_user_statistics)(user)))
-        redis.set(f"user_timeseries/{user.username}", json.dumps(q.get_user_timeseries(user)))
+        redis.set(f"user_timeseries/{user.username}", json.dumps(q.get_user_timeseries(user, True)))
 
     logger.info(f"Computing aggregate statistics")
-    redis.set("stats_counts", json.dumps(q.get_total_counts()))
-    redis.set("total_timeseries", json.dumps(q.get_aggregate_timeseries()))
+    redis.set("stats_counts", json.dumps(q.get_total_counts(True)))
+    redis.set("total_timeseries", json.dumps(q.get_aggregate_timeseries(True)))
 
 
 @app.task()
@@ -416,7 +416,7 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     redis = RedisClient.get()
-    institutions = async_to_sync(q.get_institutions)()
+    institutions = async_to_sync(q.get_institutions)(True)
     for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
 
 

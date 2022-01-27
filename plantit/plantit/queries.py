@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 import json
 import logging
 from collections import Counter, namedtuple
@@ -591,79 +592,95 @@ def count_institutions():
     return list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
 
 
-async def get_institutions() -> dict:
-    # count members per institution
-    counts = await sync_to_async(count_institutions)()
-    member_counts = {i['institution'].lower(): i['institution__count'] for i in counts}
+def get_institutions(invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    cached = list(redis.scan_iter(match=f"institutions/*"))
 
-    # get institution information (send all the requests concurrently)
-    # TODO: need to make sure this doesn't exceed the free plan rate limit
-    tasks = [mapbox.get_institution(k, settings.MAPBOX_TOKEN) for k in member_counts.keys()]
-    results = await asyncio.gather(*tasks)
+    if invalidate:
+        # count members per institution
+        counts = {i['institution'].lower(): i['institution__count'] for i in count_institutions()}
 
-    institutions = dict()
-    for result in results:
-        # reconstruct institution name with proper capitalization from Mapbox result
-        # TODO: are there any edge cases this might fail for?
-        name = ' '.join(result['query'])
+        institutions = dict()
+        for k in counts.keys():
+            # get institution information (TODO: can we send all the requests concurrently?)
+            # TODO: need to make sure this doesn't exceed the free plan rate limit
+            result = async_to_sync(mapbox.get_institution)(k, settings.MAPBOX_TOKEN)
 
-        # if Mapbox returned no results, we can't return geocode information
-        if len(result['features']) == 0:
-            logger.warning(f"No results from Mapbox for institution: {name}")
-            institutions[name] = {
-                'institution': name,
-                'count': member_counts[name],
-                'geocode': None
-            }
-        # if we got results, pick the top one
-        else:
-            feature = result['features'][0]
-            feature['id'] = name
-            feature['properties'] = {
-                'name': name,
-                'count': member_counts[name]
-            }
-            institutions[name] = {
-                'institution': name,
-                'count': member_counts[name],
-                'geocode': feature
-            }
+            # reconstruct institution name with proper capitalization from Mapbox result
+            # TODO: are there any edge cases this might fail for?
+            name = ' '.join(result['query'])
+
+            # if Mapbox returned no results, we can't return geocode information
+            if len(result['features']) == 0:
+                logger.warning(f"No results from Mapbox for institution: {name}")
+                institutions[name] = {
+                    'institution': name,
+                    'count': counts[name],
+                    'geocode': None
+                }
+            # if we got results, pick the top one
+            else:
+                feature = result['features'][0]
+                feature['id'] = name
+                feature['properties'] = {
+                    'name': name,
+                    'count': counts[name]
+                }
+                institutions[name] = {
+                    'institution': name,
+                    'count': counts[name],
+                    'geocode': feature
+                }
+
+        for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
+    else:
+        institutions = [json.loads(redis.get(institution)) for institution in cached if institution is not None]
 
     return institutions
 
 
-
-def get_total_counts() -> dict:
+def get_total_counts(invalidate: bool = False) -> dict:
     redis = RedisClient.get()
-    users = User.objects.count()
-    online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
-    wfs = [json.loads(redis.get(key)) for key in redis.scan_iter('workflows/*')]
-    devs = list(set([wf['repo']['owner']['login'] for wf in wfs]))
-    workflows = len(wfs)
-    developers = len(devs)
-    agents = Agent.objects.count()
-    tasks = TaskCounter.load().count
-    running = len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
+    cached = redis.get("stats_counts")
 
-    return {
-        'users': users,
-        'online': online,
-        'workflows': workflows,
-        'developers': developers,
-        'agents': agents,
-        'tasks': tasks,
-        'running': running
-    }
+    if cached is None or invalidate:
+        users = User.objects.count()
+        online = len(filter_online(User.objects.all()))  # TODO store this in the DB each time the user logs in
+        wfs = [json.loads(redis.get(key)) for key in redis.scan_iter('workflows/*')]
+        devs = list(set([wf['repo']['owner']['login'] for wf in wfs]))
+        workflows = len(wfs)
+        developers = len(devs)
+        agents = Agent.objects.count()
+        tasks = TaskCounter.load().count
+        running = len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
+        counts = {
+            'users': users,
+            'online': online,
+            'workflows': workflows,
+            'developers': developers,
+            'agents': agents,
+            'tasks': tasks,
+            'running': running
+        }
+
+        redis.set("stats_counts", json.dumps(counts))
+    else:
+        counts = json.loads(cached)
+
+    return counts
 
 
-def get_aggregate_timeseries() -> dict:
-    users_total = get_users_total_timeseries()
-    tasks_total = get_tasks_total_timeseries()
-    tasks_usage = get_tasks_usage_timeseries()
-    workflows_usage = get_workflows_usage_timeseries()
-    agents_usage = get_agents_usage_timeseries()
+def get_aggregate_timeseries(invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    cached = redis.get("total_timeseries")
 
-    return {
+    if cached is None or invalidate:
+        users_total = get_users_total_timeseries()
+        tasks_total = get_tasks_total_timeseries()
+        tasks_usage = get_tasks_usage_timeseries()
+        workflows_usage = get_workflows_usage_timeseries()
+        agents_usage = get_agents_usage_timeseries()
+        series = {
         'users_total': users_total,
         'tasks_total': tasks_total,
         'tasks_usage': tasks_usage,
@@ -671,17 +688,32 @@ def get_aggregate_timeseries() -> dict:
         'workflows_usage': workflows_usage,
     }
 
+        redis.set("total_timeseries", json.dumps(series))
+    else:
+        series = json.loads(cached)
 
-def get_user_timeseries(user: User) -> dict:
-    tasks_usage = get_tasks_usage_timeseries(user=user)
-    workflows_usage = get_workflows_usage_timeseries(user)
-    agents_usage = get_agents_usage_timeseries(user)
+    return series
 
-    return {
-        'tasks_usage': tasks_usage,
-        'agents_usage': agents_usage,
-        'workflows_usage': workflows_usage
-    }
+
+def get_user_timeseries(user: User, invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    cached = redis.get(f"user_timeseries/{user.username}")
+
+    if cached is None or invalidate:
+        tasks_usage = get_tasks_usage_timeseries(user=user)
+        workflows_usage = get_workflows_usage_timeseries(user)
+        agents_usage = get_agents_usage_timeseries(user)
+        series = {
+            'tasks_usage': tasks_usage,
+            'agents_usage': agents_usage,
+            'workflows_usage': workflows_usage
+        }
+
+        redis.set(f"user_timeseries/{user.username}", json.dumps(series))
+    else:
+        series = json.loads(cached)
+
+    return series
 
 
 def get_users_total_timeseries() -> List[Tuple[str, int]]:
@@ -716,21 +748,30 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -
     return series
 
 
-# TODO: refactor like below
-def get_workflow_usage_timeseries(workflow_owner: str, workflow_name: str, workflow_branch: str) -> dict:
-    tasks = Task.objects.filter(workflow__repo__owner__login=workflow_owner, workflow__repo__name=workflow_name,
-                                workflow__branch__name=workflow_branch)
-    series = dict()
+def get_workflow_usage_timeseries(owner: str, name: str, branch: str, invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    cached = redis.get(f"workflow_timeseries/{owner}/{name}/{branch}")
 
-    # return early if no tasks
-    if len(tasks) == 0:
-        return series
+    if cached is None or invalidate:
+        series = dict()
+        tasks = Task.objects.filter(
+            workflow__repo__owner__login=owner,
+            workflow__repo__name=name,
+            workflow__branch__name=branch)
 
-    # count tasks per workflow
-    for task in tasks:
-        timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
-        if timestamp not in series: series[timestamp] = 0
-        series[timestamp] = series[timestamp] + 1
+        # return early if no tasks
+        if len(tasks) == 0:
+            return series
+
+        # count tasks per workflow
+        for task in tasks:
+            timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
+            if timestamp not in series: series[timestamp] = 0
+            series[timestamp] = series[timestamp] + 1
+
+        redis.set(f"workflow_timeseries/{owner}/{name}/{branch}", json.dumps(series))
+    else:
+        series = json.loads(cached)
 
     return series
 

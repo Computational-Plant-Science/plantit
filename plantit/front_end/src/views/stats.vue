@@ -437,7 +437,7 @@ export default {
             await axios
                 .get('/apis/v1/stats/institutions/')
                 .then((response) => {
-                    this.institutions = response.data.institutions;
+                    this.institutions = response.data;
                     if (this.map) this.paintInstitutions();
                 })
                 .catch((error) => {
@@ -501,7 +501,7 @@ export default {
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
-                    features: this.institutions.map((i) => i.geocode),
+                    features: Object.values(this.institutions).map((institution) => institution.geocode),
                 },
             });
             this.map.addLayer({
@@ -639,6 +639,7 @@ export default {
                           y: this.timeseriesTasksUsage[key].y,
                           name: key,
                           type: 'line',
+                          line: { color: '#d6df5D' },
                       };
                   });
             // : [

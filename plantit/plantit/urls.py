@@ -16,7 +16,7 @@ router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
 
-# Swagger metadata
+# Swagger config
 schema_view = get_schema_view(
     openapi.Info(
         title="plantit API",
