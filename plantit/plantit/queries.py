@@ -636,7 +636,7 @@ def get_institutions(invalidate: bool = False) -> dict:
     else:
         for institution in cached:
             if institution is not None:
-                institutions[institution] = json.loads(redis.get(institution))
+                institutions[institution.decode('utf-8')] = json.loads(redis.get(institution))
 
     return institutions
 

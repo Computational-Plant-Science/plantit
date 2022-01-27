@@ -45,10 +45,16 @@ class QueriesTests(TestCase):
         series = q.get_workflows_usage_timeseries(user)
         pprint(series)
 
-    def test_get_institutions(self):
-        # TODO test cache hit case also
+    def test_get_institutions_cache_miss(self):
         institutions = q.get_institutions(invalidate=True)
-        pprint(institutions)
         self.assertTrue('university of georgia' in institutions)
         self.assertTrue(institutions['university of georgia']['count'] == 1)
         self.assertTrue(institutions['university of georgia']['geocode']['text'] == 'University of Georgia')
+
+    def test_get_institutions_cache_hit(self):
+        institutions = q.get_institutions()
+
+        # TODO
+        # self.assertTrue('university of georgia' in institutions)
+        # self.assertTrue(institutions['university of georgia']['count'] == 1)
+        # self.assertTrue(institutions['university of georgia']['geocode']['text'] == 'University of Georgia')
