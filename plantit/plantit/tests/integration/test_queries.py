@@ -45,8 +45,8 @@ class QueriesTests(TestCase):
         series = q.get_workflows_usage_timeseries(user)
         pprint(series)
 
-    async def test_get_institutions(self):
-        institutions = await q.get_institutions()
+    def test_get_institutions(self):
+        institutions = q.get_institutions()
         self.assertTrue('university of georgia' in institutions)
         self.assertTrue(institutions['university of georgia']['count'] == 1)
         self.assertTrue(institutions['university of georgia']['geocode']['text'] == 'University of Georgia')
