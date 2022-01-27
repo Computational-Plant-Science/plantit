@@ -46,7 +46,9 @@ class QueriesTests(TestCase):
         pprint(series)
 
     def test_get_institutions(self):
-        institutions = q.get_institutions()
+        # TODO test cache hit case also
+        institutions = q.get_institutions(invalidate=True)
+        pprint(institutions)
         self.assertTrue('university of georgia' in institutions)
         self.assertTrue(institutions['university of georgia']['count'] == 1)
         self.assertTrue(institutions['university of georgia']['geocode']['text'] == 'University of Georgia')
