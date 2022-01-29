@@ -650,7 +650,14 @@
                                                 align-v="center"
                                                 class="mt-2"
                                             >
-                                                <b-col class="text-left" v-if="getTask.results_retrieved && getTask.output_files.length > 0">
+                                                <b-col
+                                                    class="text-left"
+                                                    v-if="
+                                                        getTask.results_retrieved &&
+                                                        getTask.output_files
+                                                            .length > 0
+                                                    "
+                                                >
                                                     <b
                                                         v-if="
                                                             getWorkflow.config
@@ -744,7 +751,8 @@
                                                         >{{
                                                             getTask.output_files
                                                                 .length
-                                                        }} results found</span
+                                                        }}
+                                                        results found</span
                                                     ><span
                                                         v-else-if="
                                                             getTask.status !==
@@ -762,72 +770,23 @@
                                                     >
                                                     <br />
                                                 </b-col>
-                                                <b-col v-else align-self="center" class="text-center"><span class="text-center"><i class="far fa-folder-open fa-fw"></i> No results found</span></b-col>
-                                                <!--<b-col
-                                                    md="auto"
-                                                    align-self="end"
-                                                    v-if="
-                                                        getWorkflow.config
-                                                            .output &&
-                                                            !getTask.is_failure
-                                                    "
+                                                <b-col
+                                                    v-else
+                                                    align-self="center"
+                                                    class="text-center"
+                                                    ><span class="text-center"
+                                                        ><i
+                                                            class="far fa-folder-open fa-fw"
+                                                        ></i>
+                                                        No results found</span
+                                                    ></b-col
                                                 >
-                                                    <b-button
-                                                        title="Transfer results to CyVerse Data Store"
-                                                        :disabled="
-                                                            transferring ||
-                                                                getTask.transferred
-                                                        "
-                                                        v-b-tooltip.hover
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        @click="
-                                                            showTransferToCyVerseModal
-                                                        "
-                                                        ><i
-                                                            v-if="
-                                                                !transferring &&
-                                                                    !getTask.transferred
-                                                            "
-                                                            class="fas fa-upload fa-fw mr-1"
-                                                        ></i
-                                                        ><i
-                                                            v-else-if="
-                                                                transferring &&
-                                                                    !getTask.transferred
-                                                            "
-                                                            class="fas fa-spinner fa-fw mr-1"
-                                                        ></i>
-                                                        <i
-                                                            v-else
-                                                            class="fas fa-check fa-fw mr-1"
-                                                        ></i>
-                                                        {{
-                                                            getTask.transferred
-                                                                ? 'Transferred'
-                                                                : transferring
-                                                                ? 'Transferring'
-                                                                : 'Transfer'
-                                                        }}
-                                                        to
-                                                        <b-img
-                                                            class="ml-2 mt-1"
-                                                            rounded
-                                                            style="max-height: 1.1rem;"
-                                                            right
-                                                            :src="
-                                                                require('../../assets/logos/cyverse_bright.png')
-                                                            "
-                                                        ></b-img
-                                                    ></b-button>
-                                                </b-col>-->
                                                 <b-col
                                                     v-if="
-                                                            getTask.results_retrieved && getTask.output_files !== undefined
-                                                        "
+                                                        getTask.results_retrieved &&
+                                                        getTask.output_files !==
+                                                            undefined
+                                                    "
                                                     md="auto"
                                                     align-self="end"
                                                 >
@@ -841,7 +800,9 @@
                                                                 .length === 0
                                                         "
                                                         class="text-right"
-                                                        :text="outputPageSize"
+                                                        :text="
+                                                            outputPageSize.toString()
+                                                        "
                                                         dropleft
                                                         :title="
                                                             'Showing ' +
@@ -945,8 +906,10 @@
                                             </b-row>
                                             <b-row
                                                 v-if="
-                                                            getTask.results_retrieved && getTask.output_files!== undefined
-                                                        "
+                                                    getTask.results_retrieved &&
+                                                    getTask.output_files !==
+                                                        undefined
+                                                "
                                                 v-show="viewMode !== 'Carousel'"
                                             >
                                                 <b-col
@@ -983,7 +946,7 @@
                                                         </template>
                                                     </b-pagination>
                                                 </b-col>
-                                                <b-col align-self="middle"
+                                                <b-col align-self="center"
                                                     ><b-input-group
                                                         class="mt-3"
                                                         style="top: 2px"
@@ -1021,7 +984,6 @@
                                                 ></b-spinner>
                                             </b-row>
                                             <b-overlay
-
                                                 :show="downloading"
                                                 :variant="
                                                     profile.darkMode
@@ -1482,9 +1444,14 @@
                                                 </div>
                                             </b-overlay>
                                         </div>
-                                        <div class="m-3" v-if="
-                                                            getTask.results_retrieved && getTask.output_files !== undefined
-                                                        ">
+                                        <div
+                                            class="m-3"
+                                            v-if="
+                                                getTask.results_retrieved &&
+                                                getTask.output_files !==
+                                                    undefined
+                                            "
+                                        >
                                             <b-row
                                                 ><!--<b-col
                                                     v-if="
@@ -2161,14 +2128,17 @@ export default {
                 .then(async (response) => {
                     this.canceling = false;
                     if (response.status === 200) {
-                      await this.$store.dispatch('tasks/addOrUpdate', response.data);
+                        await this.$store.dispatch(
+                            'tasks/addOrUpdate',
+                            response.data
+                        );
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Canceled task ${this.$router.currentRoute.params.guid}`,
                             guid: guid().toString(),
                         });
                     } else {
-                      await this.$store.dispatch('alerts/add', {
+                        await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to cancel task ${this.$router.currentRoute.params.guid}`,
                             guid: guid().toString(),
@@ -2178,10 +2148,10 @@ export default {
                 .catch(async (error) => {
                     this.canceling = false;
                     await this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to cancel task ${this.$router.currentRoute.params.guid}`,
-                            guid: guid().toString(),
-                        });
+                        variant: 'danger',
+                        message: `Failed to cancel task ${this.$router.currentRoute.params.guid}`,
+                        guid: guid().toString(),
+                    });
                     return error;
                 });
         },
@@ -2276,7 +2246,10 @@ export default {
                 });
         },
         async getSchedulerLogs() {
-            await axios.get(`/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/`)
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/scheduler/`
+                )
                 .then((response) => {
                     this.schedulerLogs = response.data.lines;
                 })
@@ -2286,7 +2259,10 @@ export default {
                 });
         },
         async getAgentLogs() {
-            await axios.get(`/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/`)
+            await axios
+                .get(
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.guid}/logs/agent/`
+                )
                 .then((response) => {
                     this.agentLogs = response.data.lines;
                 })

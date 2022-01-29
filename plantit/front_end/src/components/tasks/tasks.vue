@@ -627,11 +627,11 @@ export default {
         };
     },
     methods: {
-        async deleteDelayed(name) {
+        async deleteDelayed(guid) {
             this.unschedulingDelayed = true;
             await axios
                 .get(
-                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+                    `/apis/v1/tasks/${guid}/unschedule_delayed/`
                 )
                 .then(async (response) => {
                     await Promise.all([
@@ -658,11 +658,11 @@ export default {
                     throw error;
                 });
         },
-        async deleteRepeating(name) {
+        async deleteRepeating(guid) {
             this.unschedulingRepeating = true;
             await axios
                 .get(
-                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+                    `/apis/v1/tasks/${guid}/unschedule_repeating/`
                 )
                 .then(async (response) => {
                     await Promise.all([

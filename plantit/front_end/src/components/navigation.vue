@@ -1179,9 +1179,12 @@ export default {
   // text-decoration: underline
   // text-decoration-color: $color-button
 
+.dropdown-custom
+  border: none !important
+
 .dropdown-custom:hover
   background-color: transparent !important
-  border: 1px transparent !important
+  border: none !important
   box-shadow: none !important
 
 .crumb-light

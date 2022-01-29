@@ -396,30 +396,24 @@
                                         <b-col
                                             ><Plotly
                                                 v-if="tasks.length > 0"
-                                                :data="taskTimeseriesData"
-                                                :layout="taskTimeseriesLayout"
+                                                :data="tasksStatusPlotTraces"
+                                                :layout="tasksStatusPlotLayout"
                                             ></Plotly></b-col
                                         ><b-col>
                                             <Plotly
-                                                v-if="
-                                                    timeseriesUserTasksUsage !==
-                                                    null
-                                                "
-                                                :data="tasksRunningPlotData"
-                                                :layout="tasksRunningPlotLayout"
+                                                v-if="showTasksUsagePlot"
+                                                :data="tasksUsagePlotTraces"
+                                                :layout="tasksUsagePlotLayout"
                                             ></Plotly> </b-col
                                     ></b-row>
                                     <br />
                                     <b-row
                                         ><b-col
                                             ><Plotly
-                                                v-if="
-                                                    timeseriesUserWorkflowsUsage !==
-                                                    null
-                                                "
-                                                :data="workflowsRunningPlotData"
+                                                v-if="showWorkflowsUsagePlot"
+                                                :data="workflowsUsagePlotTraces"
                                                 :layout="
-                                                    workflowsRunningPlotLayout
+                                                    workflowsUsagePlotLayout
                                                 "
                                             ></Plotly></b-col
                                     ></b-row>
@@ -427,14 +421,9 @@
                                     <b-row
                                         ><b-col
                                             ><Plotly
-                                                v-if="
-                                                    timeseriesUserAgentsUsage !==
-                                                    null
-                                                "
-                                                :data="agentsRunningPlotData"
-                                                :layout="
-                                                    agentsRunningPlotLayout
-                                                "
+                                                v-if="showAgentsUsagePlot"
+                                                :data="agentsUsagePlotTraces"
+                                                :layout="agentsUsagePlotLayout"
                                             ></Plotly></b-col
                                     ></b-row>
                                 </div>
@@ -465,8 +454,8 @@
                                                 profile.stats.workflow_usage
                                                     .labels.length > 0
                                             "
-                                            :data="workflowPlotData"
-                                            :layout="workflowPlotLayout"
+                                            :data="workflowPieData"
+                                            :layout="workflowPieLayout"
                                         ></Plotly>
                                     </b-col>
                                     <b-col>
@@ -475,8 +464,8 @@
                                                 profile.stats.agent_usage.labels
                                                     .length > 0
                                             "
-                                            :data="agentPlotData"
-                                            :layout="agentPlotLayout"
+                                            :data="agentPieTraces"
+                                            :layout="agentPieLayout"
                                         ></Plotly></b-col
                                     ><b-col
                                         v-if="
@@ -489,8 +478,8 @@
                                                 profile.stats.project_usage
                                                     .labels.length > 0
                                             "
-                                            :data="projectPlotData"
-                                            :layout="projectPlotLayout"
+                                            :data="projectPieData"
+                                            :layout="projectPieLayout"
                                         ></Plotly> </b-col
                                 ></b-row>
                                 <b-row v-else
@@ -522,21 +511,14 @@ export default {
     data: function () {
         return {
             crumbs: [],
-            timeseriesUsers: [],
-            timeseriesTasksTotal: [],
             timeseriesTasksUsage: null,
-            timeseriesUserTasksUsage: null,
-            timeseriesUserWorkflowsUsage: null,
-            timeseriesAgentsRunning: null,
-            timeseriesUserAgentsUsage: null,
+            timeseriesWorkflowsUsage: null,
+            timeseriesAgentsUsage: null,
         };
     },
     async created() {
         this.crumbs = this.$route.meta.crumb;
-        await Promise.all([
-            this.loadUserTimeseries(),
-            this.loadAggregateTimeseries(),
-        ]);
+        await this.loadUserTimeseries();
     },
     watch: {
         $route() {
@@ -547,64 +529,55 @@ export default {
         prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
         },
-        async loadAggregateTimeseries() {
-            await axios
-                .get('/apis/v1/stats/timeseries/')
-                .then((response) => {
-                    this.timeseriesUsers = [response.data.users_total];
-                    this.timeseriesTasksTotal = [
-                        {
-                            x: Object.keys(response.data.tasks_total),
-                            y: Object.values(response.data.tasks_total),
-                            type: 'scatter',
-                        },
-                    ];
-                    this.timeseriesTasksUsage = [
-                        {
-                            x: Object.keys(response.data.tasks_usage),
-                            y: Object.values(response.data.tasks_usage),
-                            type: 'scatter',
-                        },
-                    ];
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        },
         async loadUserTimeseries() {
             await axios
                 .get(
                     `/apis/v1/stats/timeseries/${this.profile.djangoProfile.username}/`
                 )
                 .then((response) => {
-                    this.timeseriesUserTasksUsage = [
-                        {
-                            x: Object.keys(response.data.tasks_usage),
-                            y: Object.values(response.data.tasks_usage),
-                            type: 'scatter',
-                        },
-                    ];
-                    this.timeseriesUserWorkflowsUsage = Object.fromEntries(
+                    this.timeseriesTasksUsage = {
+                        x: Object.keys(response.data.tasks_usage).map((key) =>
+                            moment(key).format('YYYY-MM-DD HH:mm:ss')
+                        ),
+                        y: Object.values(response.data.tasks_usage),
+                        type: 'line',
+                        mode: 'lines',
+                        line: { color: '#d6df5D', shape: 'spline' },
+                    };
+                    this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
                             ([k, v]) => [
                                 k,
                                 {
-                                    x: Object.keys(v),
+                                    x: Object.keys(v).map((key) =>
+                                        moment(key).format(
+                                            'YYYY-MM-DD HH:mm:ss'
+                                        )
+                                    ),
                                     y: Object.values(v),
-                                    type: 'scatter',
+                                    name: k,
+                                    type: 'line',
+                                    mode: 'lines',
+                                    line: { shape: 'spline' },
                                 },
                             ]
                         )
                     );
-                    this.timeseriesUserAgentsUsage = Object.fromEntries(
+                    this.timeseriesAgentsUsage = Object.fromEntries(
                         Object.entries(response.data.agents_usage).map(
                             ([k, v]) => [
                                 k,
                                 {
-                                    x: Object.keys(v),
+                                    x: Object.keys(v).map((key) =>
+                                        moment(key).format(
+                                            'YYYY-MM-DD HH:mm:ss'
+                                        )
+                                    ),
                                     y: Object.values(v),
-                                    type: 'scatter',
+                                    name: k,
+                                    type: 'line',
+                                    mode: 'lines',
+                                    line: { shape: 'spline' },
                                 },
                             ]
                         )
@@ -612,7 +585,11 @@ export default {
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
-                    if (error.response !== undefined && error.response.status === 500) throw error;
+                    if (
+                        error.response !== undefined &&
+                        error.response.status === 500
+                    )
+                        throw error;
                 });
         },
     },
@@ -636,12 +613,17 @@ export default {
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', ['userWorkflows', 'userWorkflowsLoading']),
         ...mapGetters('projects', ['userProjects', 'othersProjects']),
+        isRootPath() {
+            return this.$route.name === 'home';
+        },
         anyRecentUsageStats() {
             return (
-                this.timeseriesUserTasksUsage === null ||
-                this.timeseriesUserTasksUsage[0].x.length > 0 ||
-                Object.keys(this.timeseriesUserWorkflowsUsage).length > 0 ||
-                Object.keys(this.timeseriesUserAgentsUsage).length > 0
+                (this.timeseriesTasksUsage !== null &&
+                    this.timeseriesTasksUsage.x.length > 1) ||
+                (this.timeseriesWorkflowsUsage !== null &&
+                    Object.keys(this.timeseriesWorkflowsUsage).length > 1) ||
+                (this.timeseriesAgentsUsage !== null &&
+                    Object.keys(this.timeseriesAgentsUsage).length > 1)
             );
         },
         anyCumulativeUsageStats() {
@@ -651,10 +633,7 @@ export default {
                 this.profile.stats.project_usage.labels.length > 0
             );
         },
-        isRootPath() {
-            return this.$route.name === 'home';
-        },
-        workflowPlotData() {
+        workflowPieData() {
             return [
                 {
                     values: this.profile.stats.workflow_usage.values,
@@ -663,7 +642,7 @@ export default {
                 },
             ];
         },
-        workflowPlotLayout() {
+        workflowPieLayout() {
             return {
                 title: {
                     text: 'Workflows',
@@ -684,7 +663,7 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        agentPlotData() {
+        agentPieTraces() {
             return [
                 {
                     values: this.profile.stats.agent_usage.values,
@@ -693,7 +672,7 @@ export default {
                 },
             ];
         },
-        agentPlotLayout() {
+        agentPieLayout() {
             return {
                 title: {
                     text: 'Agents',
@@ -714,7 +693,7 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        projectPlotData() {
+        projectPieData() {
             return [
                 {
                     values: this.profile.stats.project_usage.values,
@@ -723,7 +702,7 @@ export default {
                 },
             ];
         },
-        projectPlotLayout() {
+        projectPieLayout() {
             return {
                 title: {
                     text: 'Projects',
@@ -744,43 +723,7 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        taskPlotData() {
-            return [
-                {
-                    values: this.profile.stats.task_status.values,
-                    labels: this.profile.stats.task_status.labels,
-                    marker: {
-                        colors: this.tasks.map((t) =>
-                            t.status === 'success'
-                                ? 'rgb(214, 223, 93)'
-                                : t.status === 'failure'
-                                ? 'rgb(255, 114, 114)'
-                                : 'rgb(128, 128, 128)'
-                        ),
-                    },
-                    type: 'pie',
-                },
-            ];
-        },
-        taskPlotLayout() {
-            return {
-                title: {
-                    text: 'Completion Status',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                legend: {
-                    orientation: 'h',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-            };
-        },
-        taskTimeseriesData() {
+        tasksStatusPlotTraces() {
             return [
                 {
                     x: this.tasks.map((t) =>
@@ -809,21 +752,7 @@ export default {
                 },
             ];
         },
-        tasksRunningPlotData() {
-            return this.timeseriesUserTasksUsage === null
-                ? { x: [], y: [], type: 'scatter' }
-                : [
-                      {
-                          x: this.timeseriesUserTasksUsage[0].x.map((t) =>
-                              moment(t).format('YYYY-MM-DD HH:mm:ss')
-                          ),
-                          y: this.timeseriesUserTasksUsage[0].y,
-                          type: 'scatter',
-                          line: { color: '#d6df5D' },
-                      },
-                  ];
-        },
-        taskTimeseriesLayout() {
+        tasksStatusPlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
@@ -856,19 +785,29 @@ export default {
                         },
                     },
                 },
-                // yaxis: {
-                //     showticklabels: false,
-                // },
+                yaxis: {
+                    showticklabels: false,
+                },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        tasksRunningPlotLayout() {
+        showTasksUsagePlot() {
+            return (
+                this.timeseriesTasksUsage !== null &&
+                this.timeseriesTasksUsage.x.length > 1
+            );
+        },
+        tasksUsagePlotTraces() {
+            return [this.timeseriesTasksUsage];
+        },
+        tasksUsagePlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
+                hovermode: false,
                 title: {
                     text: 'Task Usage',
                     font: {
@@ -904,26 +843,22 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        workflowsRunningPlotData() {
-            return this.timeseriesUserWorkflowsUsage === null
-                ? []
-                : Object.keys(this.timeseriesUserWorkflowsUsage).map((key) => {
-                      return {
-                          x: this.timeseriesUserWorkflowsUsage[key].x.map((t) =>
-                              moment(t).format('YYYY-MM-DD HH:mm:ss')
-                          ),
-                          y: this.timeseriesUserWorkflowsUsage[key].y,
-                          name: key,
-                          type: 'line',
-                      };
-                  });
+        showWorkflowsUsagePlot() {
+            return (
+                this.timeseriesWorkflowsUsage !== null &&
+                Object.keys(this.timeseriesWorkflowsUsage).length > 1
+            );
         },
-        workflowsRunningPlotLayout() {
+        workflowsUsagePlotTraces() {
+            return [this.timeseriesWorkflowsUsage];
+        },
+        workflowsUsagePlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
+                hovermode: false,
                 title: {
                     text: 'Workflows',
                     font: {
@@ -959,26 +894,22 @@ export default {
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
         },
-        agentsRunningPlotData() {
-            return this.timeseriesUserAgentsUsage === null
-                ? []
-                : Object.keys(this.timeseriesUserAgentsUsage).map((key) => {
-                      return {
-                          x: this.timeseriesUserAgentsUsage[key].x.map((t) =>
-                              moment(t).format('YYYY-MM-DD HH:mm:ss')
-                          ),
-                          y: this.timeseriesUserAgentsUsage[key].y,
-                          name: key,
-                          type: 'line',
-                      };
-                  });
+        showAgentsUsagePlot() {
+            return (
+                this.timeseriesAgentsUsage !== null &&
+                Object.keys(this.timeseriesAgentsUsage).length > 1
+            );
         },
-        agentsRunningPlotLayout() {
+        agentsUsagePlotTraces() {
+            return Object.values(this.timeseriesAgentsUsage);
+        },
+        agentsUsagePlotLayout() {
             return {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
+                hovermode: false,
                 title: {
                     text: 'Agents',
                     font: {

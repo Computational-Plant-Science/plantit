@@ -757,9 +757,9 @@ def get_workflow_usage_timeseries(owner: str, name: str, branch: str, invalidate
     if cached is None or invalidate:
         series = dict()
         tasks = Task.objects.filter(
-            workflow__repo__owner__login=owner,
+            workflow__repo__owner=owner,
             workflow__repo__name=name,
-            workflow__branch__name=branch)
+            workflow__repo__branch=branch)
 
         # return early if no tasks
         if len(tasks) == 0:

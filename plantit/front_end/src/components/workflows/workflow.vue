@@ -4545,6 +4545,18 @@ export default {
             'tasksDelayed',
             'tasksRepeating',
         ]),
+        ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
+        ...mapGetters('datasets', [
+            'userDatasets',
+            'publicDatasets',
+            'sharedDatasets',
+            'sharingDatasets',
+            'userDatasetsLoading',
+            'publicDatasetsLoading',
+            'sharedDatasetsLoading',
+            'sharingDatasetsLoading',
+        ]),
+        ...mapGetters('projects', ['userProjects', 'othersProjects']),
         walltime() {
             return this.getWorkflow.config.jobqueue.walltime !== undefined
                 ? this.getWorkflow.config.jobqueue.walltime
@@ -4575,18 +4587,6 @@ export default {
                     t.workflow_branch === this.getWorkflow.branch.name
             );
         },
-        ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
-        ...mapGetters('datasets', [
-            'userDatasets',
-            'publicDatasets',
-            'sharedDatasets',
-            'sharingDatasets',
-            'userDatasetsLoading',
-            'publicDatasetsLoading',
-            'sharedDatasetsLoading',
-            'sharingDatasetsLoading',
-        ]),
-        ...mapGetters('projects', ['userProjects', 'othersProjects']),
         getAgents() {
             return this.agentsPermitted(this.profile.djangoProfile.username);
         },

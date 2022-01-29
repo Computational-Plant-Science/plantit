@@ -151,9 +151,9 @@ def create_repeating_task(user: User, workflow):
     eta, seconds = parse_task_eta(workflow['eta'])
     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
 
-    repo_owner = workflow['repo']['owner']['login']
+    repo_owner = workflow['repo']['owner']
     repo_name = workflow['repo']['name']
-    repo_branch = workflow['branch']['name']
+    repo_branch = workflow['repo']['branch']
 
     if 'logo' in workflow:
         logo_path = workflow['logo']

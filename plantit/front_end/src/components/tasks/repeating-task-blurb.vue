@@ -72,11 +72,11 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        async deleteRepeating(name) {
+        async deleteRepeating(id) {
             this.unschedulingRepeating = true;
             await axios
                 .get(
-                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_repeating/`
+                    `/apis/v1/tasks/${id}/unschedule_repeating/`
                 )
                 .then(async (response) => {
                     await Promise.all([

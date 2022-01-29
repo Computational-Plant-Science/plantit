@@ -84,7 +84,7 @@ export const agents = {
             state.agents.filter(
                 (a) =>
                     a.public ||
-                    a.role === 'admin' ||
+                    a.user === username ||
                     a.users_authorized.some((u) => u.username === username)
             ),
         agentsLoading: (state) => state.loading,

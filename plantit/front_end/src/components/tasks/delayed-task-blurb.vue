@@ -72,11 +72,11 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        async deleteDelayed(name) {
+        async deleteDelayed(id) {
             this.unschedulingDelayed = true;
             await axios
                 .get(
-                    `/apis/v1/tasks/${this.profile.djangoProfile.username}/${name}/unschedule_delayed/`
+                    `/apis/v1/tasks/${id}/unschedule_delayed/`
                 )
                 .then(async (response) => {
                     await Promise.all([
