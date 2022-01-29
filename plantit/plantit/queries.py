@@ -723,7 +723,7 @@ def get_users_total_timeseries() -> List[Tuple[str, int]]:
 
 
 def get_tasks_total_timeseries() -> List[Tuple[str, int]]:
-    return [(task['created'].isoformat(), i + 1) for i, task in enumerate(Task.objects.all().values('created').order_by('created')[:100])]
+    return [(task['created'].isoformat(), i + 1) for i, task in enumerate(Task.objects.all().values('created').order_by('created'))]
 
 
 # TODO: refactor like below

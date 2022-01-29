@@ -132,7 +132,7 @@
                                     Workflows</b-button
                                 ></template
                             >
-                            <b-row>
+                            <!--<b-row>
                                 <b-col
                                     ><Plotly
                                         v-if="showWorkflowsUsagePlot"
@@ -140,7 +140,7 @@
                                         :layout="workflowsUsagePlotLayout"
                                     ></Plotly
                                 ></b-col>
-                            </b-row>
+                            </b-row>-->
                             <br />
                             <b-card-group deck columns
                                 ><b-card
@@ -184,8 +184,8 @@
                             "
                             ><template #title
                                 ><h1 class="text-success text-center">
-                                    <span v-if="developers.length >= 0">{{
-                                        developers.length
+                                    <span v-if="developerCount >= 0">{{
+                                        developerCount
                                     }}</span>
                                     <b-spinner
                                         v-else
@@ -208,7 +208,7 @@
                                     ><i class="fas fa-code fa-fw"></i>
                                     Developers</b-button
                                 ></template
-                            ><b-card-group
+                            ><!--<b-card-group
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -248,7 +248,7 @@
                                         }}</b-col></b-row
                                     ></b-card
                                 ></b-card-group
-                            ></b-tab
+                            >--></b-tab
                         >
                         <b-tab
                             title="Tasks"
@@ -353,6 +353,7 @@ export default {
             timeseriesWorkflowsUsage: null,
             onlineCount: -1,
             workflowCount: -1,
+            developerCount: -1,
             taskCount: -1,
             runningCount: -1,
             institutions: [],
@@ -424,6 +425,7 @@ export default {
                     this.userCount = response.data.users;
                     this.onlineCount = response.data.online;
                     this.workflowCount = response.data.workflows;
+                    this.developerCount = response.data.developers;
                     this.agentCount = response.data.agents;
                     this.taskCount = response.data.tasks;
                     this.runningCount = response.data.running;
