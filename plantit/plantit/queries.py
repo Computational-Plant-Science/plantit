@@ -595,12 +595,12 @@ def count_institutions():
 def get_institutions(invalidate: bool = False) -> dict:
     redis = RedisClient.get()
     cached = list(redis.scan_iter(match=f"institutions/*"))
+    institutions = dict()
 
     if invalidate:
         # count members per institution
         counts = {i['institution'].lower(): i['institution__count'] for i in count_institutions()}
 
-        institutions = dict()
         for k in counts.keys():
             # get institution information (TODO: can we send all the requests concurrently?)
             # TODO: need to make sure this doesn't exceed the free plan rate limit
@@ -634,7 +634,9 @@ def get_institutions(invalidate: bool = False) -> dict:
 
         for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
     else:
-        institutions = [json.loads(redis.get(institution)) for institution in cached if institution is not None]
+        for institution in cached:
+            if institution is not None:
+                institutions[institution.decode('utf-8')] = json.loads(redis.get(institution))
 
     return institutions
 
