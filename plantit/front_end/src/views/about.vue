@@ -69,7 +69,8 @@
                     </p>
                     <ul>
                         <li>
-                            a pipeline framework (e.g.,
+                            a workflow management framework or distributed task
+                            queue (e.g.,
                             <b-link
                                 href="https://snakemake.readthedocs.io/en/stable/"
                                 >Snakemake</b-link
@@ -82,20 +83,17 @@
                             >,
                             <b-link href="https://airflow.apache.org/"
                                 >AirFlow</b-link
-                            >)
+                            >,
+                            <b-link
+                                href="https://docs.celeryproject.org/en/stable/index.html"
+                                >Celery</b-link
+                            >, <b-link href="https://dask.org/">Dask</b-link>)
                         </li>
                         <li>
                             a machine learning automation platform (e.g.,
                             <b-link href="https://metaflow.org/"
                                 >MetaFlow</b-link
                             >)
-                        </li>
-                        <li>
-                            a distributed queue or task scheduler (e.g.,
-                            <b-link
-                                href="https://docs.celeryproject.org/en/stable/index.html"
-                                >Celery</b-link
-                            >, <b-link href="https://dask.org/">Dask</b-link>)
                         </li>
                         <li>
                             a batch-processing, streaming, or analytics platform
@@ -105,8 +103,7 @@
                             >)
                         </li>
                         <li>
-                            a container orchestrator or infrastructure-as-code
-                            system (e.g.,
+                            a container orchestrator (e.g.,
                             <b-link href="https://kubernetes.io/"
                                 >Kubernetes</b-link
                             >)
