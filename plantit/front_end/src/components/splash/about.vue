@@ -42,6 +42,20 @@
                             ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
+                            ><h1 v-if="developerCount >= 0" class="text-success">
+                                {{ developerCount }}
+                            </h1>
+                            <b-spinner
+                                v-else
+                                type="spinner"
+                                label="Loading..."
+                                variant="success"
+                            ></b-spinner
+                        ></b-col>
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">developers</h5>
+                        </b-col>
+                        <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="taskCount >= 0" class="text-success">
                                 {{ taskCount }}
                             </h1>
@@ -263,6 +277,7 @@ export default {
         return {
             userCount: -1,
             workflowCount: -1,
+            developerCount: -1,
             taskCount: -1,
             timeseriesTasksRunning: null,
         };
@@ -274,6 +289,7 @@ export default {
                 .then((response) => {
                     this.userCount = response.data.users;
                     this.workflowCount = response.data.workflows;
+                    this.developerCount = response.data.developers;
                     this.taskCount = response.data.tasks;
                 })
                 .catch((error) => {

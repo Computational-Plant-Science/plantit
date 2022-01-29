@@ -28,10 +28,10 @@
                     </b-col>
                 </b-row>
             </template>-->
-            <br/>
+            <br />
             <b-card-group columns>
-              <b-card
-                  class="mt-1"
+                <b-card
+                    class="mt-1"
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
@@ -59,7 +59,7 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-              <b-card
+                <b-card
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
@@ -73,7 +73,7 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-              <b-card
+                <b-card
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
@@ -122,7 +122,7 @@
 
 <script>
 export default {
-    name: 'home-sponsors'
+    name: 'home-sponsors',
 };
 </script>
 
