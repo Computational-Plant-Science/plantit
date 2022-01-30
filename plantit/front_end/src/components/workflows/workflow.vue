@@ -3144,7 +3144,7 @@
                                                                 ><b-button
                                                                     :disabled="
                                                                         !canSubmit ||
-                                                                        submitted
+                                                                        submitting
                                                                     "
                                                                     @click="
                                                                         onStart
@@ -3159,11 +3159,11 @@
                                                                     <b-spinner
                                                                         small
                                                                         v-if="
-                                                                            submitted
+                                                                            submitting
                                                                         "
                                                                         label="Loading..."
                                                                         variant="dark"
-                                                                        class="mr-2 mb-1"
+                                                                        class="mr-2"
                                                                     ></b-spinner
                                                                     ><i
                                                                         v-else
@@ -3866,7 +3866,7 @@ export default {
             selectedInputLoading: false,
             activeTab: 0,
             activeAgentTab: 0,
-            submitted: false,
+            submitting: false,
             currentResourceTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
@@ -4309,7 +4309,6 @@ export default {
                 headers: { 'Content-Type': 'application/json' },
             })
                 .then(async (response) => {
-                    this.submitting = false;
                     if (response.data.created) {
                         await this.$store.dispatch(
                             'tasks/addOrUpdate',
@@ -4329,6 +4328,7 @@ export default {
                             guid: guid().toString(),
                         });
                     }
+                    this.submitting = false;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
