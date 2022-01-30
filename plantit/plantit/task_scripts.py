@@ -209,20 +209,15 @@ def compose_task_singularity_command(
         docker_username: str = None,
         docker_password: str = None,
         index: int = None) -> str:
-    # build up the command according to the order:
-    # - (non-secret) env vars
-    # - singularity invocation
-    # - bind mounts
-    # - cache & gpu options
-    #
-    # then prepend
-    # - parameters
-    # - secret env vars
 
     cmd = ''
+
+    # prepend environment variables in SINGULARITYENV_<key> format
     if env is not None:
         if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}=\"{v['value']}\"" for v in env])
         cmd += ' '
+
+    # substitute parameters
     if parameters is None: parameters = []
     if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
@@ -230,13 +225,25 @@ def compose_task_singularity_command(
         key = parameter['key'].upper().replace(' ', '_')
         val = str(parameter['value'])
         cmd += f" SINGULARITYENV_{key}=\"{val}\""
+
+    # singularity invocation and working directory
     cmd += f" singularity exec --home {work_dir}"
+
+    # add bind mount arguments
     if bind_mounts is not None and len(bind_mounts) > 0:
         cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+
+    # whether to use the Singularity cache
     if no_cache: cmd += ' --disable-cache'
+
+    # whether to use GPUs (Nvidia)
     if gpus: cmd += ' --nv'
+
+    # append the command
     cmd += f" {image} sh -c '{command}'"  # is `sh -c '[the command to run]'` always available/safe?
-    logger.debug(f"Using command: '{cmd}'")  # don't want to reveal secrets so log before prepending secret env vars
+
+    # don't want to reveal secrets, so log the command before prepending secret env vars
+    logger.debug(f"Using command: '{cmd}'")
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
 
