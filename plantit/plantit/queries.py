@@ -832,8 +832,7 @@ def get_agent_usage_timeseries(name) -> dict:
 
 # TODO: refactor like above
 def get_agents_usage_timeseries(user: User = None) -> dict:
-    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[
-                                                                                              :100]
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
     series = dict()
 
     # return early if no tasks
@@ -843,6 +842,11 @@ def get_agents_usage_timeseries(user: User = None) -> dict:
     # count tasks per agent
     for task in tasks:
         agent = task.agent
+
+        # if task predates our adding agent FK to model, might be None... just skip it
+        if agent is None:
+            continue
+
         if agent.name not in series: series[agent.name] = dict()
         timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
         if timestamp not in series[agent.name]: series[agent.name][timestamp] = 0

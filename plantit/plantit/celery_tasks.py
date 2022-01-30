@@ -416,7 +416,7 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     redis = RedisClient.get()
-    institutions = async_to_sync(q.get_institutions)(True)
+    institutions = q.get_institutions(True)
     for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
 
 

@@ -850,7 +850,7 @@ export default {
             );
         },
         workflowsUsagePlotTraces() {
-            return [this.timeseriesWorkflowsUsage];
+          return Object.values(this.timeseriesWorkflowsUsage);
         },
         workflowsUsagePlotLayout() {
             return {
