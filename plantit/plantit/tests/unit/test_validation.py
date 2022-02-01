@@ -22,6 +22,56 @@ class ValidationTests(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Missing attribute \'image\'' in result[1])
 
+    def test_validate_config_when_is_not_valid_shell_wrong_type(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'shell': True
+        })
+        self.assertFalse(result[0])
+        self.assertTrue('Attribute \'shell\' must be a str' in result[1])
+
+    def test_validate_config_when_is_valid_shell_selections(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'shell': 'bash'
+        })
+        self.assertTrue(result[0])
+
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'shell': 'sh'
+        })
+        self.assertTrue(result[0])
+
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'shell': 'zsh'
+        })
+        self.assertTrue(result[0])
+
+    def test_validate_config_when_is_not_valid_unsupported_shell(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'image': 'docker://alpine',
+            'commands': 'echo "Hello, world!"',
+            'shell': 'not a supported shell'
+        })
+        self.assertFalse(result[0])
+        self.assertTrue('Attribute \'shell\' must be \'sh\', \'bash\', or \'zsh\'' in result[1])
+
     def test_validate_config_when_is_not_valid_missing_commands(self):
         result = validate_workflow_configuration({
             'name': 'Test Flow',

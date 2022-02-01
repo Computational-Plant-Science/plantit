@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from plantit import docker as docker, terrain as terrain
@@ -149,11 +150,18 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
     # walltime (optional)
     if 'walltime' in config:
         walltime = config['walltime']
-        import re
         pattern = re.compile("^([0-9][0-9]:[0-9][0-9]:[0-9][0-9])$")
         if type(walltime) is not str:
             errors.append('Attribute \'walltime\' must be a str')
         if type(walltime) is str and not bool(pattern.match(walltime)):
             errors.append('Attribute \'walltime\' must have format XX:XX:XX')
+
+    # shell wrapper
+    if 'shell' in config:
+        shell = config['shell']
+        if not isinstance(shell, str):
+            errors.append('Attribute \'shell\' must be a str')
+        elif shell != 'sh' and shell != 'bash' and shell != 'zsh':  # TODO: do we need to support any others?
+            errors.append('Attribute \'shell\' must be \'sh\', \'bash\', or \'zsh\'')
 
     return (True, []) if len(errors) == 0 else (False, errors)
