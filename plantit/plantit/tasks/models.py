@@ -191,4 +191,5 @@ class TaskOptions(TypedDict, total=False):
     log_file: str
     jobqueue: dict
     no_cache: bool
-    gpu: bool
+    gpus: bool
+    shell: str

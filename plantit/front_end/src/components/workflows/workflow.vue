@@ -416,7 +416,9 @@
                                                                         undefined
                                                                     "
                                                                 >
-                                                                    <b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                    >
                                                                         <b-link
                                                                             v-if="
                                                                                 typeof getWorkflow
@@ -446,30 +448,31 @@
                                                                                     .doi
                                                                             }}</b-link
                                                                         >
-                                                                        <b-list-group
+                                                                        <div
                                                                             v-else
                                                                         >
-                                                                            <b-list-group-item
-                                                                                :variant="
-                                                                                    profile.darkMode
-                                                                                        ? 'dark'
-                                                                                        : 'light'
-                                                                                "
+                                                                            <b-row
                                                                                 v-for="doi in getWorkflow
                                                                                     .config
                                                                                     .doi"
                                                                                 v-bind:key="
                                                                                     doi
                                                                                 "
-                                                                                ><b-link
-                                                                                    class="text-dark"
-                                                                                    :href="`https://doi.org/${doi}`"
-                                                                                    >{{
-                                                                                        doi
-                                                                                    }}</b-link
-                                                                                ></b-list-group-item
+                                                                                ><b-col
+                                                                                    ><b-link
+                                                                                        :class="
+                                                                                            profile.darkMode
+                                                                                                ? 'text-light'
+                                                                                                : 'text-dark'
+                                                                                        "
+                                                                                        :href="`https://doi.org/${doi}`"
+                                                                                        >{{
+                                                                                            doi
+                                                                                        }}</b-link
+                                                                                    ></b-col
+                                                                                ></b-row
                                                                             >
-                                                                        </b-list-group>
+                                                                        </div>
                                                                     </b-col>
                                                                 </b-row>
                                                             </b-col>
@@ -4665,9 +4668,7 @@ export default {
             // return true;
         },
         agentValid() {
-            return (
-                this.selectedAgent !== null && this.selectedAgent !== ''
-            );
+            return this.selectedAgent !== null && this.selectedAgent !== '';
         },
         canSubmit() {
             return (

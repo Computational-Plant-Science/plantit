@@ -206,6 +206,7 @@ def compose_task_singularity_command(
         parameters: List[Parameter] = None,
         no_cache: bool = False,
         gpus: int = 0,
+        shell_wrapper: str = None,
         docker_username: str = None,
         docker_password: str = None,
         index: int = None) -> str:
@@ -240,7 +241,10 @@ def compose_task_singularity_command(
     if gpus: cmd += ' --nv'
 
     # append the command
-    cmd += f" {image} sh -c '{command}'"  # is `sh -c '[the command to run]'` always available/safe?
+    if shell_wrapper is not None:
+        cmd += f" {image} {shell_wrapper} -c '{command}'"  # is `sh -c '[the command to run]'` always available/safe?
+    else:
+        cmd += f" {image} {command}"  # is `sh -c '[the command to run]'` always available/safe?
 
     # don't want to reveal secrets, so log the command before prepending secret env vars
     logger.debug(f"Using command: '{cmd}'")
@@ -321,6 +325,7 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
                             'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
                     no_cache=options['no_cache'] if 'no_cache' in options else False,
                     gpus=gpus,
+                    shell_wrapper=options['shell'],
                     docker_username=docker_username,
                     docker_password=docker_password,
                     index=i)
@@ -339,6 +344,7 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
                                                                                               list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpus=gpus,
+                shell_wrapper=options['shell'],
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -357,6 +363,7 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
                                                                                               list) else [],
                 no_cache=options['no_cache'] if 'no_cache' in options else False,
                 gpus=gpus,
+                shell_wrapper=options['shell'],
                 docker_username=docker_username,
                 docker_password=docker_password)
             lines.append(command)
@@ -372,6 +379,7 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
             no_cache=options['no_cache'] if 'no_cache' in options else False,
             gpus=gpus,
+            shell_wrapper=options['shell'],
             docker_username=docker_username,
             docker_password=docker_password)
         lines.append(command)

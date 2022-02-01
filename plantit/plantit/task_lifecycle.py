@@ -485,7 +485,9 @@ def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
     config['output']['exclude']['names'].append("template_task_slurm.sh")
     output = config['output']
 
+    # from here on, make sure we have no configuration errors
     errors = []
+
     image = None
     if not isinstance(config['image'], str):
         errors.append('Attribute \'image\' must not be a str')
@@ -626,6 +628,14 @@ def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
         if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
             errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
 
+    shell = None
+    if 'shell' in config:
+        shell = config['shell']
+        if not isinstance(shell, str):
+            errors.append('Attribute \'shell\' must be a str')
+        elif shell != 'sh' and shell != 'bash' and shell != 'zsh':  # TODO: do we need to support any others?
+            errors.append('Attribute \'shell\' must be \'sh\', \'bash\', or \'zsh\'')
+
     options = TaskOptions(
         workdir=work_dir,
         image=image,
@@ -641,5 +651,6 @@ def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
     if jobqueue is not None: options['jobqueue'] = jobqueue
     if no_cache is not None: options['no_cache'] = no_cache
     if gpu is not None: options['gpus'] = task.agent.gpus
+    if shell is not None: options['shell'] = shell
 
     return errors, options
