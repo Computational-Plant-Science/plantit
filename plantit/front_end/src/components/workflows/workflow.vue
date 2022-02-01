@@ -511,6 +511,22 @@
                                                                 <b-row>
                                                                     <b-col>
                                                                         <small
+                                                                            >Shell</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b>{{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .shell ? getWorkflow.config.shell : 'None'
+                                                                        }}</b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
                                                                             >GPU</small
                                                                         >
                                                                     </b-col>
@@ -4441,6 +4457,7 @@ export default {
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 commands: this.getWorkflow.config.commands,
+                shell: this.getWorkflow.config.shell,
                 logo: this.getWorkflow.config.logo,
                 gpu: this.getWorkflow.config.gpu,
                 env: this.getWorkflow.config.env,

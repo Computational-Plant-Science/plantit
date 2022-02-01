@@ -1,5 +1,5 @@
 <template>
-    <div class="m-0 p-0 mb-4">
+    <div class="m-0 p-0 mb-3">
         <b-sidebar
             right
             id="notifications"
@@ -125,7 +125,7 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo"
+            class="logo py-0"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"

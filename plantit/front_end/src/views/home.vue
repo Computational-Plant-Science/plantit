@@ -4,7 +4,6 @@
         class="m-0 mt-3 p-3"
         style="background-color: transparent"
     >
-        <br/>
         <div v-if="profileLoading">
             <b-row align-v="center">
                 <b-col class="text-center">
