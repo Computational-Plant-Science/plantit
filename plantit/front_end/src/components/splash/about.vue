@@ -14,20 +14,6 @@
                 <b-container v-if="userCount >= 0">
                     <b-row>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 v-if="userCount >= 0" class="text-success">
-                                {{ userCount }}
-                            </h1>
-                            <b-spinner
-                                v-else
-                                type="spinner"
-                                label="Loading..."
-                                variant="success"
-                            ></b-spinner
-                        ></b-col>
-                        <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">users</h5>
-                        </b-col>
-                        <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="workflowCount >= 0" class="text-success">
                                 {{ workflowCount }}
                             </h1>
@@ -39,10 +25,29 @@
                             ></b-spinner
                         ></b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">workflows</h5>
+                            ><h5 class="text-white">phenomics workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 v-if="developerCount >= 0" class="text-success">
+                            ><h1 v-if="userCount >= 0" class="text-success">
+                                {{ userCount }}
+                            </h1>
+                            <b-spinner
+                                v-else
+                                type="spinner"
+                                label="Loading..."
+                                variant="success"
+                            ></b-spinner
+                        ></b-col>
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">
+                                scientists & researchers
+                            </h5>
+                        </b-col>
+                        <b-col align-self="end" class="text-right mr-0"
+                            ><h1
+                                v-if="developerCount >= 0"
+                                class="text-success"
+                            >
                                 {{ developerCount }}
                             </h1>
                             <b-spinner
@@ -53,7 +58,7 @@
                             ></b-spinner
                         ></b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">developers</h5>
+                            ><h5 class="text-white">workflow developers</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="taskCount >= 0" class="text-success">
@@ -67,7 +72,7 @@
                             ></b-spinner>
                         </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">tasks</h5>
+                            ><h5 class="text-white">workflow submissions</h5>
                         </b-col>
                     </b-row>
                     <!--<br/>
@@ -102,30 +107,18 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Data storage & provenance
+                                    Store roots in the cloud
                                 </h4>
-                                Built on the
+                                Automatic transfers to and from the
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
                                 >
                                 Data Store
-                                <!--, or plug in cloud stores like
-                            <b-link
-                                class="text-white"
-                                href="https://aws.amazon.com/s3/"
-                                >Amazon S3</b-link
-                            >-->
-                                and Terrain API for virtual data science
                                 <br />
-                                Track experiments & datasets and export
-                                <b-link
-                                    class="text-white"
-                                    href="https://www.miappe.org/"
-                                    >MIAPPE</b-link
-                                >
-                                metadata with a click
+                                Organize project teams and attach MIAPPE
+                                metadata
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -182,29 +175,29 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Open source phenomics
+                                    Grow open source phenomics
                                 </h4>
-                                Explore phenotyping software or integrate your
-                                own
+                                Explore curated tools or bind your own
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
                                     >Github</b-link
                                 >
-                                repository
+                                repo
                                 <br />
-                                Deploy container workflows to clusters with
+                                Deploy
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
                                     >Docker</b-link
                                 >
-                                and
+                                images as
                                 <b-link
                                     class="text-white"
                                     href="https://sylabs.io/docs/"
                                     >Singularity</b-link
                                 >
+                                containers
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -229,13 +222,11 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Code optional, always visible
+                                    Code visible but optional
                                 </h4>
-                                High-throughput phenotyping on the web, no
-                                programming necessary
+                                Portable, reproducible computational pipelines
                                 <br />
-                                Transparently reproducible container workflows
-                                on the command line
+                                Continuous delivery to researchers everywhere
                             </b-card-text>
                         </b-card>
                     </b-col>

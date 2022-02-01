@@ -29,72 +29,7 @@
                         active-nav-item-class="bg-transparent text-dark"
                         pills
                         align="center"
-                        ><b-tab
-                            title="Users"
-                            :title-link-class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                            :class="
-                                profile.darkMode
-                                    ? 'theme-dark m-0 p-3'
-                                    : 'theme-light m-0 p-3'
-                            "
-                        >
-                            <template #title>
-                                <h1 class="text-success text-center">
-                                    <span v-if="userCount >= 0">{{
-                                        userCount
-                                    }}</span>
-                                    <b-spinner
-                                        v-else
-                                        label="Loading..."
-                                        variant="secondary"
-                                    ></b-spinner>
-                                </h1>
-                                <b-button
-                                    :variant="
-                                        activeTab === 0
-                                            ? profile.darkMode
-                                                ? 'outline-success'
-                                                : 'success'
-                                            : profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    v-b-tooltip.hover
-                                    :title="`Users`"
-                                >
-                                    <i class="fas fa-user fa-fw"></i>
-                                    Users</b-button
-                                ></template
-                            ><Plotly
-                                v-if="showUsersPlot"
-                                :data="usersPlotTraces"
-                                :layout="usersPlotLayout"
-                            ></Plotly>
-                            <br />
-                            <span text-center>
-                                <h1 class="text-success">
-                                    <span v-if="onlineCount >= 0">{{
-                                        onlineCount
-                                    }}</span>
-                                    <b-spinner
-                                        v-else
-                                        label="Loading..."
-                                        variant="secondary"
-                                    ></b-spinner>
-                                </h1>
-                                <b-badge
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    ><i class="fas fa-signal fa-fw"></i>
-                                    Online</b-badge
-                                ></span
-                            ></b-tab
-                        >
+                    >
                         <b-tab
                             title="Workflows"
                             :title-link-class="
@@ -118,7 +53,7 @@
                                 </h1>
                                 <b-button
                                     :variant="
-                                        activeTab === 1
+                                        activeTab === 0
                                             ? profile.darkMode
                                                 ? 'outline-success'
                                                 : 'success'
@@ -126,9 +61,10 @@
                                             ? 'outline-light'
                                             : 'white'
                                     "
-                                    v-b-tooltip.hover
-                                    :title="`Workflows`"
                                     ><i class="fas fa-stream fa-fw"></i>
+                                    <br />
+                                    Phenomics
+                                    <br />
                                     Workflows</b-button
                                 ></template
                             >
@@ -173,6 +109,71 @@
                             ></b-card-group>
                         </b-tab>
                         <b-tab
+                            :title-link-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            :class="
+                                profile.darkMode
+                                    ? 'theme-dark m-0 p-3'
+                                    : 'theme-light m-0 p-3'
+                            "
+                        >
+                            <template #title>
+                                <h1 class="text-success text-center">
+                                    <span v-if="userCount >= 0">{{
+                                        userCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                </h1>
+                                <b-button
+                                    :variant="
+                                        activeTab === 1
+                                            ? profile.darkMode
+                                                ? 'outline-success'
+                                                : 'success'
+                                            : profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                >
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <br />
+                                    Scientists &<br />Researchers</b-button
+                                ></template
+                            ><Plotly
+                                v-if="showUsersPlot"
+                                :data="usersPlotTraces"
+                                :layout="usersPlotLayout"
+                            ></Plotly>
+                            <br />
+                            <span text-center>
+                                <h1 class="text-success">
+                                    <span v-if="onlineCount >= 0">{{
+                                        onlineCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                </h1>
+                                <b-badge
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    ><i class="fas fa-signal fa-fw"></i>
+                                    Online</b-badge
+                                ></span
+                            >
+                        </b-tab
+                        >
+                        <b-tab
                             title="Developers"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -203,9 +204,10 @@
                                             ? 'outline-light'
                                             : 'white'
                                     "
-                                    v-b-tooltip.hover
-                                    title="Developers"
                                     ><i class="fas fa-code fa-fw"></i>
+                                    <br />
+                                    Workflow
+                                    <br />
                                     Developers</b-button
                                 ></template
                             ><!--<b-card-group
@@ -284,9 +286,12 @@
                                     "
                                     v-b-tooltip.hover
                                     :title="`Tasks`"
-                                    ><i class="fas fa-tasks fa-fw"></i>
-                                    Tasks</b-button
-                                ></template
+                                    ><i class="fas fa-terminal fa-fw"></i>
+                                    <br />
+                                    Workflow
+                                    <br />
+                                    Submissions
+                                </b-button></template
                             ><Plotly
                                 v-if="showTasksTotalPlot"
                                 :data="tasksTotalPlotTraces"
@@ -319,8 +324,27 @@
                 </b-col>
             </b-row>
             <br />
-            <div id="map" style="height: 40rem"></div>
-            <br />
+            <b-row>
+                <b-col class="text-center">
+                    <h4
+                        :class="profile.darkMode ? 'text-white' : 'text-theme'"
+                        style="text-decoration: underline; z-index: 100"
+                    >
+                        plant<small
+                            class="mb-3 text-success"
+                            style="
+                                text-decoration: underline;
+                                text-shadow: 1px 1px 2px black;
+                                z-index: 100;
+                            "
+                            ><small>IT</small></small
+                        ><small>user<small>institutions</small></small>
+                    </h4>
+                </b-col>
+            </b-row>
+            <br/>
+          <div id="map" style="height: 40rem; width: 100%"></div>
+          <br/>
         </b-container>
     </div>
 </template>

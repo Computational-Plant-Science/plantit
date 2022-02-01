@@ -220,7 +220,7 @@
                                     "
                                     >a browser gateway for </span
                                 ><span
-                                :class="
+                                    :class="
                                         profile.darkMode
                                             ? 'text-light'
                                             : 'text-theme'
@@ -258,11 +258,12 @@
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            This site is a portal for
-                            high-performance/-throughput phenotyping. It hides
-                            deployment and data access details behind a web UI, making it
-                            easy to submit computational pipelines to XSEDE and
-                            other supercomputing resources.
+                            This site is a portal for high-throughput phenomics.
+                            Submit computational pipelines from the browser,
+                            with automatic transfers to and from the
+                            <b-link href="https://www.cyverse.org/data-store"
+                                >CyVerse Data Store</b-link
+                            >.
                         </p>
                         <hr />
                         <p
@@ -270,18 +271,16 @@
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            <b>Researchers:</b> Deploy highly parallel
-                            simulations or analyses to a cluster or
-                            supercomputer, all from the browser.
+                            <b>Researchers:</b> Deploy simulations or analyses
+                            to a supercomputer from the browser.
                         </p>
                         <p
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            <b>Developers:</b> Publish versionable container
-                            workflows from any GitHub repository to the
-                            worldwide research community.
+                            <b>Developers:</b> Publish container workflows to
+                            the worldwide research community.
                         </p></b-col
                     ><b-col
                         class="text-left"

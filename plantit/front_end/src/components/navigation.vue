@@ -1,5 +1,5 @@
 <template>
-    <div class="m-0 p-0">
+    <div class="m-0 p-0 mb-4">
         <b-sidebar
             right
             id="notifications"
@@ -126,7 +126,6 @@
         <b-navbar
             toggleable="sm"
             class="logo"
-            style="min-height: 35px; max-height: 35px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
@@ -134,7 +133,7 @@
             <b-collapse is-nav align="center">
                 <b-navbar-nav class="overflow-hidden" align="center"
                     ><b-nav-item class="overflow-hidden" href="/">
-                        <h5
+                        <h4
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-theme'
                             "
@@ -142,9 +141,9 @@
                         >
                             <b-img
                                 style="
-                                    max-width: 1rem;
+                                    max-width: 1.5rem;
                                     position: relative;
-                                    top: -5px;
+                                    top: -10px;
                                 "
                                 :src="require('../assets/logo.png')"
                                 left
@@ -170,27 +169,30 @@
                                                 class="fas fa-spinner"
                                                 v-else
                                             ></i></b-badge></small></small
-                            ></small></h5
+                            ></small></h4
                     ></b-nav-item>
                     <b-row align-v="center" class="pl-3 pr-3">
-                    <b-nav-item
-                        title="about"
-                        to="/about"
-                        :link-class="
-                            profile.darkMode ? 'text-secondary' : 'text-dark'
-                        "
-                        ><span
-                            :class="
+                        <b-nav-item
+                            title="about"
+                            to="/about"
+                            :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            style="font-size: 80%"
-                            ><i class="fas fa-question-circle fa-1x fa-fw"></i
-                            >About</span
-                        ></b-nav-item
-                    >
-                    <!--<b-nav-item
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i
+                                    class="fas fa-question-circle fa-1x fa-fw"
+                                ></i
+                                >About</span
+                            ></b-nav-item
+                        >
+                        <!--<b-nav-item
                             to="/beta"
                             class="mt-2"
                             :link-class="
@@ -209,74 +211,81 @@
                                 Testing</span
                             ></b-nav-item
                         >-->
-                    <b-nav-item
-                        title="stats"
-                        to="/stats"
-                        :link-class="
-                            profile.darkMode ? 'text-secondary' : 'text-dark'
-                        "
-                        ><span
-                            :class="
+                        <b-nav-item
+                            title="stats"
+                            to="/stats"
+                            :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            style="font-size: 80%"
-                            ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                            >Stats</span
-                        ></b-nav-item
-                    >
-                    <b-nav-item
-                        title="stats"
-                        href="https://stats.uptimerobot.com/yAgPxH7KNJ"
-                        :link-class="
-                            profile.darkMode ? 'text-secondary' : 'text-dark'
-                        "
-                        ><span
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            style="font-size: 80%"
-                            ><i class="fas fa-satellite-dish fa-1x fa-fw"></i
-                            >Status</span
-                        ></b-nav-item
-                    >
-                    <b-nav-item
-                        title="docs"
-                        href="https://plantit.readthedocs.io/en/latest"
-                        :link-class="
-                            profile.darkMode ? 'text-secondary' : 'text-dark'
-                        "
-                        ><span
-                            style="font-size: 80%"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            ><i class="fas fa-book fa-1x fa-fw"></i>Docs</span
-                        ></b-nav-item
-                    >
-                    <b-nav-item
-                        href="https://github.com/Computational-Plant-Science/plantit"
-                        :link-class="
-                            profile.darkMode ? 'text-secondary' : 'text-dark'
-                        "
-                        title="github"
-                    >
-                        <span
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            style="font-size: 80%"
-                            ><i class="fab fa-github fa-1x fa-fw"></i
-                            >Github</span
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i
+                                >Stats</span
+                            ></b-nav-item
                         >
-                    </b-nav-item>
+                        <b-nav-item
+                            title="status"
+                            href="https://stats.uptimerobot.com/yAgPxH7KNJ"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i
+                                    class="fas fa-satellite-dish fa-1x fa-fw"
+                                ></i
+                                >Status</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            title="docs"
+                            href="https://plantit.readthedocs.io/en/latest"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                >Docs</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="github"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-github fa-1x fa-fw"></i
+                                >Github</span
+                            >
+                        </b-nav-item>
                     </b-row>
                     <!--<b-nav-item
                             href="#"
@@ -310,7 +319,8 @@
                         >Welcome!
                         <hr />
                         An <i class="fas fa-question fa-fw"></i> icon in the
-                        navigation bar indicates hints are enabled. To see hints, click
+                        navigation bar indicates hints are enabled. To see
+                        hints, click
                         <b-badge
                             :variant="
                                 profile.darkMode ? 'outline-dark' : 'light'
@@ -837,7 +847,7 @@ export default {
         if (this.$route.name === 'about' || this.$route.name === 'stats') {
             await Promise.all([
                 this.getVersion(),
-                 this.$store.dispatch('workflows/loadPublic'),
+                this.$store.dispatch('workflows/loadPublic'),
                 // this.$store.dispatch('datasets/loadPublic'),
             ]);
             return;
