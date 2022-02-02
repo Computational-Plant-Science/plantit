@@ -40,4 +40,4 @@ class TaskLifecycleTests(TestCase):
         )
 
         self.assertTrue(
-            'SINGULARITYENV_WORKDIR="/work/dir" singularity exec --home /work/dir docker://alpine echo sh -c '"Hello, world!"'' in command)
+            'SINGULARITYENV_WORKDIR="/work/dir" singularity exec --home /work/dir docker://alpine sh -c \'echo "Hello, world!"\'' in command)
