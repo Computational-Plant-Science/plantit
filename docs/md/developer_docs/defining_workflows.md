@@ -107,6 +107,15 @@ params:
    default: 'Hello, world!'
 ```
 
+### Shell selection
+
+By default, the `command` specified in `plantit.yaml` is invoked directly from the Singularity container runtime, i.e., `singularity exec <image> <command>`. Since [Singularity runs in a modified shell environment](https://stackoverflow.com/a/56490063) some behavior may differ from that produced by Docker. Some Anaconda-based images can be configured to automatically activate an environment, for instance. With Singularity this cannot be achieved without wrapping the `command` with `bash -c '<command>'` and [editing bash startup files in the container definition](https://stackoverflow.com/a/57441264).
+
+For these reasons `plantit` provides a `shell` option. If provided, this option will cause `plantit` to wrap the `command` with `... <shell> -c 'command'` when invoking Singularity. Supported values include:
+
+- `bash`
+- `sh`
+- `zsh`
 
 ### Workflow input/output
 

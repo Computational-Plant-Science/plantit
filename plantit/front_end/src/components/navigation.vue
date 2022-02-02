@@ -1,5 +1,5 @@
 <template>
-    <div class="m-0 p-0 mb-3">
+    <div class="m-0 p-0 mb-4">
         <b-sidebar
             right
             id="notifications"

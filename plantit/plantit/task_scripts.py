@@ -206,7 +206,7 @@ def compose_task_singularity_command(
         parameters: List[Parameter] = None,
         no_cache: bool = False,
         gpus: int = 0,
-        shell_wrapper: str = None,
+        shell: str = None,
         docker_username: str = None,
         docker_password: str = None,
         index: int = None) -> str:
@@ -241,13 +241,15 @@ def compose_task_singularity_command(
     if gpus: cmd += ' --nv'
 
     # append the command
-    if shell_wrapper is not None:
-        cmd += f" {image} {shell_wrapper} -c '{command}'"  # is `sh -c '[the command to run]'` always available/safe?
+    if shell is not None:
+        cmd += f" {image} {shell} -c '{command}'"
     else:
-        cmd += f" {image} {command}"  # is `sh -c '[the command to run]'` always available/safe?
+        cmd += f" {image} {command}"
 
     # don't want to reveal secrets, so log the command before prepending secret env vars
     logger.debug(f"Using command: '{cmd}'")
+
+    # docker auth info (optional)
     if docker_username is not None and docker_password is not None:
         cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
 
@@ -298,10 +300,19 @@ def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: Lis
 
 def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
     lines = []
+    work_dir = options['workdir']
+    image = options['image']
+    command = options['command']
+    env = options['env']
+    gpus = options['gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+    parameters = options['parameters'] if 'parameters' in options else [] + [
+                Parameter(key='OUTPUT', value=options['output']['from']),
+                Parameter(key='GPUS', value=str(gpus))]
+    bind_mounts = options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+    no_cache = options['no_cache'] if 'no_cache' in options else False
+    shell = options['shell'] if 'shell' in options else None
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
-    # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
-    gpus = options['gpus'] if 'gpus' in options else 0
 
     if 'input' in options:
         files = list_input_files(task, options) if (
@@ -312,77 +323,60 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
         if options['input']['kind'] == 'files':
             for i, file in enumerate(files):
                 file_name = file.rpartition('/')[2]
-                command = compose_task_singularity_command(
-                    work_dir=options['workdir'],
-                    image=options['image'],
-                    command=options['command'],
-                    env=options['env'],
-                    parameters=(options['parameters'] if 'parameters' in options else []) + [
-                        Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
-                        Parameter(key='OUTPUT', value=options['output']['from']),
-                        Parameter(key='GPUS', value=str(gpus))],
-                    bind_mounts=options['bind_mounts'] if (
-                            'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else [],
-                    no_cache=options['no_cache'] if 'no_cache' in options else False,
+                lines.append(compose_task_singularity_command(
+                    work_dir=work_dir,
+                    image=image,
+                    command=command,
+                    env=env,
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
                     gpus=gpus,
-                    shell_wrapper=options['shell'],
+                    shell=shell,
                     docker_username=docker_username,
                     docker_password=docker_password,
-                    index=i)
-                lines.append(command)
+                    index=i))
         elif options['input']['kind'] == 'directory':
-            command = compose_task_singularity_command(
-                work_dir=options['workdir'],
-                image=options['image'],
-                command=options['command'],
-                env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [
-                    Parameter(key='INPUT', value=join(options['workdir'], 'input')),
-                    Parameter(key='OUTPUT', value=options['output']['from']),
-                    Parameter(key='GPUS', value=str(gpus))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
-                                                                                              list) else [],
-                no_cache=options['no_cache'] if 'no_cache' in options else False,
+            dir_name = 'input'
+            lines.append(compose_task_singularity_command(
+                work_dir=work_dir,
+                image=image,
+                command=command,
+                env=env,
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], dir_name))],
+                bind_mounts=bind_mounts,
+                no_cache=no_cache,
                 gpus=gpus,
-                shell_wrapper=options['shell'],
+                shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password)
-            lines.append(command)
+                docker_password=docker_password))
         elif options['input']['kind'] == 'file':
             file_name = options['input']['path'].rpartition('/')[2]
-            command = compose_task_singularity_command(
-                work_dir=options['workdir'],
-                image=options['image'],
-                command=options['command'],
-                env=options['env'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [
-                    Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name)),
-                    Parameter(key='OUTPUT', value=options['output']['from']),
-                    Parameter(key='GPUS', value=str(gpus))],
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options and isinstance(options['bind_mounts'],
-                                                                                              list) else [],
-                no_cache=options['no_cache'] if 'no_cache' in options else False,
+            lines.append(compose_task_singularity_command(
+                work_dir=work_dir,
+                image=image,
+                command=command,
+                env=env,
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                bind_mounts=bind_mounts,
+                no_cache=no_cache,
                 gpus=gpus,
-                shell_wrapper=options['shell'],
+                shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password)
-            lines.append(command)
+                docker_password=docker_password))
     else:
-        command = compose_task_singularity_command(
-            work_dir=options['workdir'],
-            image=options['image'],
-            command=options['command'],
-            env=options['env'],
-            parameters=options['parameters'] if 'parameters' in options else [] + [
-                Parameter(key='OUTPUT', value=options['output']['from']),
-                Parameter(key='GPUS', value=str(gpus))],
+        lines.append(compose_task_singularity_command(
+            work_dir=work_dir,
+            image=image,
+            command=command,
+            env=env,
+            parameters=parameters,
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
-            no_cache=options['no_cache'] if 'no_cache' in options else False,
+            no_cache=no_cache,
             gpus=gpus,
-            shell_wrapper=options['shell'],
+            shell=shell,
             docker_username=docker_username,
-            docker_password=docker_password)
-        lines.append(command)
+            docker_password=docker_password))
 
     return lines
 

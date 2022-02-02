@@ -12,12 +12,12 @@ from plantit.task_scripts import compose_task_singularity_command
 
 
 class TaskLifecycleTests(TestCase):
-    def test_compose_task_singularity_command_shell_wrapper(self):
+    def test_compose_task_singularity_command_shell(self):
         command = compose_task_singularity_command(
             work_dir='/work/dir',
             image='docker://alpine',
             command='echo "Hello, world!"',
-            shell_wrapper='bash'
+            shell='bash'
         )
 
         self.assertTrue(
@@ -27,7 +27,7 @@ class TaskLifecycleTests(TestCase):
             work_dir='/work/dir',
             image='docker://alpine',
             command='echo "Hello, world!"',
-            shell_wrapper='sh'
+            shell='sh'
         )
 
         self.assertTrue(
