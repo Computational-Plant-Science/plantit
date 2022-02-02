@@ -241,10 +241,8 @@ def compose_task_singularity_command(
     if gpus: cmd += ' --nv'
 
     # append the command
-    if shell is not None:
-        cmd += f" {image} {shell} -c '{command}'"
-    else:
-        cmd += f" {image} {command}"
+    if shell is None: shell = 'sh'
+    cmd += f" {image} {shell} -c '{command}'"
 
     # don't want to reveal secrets, so log the command before prepending secret env vars
     logger.debug(f"Using command: '{cmd}'")
@@ -305,7 +303,7 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
     command = options['command']
     env = options['env']
     gpus = options['gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
-    parameters = options['parameters'] if 'parameters' in options else [] + [
+    parameters = (options['parameters'] if 'parameters' in options else []) + [
                 Parameter(key='OUTPUT', value=options['output']['from']),
                 Parameter(key='GPUS', value=str(gpus))]
     bind_mounts = options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []

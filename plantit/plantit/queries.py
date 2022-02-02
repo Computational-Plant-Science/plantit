@@ -68,25 +68,31 @@ async def refresh_user_workflow_cache(github_username: str):
 
     # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
-    cursor = '0'
     removed = 0
-    existing = 0
-    while cursor != 0:
-        cursor, data = redis.scan(cursor, f"workflows/{github_username}")
-        wf_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
-        for key in data:
-            decoded = key.decode('utf-8')
-            if decoded not in wf_keys:
-                removed += 1
-                redis.delete(decoded)
-            else:
-                existing += 1
+    updated = 0
+    added = 0
+    old_keys = [key.decode('utf-8') for key in redis.scan_iter(match=f"workflows/{github_username}/*")]
+    new_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
+    for old_key in old_keys:
+        if old_key not in new_keys:
+            logger.debug(f"Removing user workflow {old_key}")
+            removed += 1
+            redis.delete(old_key)
+        else:
+            logger.debug(f"Updating user workflow {old_key}")
+            updated += 1
+
     # ...then adding/updating the workflows we just scraped
     for wf in workflows:
-        redis.set(f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
+        key = f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}"
+        if key not in old_keys:
+            logger.debug(f"Adding user workflow {key}")
+            added += 1
+        redis.set(key, json.dumps(del_none(wf)))
+
     redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
     logger.info(
-        f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {len(workflows) - existing} new, removed {removed}, updated {existing})")
+        f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {added}, updated {updated}, removed {removed})")
 
 
 async def refresh_online_user_orgs_workflow_cache():
@@ -106,23 +112,30 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 
     # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
-    cursor = '0'
     removed = 0
-    existing = 0
-    while cursor != 0:
-        cursor, data = redis.scan(cursor, f"workflows/{org_name}")
-        wf_keys = [f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
-        for key in data:
-            decoded = key.decode('utf-8')
-            if decoded not in wf_keys:
-                removed += 1
-                redis.delete(decoded)
-            else:
-                existing += 1
+    updated = 0
+    added = 0
+    old_keys = [key.decode('utf-8') for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
+    new_keys = [f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
+    for old_key in old_keys:
+        if old_key not in new_keys:
+            logger.debug(f"Removing org workflow {old_key}")
+            removed += 1
+            redis.delete(old_key)
+        else:
+            logger.debug(f"Updating org workflow {old_key}")
+            updated += 1
+
     # ...then adding/updating the workflows we just scraped
-    for wf in workflows: redis.set(f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}", json.dumps(del_none(wf)))
+    for wf in workflows:
+        key = f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}"
+        if key not in old_keys:
+            logger.debug(f"Adding org workflow {key}")
+            added += 1
+        redis.set(key, json.dumps(del_none(wf)))
+
     redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
-    logger.info(f"{len(workflows)} workflow(s) in GitHub organization {org_name}'s workflow cache")
+    logger.info(f"{len(workflows)} workflow(s) now in GitHub organization {org_name}'s workflow cache (added {added}, updated {updated}, removed {removed})")
 
 
 def list_public_workflows() -> List[dict]:
@@ -615,7 +628,7 @@ def get_institutions(invalidate: bool = False) -> dict:
                 logger.warning(f"No results from Mapbox for institution: {name}")
                 institutions[name] = {
                     'institution': name,
-                    'count': counts[name],
+                    'count': counts[name] if name in counts else 0,
                     'geocode': None
                 }
             # if we got results, pick the top one
