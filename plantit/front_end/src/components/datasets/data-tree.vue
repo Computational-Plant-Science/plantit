@@ -296,9 +296,7 @@
                                     </b>
                                 </b-col>
                             </b-row>
-                            <b-row
-                                v-if="userProjects.length > 0"
-                                class="mt-2"
+                            <b-row v-if="userProjects.length > 0" class="mt-2"
                                 ><b-col
                                     :class="
                                         profile.darkMode
@@ -1115,7 +1113,9 @@
                         class="fas fa-seedling fa-fw mr-2 text-success"
                     ></i
                     >{{
-                        replaceMe(internalLoaded ? internalNode.label : node.label)
+                        replaceMe(
+                            internalLoaded ? internalNode.label : node.label
+                        )
                     }}</b-button
                 >
             </b-col>
@@ -1194,77 +1194,92 @@
                     </b-pagination>
                 </b-col></b-row
             >
-            <b-row
-                id="files"
-                class="mt-1 mb-1 ml-2 mr-0 p-0"
-                style="border-top: 1px solid rgba(211, 211, 211, 0.5)"
-                v-for="(child, index) in filteredFiles"
-                :key="index"
-                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+            <b-overlay
+                :show="downloading"
+                :variant="profile.darkMode ? 'dark' : 'light'"
+                rounded="sm"
             >
-                <b-col>
-                    <b-img-lazy
-                        v-if="previewsLoaded && fileIsImage(child.label)"
-                        :src="getFileURL(child)"
-                        style="width: 3rem; height: 3rem"
-                    ></b-img-lazy>
-                    <b-button
-                        class="mt-1 mb-1 ml-4"
-                        :disabled="!select || select !== 'file'"
-                        size="sm"
-                        :variant="
-                            profile.darkMode ? 'outline-light' : 'outline-dark'
-                        "
-                        @click="selectNode(child, 'file')"
-                        ><i class="fas fa-file fa-fw"></i>
-                        {{ child.label }}</b-button
-                    >
-                </b-col>
-                <b-col md="auto" align-self="center"
-                    ><small>{{ formatBytes(child['file-size']) }}</small></b-col
+                <b-row
+                    id="files"
+                    class="mt-1 mb-1 ml-2 mr-0 p-0"
+                    style="border-top: 1px solid rgba(211, 211, 211, 0.5)"
+                    v-for="(child, index) in filteredFiles"
+                    :key="index"
+                    :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                 >
-                <b-col md="auto" align-self="center">
-                    <b-button
-                        id="popover-reactive-1"
-                        :disabled="!fileIsImage(child.label)"
-                        :variant="profile.darkMode ? 'outline-light' : 'white'"
-                        class="m-1"
-                        size="sm"
-                        v-b-tooltip.hover
-                        :title="'View ' + child.label"
-                        @click="viewFile(child)"
+                    <b-col>
+                        <b-img-lazy
+                            v-if="previewsLoaded && fileIsImage(child.label)"
+                            :src="getFileURL(child)"
+                            style="width: 3rem; height: 3rem"
+                        ></b-img-lazy>
+                        <b-button
+                            class="mt-1 mb-1 ml-4"
+                            :disabled="!select || select !== 'file'"
+                            size="sm"
+                            :variant="
+                                profile.darkMode
+                                    ? 'outline-light'
+                                    : 'outline-dark'
+                            "
+                            @click="selectNode(child, 'file')"
+                            ><i class="fas fa-file fa-fw"></i>
+                            {{ child.label }}</b-button
+                        >
+                    </b-col>
+                    <b-col md="auto" align-self="center"
+                        ><small>{{
+                            formatBytes(child['file-size'])
+                        }}</small></b-col
                     >
-                        <i class="fas fa-eye fa-fw"></i>
-                    </b-button>
-                    <b-button
-                        v-if="isOwned"
-                        class="m-1"
-                        size="sm"
-                        title="Delete File"
-                        @click="
-                            deletePath(
-                                child.path,
-                                profile.djangoProfile.cyverse_token
-                            )
-                        "
-                        variant="outline-danger"
-                        ><i class="fas fa-trash fa-fw"></i></b-button
-                    ><b-button
-                        class="m-1"
-                        size="sm"
-                        title="Download File"
-                        @click="
-                            downloadFile(
-                                child.path,
-                                profile.djangoProfile.cyverse_token
-                            )
-                        "
-                        :variant="
-                            profile.darkMode ? 'outline-light' : 'outline-dark'
-                        "
-                        ><i class="fas fa-download fa-fw"></i></b-button
-                ></b-col>
-            </b-row>
+                    <b-col md="auto" align-self="center">
+                        <b-button
+                            id="popover-reactive-1"
+                            :disabled="!fileIsImage(child.label)"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            class="m-1"
+                            size="sm"
+                            v-b-tooltip.hover
+                            :title="'View ' + child.label"
+                            @click="viewFile(child)"
+                        >
+                            <i class="fas fa-eye fa-fw"></i>
+                        </b-button>
+                        <b-button
+                            v-if="isOwned"
+                            class="m-1"
+                            size="sm"
+                            title="Delete File"
+                            @click="
+                                deletePath(
+                                    child.path,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                            variant="outline-danger"
+                            ><i class="fas fa-trash fa-fw"></i></b-button
+                        ><b-button
+                            class="m-1"
+                            size="sm"
+                            title="Download File"
+                            :disabled="downloading"
+                            @click="
+                                downloadFile(
+                                    child.path,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                            :variant="
+                                profile.darkMode
+                                    ? 'outline-light'
+                                    : 'outline-dark'
+                            "
+                            ><i class="fas fa-download fa-fw"></i></b-button
+                    ></b-col>
+                </b-row>
+            </b-overlay>
         </b-list-group-item>
         <b-list-group-item
             class="mt-2 mb-1 ml-2 mr-0 p-0"
