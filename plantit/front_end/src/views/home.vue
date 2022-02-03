@@ -558,7 +558,7 @@ export default {
                                     name: k,
                                     type: 'line',
                                     mode: 'lines',
-                                    line: { shape: 'spline' },
+                                    // line: { shape: 'spline' },
                                 },
                             ]
                         )

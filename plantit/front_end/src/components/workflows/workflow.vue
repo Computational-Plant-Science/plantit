@@ -4278,7 +4278,8 @@ export default {
                 if (lastConfig.output !== undefined)
                     this.output = lastConfig.output;
                 if (lastConfig.agent !== undefined)
-                    this.selectedAgent = lastConfig.agent;
+                    // make sure the agent used in the last submission still exist
+                    if (this.getAgents.includes(this.selectedAgent)) this.selectedAgent = lastConfig.agent;
             }
 
             if (

@@ -38,7 +38,7 @@ from plantit.keypairs import get_user_private_key_path
 logger = logging.getLogger(__name__)
 
 
-def create_immediate_task(user: User, config):
+def create_immediate_task(user: User, config: dict):
     # set submission time so we can persist configuration
     # and show recent submissions to the user in the UI
     config['timestamp'] = timezone.now().isoformat()
@@ -109,7 +109,7 @@ def create_immediate_task(user: User, config):
     return task
 
 
-def create_delayed_task(user: User, config):
+def create_delayed_task(user: User, config: dict):
     now = timezone.now().timestamp()
     id = f"{user.username}-delayed-{now}"
     eta, seconds = parse_task_eta(config['eta'])
@@ -120,8 +120,8 @@ def create_delayed_task(user: User, config):
     repo_name = config['repo']['name']
     repo_branch = config['repo']['branch']
 
-    if 'logo' in config['config']:
-        logo_path = config['config']['logo']
+    if 'logo' in config:
+        logo_path = config['logo']
         workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
     else:
         workflow_image_url = None
