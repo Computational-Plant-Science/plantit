@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 import paramiko
+from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 logger = logging.getLogger(__name__)
@@ -50,8 +51,14 @@ class SSH:
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
-    retry=retry_if_exception_type())
-def execute_command(ssh: SSH, precommand: str, command: str, directory: str = None, allow_stderr: bool = False) -> List[str]:
+    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    reraise=True)
+def execute_command(
+        ssh: SSH,
+        precommand: str,
+        command: str,
+        directory: str = None,
+        allow_stderr: bool = False) -> List[str]:
     """
     Executes the given command on the given SSH connection. This method is a generator and will yield any output produced line by line.
 
@@ -74,7 +81,7 @@ def execute_command(ssh: SSH, precommand: str, command: str, directory: str = No
 
     for line in iter(lambda: stdout.readline(2048), ""):
         clean = clean_html(line)
-        # logger.info(f"Received stdout from '{ssh.host}': '{clean}'")
+        logger.debug(f"Received stdout from '{ssh.host}': '{clean}'")
         yield clean
 
     errors = []
