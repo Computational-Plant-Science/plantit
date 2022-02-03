@@ -137,7 +137,8 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
         redis.set(key, json.dumps(del_none(wf)))
 
     redis.set(f"workflows_updated/{org_name}", timezone.now().timestamp())
-    logger.info(f"{len(workflows)} workflow(s) now in GitHub organization {org_name}'s workflow cache (added {added}, updated {updated}, removed {removed})")
+    logger.info(
+        f"{len(workflows)} workflow(s) now in GitHub organization {org_name}'s workflow cache (added {added}, updated {updated}, removed {removed})")
 
 
 def list_public_workflows() -> List[dict]:
@@ -698,12 +699,12 @@ def get_aggregate_timeseries(invalidate: bool = False) -> dict:
         workflows_usage = get_workflows_usage_timeseries()
         agents_usage = get_agents_usage_timeseries()
         series = {
-        'users_total': users_total,
-        'tasks_total': tasks_total,
-        'tasks_usage': tasks_usage,
-        'agents_usage': agents_usage,
-        'workflows_usage': workflows_usage,
-    }
+            'users_total': users_total,
+            'tasks_total': tasks_total,
+            'tasks_usage': tasks_usage,
+            'agents_usage': agents_usage,
+            'workflows_usage': workflows_usage,
+        }
 
         redis.set("total_timeseries", json.dumps(series))
     else:
@@ -807,8 +808,8 @@ def get_workflows_usage_timeseries(user: User = None) -> dict:
     start = timezone.now().date() - timedelta(days=window_width_days)
 
     # if a user is provided, filter only tasks owned by that user, otherwise public tasks
-    tasks = Task.objects.filter(workflow__config__public=True, created__gte=start) if user is None else Task.objects.filter(user=user,
-                                                                                                                            created__gte=start)
+    tasks = Task.objects.filter(workflow__public=True, created__gte=start) if user is None else Task.objects.filter(user=user,
+                                                                                                                    created__gte=start)
     tasks = tasks.order_by('-created')  # chronological order by start time
 
     # to store timeseries (key is workflow owner/name/branch, value is series)
@@ -818,7 +819,8 @@ def get_workflows_usage_timeseries(user: User = None) -> dict:
     if len(tasks) == 0: return series
 
     # loop over days from start date to now and count tasks occurring per workflow on each day
-    for date in (start + timedelta(days=n) for n in range(window_width_days)):
+    dates = [start + timedelta(days=n) for n in range(window_width_days + 1)]
+    for date in dates:
         # tasks created on this date
         tasks_today = tasks.filter(created__date=date)
 
@@ -856,7 +858,8 @@ def get_agent_usage_timeseries(name) -> dict:
 
 # TODO: refactor like above
 def get_agents_usage_timeseries(user: User = None) -> dict:
-    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[:100]
+    tasks = Task.objects.filter(agent__public=True).order_by('-created') if user is None else Task.objects.filter(user=user).order_by('-created')[
+                                                                                              :100]
     series = dict()
 
     # return early if no tasks

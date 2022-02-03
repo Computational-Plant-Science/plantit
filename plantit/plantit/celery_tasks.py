@@ -396,7 +396,13 @@ def refresh_user_stats(username: str):
         return
 
     logger.info(f"Aggregating statistics for {user.username}")
+
+    # overall statistics
     stats = async_to_sync(q.calculate_user_statistics)(user)
+
+    # timeseries (no need to save result, just trigger reevaluation)
+    q.get_user_timeseries(user, invalidate=True)
+
     redis = RedisClient.get()
     redis.set(f"stats/{user.username}", json.dumps(stats))
     redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
