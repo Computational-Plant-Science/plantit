@@ -9,6 +9,9 @@ compose="docker-compose -f docker-compose.$config.yml"
 echo "Bringing containers down..."
 $compose down --remove-orphans
 
+echo "Cleaning Docker cache"
+docker system prune
+
 echo "Fetching latest source from git..."
 git fetch origin master
 git checkout origin/master plantit/
