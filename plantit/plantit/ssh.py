@@ -69,7 +69,7 @@ def execute_command(ssh: SSH, precommand: str, command: str, directory: str = No
     if directory is not None: full_command = f"cd {directory} && {full_command}"
 
     logger.info(f"Executing command on '{ssh.host}': {full_command}")
-    stdin, stdout, stderr = ssh.client.exec_command(full_command, get_pty=True)
+    stdin, stdout, stderr = ssh.client.exec_command(f"bash --login -c '{full_command}'", get_pty=True)
     stdin.close()
 
     for line in iter(lambda: stdout.readline(2048), ""):
