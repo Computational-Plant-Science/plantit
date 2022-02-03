@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 import json
 import logging
-from collections import Counter, namedtuple
+from collections import Counter, namedtuple, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
@@ -761,11 +761,12 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
         running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
         series[t] = running
-        series[datetime.fromtimestamp(t).isoformat()] = running
 
-    series_frame = pd.DataFrame({'X': list(series.keys()), 'Y': list(series.values())})
-    smoothed_frame = loess.regress(series_frame, bandwidth=2000, num_pts=5)
-    series = {datetime.fromtimestamp(row['X']).isoformat(): row['Y'] for i, row in smoothed_frame.iter_rows()}
+    # smooth timeseries with LOESS regression
+    series_keys = list(series.keys())
+    series_frame = pd.DataFrame({'X': series_keys, 'Y': list(series.values())})
+    smoothed_frame = loess.regress(series_frame, bandwidth=int(interval_seconds / 20), num_pts=int(len(series_keys) / 2))
+    series = {datetime.fromtimestamp(row['X']).isoformat(): row['Y'] for i, row in smoothed_frame.iterrows()}
 
     return series
 
@@ -828,6 +829,9 @@ def get_workflows_usage_timeseries(user: User = None) -> dict:
             timestamp = datetime.combine(task.created.date(), datetime.min.time()).isoformat()
             if timestamp not in series[workflow]: series[workflow][timestamp] = 0
             series[workflow][timestamp] = series[workflow][timestamp] + 1
+
+    for key in series.keys():
+        series[key] = OrderedDict(series[key])
 
     return series
 

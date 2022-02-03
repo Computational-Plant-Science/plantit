@@ -66,20 +66,18 @@ def regress(data: pd.DataFrame, bandwidth: int, num_pts: int) -> pd.DataFrame:
     """
 
     # extract the predictor and response and compute their respective min and max values
-    xs = data.iloc[:,0]
+    xs = data.iloc[:,0].astype(float)
     x_min = np.min(xs)
     x_max = np.max(xs)
 
     # extract the response
-    ys = data.iloc[:,1]
+    ys = data.iloc[:,1].astype(float)
     y_min = np.min(ys)
     y_max = np.max(ys)
 
     # scale the predictor and response to unit interval
     normed_xs = np.interp(xs, (x_min, x_max), (0, 1))
     normed_ys = np.interp(ys, (y_min, y_max), (0, 1))
-
-    print(pd.DataFrame({'X': normed_xs, 'Y': normed_ys}))
 
     # predict n evenly spaced points over the output range
     output_xs = np.linspace(x_min, x_max, num_pts)

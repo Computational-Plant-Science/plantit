@@ -500,6 +500,7 @@ export default {
                         y: Object.keys(response.data.tasks_usage).map(
                             (key) => response.data.tasks_usage[key]
                         ),
+                        yaxis: 'y2',
                         type: 'line',
                         mode: 'lines',
                         line: { color: '#d6df5D', shape: 'spline' },
@@ -630,7 +631,7 @@ export default {
             );
         },
         tasksTotalPlotTraces() {
-            return [this.timeseriesTasksTotal];
+            return [this.timeseriesTasksTotal, this.timeseriesTasksUsage];
         },
         tasksTotalPlotLayout() {
             return {
@@ -668,6 +669,10 @@ export default {
                 yaxis: {
                     showticklabels: false,
                 },
+                yaxis2: {
+    overlaying: 'y',
+    side: 'right'
+  },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
