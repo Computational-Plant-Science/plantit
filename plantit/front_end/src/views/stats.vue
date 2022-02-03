@@ -292,18 +292,7 @@
                                     <br />
                                     Submissions
                                 </b-button></template
-                            ><Plotly
-                                v-if="showTasksTotalPlot"
-                                :data="tasksTotalPlotTraces"
-                                :layout="tasksTotalPlotLayout"
-                            ></Plotly>
-                            <Plotly
-                                v-if="showTasksUsagePlot"
-                                :data="tasksUsagePlotTraces"
-                                :layout="tasksUsagePlotLayout"
-                            ></Plotly>
-                            <br />
-                            <h1 v-if="runningCount >= 0" class="text-success">
+                            ><b-row align-h="center"><b-col><h1 v-if="runningCount >= 0" class="text-success">
                                 {{ runningCount }}
                             </h1>
                             <b-spinner
@@ -318,7 +307,12 @@
                                 "
                                 ><i class="fas fa-terminal fa-fw"></i>
                                 Running</b-badge
-                            ></b-tab
+                            ></b-col></b-row><br/><Plotly
+                                v-if="showTasksTotalPlot"
+                                :data="tasksTotalPlotTraces"
+                                :layout="tasksTotalPlotLayout"
+                            ></Plotly>
+                            </b-tab
                         >
                     </b-tabs>
                 </b-col>
@@ -489,6 +483,7 @@ export default {
                             moment(tuple[0]).format('YYYY-MM-DD HH:mm:ss')
                         ),
                         y: response.data.tasks_total.map((tuple) => tuple[1]),
+                        name: 'Total',
                         type: 'line',
                         mode: 'lines',
                         line: { color: '#d6df5D', shape: 'spline' },
@@ -500,10 +495,11 @@ export default {
                         y: Object.keys(response.data.tasks_usage).map(
                             (key) => response.data.tasks_usage[key]
                         ),
+                        name: 'Usage',
                         yaxis: 'y2',
                         type: 'line',
                         mode: 'lines',
-                        line: { color: '#d6df5D', shape: 'spline' },
+                        line: { color: '#f0e68c', shape: 'spline' },
                     };
                     this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
@@ -639,6 +635,7 @@ export default {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
+                hovermode: false,
                 title: {
                     text: 'Total',
                     font: {
@@ -646,7 +643,7 @@ export default {
                     },
                 },
                 legend: {
-                    orientation: 'h',
+                    // orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -670,9 +667,10 @@ export default {
                     showticklabels: false,
                 },
                 yaxis2: {
-    overlaying: 'y',
-    side: 'right'
-  },
+                  showticklabels: false,
+                    overlaying: 'y',
+                    side: 'right'
+                  },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
