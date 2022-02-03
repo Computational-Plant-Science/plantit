@@ -832,8 +832,9 @@ def get_workflows_usage_timeseries(user: User = None) -> dict:
             if timestamp not in series[workflow]: series[workflow][timestamp] = 0
             series[workflow][timestamp] = series[workflow][timestamp] + 1
 
+    # sort dictionary by keys (dates)
     for key in series.keys():
-        series[key] = OrderedDict(series[key])
+        series[key] = OrderedDict(sorted(series[key].items(), key=lambda x: x[0]))
 
     return series
 
