@@ -9,6 +9,7 @@ from typing import List, Tuple
 
 import jwt
 import numpy as np
+import pandas as pd
 from asgiref.sync import sync_to_async, async_to_sync
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -19,6 +20,7 @@ from django.utils import timezone
 import plantit.terrain as terrain
 import plantit.mapbox as mapbox
 from plantit import github as github
+from plantit import loess as loess
 from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentRole
 from plantit.miappe.models import Investigation, Study
@@ -758,7 +760,12 @@ def get_tasks_usage_timeseries(interval_seconds: int = 600, user: User = None) -
     end = max(v[1] for v in start_end_times.values())
     for t in range(int(start.timestamp()), int(end.timestamp()), interval_seconds):
         running = len([1 for k, se in start_end_times.items() if int(se[0].timestamp()) <= t <= int(se[1].timestamp())])
+        series[t] = running
         series[datetime.fromtimestamp(t).isoformat()] = running
+
+    series_frame = pd.DataFrame({'X': list(series.keys()), 'Y': list(series.values())})
+    smoothed_frame = loess.regress(series_frame, bandwidth=2000, num_pts=5)
+    series = {datetime.fromtimestamp(row['X']).isoformat(): row['Y'] for i, row in smoothed_frame.iter_rows()}
 
     return series
 

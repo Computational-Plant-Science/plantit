@@ -44,3 +44,5 @@ opencv-python
 redis
 boto3
 flower
+scipy
+statsmodels
