@@ -10,7 +10,7 @@ echo "Bringing containers down..."
 $compose down --remove-orphans
 
 echo "Cleaning Docker cache"
-docker system prune
+docker system prune -f
 
 echo "Fetching latest source from git..."
 git fetch origin master
