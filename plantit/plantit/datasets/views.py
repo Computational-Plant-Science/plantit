@@ -77,7 +77,6 @@ async def share(request):
     body = json.loads(request.body.decode('utf-8'))
     guests = body['sharing']
     policies = []
-    pprint.pprint(body)
 
     for guest in guests:
         try:

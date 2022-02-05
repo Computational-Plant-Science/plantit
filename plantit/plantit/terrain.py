@@ -226,7 +226,7 @@ def path_exists(path, token) -> bool:
     if response.status_code != 200:
         try:
             content = response.json()
-            print(f"Bad response when checking if path '{path}' exists: {content}")
+            logger.warning(f"Bad response when checking if path '{path}' exists: {content}")
         finally: pass
 
     response.raise_for_status()
