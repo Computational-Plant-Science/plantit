@@ -13,23 +13,22 @@ from django.utils import timezone
 
 import plantit.healthchecks
 import plantit.mapbox
-import plantit.terrain as terrain
 import plantit.queries as q
+import plantit.terrain as terrain
 import plantit.utils.agents
 from plantit import settings
-from plantit.healthchecks import is_healthy
-from plantit.agents.models import AgentScheduler, Agent
-from plantit.queries import get_workflow, refresh_user_workflow_cache, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
-    refresh_user_cyverse_tokens
+from plantit.agents.models import Agent
 from plantit.celery import app
+from plantit.healthchecks import is_healthy
+from plantit.queries import refresh_user_workflow_cache, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
+    refresh_user_cyverse_tokens
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
-    get_job_status, get_job_walltime, list_result_files, cancel_task
+    get_job_status_and_walltime, list_result_files, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
-from plantit.utils.tasks import parse_task_time_limit
 
 logger = get_task_logger(__name__)
 
@@ -187,8 +186,7 @@ def poll_job_status(self, guid: str):
     try:
         # get the job status from the scheduler
         check_job_logs_for_progress(task)
-        job_status = get_job_status(task)
-        job_walltime = get_job_walltime(task)
+        job_status, job_walltime = get_job_status_and_walltime(task)
 
         # get_job_status() returns None if the job isn't found in the agent's scheduler.
         # there are 2 reasons this might happen:
@@ -434,7 +432,7 @@ def check_task_cyverse_transfer(self, guid: str, attempts: int = 0):
         now = timezone.now()
         task.updated = now
         task.completed = now
-        task.status = TaskStatus.SUCCESS
+        task.status = TaskStatus.SUCCESS if task.status != TaskStatus.FAILURE else task.status
         task.transferred = True
         task.results_transferred = len(expected)
         task.transfer_path = path
