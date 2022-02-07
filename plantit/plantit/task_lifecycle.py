@@ -6,7 +6,7 @@ import traceback
 from os import environ
 from os.path import join, isdir
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import binascii
 import json
@@ -361,7 +361,7 @@ def get_job_walltime(task: Task) -> (str, str):
             return None
 
 
-def get_job_status(task: Task) -> str:
+def get_job_status(task: Task):
     ssh = get_task_ssh_client(task)
     with ssh:
         lines = execute_command(
@@ -371,8 +371,12 @@ def get_job_status(task: Task) -> str:
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
 
-        line = next(l for l in lines if task.job_id in l)
-        status = line.split()[5].replace('+', '')
+        try:
+            line = next(l for l in lines if task.job_id in l)
+            return line.split()[5].replace('+', '')
+        except StopIteration:
+            # if we don't receive any lines of output from `sacct -j <job ID>`, the job wasn't found
+            pass
 
         # check the scheduler log file in case `sacct` is no longer displaying info
         # about this job so we don't miss a cancellation/timeout/failure/completion
@@ -380,23 +384,28 @@ def get_job_status(task: Task) -> str:
 
             log_file_path = get_task_scheduler_log_file_path(task)
             stdin, stdout, stderr = ssh.client.exec_command(f"test -e {log_file_path} && echo exists")
-            if stdout.read().decode().strip() != 'exists': return status
 
+            # if log file doesn't exist, return None
+            if stdout.read().decode().strip() != 'exists': return None
+
+            # otherwise check the log file to see if job status was written there
             with sftp.open(log_file_path, 'r') as log_file:
                 logger.info(f"Checking scheduler log file {log_file_path} for job {task.job_id} status")
+
                 for line in log_file.readlines():
+                    # if we find success or failure, return immediately
+                    if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
+                        return 'FAILED'
+                    if 'SUCCESS' in line or 'COMPLETED' in line:
+                        return 'SUCCESS'
+
+                    # otherwise use the most recent status (last line of the log file)
                     if 'CANCELLED' in line or 'CANCELED' in line:
                         status = 'CANCELED'
                         continue
                     if 'TIMEOUT' in line:
                         status = 'TIMEOUT'
                         continue
-                    if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
-                        status = 'FAILED'
-                        break
-                    if 'SUCCESS' in line or 'COMPLETED' in line:
-                        status = 'SUCCESS'
-                        break
 
                 return status
 
