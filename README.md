@@ -1,3 +1,4 @@
+
 <div align="center">
 
 <img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative; top: 50px; height: 150px" />
