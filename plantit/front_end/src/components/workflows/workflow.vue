@@ -17,7 +17,7 @@
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row v-if="workflowLoading || getWorkflow === null">
+            <b-row v-if="workflowLoading">
                 <b-spinner
                     small
                     label="Loading..."
@@ -28,6 +28,9 @@
                     >Loading workflow...</span
                 >
             </b-row>
+            <b-row v-else-if="getWorkflow === null"><b-col><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                    ><i class="fas fa-exclamation-triangle fa-fw"></i> Workflow not found.</span
+                ></b-col></b-row>
             <b-row v-else>
                 <b-col>
                     <b-row>
