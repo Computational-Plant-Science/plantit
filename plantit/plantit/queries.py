@@ -626,25 +626,34 @@ def get_institutions(invalidate: bool = False) -> dict:
             # TODO: are there any edge cases this might fail for?
             name = ' '.join(result['query'])
 
+            # if we can't match the institution name, skip it
+            if name not in counts:
+                logger.warning(f"Failed to match {name} to any institution")
+                continue
+
+            # number of members in this institution
+            count = counts[name]
+
             # if Mapbox returned no results, we can't return geocode information
             if len(result['features']) == 0:
                 logger.warning(f"No results from Mapbox for institution: {name}")
                 institutions[name] = {
                     'institution': name,
-                    'count': counts[name] if name in counts else 0,
+                    'count': count,
                     'geocode': None
                 }
+
             # if we got results, pick the top one
             else:
                 feature = result['features'][0]
                 feature['id'] = name
                 feature['properties'] = {
                     'name': name,
-                    'count': counts[name]
+                    'count': count
                 }
                 institutions[name] = {
                     'institution': name,
-                    'count': counts[name],
+                    'count': count,
                     'geocode': feature
                 }
 
