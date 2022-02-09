@@ -6,7 +6,7 @@ import traceback
 from os import environ
 from os.path import join, isdir
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import binascii
 import json
@@ -19,6 +19,9 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
+
+from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
+from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import docker as docker
 from plantit.agents.models import Agent, AgentScheduler
@@ -342,9 +345,18 @@ def check_job_logs_for_progress(task: Task):
         task.save()
 
 
-def get_job_walltime(task: Task) -> (str, str):
+@retry(
+    wait=wait_random_exponential(multiplier=5, max=120),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    reraise=True)
+def get_job_status_and_walltime(task: Task):
     ssh = get_task_ssh_client(task)
+    status = None
+    walltime = None
+
     with ssh:
+        # first get the job's walltime
         lines = execute_command(
             ssh=ssh,
             precommand=":",
@@ -355,15 +367,12 @@ def get_job_walltime(task: Task) -> (str, str):
         try:
             job_line = next(l for l in lines if task.job_id in l)
             job_split = job_line.split()
-            job_walltime = job_split[-3]
-            return job_walltime
+            walltime = job_split[-3]
         except StopIteration:
-            return None
+            # if we don't receive any lines of output, the job wasn't found
+            pass
 
-
-def get_job_status(task: Task) -> str:
-    ssh = get_task_ssh_client(task)
-    with ssh:
+        # next get the job's status
         lines = execute_command(
             ssh=ssh,
             precommand=':',
@@ -371,8 +380,13 @@ def get_job_status(task: Task) -> str:
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
 
-        line = next(l for l in lines if task.job_id in l)
-        status = line.split()[5].replace('+', '')
+        try:
+            line = next(l for l in lines if task.job_id in l)
+            status = line.split()[5].replace('+', '')
+            return status, walltime
+        except StopIteration:
+            # if we don't receive any lines of output, the job wasn't found
+            pass
 
         # check the scheduler log file in case `sacct` is no longer displaying info
         # about this job so we don't miss a cancellation/timeout/failure/completion
@@ -380,25 +394,33 @@ def get_job_status(task: Task) -> str:
 
             log_file_path = get_task_scheduler_log_file_path(task)
             stdin, stdout, stderr = ssh.client.exec_command(f"test -e {log_file_path} && echo exists")
-            if stdout.read().decode().strip() != 'exists': return status
 
-            with sftp.open(log_file_path, 'r') as log_file:
-                logger.info(f"Checking scheduler log file {log_file_path} for job {task.job_id} status")
-                for line in log_file.readlines():
-                    if 'CANCELLED' in line or 'CANCELED' in line:
-                        status = 'CANCELED'
-                        continue
-                    if 'TIMEOUT' in line:
-                        status = 'TIMEOUT'
-                        continue
-                    if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
-                        status = 'FAILED'
-                        break
-                    if 'SUCCESS' in line or 'COMPLETED' in line:
-                        status = 'SUCCESS'
-                        break
+            # if log file doesn't exist, return None
+            if stdout.read().decode().strip() != 'exists': status = None
 
-                return status
+            # otherwise check the log file to see if job status was written there
+            else:
+                with sftp.open(log_file_path, 'r') as log_file:
+                    logger.info(f"Checking scheduler log file {log_file_path} for job {task.job_id} status")
+
+                    for line in log_file.readlines():
+                        # if we find success or failure, stop
+                        if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
+                            status = 'FAILED'
+                            break
+                        if 'SUCCESS' in line or 'COMPLETED' in line:
+                            status = 'SUCCESS'
+                            break
+
+                        # otherwise use the most recent status (last line of the log file)
+                        if 'CANCELLED' in line or 'CANCELED' in line:
+                            status = 'CANCELED'
+                            continue
+                        if 'TIMEOUT' in line:
+                            status = 'TIMEOUT'
+                            continue
+
+    return status, walltime
 
 
 def list_result_files(task: Task) -> List[dict]:
@@ -471,8 +493,7 @@ def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
     if 'include' not in config['output']: config['output']['include'] = dict()
     if 'patterns' not in config['output']['include']: config['output']['exclude']['patterns'] = []
 
-    # include task configuration file and scheduler logs
-    config['output']['include']['names'].append(f"{task.guid}.yaml")
+    # include scheduler logs
     config['output']['include']['patterns'].append("out")
     config['output']['include']['patterns'].append("err")
     config['output']['include']['patterns'].append("log")
