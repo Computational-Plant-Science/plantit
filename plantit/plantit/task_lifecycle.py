@@ -451,7 +451,7 @@ def list_result_files(task: Task) -> List[dict]:
             for name in expected_names:
                 if name in names:
                     exists = True
-                    seen.append(output['name'])
+                    seen.append(name)
                 else:
                     exists = False
 
@@ -481,21 +481,22 @@ def list_result_files(task: Task) -> List[dict]:
                 any_matched = False
                 for name in names:
                     # if this filename matches a pattern and hasn't already been included by name, add it to the list
-                    if not any(s == name for s in seen):
-                        results.append({
-                            'name': name,
-                            'path': join(workdir, name),
-                            'exists': True
-                        })
+                    if pattern in name:
+                        if not any(s == name for s in seen):
+                            results.append({
+                                'name': name,
+                                'path': join(workdir, name),
+                                'exists': True
+                            })
 
-                    # if the pattern matched something already included by name, don't count it as missing
-                    any_matched = True
+                        # if the pattern matched something already included by name, don't count it as missing
+                        any_matched = True
 
                 # otherwise report the pattern missing
                 if not any_matched:
                     results.append({
-                        'name': name,
-                        'path': join(workdir, pattern),
+                        'name': f"*.{pattern}",
+                        'path': join(workdir, f"*.{pattern}"),
                         'exists': False
                     })
 
