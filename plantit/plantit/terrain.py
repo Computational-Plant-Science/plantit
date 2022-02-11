@@ -18,6 +18,18 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 logger = logging.getLogger(__name__)
 
 
+class Unauthorized(Exception):
+    pass
+
+
+class BadRequest(Exception):
+    pass
+
+
+class BadResponse(Exception):
+    pass
+
+
 def list_files(path,
                include_patterns=None,
                include_names=None,
@@ -84,13 +96,13 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
                              auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SECRET')))
 
     if response.status_code == 400:
-        raise ValueError('Unauthorized for KeyCloak token endpoint')
+        raise Unauthorized('Unauthorized for KeyCloak token endpoint')
     elif response.status_code != 200:
-        raise ValueError(f"Bad response from KeyCloak token endpoint:\n{response.json()}")
+        raise BadResponse(f"Bad response from KeyCloak token endpoint:\n{response.json()}")
 
     content = response.json()
     if 'access_token' not in content or 'refresh_token' not in content:
-        raise ValueError(f"Missing params on token response, expected 'access_token' and 'refresh_token' but got:\n{pprint.pprint(content)}")
+        raise BadRequest(f"Missing params on token response, expected 'access_token' and 'refresh_token' but got:\n{pprint.pprint(content)}")
 
     return content['access_token'], content['refresh_token']
 

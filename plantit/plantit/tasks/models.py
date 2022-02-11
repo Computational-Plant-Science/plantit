@@ -88,7 +88,7 @@ class Task(models.Model):
 
     @property
     def is_success(self):
-        return self.status == TaskStatus.SUCCESS or self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
+        return self.status == TaskStatus.SUCCESS  # or self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
 
     @property
     def is_failure(self):

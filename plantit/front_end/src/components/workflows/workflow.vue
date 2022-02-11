@@ -1393,15 +1393,15 @@
                                                                             min-width: 60rem;
                                                                         "
                                                                         v-if="
-                                                                            workflow !==
+                                                                            getWorkflow !==
                                                                                 null &&
                                                                             getWorkflow
                                                                                 .config
                                                                                 .input !==
                                                                                 undefined &&
-                                                                            input.kind !==
+                                                                            getWorkflow.config.input.kind !==
                                                                                 undefined &&
-                                                                            input.kind !==
+                                                                            getWorkflow.config.input.kind !==
                                                                                 null
                                                                         "
                                                                         :bg-variant="
@@ -4273,16 +4273,16 @@ export default {
             if ('last_config' in this.getWorkflow) {
                 let lastConfig = this.getWorkflow['last_config'];
                 this.params =
-                    lastConfig.parameters !== undefined
-                        ? lastConfig.parameters
+                    lastConfig.workflow.parameters !== undefined
+                        ? lastConfig.workflow.parameters
                         : this.params;
-                if (lastConfig.input !== undefined)
-                    this.input = lastConfig.input;
-                if (lastConfig.output !== undefined)
-                    this.output = lastConfig.output;
+                if (lastConfig.workflow.input !== undefined)
+                    this.input = lastConfig.workflow.input;
+                if (lastConfig.workflow.output !== undefined)
+                    this.output = lastConfig.workflow.output;
                 if (lastConfig.agent !== undefined)
-                    // make sure the agent used in the last submission still exist
-                    if (this.getAgents.includes(this.selectedAgent)) this.selectedAgent = lastConfig.agent;
+                    // make sure the agent used in the last submission still exists
+                    if (this.getAgents.map(a => a.name).includes(lastConfig.agent)) this.selectedAgent = lastConfig.agent;
             }
 
             if (
