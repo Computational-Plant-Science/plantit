@@ -430,45 +430,78 @@ def list_result_files(task: Task) -> List[dict]:
     Args:
         task: The task
 
-    Returns: Files expected to be produced by the task
+    Returns: Result files expected to be produced by the task
 
     """
 
-    # TODO factor out into method
-    included_by_name = get_output_included_names(task)
-    included_by_pattern = get_output_included_patterns(task)
-
+    seen = []
+    results = []
     ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
-    outputs = []
-    seen = []
+    expected_names = get_output_included_names(task)
+    expected_patterns = get_output_included_patterns(task)
 
     with ssh:
         with ssh.client.open_sftp() as sftp:
-            for file in included_by_name:
-                file_path = join(workdir, file)
-                stdin, stdout, stderr = ssh.client.exec_command(f"test -e {file_path} && echo exists")
+            # list contents of task working directory
+            names = sftp.listdir(workdir)
+
+            # check for files by name
+            logger.info(f"Looking for files by name: {', '.join(expected_patterns)}")
+            for name in expected_names:
+                if name in names:
+                    exists = True
+                    seen.append(output['name'])
+                else:
+                    exists = False
+
                 output = {
-                    'name': file,
-                    'path': join(workdir, file),
-                    'exists': stdout.read().decode().strip() == 'exists'
+                    'name': name,
+                    'path': join(workdir, name),
+                    'exists': exists
                 }
-                seen.append(output['name'])
-                outputs.append(output)
+                results.append(output)
 
-            logger.info(f"Looking for files by pattern(s): {', '.join(included_by_pattern)}")
 
-            for f in sftp.listdir(workdir):
-                if any(pattern in f for pattern in included_by_pattern):
-                    if not any(s == f for s in seen):
-                        outputs.append({
-                            'name': f,
-                            'path': join(workdir, f),
+                # file_path = join(workdir, expected_name)
+                # stdin, stdout, stderr = ssh.client.exec_command(f"test -e {file_path} && echo exists")
+                # output = {
+                #     'name': expected_name,
+                #     'path': join(workdir, expected_name),
+                #     'exists': stdout.read().decode().strip() == 'exists'
+                # }
+                # seen.append(output['name'])
+                # outputs.append(output)
+
+            # check for files by pattern, excluding any we've already matched by name
+            logger.info(f"Looking for files by pattern: {', '.join(expected_patterns)}")
+            for pattern in expected_patterns:
+
+                # check if the pattern matches any of the directory contents
+                any_matched = False
+                for name in names:
+                    # if this filename matches a pattern and hasn't already been included by name, add it to the list
+                    if not any(s == name for s in seen):
+                        results.append({
+                            'name': name,
+                            'path': join(workdir, name),
                             'exists': True
                         })
 
-    logger.info(f"Expecting {len(outputs)} result files for task {task.guid}: {', '.join([o['name'] for o in outputs])}")
-    return outputs
+                    # if the pattern matched something already included by name, don't count it as missing
+                    any_matched = True
+
+                # otherwise report the pattern missing
+                if not any_matched:
+                    results.append({
+                        'name': name,
+                        'path': join(workdir, pattern),
+                        'exists': False
+                    })
+
+    logger.info(f"Expecting {len(results)}+ result files for task {task.guid}: {', '.join([o['name'] for o in results])}")
+    return results
+
 
 
 def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):

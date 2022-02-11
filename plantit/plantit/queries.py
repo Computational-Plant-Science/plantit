@@ -2,6 +2,7 @@ import asyncio
 import concurrent.futures
 import json
 import logging
+import traceback
 from collections import Counter, namedtuple, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -468,7 +469,30 @@ def get_user_cyverse_profile(user: User) -> dict:
 
 
 def refresh_user_cyverse_tokens(user: User):
-    access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    if user.profile.cyverse_refresh_token is None:
+        logger.warning(f"User {user.username} has no CyVerse access token to refresh")
+        return
+
+    try:
+        access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    except terrain.Unauthorized as e:
+        decoded = jwt.decode(user.profile.cyverse_refresh_token, options={
+            'verify_signature': False,
+            'verify_aud': False,
+            'verify_iat': False,
+            'verify_exp': False,
+            'verify_iss': False
+        })
+        exp = datetime.fromtimestamp(decoded['exp'], timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+
+        if now > exp: logger.warning(f"CyVerse refresh token for {user.username} expired at {exp.isoformat()}, can't refresh access token")
+        else: logger.error(f"Failed to refresh CyVerse access token for {user.username}: {e.message}")
+        return
+    except Exception:
+        logger.error(f"Failed to refresh CyVerse access token for {user.username}: {traceback.format_exc()}")
+        return
+
     user.profile.cyverse_access_token = access_token
     user.profile.cyverse_refresh_token = refresh_token
     user.profile.save()
