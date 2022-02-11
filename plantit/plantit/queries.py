@@ -48,7 +48,8 @@ async def refresh_online_users_workflow_cache():
     logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        await refresh_user_workflow_cache(profile.github_username)
+        if profile.github_username is not None:
+            await refresh_user_workflow_cache(profile.github_username)
 
 
 async def refresh_user_workflow_cache(github_username: str):
