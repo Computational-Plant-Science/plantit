@@ -35,7 +35,7 @@
             </b-row>-->
             <b-row>
                 <b-col>
-                    <div v-if="!tasksLoading && getWorkflow.config">
+                    <div v-if="!tasksLoading">
                         <b-row class="m-0 p-0">
                             <b-col md="auto" align-self="end" class="m-0 p-0">
                                 <h4
@@ -255,7 +255,7 @@
                             </b-col>
                             <b-col
                                 v-if="
-                                    getTask.is_complete && getTask.can_restart
+                                    getTask.is_complete && getTask.can_restart && getWorkflow !== null
                                 "
                                 md="auto"
                                 class="m-0 mb-2"
@@ -378,9 +378,13 @@
                                         class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
                                     >
                                         <WorkflowBlurb
+                                            v-if="getWorkflow !== null"
                                             :linkable="true"
                                             :workflow="getWorkflow"
                                         ></WorkflowBlurb>
+                                      <b-row v-else><b-col><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                    ><h5>{{ workflowKey }}</h5><br/><i class="fas fa-exclamation-triangle fa-fw"></i> Workflow no longer exists.</span
+                ></b-col></b-row>
                                     </b-card-body>
                                 </b-card>
                                 <b-row class="m-0 p-0 mt-1">
@@ -658,92 +662,6 @@
                                                             .length > 0
                                                     "
                                                 >
-                                                    <b
-                                                        v-if="
-                                                            getWorkflow.config
-                                                                .output
-                                                        "
-                                                        >Matching:
-                                                        <code
-                                                            :class="
-                                                                profile.darkMode
-                                                                    ? 'theme-dark'
-                                                                    : 'theme-light'
-                                                            "
-                                                            >{{
-                                                                getWorkflow
-                                                                    .config
-                                                                    .output.path
-                                                                    ? getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .path +
-                                                                      '/'
-                                                                    : ''
-                                                            }}{{
-                                                                (getWorkflow
-                                                                    .config
-                                                                    .output
-                                                                    .include
-                                                                    ? (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          ? '+ '
-                                                                          : '') +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .include
-                                                                          .patterns
-                                                                          ? '*.' +
-                                                                            getWorkflow.config.output.include.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                          : []) +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .include
-                                                                          .names
-                                                                          ? ', ' +
-                                                                            getWorkflow.config.output.include.names.join(
-                                                                                ', '
-                                                                            )
-                                                                          : [])
-                                                                    : '') +
-                                                                `, ${getTask.name}.zip`
-                                                            }}{{
-                                                                getWorkflow
-                                                                    .config
-                                                                    .output
-                                                                    .exclude
-                                                                    ? ' - ' +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          .patterns
-                                                                          ? '*.' +
-                                                                            getWorkflow.config.output.exclude.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                          : []) +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          .names
-                                                                          ? ', ' +
-                                                                            getWorkflow.config.output.exclude.names.join(
-                                                                                ', '
-                                                                            )
-                                                                          : [])
-                                                                    : ''
-                                                            }}
-                                                        </code></b
-                                                    >
-                                                    <br />
                                                     <span
                                                         v-if="
                                                             getTask.results_retrieved
@@ -2446,7 +2364,7 @@ export default {
                 .filter((file) => file.name.includes(this.resultSearchText));
         },
         workflowKey() {
-            return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
+            return `${this.getTask.workflow_owner}/${this.getTask.workflow_name}/${this.getTask.workflow_branch}`;
         },
         getTask() {
             let task = this.task(this.$router.currentRoute.params.guid);

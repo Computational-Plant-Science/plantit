@@ -210,7 +210,7 @@
                                     <br />
                                     Developers</b-button
                                 ></template
-                            ><!--<b-card-group
+                            ><b-card-group
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -250,7 +250,7 @@
                                         }}</b-col></b-row
                                     ></b-card
                                 ></b-card-group
-                            >--></b-tab
+                            ></b-tab
                         >
                         <b-tab
                             title="Tasks"
@@ -586,12 +586,12 @@ export default {
                 },
                 autosize: true,
                 height: 350,
-                title: {
-                    text: 'Total',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
+                // title: {
+                //     text: 'Total',
+                //     font: {
+                //         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                //     },
+                // },
                 legend: {
                     orientation: 'h',
                     font: {
@@ -636,12 +636,12 @@ export default {
                 },
                 autosize: true,
                 hovermode: false,
-                title: {
-                    text: 'Total',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
+                // title: {
+                //     text: 'Total',
+                //     font: {
+                //         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
+                //     },
+                // },
                 legend: {
                     // orientation: 'h',
                     font: {

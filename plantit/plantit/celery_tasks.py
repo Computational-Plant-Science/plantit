@@ -579,7 +579,10 @@ def stranded_task_sweep():
         # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded
         if (now - task.updated).total_seconds() > (2 * period):
             logger.warning(f"Found possibly stranded task: {task.guid}")
-            # TODO for now, flag these in the UI for the user to debug manually
+
+        if (now - task.updated).total_seconds() > (5 * period):
+            logger.warning(f"Rescuing stranded task: {task.guid}")
+            poll_job_status.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS), priority=1)
 
 
 class TerrainToken:

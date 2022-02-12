@@ -2,6 +2,7 @@ import asyncio
 import concurrent.futures
 import json
 import logging
+import traceback
 from collections import Counter, namedtuple, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -48,7 +49,8 @@ async def refresh_online_users_workflow_cache():
     logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
-        await refresh_user_workflow_cache(profile.github_username)
+        if profile.github_username is not None:
+            await refresh_user_workflow_cache(profile.github_username)
 
 
 @sync_to_async
@@ -490,7 +492,30 @@ def get_user_cyverse_profile(user: User) -> dict:
 
 
 def refresh_user_cyverse_tokens(user: User):
-    access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    if user.profile.cyverse_refresh_token is None:
+        logger.warning(f"User {user.username} has no CyVerse access token to refresh")
+        return
+
+    try:
+        access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    except terrain.Unauthorized as e:
+        decoded = jwt.decode(user.profile.cyverse_refresh_token, options={
+            'verify_signature': False,
+            'verify_aud': False,
+            'verify_iat': False,
+            'verify_exp': False,
+            'verify_iss': False
+        })
+        exp = datetime.fromtimestamp(decoded['exp'], timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+
+        if now > exp: logger.warning(f"CyVerse refresh token for {user.username} expired at {exp.isoformat()}, can't refresh access token")
+        else: logger.error(f"Failed to refresh CyVerse access token for {user.username}: {e.message}")
+        return
+    except Exception:
+        logger.error(f"Failed to refresh CyVerse access token for {user.username}: {traceback.format_exc()}")
+        return
+
     user.profile.cyverse_access_token = access_token
     user.profile.cyverse_refresh_token = refresh_token
     user.profile.save()
@@ -654,25 +679,34 @@ def get_institutions(invalidate: bool = False) -> dict:
             # TODO: are there any edge cases this might fail for?
             name = ' '.join(result['query'])
 
+            # if we can't match the institution name, skip it
+            if name not in counts:
+                logger.warning(f"Failed to match {name} to any institution")
+                continue
+
+            # number of members in this institution
+            count = counts[name]
+
             # if Mapbox returned no results, we can't return geocode information
             if len(result['features']) == 0:
                 logger.warning(f"No results from Mapbox for institution: {name}")
                 institutions[name] = {
                     'institution': name,
-                    'count': counts[name] if name in counts else 0,
+                    'count': count,
                     'geocode': None
                 }
+
             # if we got results, pick the top one
             else:
                 feature = result['features'][0]
                 feature['id'] = name
                 feature['properties'] = {
                     'name': name,
-                    'count': counts[name]
+                    'count': count
                 }
                 institutions[name] = {
                     'institution': name,
-                    'count': counts[name],
+                    'count': count,
                     'geocode': feature
                 }
 
