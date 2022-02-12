@@ -216,7 +216,8 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
                         'validation': {
                             'is_valid': False,
                             'errors': [traceback.format_exc()]
-                        }
+                        },
+                        'example': False
                     })
 
         return workflows

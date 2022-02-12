@@ -1,14 +1,12 @@
 import json
 import logging
-import traceback
 
 from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound
 
 import plantit.queries as q
-from plantit.github import get_repo, list_repo_branches, list_user_organizations
-from plantit.redis import RedisClient
+from plantit.github import get_repo, list_repo_branches
 from plantit.users.models import Profile
 
 logger = logging.getLogger(__name__)
@@ -18,15 +16,10 @@ def list_public(request):
     return JsonResponse({'workflows': q.list_public_workflows()})
 
 
-# TODO: when this (https://code.djangoproject.com/ticket/31949) gets merged, remove sync_to_async/async_to_sync hacks
-@sync_to_async
 @login_required
-@async_to_sync
-async def list_user(request):
-    profile = await sync_to_async(Profile.objects.get)(user=request.user)
-    redis = RedisClient.get()
-    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{profile.github_username}/*")]
-    return JsonResponse({'workflows': workflows})
+def list_user(request):
+    profile = Profile.objects.get(user=request.user)
+    return JsonResponse({'workflows': q.list_user_workflows(profile.github_username)})
 
 
 @sync_to_async
@@ -34,31 +27,16 @@ async def list_user(request):
 @async_to_sync
 async def list_org(request):
     orgs = await q.get_user_github_organizations(request.user)
-    redis = RedisClient.get()
-
-    # load workflows for each org
-    org_workflows = dict()
-    for org in orgs:
-        org_name = org['login']
-        org_workflows[org_name] = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{org_name}/*")]
-
-    return JsonResponse({'workflows': org_workflows})
+    workflows = dict()
+    for org in orgs: workflows[org['login']] = await sync_to_async(q.list_org_workflows)(org['login'])
+    return JsonResponse({'workflows': workflows})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
-async def list_project(request):
-    redis = RedisClient.get()
-    project_workflows = dict()
-
-    # load workflows for each project
-    for project in (await q.list_user_projects(request.user)):
-        proj_dict = await sync_to_async(q.project_to_dict)(project)
-        workflows = [json.loads(wf) for wf in [redis.get(key) for key in [f"workflows/{name}" for name in proj_dict['workflows']]] if wf is not None]
-        project_workflows[project.guid] = workflows
-
-    return JsonResponse({'workflows': project_workflows})
+def list_project(request):
+    projects = q.list_user_projects(request.user)
+    workflows = {project.guid: q.list_project_workflows(project) for project in projects}
+    return JsonResponse({'workflows': workflows})
 
 
 @sync_to_async
@@ -76,9 +54,8 @@ async def get(request, owner, name, branch):
         invalidate=bool(invalidate))
 
     # load the most recent submission config, if one exists
-    redis = RedisClient.get()
-    last_config = redis.get(f"workflow_configs/{request.user.username}/{owner}/{name}/{branch}")
-    if last_config is not None: workflow['last_config'] = json.loads(last_config)
+    last = q.get_last_task_config(request.user.username, owner, name, branch)
+    if last is not None: workflow['last_config'] = last
 
     return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 

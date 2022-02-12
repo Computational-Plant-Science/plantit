@@ -35,11 +35,24 @@
                         class="ml-0 mt-0 mr-0"
                         :title="context"
                         ><template #button-content>
-                            <span v-if="context === profile.githubProfile.login"
-                                ><i class="fas fa-user fa-fw"></i> Yours</span
-                            ><span v-else-if="context === ''"
+                            <span v-if="context === 'Featured'"
+                                ><i class="fas fa-certificate fa-fw"></i>
+                                Featured</span
+                            >
+                            <span v-else-if="context === 'Examples'">
+                                <i class="fas fa-thumbtack fa-fw"></i>
+                                {{ context }}
+                            </span>
+                            <span v-else-if="context === 'Public'"
                                 ><i class="fas fa-users fa-fw"></i> Public</span
-                            ><span
+                            >
+                            <span
+                                v-else-if="
+                                    context === profile.githubProfile.login
+                                "
+                                ><i class="fas fa-user fa-fw"></i> Yours</span
+                            >
+                            <span
                                 v-else-if="
                                     getProjects
                                         .map((p) => p.title)
@@ -56,31 +69,37 @@
                                 ></b-img>
                                 {{ context }}</span
                             >
-                            <span v-else-if="context === 'Examples'">
-                                <i class="fas fa-thumbtack fa-fw"></i>
-                                {{ context }}
-                            </span>
+                            <!-- otherwise it's an organization context -->
                             <span v-else
                                 ><i class="fas fa-building fa-fw"></i>
                                 {{ context }}</span
                             >
                         </template>
                         <b-dropdown-header>Default</b-dropdown-header>
-                        <b-dropdown-item @click="switchContext('Examples')" class="darklinks"
+                        <b-dropdown-item
+                            @click="switchContext('Featured')"
+                            class="darklinks"
+                            ><i class="fas fa-certificate fa-fw"></i>
+                            Featured</b-dropdown-item
+                        >
+                        <b-dropdown-item
+                            @click="switchContext('Examples')"
+                            class="darklinks"
                             ><i class="fas fa-thumbtack fa-fw"></i>
                             Examples</b-dropdown-item
                         >
-                        <b-dropdown-item @click="switchContext('')" class="darklinks"
+                        <b-dropdown-item
+                            @click="switchContext('Public')"
+                            class="darklinks"
                             ><i class="fas fa-users fa-fw"></i>
                             Public</b-dropdown-item
                         >
-
                         <b-dropdown-item
-                            @click="switchContext(profile.githubProfile.login)" class="darklinks"
+                            @click="switchContext(profile.githubProfile.login)"
+                            class="darklinks"
                             ><i class="fas fa-user fa-fw"></i>
                             Yours</b-dropdown-item
                         >
-
                         <b-dropdown-divider></b-dropdown-divider>
                         <b-dropdown-header>Organizations</b-dropdown-header>
                         <b-dropdown-item
@@ -191,9 +210,14 @@
                 </b-card>
             </b-card-group>
             <b-row v-else
-                ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    ><span v-if="context === ''"
+                ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    <span v-if="context === 'Featured'"
+                        >No featured workflows to show.</span
+                    >
+                    <span v-else-if="context === 'Public'"
                         >No public workflows have been published yet.</span
+                    ><span v-else-if="context === 'Examples'"
+                        >There are no example workflows to show.</span
                     ><span v-else-if="context === profile.githubProfile.login"
                         >You haven't created any workflow bindings yet. Add a
                         <code>plantit.yaml</code> file to any public repository
@@ -203,8 +227,6 @@
                             getProjects.map((c) => c.title).includes(context)
                         "
                         >This project has no associated workflows yet.</span
-                    ><span v-else-if="context === 'Examples'"
-                        >There are no example workflows to show.</span
                     >
                     <span v-else
                         >This organization has no workflow bindings yet.</span
@@ -232,13 +254,11 @@ export default {
     data: function () {
         return {
             name: '',
-            context: '',
-            contextToggling: false,
+            context: 'Featured',
             login: false,
         };
     },
     watch: {
-        // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
         userWorkflows: function () {
             // noop
@@ -253,10 +273,8 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        switchContext(ctx) {
-            this.contextToggling = true;
-            this.context = ctx;
-            this.contextToggling = false;
+        switchContext(context) {
+            this.context = context;
         },
         sortWorkflows(a, b) {
             if (a.config.name === b.config.name) {
@@ -313,23 +331,33 @@ export default {
             return this.userProjects.concat(this.othersProjects);
         },
         getWorkflows() {
-            return [
-                ...(this.context === ''
-                    ? this.excludeExamples(this.publicWorkflows)
-                    : this.context === this.profile.githubProfile.login
-                    ? this.userWorkflows
-                    : this.getProjects
-                          .map((p) => p.title)
-                          .includes(this.context)
-                    ? this.projectWorkflows[
-                          this.getProjects.filter(
-                              (p) => p.title === this.context
-                          )[0].guid
-                      ]
-                    : this.context === 'Examples'
-                    ? this.filterExamples(this.publicWorkflows)
-                    : this.orgWorkflows[this.context]),
-            ].sort(this.sortWorkflows);
+            if (this.context === 'Public')
+                return [...this.excludeExamples(this.publicWorkflows)].sort(
+                    this.sortWorkflows
+                );
+            else if (this.context === this.profile.githubProfile.login)
+                return [...this.userWorkflows].sort(this.sortWorkflows);
+            else if (
+                this.getProjects.map((p) => p.title).includes(this.context)
+            )
+                return [
+                    ...this.projectWorkflows[
+                        this.getProjects.filter(
+                            (p) => p.title === this.context
+                        )[0].guid
+                    ],
+                ].sort(this.sortWorkflows);
+            else if (this.context === 'Examples')
+                return [...this.filterExamples(this.publicWorkflows)].sort(
+                    this.sortWorkflows
+                );
+            else if (this.context === 'Featured') {
+                // todo: filter featured workflows
+                return [];
+            } else
+                return [...this.orgWorkflows[this.context]].sort(
+                    this.sortWorkflows
+                );
         },
         workflowsLoading() {
             return this.context === ''

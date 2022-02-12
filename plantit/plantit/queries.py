@@ -25,7 +25,7 @@ from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
-from plantit.misc.models import NewsUpdate
+from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskCounter, TaskStatus
 from plantit.users.models import Profile
@@ -49,6 +49,11 @@ async def refresh_online_users_workflow_cache():
     for user in online:
         profile = await sync_to_async(Profile.objects.get)(user=user)
         await refresh_user_workflow_cache(profile.github_username)
+
+
+@sync_to_async
+def is_featured(owner, name, branch):
+    return FeaturedWorkflow.objects.filter(owner=owner, name=name, branch=branch).exists()
 
 
 async def refresh_user_workflow_cache(github_username: str):
@@ -86,6 +91,9 @@ async def refresh_user_workflow_cache(github_username: str):
 
     # ...then adding/updating the workflows we just scraped
     for wf in workflows:
+        # set flag if this is a featured workflow
+        wf['featured'] = await is_featured(github_username, wf['repo']['name'], wf['branch']['name'])
+
         key = f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}"
         if key not in old_keys:
             logger.debug(f"Adding user workflow {key}")
@@ -130,6 +138,9 @@ async def refresh_org_workflow_cache(org_name: str, github_token: str):
 
     # ...then adding/updating the workflows we just scraped
     for wf in workflows:
+        # set flag if this is a featured workflow
+        wf['featured'] = await is_featured(org_name, wf['repo']['name'], wf['branch']['name'])
+
         key = f"workflows/{org_name}/{wf['repo']['name']}/{wf['branch']['name']}"
         if key not in old_keys:
             logger.debug(f"Adding org workflow {key}")
@@ -153,6 +164,17 @@ def list_user_workflows(owner: str) -> List[dict]:
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 
+def list_org_workflows(organization: str) -> List[dict]:
+    redis = RedisClient.get()
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{organization}/*")]
+
+
+def list_project_workflows(project: Investigation) -> List[dict]:
+    redis = RedisClient.get()
+    proj_dict = project_to_dict(project)
+    return [json.loads(wf) for wf in [redis.get(key) for key in [f"workflows/{name}" for name in proj_dict['workflows']]] if wf is not None]
+
+
 async def get_workflow(
         owner: str,
         name: str,
@@ -161,16 +183,17 @@ async def get_workflow(
         cyverse_token: str,
         invalidate: bool = False) -> dict:
     redis = RedisClient.get()
-    last_updated = redis.get(f"workflows_updated/{owner}")
+    updated = redis.get(f"workflows_updated/{owner}")
     workflow = redis.get(f"workflows/{owner}/{name}/{branch}")
 
-    if last_updated is None or workflow is None or invalidate:
+    if updated is None or workflow is None or invalidate:
         bundle = await github.get_repo_bundle(owner, name, branch, github_token, cyverse_token)
         workflow = {
             'config': bundle['config'],
             'repo': bundle['repo'],
             'validation': bundle['validation'],
-            'branch': branch
+            'branch': branch,
+            'featured': FeaturedWorkflow.objects.filter(owner=owner, name=name, branch=branch).exists()
         }
         redis.set(f"workflows/{owner}/{name}/{branch}", json.dumps(del_none(workflow)))
         return workflow
@@ -439,7 +462,6 @@ def project_to_dict(project: Investigation) -> dict:
     }
 
 
-@sync_to_async
 def list_user_projects(user: User):
     return list(user.project_teams.all()) + list(Investigation.objects.filter(owner=user))
 
@@ -558,6 +580,12 @@ def notification_to_dict(notification: Notification) -> dict:
         'message': notification.message,
         'read': notification.read,
     }
+
+
+def get_last_task_config(username, owner, name, branch):
+    redis = RedisClient.get()
+    last_config = redis.get(f"workflow_configs/{username}/{owner}/{name}/{branch}")
+    return None if last_config is None else json.loads(last_config)
 
 
 @sync_to_async
