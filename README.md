@@ -45,6 +45,10 @@ HPC/HTC plant phenotyping in the browser
 
 `plantit` is a science gateway for image-based plant phenotyping. It's simultaneously a portal to supercomputing clusters for researchers and a continuous delivery tool for developers. (Of course one may wear both hats.)
 
+### Status
+
+`plantit` is currently in public beta with the release of `v1.0.0` planned to coincide with [NAPPN 2022](https://www.plantphenotyping.org/conference-home) (Feb. 22-25). See [Releases](https://github.com/Computational-Plant-Science/plantit/releases) for changelog and [Roadmap](https://github.com/Computational-Plant-Science/plantit/wiki/Changelog-&-Roadmap) for planned features, fixes, and future releases.
+
 ### Motivation
 
 `plantit` streamlines the deployment of phenotyping software to high-performance computing environments. Though this task's implementation details are likely incidental to the concerns of nearly everyone, it is growing increasingly necessary: plant phenomics is becoming a "big data" science for which single-purpose desktop GUI applications are no longer sufficient. High-throughput phenotyping is resource-intensive and typically demands institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Research software should insulate its users from this, freeing up time and attention for the problem domain. This is what computers are for!
