@@ -248,6 +248,46 @@ def path_exists(path, token) -> bool:
     return content['paths'][path]
 
 
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+def path_exists_and_type(path, token) -> Tuple[bool, str]:
+    """
+        Checks whether a collection (directory) or object (file) exists at the given path, and returns its type.
+
+        Args:
+            path: The path
+            token: The authentication token
+
+        Returns: (True, type of object) if the path exists, otherwise (False, None)
+        """
+
+    data = {'paths': [path]}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    response = requests.post("https://de.cyverse.org/terrain/secured/filesystem/stat", data=json.dumps(data), headers=headers)
+
+    # before invoking `raise_for_status` and bubbling an exception up,
+    # try to decode the response and check the reason for failure
+    if response.status_code == 400:
+        return False, None
+    elif response.status_code != 200:
+        try:
+            content = response.json()
+            logger.warning(f"Bad response when checking if path '{path}' exists: {content}")
+        finally:
+            pass
+
+    response.raise_for_status()
+    content = response.json()
+    if 'paths' not in content: raise ValueError(f"No paths on response: {content}")
+    if path not in content['paths'].keys(): return False, None
+    return True, content['paths'][path]['type']
+
+
     # response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
     #                         headers={"Authorization": f"Bearer {token}"})
     # content = response.json()
