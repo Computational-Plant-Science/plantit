@@ -24,6 +24,7 @@ HPC/HTC plant phenotyping in the browser
 **Contents**
 
 - [About](#about)
+  - [Status](#status)
   - [Motivation](#motivation)
   - [Overview](#overview)
   - [Architecture](#architecture)

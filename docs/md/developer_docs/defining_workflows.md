@@ -11,6 +11,7 @@
     - [GPU mode](#gpu-mode)
     - [Parameters](#parameters)
       - [Default parameter values](#default-parameter-values)
+    - [Shell selection](#shell-selection)
     - [Workflow input/output](#workflow-inputoutput)
       - [Workflow inputs](#workflow-inputs)
         - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
