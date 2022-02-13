@@ -531,9 +531,7 @@ export default {
         },
         async loadUserTimeseries() {
             await axios
-                .get(
-                    `/apis/v1/stats/timeseries/${this.profile.djangoProfile.username}/`
-                )
+                .get(`/apis/v1/stats/user_timeseries/`)
                 .then((response) => {
                     this.timeseriesTasksUsage = {
                         x: Object.keys(response.data.tasks_usage).map((key) =>

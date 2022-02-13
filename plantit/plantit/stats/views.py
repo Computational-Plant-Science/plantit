@@ -1,15 +1,10 @@
-import json
-
-from asgiref.sync import sync_to_async, async_to_sync
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.mapbox
 import plantit.queries as q
-from plantit.redis import RedisClient
 
 
 @swagger_auto_schema(methods='get')
@@ -41,7 +36,8 @@ def workflow_timeseries(request, owner, name, branch):
 
 
 @login_required
-def user_timeseries(request, username):
+def user_timeseries(request):
+    username = request.GET.get('username', request.user.username)
     try: user = User.objects.get(username=username)
     except: return HttpResponseNotFound()
     return JsonResponse(q.get_user_timeseries(user))

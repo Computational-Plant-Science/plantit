@@ -28,7 +28,7 @@ async def get_profile(owner: str, token: str, timeout: int = 15) -> dict:
         if response.status_code != 200: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
 
         profile = response.json()
-        logger.debug(f"Retrieved GitHub user profile {owner}:\n{profile}")
+        logger.debug(f"Retrieved GitHub user profile {owner}")
         return profile
 
 
