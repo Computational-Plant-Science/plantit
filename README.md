@@ -27,8 +27,15 @@ HPC/HTC plant phenotyping in the browser
   - [Status](#status)
   - [Motivation](#motivation)
   - [Overview](#overview)
-  - [Architecture](#architecture)
+  - [Features](#features)
+    - [Automatic data transfers](#automatic-data-transfers)
+    - [Browser submissions](#browser-submissions)
+    - [Easy integration](#easy-integration)
+    - [Portable workflows](#portable-workflows)
+    - [Share at your pace](#share-at-your-pace)
+    - [Metadata & annotation](#metadata--annotation)
 - [Development](#development)
+  - [Architecture](#architecture)
   - [Requirements](#requirements)
   - [Installation](#installation)
     - [Setting up a development environment](#setting-up-a-development-environment)
@@ -52,18 +59,41 @@ HPC/HTC plant phenotyping in the browser
 
 ### Motivation
 
-`plantit` streamlines the deployment of phenotyping software to high-performance computing environments. Though this task's implementation details are likely incidental to the concerns of nearly everyone, it is growing increasingly necessary: plant phenomics is becoming a "big data" science for which single-purpose desktop GUI applications are no longer sufficient. High-throughput phenotyping is resource-intensive and typically demands institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Research software should insulate its users from this, freeing up time and attention for the problem domain. This is what computers are for!
+Plant phenomics is outgrowing single-purpose desktop GUI applications. High-throughput phenotyping is resource-intensive and may demand institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Deployment details are often incidental to the aims of biologists, however. Research software should insulate its users from nonessential concerns, freeing up time and attention for the problem domain. This is what computers are for!
 
 ### Overview
 
-In a sentence: `plantit` transfers data from the [CyVerse](https://cyverse.org/) cloud to an [XSEDE](https://www.xsede.org/) [supercomputer](https://www.tacc.utexas.edu/systems/stampede2), runs [Singularity](https://sylabs.io/) container workflows on it, and sends the results back to CyVerse. (It will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) be able to omit the transfers and operate on datasets parked on the cluster filesystem.) You can choose which workflow to apply to which data, submit and monitor the task, and download results from a web browser. You can bring your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). You can submit your task immediately, or schedule it to run after a delay or on a periodic interval. You can also bind your own workflow by packaging it into a [Docker](https://www.docker.com/) image published on [Docker Hub](https://hub.docker.com/), then [adding a `plantit.yaml` configuration file](https://plantit.readthedocs.io/en/latest/md/developer_docs/defining_workflows.html) to any public GitHub repo (like [GitHub Actions](https://github.com/features/actions) or [Travis CI](https://www.travis-ci.com/)).
+In a sentence: `plantit` runs phenotyping container workflows in high-throughput computing environments (by default, [XSEDE's](https://www.xsede.org/) [Stampede2](https://www.tacc.utexas.edu/systems/stampede2) cluster). All you need to get started is a [CyVerse](https://cyverse.org/) account.
 
-Aside from its core competency as a portal to HPC/HTC, `plantit` provides a few extra features:
+### Features
 
-- sharing/collaboration: share datasets and workflows with a private team or the entire research community
-- metadata/provenance: contextualize data according to the emerging [MIAPPE](https://www.miappe.org/) conventions ([under development](https://github.com/Computational-Plant-Science/plantit/issues/41))
+#### Automatic data transfers
 
-This can all be done in the browser (a REST API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256)).
+`plantit` can automatically transfer data to and from the [CyVerse](https://cyverse.org/) cloud before and after processing. Plug in your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). `plantit` will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) also be able to omit transfers and use datasets parked on cluster filesystems.
+
+#### Browser submissions
+
+Choose which workflow to apply to which data, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
+
+#### Easy integration
+
+Bind your own software by packaging it into a [Docker](https://www.docker.com/) image published on [Docker Hub](https://hub.docker.com/), then [adding a `plantit.yaml` configuration file](https://plantit.readthedocs.io/en/latest/md/developer_docs/defining_workflows.html) to any public GitHub repo (like [GitHub Actions](https://github.com/features/actions) or [Travis CI](https://www.travis-ci.com/)).
+
+#### Portable workflows
+
+`plantit` workflows run in [Singularity](https://sylabs.io/) containers. This insulates workflows from their deployment environment and makes results easier to reproduce.
+
+#### Share at your pace
+
+Keep your datasets and workflows private, share them with a small team, or publish to the entire research community.
+
+#### Metadata & annotation
+
+Contextualize datasets according to the emerging [MIAPPE](https://www.miappe.org/) conventions ([under development](https://github.com/Computational-Plant-Science/plantit/issues/41)).
+
+## Development
+
+Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
 
 ### Architecture
 
@@ -73,9 +103,6 @@ Architecture | Task Lifecycle    |            Task Detail             | Cluster 
 |:---------:|:----------------------------:|:-------------------------------------:|:-----------------------:|
 ![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) | ![](docs/media/stack.jpg) 
 
-## Development
-
-Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
 
 ### Requirements
 
