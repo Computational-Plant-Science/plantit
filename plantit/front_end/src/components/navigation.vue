@@ -437,7 +437,7 @@
                                 ></span>
                                 <b-img
                                     id="avatar"
-                                    v-if="profile.githubProfile"
+                                    v-if="profile.loggedIntoGitHub"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
                                     style="
                                         min-width: 20px;

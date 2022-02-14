@@ -358,13 +358,6 @@ def list_task_results(self, guid: str):
 
     # make sure we got the results we expected
     if len(missing) > 0:
-        # mark the task failed
-        task.status = TaskStatus.FAILURE
-        now = timezone.now()
-        task.updated = now
-        task.completed = now
-        task.save()
-
         # log status update and push it to clients
         message = f"Found {len(found)} results, missing {len(missing)}: {', '.join([m['name'] for m in missing])}"
         log_task_orchestrator_status(task, [message])
@@ -432,7 +425,7 @@ def check_task_cyverse_transfer(self, guid: str, attempts: int = 0):
         now = timezone.now()
         task.updated = now
         task.completed = now
-        task.status = TaskStatus.SUCCESS if task.status != TaskStatus.FAILURE else task.status
+        task.status = TaskStatus.COMPLETED if task.status != TaskStatus.FAILURE else task.status
         task.transferred = True
         task.results_transferred = len(expected)
         task.transfer_path = path

@@ -293,10 +293,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 response['organizations'] = github_organizations
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
-                response['github_profile'] = {}
+                response['github_profile'] = None
                 response['organizations'] = []
         else:
-            response['github_profile'] = {}
+            response['github_profile'] = None
             response['organizations'] = []
 
         return JsonResponse(response)

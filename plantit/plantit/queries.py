@@ -732,7 +732,7 @@ def get_total_counts(invalidate: bool = False) -> dict:
         developers = len(devs)
         agents = Agent.objects.count()
         tasks = TaskCounter.load().count
-        running = len(list(Task.objects.exclude(status__in=[TaskStatus.SUCCESS, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
+        running = len(list(Task.objects.exclude(status__in=[TaskStatus.COMPLETED, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
         counts = {
             'users': users,
             'online': online,

@@ -18,7 +18,7 @@ from plantit.miappe.models import Investigation, Study
 class TaskStatus(models.TextChoices):
     CREATED = 'created', gettext_lazy('Created')
     RUNNING = 'running', gettext_lazy('Running')
-    SUCCESS = 'success', gettext_lazy('Success')
+    COMPLETED = 'completed', gettext_lazy('Completed')
     FAILURE = 'failure', gettext_lazy('Failure')
     TIMEOUT = 'timeout', gettext_lazy('Timeout')
     CANCELED = 'canceled', gettext_lazy('Canceled')
@@ -69,7 +69,7 @@ class Task(models.Model):
     workflow_name = models.CharField(max_length=280, null=False, blank=False)
     workflow_branch = models.CharField(max_length=280, null=False, blank=False)
     workflow_image_url = models.URLField(null=True, blank=True)
-    status = models.CharField(max_length=8, choices=TaskStatus.choices, default=TaskStatus.CREATED)
+    status = models.CharField(max_length=9, choices=TaskStatus.choices, default=TaskStatus.CREATED)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
     results_retrieved = models.BooleanField(default=False)
     results_transferred = models.IntegerField(null=True, blank=True, default=0)
@@ -88,7 +88,7 @@ class Task(models.Model):
 
     @property
     def is_success(self):
-        return self.status == TaskStatus.SUCCESS  # or self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
+        return self.status == TaskStatus.COMPLETED  # or self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED'
 
     @property
     def is_failure(self):
