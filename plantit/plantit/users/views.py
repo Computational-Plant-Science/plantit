@@ -250,13 +250,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def get_current(self, request):
         user = request.user
 
-        # get stats
-        if request.user.profile.github_token != '':
-            redis = RedisClient.get()
-            cached = redis.get(f"stats/{user.username}")
-            stats = json.loads(cached) if cached is not None else None
-        else: stats = None
-
         # TODO: reenable
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
@@ -276,7 +269,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
             },
-            'stats': stats,
+            'stats': async_to_sync(q.get_user_statistics)(user),
             'projects': [p.guid for p in user.project_teams.all()]
         }
 
@@ -300,6 +293,11 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 response['organizations'] = github_organizations
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
+                response['github_profile'] = {}
+                response['organizations'] = []
+        else:
+            response['github_profile'] = {}
+            response['organizations'] = []
 
         return JsonResponse(response)
 

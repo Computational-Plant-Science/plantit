@@ -316,8 +316,9 @@
                         :show.sync="profile.first"
                         target="usr"
                         placement="bottomleft"
-                        >Welcome!
+                        ><h4 class="mt-2">Welcome!</h4>
                         <hr />
+                        <h5>Hints</h5>
                         An <i class="fas fa-question fa-fw"></i> icon in the
                         navigation bar indicates hints are enabled. To see
                         hints, click
@@ -328,9 +329,7 @@
                             ><i class="fas fa-question-circle fa-fw"></i> Enable
                             Hints</b-badge
                         >, then try hovering the mouse over an option in the
-                        context menu on the left side of the screen to trigger a
-                        hint box.
-                        <hr />
+                        context menu on the left side of the screen.
                         <b-button
                             block
                             size="sm"
@@ -352,6 +351,29 @@
                                 class="ml-2 mb-1"
                             ></b-spinner>
                         </b-button>
+                        <hr/>
+                        <h5>Workflows</h5>
+                        You're ready to start submitting! Head over to <b-badge
+                            :variant="
+                                profile.darkMode ? 'outline-dark' : 'light'
+                            "
+                            ><i class="fas fa-stream fa-fw"></i> Workflows</b-badge
+                        > to explore available phenotyping tools.
+                      <span v-if="!profile.loggedIntoGitHub">Note that to integrate your own workflows, you'll first need to bind your GitHub account.
+                      <b-button
+                        class="mt-2 text-left"
+                        :variant="
+                                profile.darkMode ? 'outline-dark' : 'light'
+                            "
+                        size="sm"
+                        block
+                        href="/apis/v1/idp/github_request_identity/"
+                    >
+                        <i class="fab fa-github fa-fw"></i>
+                        Log in to GitHub
+                    </b-button>
+                      </span>
+                        <hr/>
                         <b-button
                             block
                             size="sm"
@@ -565,6 +587,22 @@
                             Contact
                         </b-dropdown-item>
                         <b-dropdown-item
+                            v-if="!profile.loggedIntoGitHub"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            title="Log in to GitHub"
+                        href="/apis/v1/idp/github_request_identity/"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                    >
+                        <i class="fab fa-github fa-fw"></i>
+                        Log in to GitHub
+                    </b-dropdown-item>
+                        <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
                             class="text-danger"
@@ -761,9 +799,6 @@ export default {
         return {
             // user data
             ackedFirst: false,
-            djangoProfile: null,
-            cyverseProfile: null,
-            githubProfile: null,
             // websockets
             socket: null,
             // breadcrumb & brand
@@ -843,7 +878,7 @@ export default {
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
 
-        // no need to load all user data if we're in about or stats view
+        // no need to load all user data if we're in the about or stats view
         if (this.$route.name === 'about' || this.$route.name === 'stats') {
             await Promise.all([
                 this.getVersion(),

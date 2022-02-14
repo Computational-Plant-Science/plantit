@@ -14,50 +14,6 @@
                 </b-col>
             </b-row>
         </div>
-        <div
-            v-else-if="
-                profile.loggedIn
-                    ? profile.githubProfile === null ||
-                      profile.githubProfile === undefined
-                    : false
-            "
-        >
-            <b-row align-v="center"
-                ><b-col class="text-center" align-self="center">
-                    <br />
-                    <br />
-                    <i
-                        class="fas fa-exclamation-circle fa-fw fa-3x text-warning"
-                    ></i
-                    ><br />
-                    <h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Almost there!
-                    </h3>
-                    <br />
-                    We need to link your
-                    <i class="fab fa-github fa-fw fa-1x"></i
-                    ><b-img
-                        class="m-0"
-                        rounded
-                        style="max-height: 1.2rem"
-                        :src="
-                            profile.darkMode
-                                ? require('../assets/logos/github_white.png')
-                                : require('../assets/logos/github_black.png')
-                        "
-                    ></b-img>
-                    account.<br />Click the button below to log in.<br /><br /><b-button
-                        class="mt-1 text-left text-dark"
-                        variant="warning"
-                        size="md"
-                        href="/apis/v1/idp/github_request_identity/"
-                    >
-                        <i class="fab fa-github"></i>
-                        Log in to GitHub
-                    </b-button></b-col
-                ></b-row
-            >
-        </div>
         <div v-else>
             <b-row>
                 <b-col class="text-left" md="auto"

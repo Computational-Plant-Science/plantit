@@ -8,6 +8,7 @@ export const user = {
         profile: {
             first: false,
             loggedIn: false,
+            loggedIntoGitHub: false,
             keycloak: null,
             darkMode: false,
             pushNotifications: 'disabled',
@@ -28,6 +29,9 @@ export const user = {
         },
         setLoggedIn(state, loggedIn) {
             state.profile.loggedIn = loggedIn;
+        },
+        setLoggedIntoGithub(state, loggedIn) {
+            state.profile.loggedIntoGitHub = loggedIn;
         },
         setDarkMode(state, mode) {
             state.profile.darkMode = mode;
@@ -113,6 +117,9 @@ export const user = {
                     let now = Math.floor(Date.now() / 1000);
                     if (now > decoded.exp) commit('setLoggedIn', false);
                     else commit('setLoggedIn', true);
+
+                    // determine whether user is logged into GitHub
+                    commit('setLoggedIntoGithub', response.data.github_profile !== undefined && response.data.github_profile !== null);
 
                     // set profile info
                     commit('setDjangoProfile', response.data.django_profile);

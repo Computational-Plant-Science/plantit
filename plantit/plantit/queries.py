@@ -945,62 +945,69 @@ def get_agents_usage_timeseries(user: User = None) -> dict:
     return series
 
 
-async def calculate_user_statistics(user: User) -> dict:
-    profile = await sync_to_async(Profile.objects.get)(user=user)
-    all_tasks = await filter_tasks(user=user)
-    completed_tasks = await filter_tasks(user=user, completed=True)
-    total_tasks = len(all_tasks)
-    total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
-    total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
-    owned_workflows = [
-        f"{workflow['repo']['owner']['login']}/{workflow['name'] if 'name' in workflow else '[unnamed]'}"
-        for
-        workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
-    used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
-    used_workflows_counter = Counter(used_workflows)
-    unique_used_workflows = list(np.unique(used_workflows))
-    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
-                    [agent for agent in await filter_agents(user=user) if agent is not None]]
-    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
-                    [agent for agent in await filter_agents(user=user) if agent is not None]]
-    used_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
-                   [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
-    used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
-                     [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
-    used_agents_counter = Counter(used_agents)
-    used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
-    unique_used_agents = list(np.unique(used_agents))
+async def get_user_statistics(user: User, invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    cached = redis.get(f"stats/{user.username}")
 
-    # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
-    # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
-    tasks_running = await sync_to_async(get_tasks_usage_timeseries)(600, user)
+    if cached is None or invalidate:
+        profile = await sync_to_async(Profile.objects.get)(user=user)
+        all_tasks = await filter_tasks(user=user)
+        completed_tasks = await filter_tasks(user=user, completed=True)
+        total_tasks = len(all_tasks)
+        total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
+        total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
+        owned_workflows = [
+            f"{workflow['repo']['owner']['login']}/{workflow['name'] if 'name' in workflow else '[unnamed]'}"
+            for
+            workflow in list_user_workflows(owner=profile.github_username)] if profile.github_username != '' else []
+        used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
+        used_workflows_counter = Counter(used_workflows)
+        unique_used_workflows = list(np.unique(used_workflows))
+        owned_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
+                        [agent for agent in await filter_agents(user=user) if agent is not None]]
+        guest_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
+                        [agent for agent in await filter_agents(user=user) if agent is not None]]
+        used_agents = [(await sync_to_async(agent_to_dict)(agent, user.username))['name'] for agent in
+                       [a for a in [await get_task_agent(task) for task in all_tasks] if a is not None]]
+        used_projects = [(await sync_to_async(project_to_dict)(project)) for project in
+                         [p for p in [await get_task_project(task) for task in all_tasks] if p is not None]]
+        used_agents_counter = Counter(used_agents)
+        used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
+        unique_used_agents = list(np.unique(used_agents))
 
-    return {
-        'total_tasks': total_tasks,
-        'total_task_seconds': total_time,
-        'total_task_results': total_results,
-        'owned_workflows': owned_workflows,
-        'workflow_usage': {
-            'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],
-            'labels': unique_used_workflows,
-        },
-        'agent_usage': {
-            'values': [used_agents_counter[agent] for agent in unique_used_agents],
-            'labels': unique_used_agents,
-        },
-        'project_usage': {
-            'values': list(dict(used_projects_counter).values()),
-            'labels': list(dict(used_projects_counter).keys()),
-        },
-        'task_status': {
-            'values': [1 if task.status == 'success' else 0 for task in all_tasks],
-            'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
-        },
-        'owned_agents': owned_agents,
-        'guest_agents': guest_agents,
-        'institution': profile.institution,
-        'tasks_running': tasks_running
-    }
+        # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
+        # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
+        tasks_running = await sync_to_async(get_tasks_usage_timeseries)(600, user)
+
+        stats = {
+            'total_tasks': total_tasks,
+            'total_task_seconds': total_time,
+            'total_task_results': total_results,
+            'owned_workflows': owned_workflows,
+            'workflow_usage': {
+                'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],
+                'labels': unique_used_workflows,
+            },
+            'agent_usage': {
+                'values': [used_agents_counter[agent] for agent in unique_used_agents],
+                'labels': unique_used_agents,
+            },
+            'project_usage': {
+                'values': list(dict(used_projects_counter).values()),
+                'labels': list(dict(used_projects_counter).keys()),
+            },
+            'task_status': {
+                'values': [1 if task.status == 'success' else 0 for task in all_tasks],
+                'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
+            },
+            'owned_agents': owned_agents,
+            'guest_agents': guest_agents,
+            'institution': profile.institution,
+            'tasks_running': tasks_running
+        }
+        redis.set(f"stats/{user.username}", json.dumps(stats))
+    else: stats = json.loads(cached)
+    return stats
 
 
 def update_to_dict(update: NewsUpdate):

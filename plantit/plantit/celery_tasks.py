@@ -476,12 +476,18 @@ def cleanup_task(self, guid: str):
 
 @app.task()
 def refresh_all_users_stats():
+    # TODO: move caching to query layer
+
     redis = RedisClient.get()
 
     for user in User.objects.all():
         logger.info(f"Computing statistics for {user.username}")
-        redis.set(f"stats/{user.username}", json.dumps(async_to_sync(q.calculate_user_statistics)(user)))
-        redis.set(f"user_timeseries/{user.username}", json.dumps(q.get_user_timeseries(user, True)))
+
+        # overall statistics (no need to save result, just trigger reevaluation)
+        async_to_sync(q.get_user_statistics)(user, True)
+
+        # timeseries (no need to save result, just trigger reevaluation)
+        q.get_user_timeseries(user, invalidate=True)
 
     logger.info(f"Computing aggregate statistics")
     redis.set("stats_counts", json.dumps(q.get_total_counts(True)))
@@ -498,15 +504,11 @@ def refresh_user_stats(username: str):
 
     logger.info(f"Aggregating statistics for {user.username}")
 
-    # overall statistics
-    stats = async_to_sync(q.calculate_user_statistics)(user)
+    # overall statistics (no need to save result, just trigger reevaluation)
+    async_to_sync(q.get_user_statistics)(user, True)
 
     # timeseries (no need to save result, just trigger reevaluation)
     q.get_user_timeseries(user, invalidate=True)
-
-    redis = RedisClient.get()
-    redis.set(f"stats/{user.username}", json.dumps(stats))
-    redis.set(f"stats_updated/{user.username}", datetime.now().timestamp())
 
 
 @app.task()
@@ -522,6 +524,8 @@ def refresh_all_workflows():
 
 @app.task()
 def refresh_user_institutions():
+    # TODO: move caching to query layer
+
     redis = RedisClient.get()
     institutions = q.get_institutions(True)
     for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
