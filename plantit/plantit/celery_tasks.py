@@ -33,41 +33,6 @@ from plantit.tasks.models import Task, TaskStatus
 logger = get_task_logger(__name__)
 
 
-def report_failed_and_schedule_cleanup(task: Task, step: str):
-    # mark the task failed
-    task.status = TaskStatus.FAILURE
-    now = timezone.now()
-    task.updated = now
-    task.completed = now
-    task.save()
-
-    # there was an unexpected exception somewhere, catch and log it
-    message = f"Task '{task.guid}' step '{step}' job '{task.job_id}' failed: {traceback.format_exc()}"
-    log_task_orchestrator_status(task, [message])
-    async_to_sync(push_task_channel_event)(task)
-
-    # schedule cleanup
-    cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
-    tidy_up.s(task.guid).apply_async(countdown=cleanup_delay, priority=2)
-    task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
-    task.save()
-
-    # push AWS SNS notification
-    if task.user.profile.push_notification_status == 'enabled':
-        SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn,
-                                        f"PlantIT task {task.guid}",
-                                        message, {})
-
-
-# Task lifecycle:
-#   prep environment
-#   submit executable/run script
-#   poll status until complete
-#   check results
-#   check CyVerse transfer
-#   clean up
-
-
 @app.task(track_started=True)
 def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     try:
@@ -81,8 +46,9 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     if delayed_id is not None: task.delayed_id = delayed_id
     task.save()
 
-    # submit head of Celery (chain ;)
-    prep_environment.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+    # submit to Celery
+    (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
+                                                                                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
 
 @app.task(track_started=True)
@@ -98,237 +64,133 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
     if repeating_id is not None: task.delayed_id = repeating_id
     task.save()
 
-    # submit head of Celery (chain ;)
-    prep_environment.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+    # submit to Celery
+    (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
+                                                                                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
 
-@app.task(track_started=True)
-def prep_environment(guid: str):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
-
-    try:
-        log_task_orchestrator_status(task, [f"Preparing environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
-        async_to_sync(push_task_channel_event)(task)
-        configure_task_environment(task)
-
-        # submit next Celery task in the chain
-        send_pull.s(guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-    except Exception:
-        report_failed_and_schedule_cleanup(task, 'prep environment')
+##################
+# task lifecycle #
+##################
+# prep environment
+# submit script
+# poll status
+# check results
+# check transfer
+# clean up
 
 
-@app.task(track_started=True)
-def send_pull(guid: str):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
+def __handle_job_success(task: Task, message: str):
+    # update the task and persist it
+    now = timezone.now()
+    task.updated = now
+    task.job_status = 'COMPLETED'
+    task.save()
 
-    try:
-        # submit next Celery task in the chain
-        poll_pull.s(guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-    except:
-        report_failed_and_schedule_cleanup(task, 'send pull')
+    # log status to file
+    log_task_orchestrator_status(task, [message])
+
+    # push status to client(s)
+    async_to_sync(push_task_channel_event)(task)
+
+    # push AWS SNS notification
+    if task.user.profile.push_notification_status == 'enabled':
+        SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+    # check that we have the results we expect and then clean up the task
+    (test_results.s(task.guid) | tidy_up.s()).apply_async()
 
 
-@app.task(track_started=True)
-def poll_pull(guid: str):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
+def __handle_failure(task: Task, message: str):
+    # mark the task failed and persist it
+    task.status = TaskStatus.FAILURE
+    now = timezone.now()
+    task.updated = now
+    task.completed = now
+    task.save()
 
-    refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
-    logger.info(f"Checking {task.agent.name} scheduler status for task {guid} (job {task.job_id})")
+    # log status to file
+    log_task_orchestrator_status(task, [message])
 
-    # otherwise poll the scheduler for job status and walltime and update the task
-    try:
-        # get the job status from the scheduler
-        check_job_logs_for_progress(task)
-        job_status, job_walltime = get_job_status_and_walltime(task)
+    # push status to client(s)
+    async_to_sync(push_task_channel_event)(task)
 
-        # get_job_status() returns None if the job isn't found in the agent's scheduler.
-        # there are 2 reasons this might happen:
-        #   - the job was just submitted and hasn't been picked up for reporting by the scheduler yet
-        #   - the job already completed and we waited too long between polls to check its status
-        #
-        # in both cases we return early
-        if job_status is None:
-            # we might have just submitted the job; scheduler may take a moment to reflect new submissions
-            if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
-                # update the task and persist it
-                now = timezone.now()
-                task.updated = now
-                task.job_status = job_status
-                task.job_consumed_walltime = job_walltime
-                task.save()
-                retry_seconds = 10
+    # push AWS SNS notification
+    if task.user.profile.push_notification_status == 'enabled':
+        SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
 
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} not found, retrying in {retry_seconds} seconds"
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
+    # schedule cleanup
+    tidy_up.s(task.guid).apply_async()
 
-                # wait a few seconds and poll again
-                poll_containers.s(guid).apply_async(countdown=retry_seconds)
-                return
-            # otherwise the job completed and the scheduler's forgotten about it in the interval between polls
-            else:
-                # update the task and persist it
-                now = timezone.now()
-                task.updated = now
-                task.job_status = 'COMPLETED'
-                task.job_consumed_walltime = job_walltime
-                task.save()
-
-                # check that we have the results we expect
-                test_results.s(guid).apply_async()
-
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} completed with unknown status" + (f" after {job_walltime}" if job_walltime is not None else '')
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
-
-                # push AWS SNS notification
-                if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-            return
-
-        # update the task and persist it
-        task.job_status = job_status
-        task.job_consumed_walltime = job_walltime
-        now = timezone.now()
-        task.updated = now
-        task.save()
-
-        # get remote log files
-        ssh = get_task_ssh_client(task)
-        get_task_remote_logs(task, ssh)
-
-        # if completed unsuccessfully, mark the task according to its failure mode
-        job_complete = False
-        if job_status == 'FAILED':
-            task.status = TaskStatus.FAILURE
-            job_complete = True
-        elif job_status == 'CANCELLED':
-            task.status = TaskStatus.CANCELED
-            job_complete = True
-        elif job_status == 'TIMEOUT':
-            task.status = TaskStatus.TIMEOUT
-            job_complete = True
-        # but if it succeeded, we still need to check results before determining success/failure
-        elif job_status == 'COMPLETED':
-            job_complete = True
-
-        # update the task and persist it
-        now = timezone.now()
-        task.updated = now
-        task.save()
-
-        if job_complete:
-            send_containers.s(guid).apply_async()
-
-            # log the status update and push it to clients
-            message = f"Task {task.guid} pull job {task.job_id} completed with status {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
-            log_task_orchestrator_status(task, [message])
-            async_to_sync(push_task_channel_event)(task)
-
-            # push AWS SNS notification
-            if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-            return
-        else:
-            # if past due time...
-            if now > task.due_time:
-                # log the status update and push it to clients
-                message = f"Task {task.guid} pull job {task.job_id} {job_status} (walltime {job_walltime}) is past its due time {str(task.due_time)}"
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
-
-                # cancel the task
-                cancel_task(task)
-            else:
-                # log the status update and push it to clients
-                message = f"Task {task.guid} pull job {task.job_id} {job_status} (walltime {job_walltime})"
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
-
-                # otherwise schedule another round of polling
-                poll_containers.s(guid).apply_async(countdown=refresh_delay)
-    except:
-        report_failed_and_schedule_cleanup(task, 'poll pull')
+    # cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
+    # tidy_up.s(task.guid).apply_async(countdown=cleanup_delay, priority=2)
+    # task.cleanup_time = timezone.now() + timedelta(seconds=cleanup_delay)
+    # task.save()
 
 
 @app.task(track_started=True, bind=True)
-def send_containers(self, guid: str):
+def prep_environment(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        self.request.callbacks = None  # stop the task chain
+        self.request.callbacks = None
         return
 
-    # if the task already failed or the current scheduler job failed, skip to end of pipeline
-    if task.status == TaskStatus.FAILURE or task.job_status == 'FAILURE':
-        return skip_failed(task, 'send containers')
-
-    # mark the task running
-    task.status = TaskStatus.RUNNING
-    task.celery_task_id = self.request.id  # set the Celery task's ID so user can cancel
-    task.save()
-
     try:
-        ssh = get_task_ssh_client(task)
-        with ssh:
-            # schedule the job
-            job_id = submit_task_to_scheduler(task, ssh)
-            log_task_orchestrator_status(task, [f"Scheduled task as job {job_id}"])
-            async_to_sync(push_task_channel_event)(task)
-            return guid
-    except Exception:
-        # mark task failed
-        task.status = TaskStatus.FAILURE
-        now = timezone.now()
-        task.updated = now
-        task.completed = now
-        task.save()
-
-        # log status and update the client
-        error = traceback.format_exc()
-        log_task_orchestrator_status(task, [f"Failed with error: {error}"])
-        logger.error(f"Failed to submit task {task.guid}  on {task.agent.name}: {error}")
+        # upload workflow and job script to deployment target
+        configure_task_environment(task)
+        log_task_orchestrator_status(task, [f"Prepared environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
         async_to_sync(push_task_channel_event)(task)
 
-        # stop the task chain
+        return guid
+    except Exception:
         self.request.callbacks = None
+        __handle_failure(task, f"Failed to prep environment for task {task.guid}: {traceback.format_exc()}")
 
 
-@app.task(bind=True)
-def poll_containers(self, guid: str):
+@app.task(track_started=True, bind=True)
+def submit_job(self, guid: str):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    try:
+        # mark the task running
+        task.status = TaskStatus.RUNNING
+        task.celery_task_id = self.request.id  # set the Celery task's ID so user can cancel
+        task.save()
+
+        # submit the job to the cluster scheduler
+        ssh = get_task_ssh_client(task)
+        with ssh:
+            job_id = submit_task_to_scheduler(task, ssh)
+            log_task_orchestrator_status(task, [f"Scheduled task {guid} as job {job_id}"])
+            async_to_sync(push_task_channel_event)(task)
+
+        return guid
+    except Exception:
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to submit job for task {task.guid}: {traceback.format_exc()}")
+
+
+@app.task(track_started=True, bind=True)
+def poll_job(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         self.request.callbacks = None  # stop the task chain
         return
-
-    # if the task already failed or the current scheduler job failed, skip to end of pipeline
-    if task.status == TaskStatus.FAILURE or task.job_status == 'FAILURE':
-        return skip_failed(task, 'poll containers')
-
-    refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
-    logger.info(f"Checking {task.agent.name} scheduler status for task {guid} (job {task.job_id})")
 
     # poll the scheduler for job status and walltime and update the task
     try:
+        refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
+        logger.info(f"Checking {task.agent.name} scheduler status for task {guid} (job {task.job_id})")
+
         # get the job status from the scheduler
         check_job_logs_for_progress(task)
         job_status, job_walltime = get_job_status_and_walltime(task)
@@ -337,56 +199,30 @@ def poll_containers(self, guid: str):
         # there are 2 reasons this might happen:
         #   - the job was just submitted and hasn't been picked up for reporting by the scheduler yet
         #   - the job already completed and we waited too long between polls to check its status
-        #
-        # in both cases we return early
         if job_status is None:
+            # update the task and persist it
+            now = timezone.now()
+            task.updated = now
+            task.job_status = job_status
+            task.job_consumed_walltime = job_walltime
+            task.save()
+
             # we might have just submitted the job; scheduler may take a moment to reflect new submissions
             if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
-                # update the task and persist it
-                now = timezone.now()
-                task.updated = now
-                task.job_status = job_status
-                task.job_consumed_walltime = job_walltime
-                task.save()
-                retry_seconds = 10
+                # log the status update
+                log_task_orchestrator_status(task, [f"Job {task.job_id} not found yet, retrying in {refresh_delay}s"])
 
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} not found, retrying in {retry_seconds} seconds"
-                log_task_orchestrator_status(task, [message])
+                # push status to client(s)
                 async_to_sync(push_task_channel_event)(task)
 
-                # wait a few seconds and poll again
-                poll_containers.s(guid).apply_async(countdown=retry_seconds)
-                return
-            # otherwise the job completed and the scheduler's forgotten about it in the interval between polls
+                # wait and poll again
+                poll_job.s(guid).apply_async(countdown=refresh_delay)
             else:
-                # update the task and persist it
-                now = timezone.now()
-                task.updated = now
-                task.job_status = 'COMPLETED'
-                task.job_consumed_walltime = job_walltime
-                task.save()
+                # otherwise the job completed and the scheduler's forgotten about it in the interval between polls
+                __handle_job_success(task, f"Job {task.job_id} completed with unknown status" + (f" after {job_walltime}" if job_walltime is not None else ''))
 
-                # check that we have the results we expect
-                test_results.s(guid).apply_async()
-
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} completed with unknown status" + (f" after {job_walltime}" if job_walltime is not None else '')
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
-
-                # push AWS SNS notification
-                if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
+            # in either case, return early
             return guid
-
-        # update the task and persist it
-        task.job_status = job_status
-        task.job_consumed_walltime = job_walltime
-        now = timezone.now()
-        task.updated = now
-        task.save()
 
         # get remote log files
         ssh = get_task_ssh_client(task)
@@ -408,147 +244,76 @@ def poll_containers(self, guid: str):
             job_complete = True
 
         # update the task and persist it
+        task.job_status = job_status
+        task.job_consumed_walltime = job_walltime
         now = timezone.now()
         task.updated = now
         task.save()
 
         if job_complete:
-            # check that we have the results we expect
-            test_results.s(guid).apply_async()
-
-            # log the status update and push it to clients
-            message = f"Job {task.job_id} completed with status {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '')
-            log_task_orchestrator_status(task, [message])
-            async_to_sync(push_task_channel_event)(task)
-
-            # push AWS SNS notification
-            if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-            return guid
+            __handle_job_success(task, f"Job {task.job_id} completed with status {job_status}" + (f" after {job_walltime}" if job_walltime is not None else ''))
         else:
             # if past due time...
             if now > task.due_time:
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} {job_status} (walltime {job_walltime}) is past its due time {str(task.due_time)}"
-                log_task_orchestrator_status(task, [message])
-                async_to_sync(push_task_channel_event)(task)
-
-                # cancel the task
                 cancel_task(task)
+                __handle_failure(task, f"Job {task.job_id} {job_status} (walltime {job_walltime}) is past its due time {str(task.due_time)}")
             else:
-                # log the status update and push it to clients
-                message = f"Job {task.job_id} {job_status} (walltime {job_walltime})"
-                log_task_orchestrator_status(task, [message])
+                # log the status update
+                log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status} (walltime {job_walltime}), refreshing in {refresh_delay}s"])
+
+                # push status to client(s)
                 async_to_sync(push_task_channel_event)(task)
 
-                # otherwise schedule another round of polling
-                poll_containers.s(guid).apply_async(countdown=refresh_delay)
+                # wait and poll again
+                poll_job.s(guid).apply_async(countdown=refresh_delay)
     except:
-        report_failed(task, 'poll containers')
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to poll task {task.guid} job {task.job_id} status: {traceback.format_exc()}")
 
 
-def test_results(guid: str):
+@app.task(track_started=True, bind=True)
+def test_results(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None
         return
 
     try:
-        redis = RedisClient.get()
-        ssh = get_task_ssh_client(task)
-
-        # log status update and push it to clients
-        message = f"Retrieving logs"
-        log_task_orchestrator_status(task, [message])
-        async_to_sync(push_task_channel_event)(task)
-
         # get logs from agent filesystem
+        ssh = get_task_ssh_client(task)
         get_task_remote_logs(task, ssh)
-
-        # log status update and push it to clients
-        message = f"Retrieving results"
-        log_task_orchestrator_status(task, [message])
-        async_to_sync(push_task_channel_event)(task)
 
         # get results from agent filesystem, then save them to cache and update the task
         results = list_result_files(task)
         found = [r for r in results if r['exists']]
-        missing = [r for r in results if not r['exists']]
+
+        redis = RedisClient.get()
         redis.set(f"results/{task.guid}", json.dumps(found))
         task.results_retrieved = True
         task.save()
 
         # make sure we got the results we expected
-        if len(missing) > 0:
-            # log status update and push it to clients
-            message = f"Found {len(found)} results, missing {len(missing)}: {', '.join([m['name'] for m in missing])}"
-            log_task_orchestrator_status(task, [message])
-            async_to_sync(push_task_channel_event)(task)
-        else:
-            # log status update and push it to clients
-            message = f"Found {len(found)} results"
-            log_task_orchestrator_status(task, [message])
-            async_to_sync(push_task_channel_event)(task)
+        missing = [r for r in results if not r['exists']]
+        if len(missing) > 0: message = f"Found {len(found)} results, missing {len(missing)}: {', '.join([m['name'] for m in missing])}"
+        else: message = f"Found {len(found)} results"
 
-        # log status update and push it to clients
-        message = f"Verifying data was transferred to CyVerse"
+        # log status update and push it to client(s)
         log_task_orchestrator_status(task, [message])
         async_to_sync(push_task_channel_event)(task)
     except Exception:
-        pass
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to check results for task {task.guid} job {task.job_id}: {traceback.format_exc()}")
 
 
-@app.task(track_started=True)
-def send_push(guid: str):
+@app.task(track_started=True, bind=True)
+def test_push(self, guid: str, attempts: int = 0):
     try:
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
-
-    # if the task already failed or the current scheduler job failed, skip to end of pipeline
-    if task.status == TaskStatus.FAILURE or task.job_status == 'FAILURE':
-        skip_failed(task, 'send push')
-
-    try:
-        # submit next Celery task in the chain
-        poll_push.s(guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-    except Exception:
-        pass
-
-
-@app.task(track_started=True)
-def poll_push(guid: str):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
-
-    # if the task already failed or the current scheduler job failed, skip to end of pipeline
-    if task.status == TaskStatus.FAILURE or task.job_status == 'FAILURE':
-        skip_failed(task, 'poll push')
-
-    try:
-        # submit next Celery task in the chain
-        test_push.s(guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-    except Exception:
-        pass
-
-
-@app.task()
-def test_push(guid: str, attempts: int = 0):
-    try:
-        task = Task.objects.get(guid=guid)
-    except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
-        return
-
-    # if the task already failed or the current scheduler job failed, skip to end of pipeline
-    if task.status == TaskStatus.FAILURE or task.job_status == 'FAILURE':
-        skip_failed(task, 'test push')
 
     try:
         # check the expected filenames against the contents of the CyVerse collection
@@ -601,7 +366,8 @@ def test_push(guid: str, attempts: int = 0):
         # submit next Celery task in the chain
         tidy_up.s(guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
     except Exception:
-        pass
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to test CyVerse transfer for task {task.guid} job {task.job_id}: {traceback.format_exc()}")
 
 
 @app.task()
@@ -632,6 +398,9 @@ def tidy_up(guid: str):
         logger.error(f"Failed to clean up task {task.guid}: {traceback.format_exc()}")
 
 
+# misc
+
+
 @app.task()
 def find_stranded():
     # check if any running tasks haven't been updated in a while
@@ -645,20 +414,15 @@ def find_stranded():
             logger.warning(f"Found possibly stranded task: {task.guid}")
         if (now - task.updated).total_seconds() > (5 * period):
             logger.info(f"Trying to rescue stranded task: {task.guid}")
-            if task.pushed is not None:
-                poll_push.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-            elif task.worked is not None:
-                poll_containers.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-            elif task.pulled is not None:
-                poll_pull.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+            if task.job_id is not None:
+                poll_job.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
             else:
-                logger.error(f"Couldn't rescue stranded task '{task.guid}'")
+                logger.error(f"Couldn't rescue stranded task '{task.guid}' (no job ID)")
 
 
 @app.task()
 def refresh_all_users_stats():
     # TODO: move caching to query layer
-
     redis = RedisClient.get()
 
     for user in User.objects.all():
@@ -706,7 +470,6 @@ def refresh_all_workflows():
 @app.task()
 def refresh_user_institutions():
     # TODO: move caching to query layer
-
     redis = RedisClient.get()
     institutions = q.get_institutions(True)
     for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))

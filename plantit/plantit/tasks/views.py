@@ -1,11 +1,9 @@
 import json
 import logging
 import tempfile
-import traceback
 from os.path import join
 from pathlib import Path
 
-from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
@@ -17,12 +15,11 @@ from rest_framework.decorators import api_view
 
 import plantit.queries as q
 from plantit import settings
-from plantit.agents.models import AgentScheduler
+from plantit.celery_tasks import prep_environment, submit_job, poll_job
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.celery_tasks import prep_environment, send_pull, poll_pull
-from plantit.utils.tasks import parse_task_time_limit, get_task_orchestrator_log_file_path, \
+from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
     get_task_scheduler_log_file_path, \
     get_task_agent_log_file_path
 
@@ -52,8 +49,10 @@ def get_or_create(request):
         task_type = task_config.get('type', None)
 
         # task type must be configured
-        if task_type is None: return HttpResponseBadRequest()
-        else: task_type = task_type.lower()
+        if task_type is None:
+            return HttpResponseBadRequest()
+        else:
+            task_type = task_type.lower()
 
         # if this is an immediate task, submit it now
         if task_type == 'now':
@@ -64,15 +63,14 @@ def get_or_create(request):
             # create task
             task = create_immediate_task(request.user, task_config)
 
-            # submit head of Celery (chain ;)
-            prep_environment.s(task.guid).apply_async(
-                countdown=5,  # TODO: make initial delay configurable
-                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+            # submit to Celery
+            (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
+                                                                                        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
             task_dict = q.task_to_dict(task)
 
-        # otherwise submit delayed or repeating task
+        # otherwise register delayed or repeating task
         elif task_type == 'after':
             task, created = create_delayed_task(request.user, task_config)
             task_dict = q.delayed_task_to_dict(task)
