@@ -182,28 +182,8 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
-def configure_task_environment(task: Task):
-    log_task_orchestrator_status(task, [f"Verifying configuration"])
-    async_to_sync(push_task_channel_event)(task)
-
-    parse_errors, cli_options = parse_task_cli_options(task)
-
-    if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
-
-    work_dir = join(task.agent.workdir, task.guid)
-    log_task_orchestrator_status(task, [f"Creating working directory"])
-    async_to_sync(push_task_channel_event)(task)
-
-    ssh = get_task_ssh_client(task)
-    with ssh:
-        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
-        log_task_orchestrator_status(task, [f"Uploading task"])
-        upload_task_script(task, ssh, cli_options)
-        async_to_sync(push_task_channel_event)(task)
-
-
-def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
-    # task working directory
+def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
+    # working directory
     work_dir = join(task.agent.workdir, task.workdir)
 
     # NOTE: paramiko is finicky about connecting to certain hosts.
@@ -243,22 +223,8 @@ def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
             logger.info(f"Uploading launcher script for task {task.guid} using command: {cmd}")
             subprocess.run(cmd, shell=True)
     else:
-        # set default directory for input files
-        if 'input' in options:
-            path = options['input']['path']
-            kind = options['input']['kind']
-            many = kind == InputKind.DIRECTORY or kind == InputKind.FILES
-            options['input']['path'] = 'input' if path == '' or many else f"input/{path.rpartition('/')[2]}"
-
-        # TODO support for more schedulers
-        options['jobqueue'] = {'slurm': options['jobqueue']}
-
-        # upload the config file for the CLI
-        logger.info(f"Uploading config for task {task.guid}")
-        with ssh.client.open_sftp() as sftp:
-            sftp.chdir(work_dir)
-            with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
-                yaml.dump(del_none(options), cli_file, default_flow_style=False)
+        # TODO upload list of input files for SLURM job arrays
+        pass
 
 
 def submit_task_to_scheduler(task: Task, ssh: SSH) -> str:
@@ -504,8 +470,7 @@ def list_result_files(task: Task) -> List[dict]:
     return results
 
 
-
-def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
+def parse_task_options(task: Task) -> (List[str], TaskOptions):
     config = task.workflow
     config['workdir'] = join(task.agent.workdir, task.guid)
     config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"

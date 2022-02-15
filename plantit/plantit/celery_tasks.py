@@ -25,7 +25,7 @@ from plantit.queries import refresh_user_workflow_cache, refresh_online_users_wo
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
-from plantit.task_lifecycle import create_immediate_task, configure_task_environment, submit_task_to_scheduler, check_job_logs_for_progress, \
+from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_task_to_scheduler, check_job_logs_for_progress, \
     get_job_status_and_walltime, list_result_files, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
 from plantit.tasks.models import Task, TaskStatus
@@ -47,8 +47,12 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     task.save()
 
     # submit to Celery
-    (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
-                                                                                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+    (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+        countdown=5,  # TODO: make initial delay configurable
+        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+
+    log_task_orchestrator_status(task, [f"Created {task.user.username}'s (delayed) task {task.guid} on {task.agent.name}"])
+    async_to_sync(push_task_channel_event)(task)
 
 
 @app.task(track_started=True)
@@ -65,20 +69,29 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
     task.save()
 
     # submit to Celery
-    (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
-                                                                                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+    (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+        countdown=5,  # TODO: make initial delay configurable
+        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+
+    log_task_orchestrator_status(task, [f"Created {task.user.username}'s (repeating) task {task.guid} on {task.agent.name}"])
+    async_to_sync(push_task_channel_event)(task)
 
 
-##################
-# task lifecycle #
-##################
+####################
+#  Task Lifecycle  #
+####################
+#
 # prep environment
+# share dataset
 # submit script
 # poll status
-# check results
-# check transfer
+# (if successful)
+#   check results
+#   check transfer
+# unshare dataset
 # clean up
-
+#
+####################
 
 def __handle_job_success(task: Task, message: str):
     # update the task and persist it
@@ -97,8 +110,8 @@ def __handle_job_success(task: Task, message: str):
     if task.user.profile.push_notification_status == 'enabled':
         SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
 
-    # check that we have the results we expect and then clean up the task
-    (test_results.s(task.guid) | tidy_up.s()).apply_async()
+    # check that we have the results we expect, revoke access to the user's datasets, and then clean up the task
+    (test_results.s(task.guid) | unshare_data.s() | tidy_up.s()).apply_async()
 
 
 def __handle_failure(task: Task, message: str):
@@ -119,8 +132,8 @@ def __handle_failure(task: Task, message: str):
     if task.user.profile.push_notification_status == 'enabled':
         SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
 
-    # schedule cleanup
-    tidy_up.s(task.guid).apply_async()
+    # revoke access to the user's datasets then clean up the task
+    (unshare_data.s(task.guid) | tidy_up.s()).apply_async()
 
     # cleanup_delay = int(environ.get('TASKS_CLEANUP_MINUTES')) * 60
     # tidy_up.s(task.guid).apply_async(countdown=cleanup_delay, priority=2)
@@ -138,15 +151,69 @@ def prep_environment(self, guid: str):
         return
 
     try:
-        # upload workflow and job script to deployment target
-        configure_task_environment(task)
-        log_task_orchestrator_status(task, [f"Prepared environment for {task.user.username}'s task {task.guid} on {task.agent.name}"])
+        # check task configuration for errors
+        parse_errors, options = parse_task_options(task)
+        if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+
+        log_task_orchestrator_status(task, [f"Verified task configuration"])
+        async_to_sync(push_task_channel_event)(task)
+
+        # create working directory and upload deployment artifacts to agent
+        work_dir = join(task.agent.workdir, task.guid)
+        ssh = get_task_ssh_client(task)
+        with ssh:
+            list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
+            upload_deployment_artifacts(task, ssh, options)
+
+        log_task_orchestrator_status(task, [f"Prepared environment for task {task.guid} on {task.agent.name}"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
     except Exception:
         self.request.callbacks = None
         __handle_failure(task, f"Failed to prep environment for task {task.guid}: {traceback.format_exc()}")
+
+
+@app.task(track_started=True, bind=True)
+def share_data(self, guid: str):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    try:
+        options = task.workflow
+        paths = [
+            {
+                'path': options['output']['to'],
+                'permission': 'write'
+            }
+        ]
+        if 'input' in options:
+            paths.append({
+                'path': options['input']['path'],
+                'permission': 'read'
+            })
+
+        # share the user's source and target collections with the plantit CyVerse user
+        terrain.share_dir({
+            'sharing': [
+                {
+                    'user': task.user.username,
+                    'paths': paths
+                }
+            ]
+        })
+
+        log_task_orchestrator_status(task, [f"Granted temporary data access for task {task.guid} on {task.agent.name}"])
+        async_to_sync(push_task_channel_event)(task)
+
+        return guid
+    except Exception:
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to grant temporary data access for task {task.guid}: {traceback.format_exc()}")
 
 
 @app.task(track_started=True, bind=True)
@@ -368,6 +435,48 @@ def test_push(self, guid: str, attempts: int = 0):
     except Exception:
         self.request.callbacks = None
         __handle_failure(task, f"Failed to test CyVerse transfer for task {task.guid} job {task.job_id}: {traceback.format_exc()}")
+
+
+@app.task(track_started=True, bind=True)
+def unshare_data(self, guid: str):
+    try:
+        task = Task.objects.get(guid=guid)
+    except:
+        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    try:
+        options = task.workflow
+        paths = [
+            {
+                'path': options['output']['to'],
+                'permission': 'write'
+            }
+        ]
+        if 'input' in options:
+            paths.append({
+                'path': options['input']['path'],
+                'permission': 'read'
+            })
+
+        # revoke the plantit CyVerse user's access to the source and target collections
+        terrain.unshare_dir({
+            'unshare': [
+                {
+                    'user': task.user.username,
+                    'paths': paths
+                }
+            ]
+        })
+
+        log_task_orchestrator_status(task, [f"Revoked temporary data access for task {task.guid} on {task.agent.name}"])
+        async_to_sync(push_task_channel_event)(task)
+
+        return guid
+    except Exception:
+        self.request.callbacks = None
+        __handle_failure(task, f"Failed to revoke temporary data access for task {task.guid}: {traceback.format_exc()}")
 
 
 @app.task()

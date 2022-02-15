@@ -161,13 +161,13 @@ async def create_dir(path: str, token: str, timeout: int = 15):
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def share_dir(dir: dict, token: str, timeout: int = 15):
+async def share_dir(data: dict, token: str, timeout: int = 15):
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json;charset=utf-8"
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(dir))
+        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(data))
         response.raise_for_status()
 
 
@@ -178,14 +178,13 @@ async def share_dir(dir: dict, token: str, timeout: int = 15):
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def unshare_dir(path: str, token: str, timeout: int = 15):
+async def unshare_dir(data: dict, token: str, timeout: int = 15):
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": 'application/json;charset=utf-8'
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/unshare",
-                                     data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
+        response = await client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps(data))
         response.raise_for_status()
 
 

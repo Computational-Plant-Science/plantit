@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view
 
 import plantit.queries as q
 from plantit import settings
-from plantit.celery_tasks import prep_environment, submit_job, poll_job
+from plantit.celery_tasks import prep_environment, share_data, submit_job, poll_job
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
@@ -63,9 +63,10 @@ def get_or_create(request):
             # create task
             task = create_immediate_task(request.user, task_config)
 
-            # submit to Celery
-            (prep_environment.s(task.guid) | submit_job.s() | poll_job.s()).apply_async(countdown=5,  # TODO: make initial delay configurable
-                                                                                        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+            # submit head of Celery (task chain ;)
+            (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+                countdown=5,  # TODO: make initial delay configurable
+                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
             task_dict = q.task_to_dict(task)

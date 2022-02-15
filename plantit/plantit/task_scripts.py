@@ -54,16 +54,10 @@ def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str
         commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
         commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}\n")
         commands.append("$LAUNCHER_DIR/paramrun\n")
-    # otherwise use the CLI
+    # otherwise use SLURM job arrays
     else:
-        command = f"plantit run {task.guid}.yaml"
-        if task.agent.job_array and len(inputs) > 0:
-            command += f" --slurm_job_array"
-
-        if docker_username is not None and docker_password is not None:
-            command += f" --docker_username {docker_username} --docker_password {docker_password}"
-
-        commands.append(command)
+        # TODO: compose script to parse SLURM task ID and read appropriate input filename from file
+        pass
 
     newline = '\n'
     logger.debug(f"Using CLI commands: {newline.join(commands)}")
@@ -180,21 +174,19 @@ def compose_task_run_script(task: Task, options: TaskOptions, template: str) -> 
     else:
         inputs = []
 
-    resource_requests = compose_task_resource_requests(task, options, inputs)
-    cli_pull = compose_task_pull_command(task, options)
-    cli_run = compose_task_run_commands(task, options, inputs)
-    cli_clean = compose_task_clean_commands(task)
-    cli_zip = compose_task_zip_command(task, options)
-    cli_push = compose_task_push_command(task, options)
+    resources = compose_task_resource_requests(task, options, inputs)
+    pull = compose_task_pull_command(task, options)
+    run = compose_task_run_commands(task, options, inputs)
+    zip = compose_task_zip_command(task, options)
+    push = compose_task_push_command(task, options)
 
     return template_header + \
-           resource_requests + \
+           resources + \
            [task.agent.pre_commands] + \
-           [cli_pull] + \
-           cli_run + \
-           [cli_clean] + \
-           [cli_zip] + \
-           [cli_push]
+           [pull] + \
+           run + \
+           [zip] + \
+           [push]
 
 
 def compose_task_singularity_command(
