@@ -21,7 +21,7 @@ from plantit.agents.models import AgentScheduler
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.celery_tasks import prepare_task_environment, submit_task, poll_job_status
+from plantit.celery_tasks import prep_environment, send_pull, poll_pull
 from plantit.utils.tasks import parse_task_time_limit, get_task_orchestrator_log_file_path, \
     get_task_scheduler_log_file_path, \
     get_task_agent_log_file_path
@@ -64,13 +64,10 @@ def get_or_create(request):
             # create task
             task = create_immediate_task(request.user, task_config)
 
-            # submit task chain
-            (prepare_task_environment.s(task.guid) | \
-             submit_task.s() | \
-             poll_job_status.s()).apply_async(
+            # submit head of Celery (chain ;)
+            prep_environment.s(task.guid).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
-                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS),
-                priority=1)
+                soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
             task_dict = q.task_to_dict(task)
