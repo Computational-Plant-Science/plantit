@@ -16,6 +16,7 @@ from datetime import timedelta
 import yaml
 from asgiref.sync import async_to_sync
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
@@ -24,6 +25,7 @@ from paramiko.ssh_exception import AuthenticationException, ChannelException, No
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import docker as docker
+import plantit.terrain as terrain
 from plantit.agents.models import Agent, AgentScheduler
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
@@ -182,6 +184,10 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
+def get_inputs(task: Task, options: TaskOptions) -> List[str]:
+      # convert to names
+
+
 def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     # working directory
     work_dir = join(task.agent.workdir, task.workdir)
@@ -197,34 +203,44 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     #   it probably means the remote host's disk is full.
     #   could catch the error and show an alert in the UI.
 
-    # if this workflow has input files, create a directory for them
+    # if this workflow has input files...
     if 'input' in options:
+        # create a directory for them
         logger.info(f"Creating input directory for task {task.guid}")
         list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}"))
 
-    # compose the task script, write a temporary local copy, then transfer it to the deployment target
+        # get their filenames
+        if 'input' not in options or options['input'] is None: inputs = []
+        kind = options['input']['kind']
+        path = options['input']['path']
+        token = task.user.profile.cyverse_access_token
+        paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
+        inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
+    else: inputs = []
+
+    # compose the task script and transfer it to the selected agent
     with tempfile.NamedTemporaryFile() as task_script:
-        lines = compose_task_run_script(task, options, environ.get('TASKS_TEMPLATE_SCRIPT_SLURM'))
+        lines = compose_task_run_script(task, options, inputs)
         for line in lines: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
-        logger.info(os.stat(task_script.name))
-        cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh"
-        logger.info(f"Uploading job script for task {task.guid} using command: {cmd}")
-        subprocess.run(cmd, shell=True)
+        logger.info(f"Uploading job script for task {task.guid}")
+        subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
 
     # if the selected agent uses the TACC Launcher, create and upload a launcher script too
     if task.agent.launcher:
         with tempfile.NamedTemporaryFile() as launcher_script:
-            launcher_commands = compose_task_launcher_script(task, options)
+            launcher_commands = compose_task_launcher_script(task, options, inputs)
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
-            logger.info(os.stat(launcher_script.name))
-            cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}"
-            logger.info(f"Uploading launcher script for task {task.guid} using command: {cmd}")
-            subprocess.run(cmd, shell=True)
+            logger.info(f"Uploading launcher script for task {task.guid}")
+            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.LAUNCHER_SCRIPT_NAME)}", shell=True)
+    # otherwise upload a list of inputs for the SLURM job array
     else:
-        # TODO upload list of input files for SLURM job arrays
-        pass
+        with tempfile.NamedTemporaryFile() as inputs_file:
+            for line in inputs: inputs_file.write(f"{line}\n".encode('utf-8'))
+            inputs_file.seek(0)
+            logger.info(f"Uploading inputs file for task {task.guid}")
+            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {inputs_file.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.INPUTS_FILE_NAME)}", shell=True)
 
 
 def submit_task_to_scheduler(task: Task, ssh: SSH) -> str:

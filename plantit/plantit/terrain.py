@@ -195,7 +195,7 @@ async def unshare_dir(data: dict, token: str, timeout: int = 15):
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-def get_file(path: str, token: str) -> List[str]:
+def get_file(path: str, token: str) -> dict:
     with requests.post(
             "https://de.cyverse.org/terrain/secured/filesystem/stat",
             data=json.dumps({'paths': [path]}),

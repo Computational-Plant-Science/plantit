@@ -11,20 +11,64 @@ from typing import List
 from django.conf import settings
 
 from plantit import terrain as terrain
-from plantit.agents.models import AgentScheduler
 from plantit.task_resources import push_task_channel_event, log_task_orchestrator_status
 
-from plantit.tasks.models import Task, InputKind, TaskOptions, EnvironmentVariable, BindMount, Parameter
+from plantit.tasks.models import Task, InputKind, TaskOptions, Parameter, EnvironmentVariable
 from plantit.utils.agents import has_virtual_memory
-from plantit.utils.tasks import format_bind_mount
+
+from plantit.plantit.singularity import compose_singularity_invocation
 
 logger = logging.getLogger(__name__)
 
 
-def compose_task_pull_command(task: Task, options: TaskOptions) -> str:
-    if 'input' not in options: return ''
+# commands
+
+def compose_headers(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    nodes = calculate_node_count(task, inputs)
+    tasks = min(len(inputs), task.agent.max_cores)
+    task.inputs_detected = len(inputs)
+    task.save()
+
+    if 'jobqueue' not in options: return []
+    gpus = options['gpus'] if 'gpus' in options else 0
+    jobqueue = options['jobqueue']
+    commands = []
+
+    if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
+    if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
+        memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
+        commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
+    if 'walltime' in jobqueue or 'time' in jobqueue:
+        walltime = calculate_walltime(task, options, inputs)
+        async_to_sync(push_task_channel_event)(task)
+        task.job_requested_walltime = walltime
+        task.save()
+        commands.append(f"#SBATCH --time={walltime}")
+    if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
+    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
+    if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
+    if len(inputs) > 0 and options['input']['kind'] == 'files':
+        if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
+        commands.append(f"#SBATCH -N {nodes}")
+        commands.append(f"#SBATCH --ntasks={tasks if inputs is not None and not task.agent.job_array else 1}")
+    else:
+        commands.append(f"#SBATCH -N 1")
+        commands.append("#SBATCH --ntasks=1")
+    commands.append("#SBATCH --mail-type=END,FAIL")
+    commands.append(f"#SBATCH --mail-user={task.user.email}")
+    commands.append("#SBATCH --output=plantit.%j.out")
+    commands.append("#SBATCH --error=plantit.%j.err")
+
+    newline = '\n'
+    logger.debug(f"Using headers: {newline.join(commands)}")
+    return commands
+
+
+def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
+    if 'input' not in options: return []
     input = options['input']
-    if input is None: return ''
+    if input is None: return []
     kind = input['kind']
 
     if kind != InputKind.FILE and 'patterns' in input:
@@ -41,12 +85,10 @@ def compose_task_pull_command(task: Task, options: TaskOptions) -> str:
               f""f" --terrain_token {task.user.profile.cyverse_access_token}"
 
     logger.debug(f"Using pull command: {command}")
-    return command
+    return [command]
 
 
-def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
-    docker_username = environ.get('DOCKER_USERNAME', None)
-    docker_password = environ.get('DOCKER_PASSWORD', None)
+def compose_container_commands(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
     commands = []
 
     # if this resource uses TACC's launcher, create a parameter sweep script to invoke the Singularity container
@@ -60,25 +102,11 @@ def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str
         pass
 
     newline = '\n'
-    logger.debug(f"Using CLI commands: {newline.join(commands)}")
+    logger.debug(f"Using container commands: {newline.join(commands)}")
     return commands
 
 
-def compose_task_clean_commands(task: Task) -> str:
-    docker_username = environ.get('DOCKER_USERNAME', None)
-    docker_password = environ.get('DOCKER_PASSWORD', None)
-    cmd = f"plantit clean *.out -p {docker_username} -p {docker_password}"
-    cmd += f"\nplantit clean *.err -p {docker_username} -p {docker_password}"
-
-    if task.agent.launcher:
-        workdir = join(task.agent.workdir, task.workdir)
-        launcher_script = join(workdir, os.environ.get('LAUNCHER_SCRIPT_NAME'))
-        cmd += f"\nplantit clean {launcher_script} -p {docker_username} -p {docker_password} "
-
-    return cmd
-
-
-def compose_task_zip_command(task: Task, options: TaskOptions) -> str:
+def compose_zip_commands(task: Task, options: TaskOptions) -> List[str]:
     if 'output' in options:
         output = options['output']
     else:
@@ -124,10 +152,10 @@ def compose_task_zip_command(task: Task, options: TaskOptions) -> str:
             command = f"{command} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
 
     logger.debug(f"Using zip command: {command}")
-    return command
+    return [command]
 
 
-def compose_task_push_command(task: Task, options: TaskOptions) -> str:
+def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     command = ''
     if 'output' not in options: return command
     output = options['output']
@@ -158,138 +186,31 @@ def compose_task_push_command(task: Task, options: TaskOptions) -> str:
         command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
 
     logger.debug(f"Using push command: {command}")
-    return command
+    return [command]
 
 
-def compose_task_run_script(task: Task, options: TaskOptions, template: str) -> List[str]:
-    with open(template, 'r') as template_file:
-        template_header = [line.strip() for line in template_file if line != '']
+# scripts
 
-    if 'input' in options and options['input'] is not None:
-        kind = options['input']['kind']
-        path = options['input']['path']
-        cyverse_token = task.user.profile.cyverse_access_token
-        inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path,
-                                                                                                         cyverse_token)
-    else:
-        inputs = []
+def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+        template = [line.strip() for line in template_file if line != '']
+        headers = compose_headers(task, options, inputs)
+        pull = compose_pull_commands(task, options)
+        run = compose_container_commands(task, options, inputs)
+        zip = compose_zip_commands(task, options)
+        push = compose_push_commands(task, options)
 
-    resources = compose_task_resource_requests(task, options, inputs)
-    pull = compose_task_pull_command(task, options)
-    run = compose_task_run_commands(task, options, inputs)
-    zip = compose_task_zip_command(task, options)
-    push = compose_task_push_command(task, options)
-
-    return template_header + \
-           resources + \
-           [task.agent.pre_commands] + \
-           [pull] + \
-           run + \
-           [zip] + \
-           [push]
+        return template + \
+               headers + \
+               [task.agent.pre_commands] + \
+               pull + \
+               run + \
+               zip + \
+               push
 
 
-def compose_task_singularity_command(
-        work_dir: str,
-        image: str,
-        command: str,
-        env: List[EnvironmentVariable] = None,
-        bind_mounts: List[BindMount] = None,
-        parameters: List[Parameter] = None,
-        no_cache: bool = False,
-        gpus: int = 0,
-        shell: str = None,
-        docker_username: str = None,
-        docker_password: str = None,
-        index: int = None) -> str:
-
-    cmd = ''
-
-    # prepend environment variables in SINGULARITYENV_<key> format
-    if env is not None:
-        if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}=\"{v['value']}\"" for v in env])
-        cmd += ' '
-
-    # substitute parameters
-    if parameters is None: parameters = []
-    if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
-    parameters.append(Parameter(key='WORKDIR', value=work_dir))
-    for parameter in parameters:
-        key = parameter['key'].upper().replace(' ', '_')
-        val = str(parameter['value'])
-        cmd += f" SINGULARITYENV_{key}=\"{val}\""
-
-    # singularity invocation and working directory
-    cmd += f" singularity exec --home {work_dir}"
-
-    # add bind mount arguments
-    if bind_mounts is not None and len(bind_mounts) > 0:
-        cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-
-    # whether to use the Singularity cache
-    if no_cache: cmd += ' --disable-cache'
-
-    # whether to use GPUs (Nvidia)
-    if gpus: cmd += ' --nv'
-
-    # append the command
-    if shell is None: shell = 'sh'
-    cmd += f" {image} {shell} -c '{command}'"
-
-    # don't want to reveal secrets, so log the command before prepending secret env vars
-    logger.debug(f"Using command: '{cmd}'")
-
-    # docker auth info (optional)
-    if docker_username is not None and docker_password is not None:
-        cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
-
-    return cmd
-
-
-def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
-    nodes = calculate_node_count(task, inputs)
-    tasks = min(len(inputs), task.agent.max_cores)
-    task.inputs_detected = len(inputs)
-    task.save()
-
-    if 'jobqueue' not in options: return []
-    gpus = options['gpus'] if 'gpus' in options else 0
-    jobqueue = options['jobqueue']
-    commands = []
-
-    if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
-    if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
-        memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
-        commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
-    if 'walltime' in jobqueue or 'time' in jobqueue:
-        walltime = calculate_walltime(task, options, inputs)
-        async_to_sync(push_task_channel_event)(task)
-        task.job_requested_walltime = walltime
-        task.save()
-        commands.append(f"#SBATCH --time={walltime}")
-    if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
-    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
-    if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
-    if len(inputs) > 0 and options['input']['kind'] == 'files':
-        if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
-        commands.append(f"#SBATCH -N {nodes}")
-        commands.append(f"#SBATCH --ntasks={tasks if inputs is not None and not task.agent.job_array else 1}")
-    else:
-        commands.append(f"#SBATCH -N 1")
-        commands.append("#SBATCH --ntasks=1")
-    commands.append("#SBATCH --mail-type=END,FAIL")
-    commands.append(f"#SBATCH --mail-user={task.user.email}")
-    commands.append("#SBATCH --output=plantit.%j.out")
-    commands.append("#SBATCH --error=plantit.%j.err")
-
-    newline = '\n'
-    logger.debug(f"Using resource requests: {newline.join(commands)}")
-    return commands
-
-
-def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
-    lines = []
+def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    lines: List[str] = []
     work_dir = options['workdir']
     image = options['image']
     command = options['command']
@@ -305,60 +226,52 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
     docker_password = environ.get('DOCKER_PASSWORD', None)
 
     if 'input' in options:
-        files = list_input_files(task, options) if (
-                'input' in options and options['input']['kind'] == 'files') else []
-        task.inputs_detected = len(files)
-        task.save()
-
         if options['input']['kind'] == 'files':
-            for i, file in enumerate(files):
-                file_name = file.rpartition('/')[2]
-                lines.append(compose_task_singularity_command(
+            for i, file in enumerate(inputs):
+                lines = lines + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
-                    command=command,
+                    commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file))],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,
                     shell=shell,
                     docker_username=docker_username,
                     docker_password=docker_password,
-                    index=i))
+                    index=i)
         elif options['input']['kind'] == 'directory':
-            dir_name = 'input'
-            lines.append(compose_task_singularity_command(
+            lines = lines + compose_singularity_invocation(
                 work_dir=work_dir,
                 image=image,
-                command=command,
+                commands=command,
                 env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], dir_name))],
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
                 bind_mounts=bind_mounts,
                 no_cache=no_cache,
                 gpus=gpus,
                 shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password))
+                docker_password=docker_password)
         elif options['input']['kind'] == 'file':
-            file_name = options['input']['path'].rpartition('/')[2]
-            lines.append(compose_task_singularity_command(
+            lines = lines + compose_singularity_invocation(
                 work_dir=work_dir,
                 image=image,
-                command=command,
+                commands=command,
                 env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', inputs[0]))],
                 bind_mounts=bind_mounts,
                 no_cache=no_cache,
                 gpus=gpus,
                 shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password))
+                docker_password=docker_password)
     else:
-        lines.append(compose_task_singularity_command(
+        lines = lines + compose_singularity_invocation(
             work_dir=work_dir,
             image=image,
-            command=command,
+            commands=command,
             env=env,
             parameters=parameters,
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
@@ -366,22 +279,12 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
             gpus=gpus,
             shell=shell,
             docker_username=docker_username,
-            docker_password=docker_password))
+            docker_password=docker_password)
 
     return lines
 
 
 # utils
-
-def list_input_files(task: Task, options: TaskOptions) -> List[str]:
-    input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
-    msg = f"Found {len(input_files)} input file(s)"
-    log_task_orchestrator_status(task, [msg])
-    async_to_sync(push_task_channel_event)(task)
-    logger.info(msg)
-
-    return input_files
-
 
 def calculate_node_count(task: Task, inputs: List[str]):
     node_count = min(len(inputs), task.agent.max_nodes)
