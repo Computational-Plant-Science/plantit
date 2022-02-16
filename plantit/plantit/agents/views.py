@@ -67,8 +67,7 @@ def healthcheck(request, name):
         if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
 
-    body = json.loads(request.body.decode('utf-8'))
-    healthy, output = is_healthy(agent, body['auth'])
+    healthy, output = is_healthy(agent)
     check = {
         'timestamp': timezone.now().isoformat(),
         'healthy': healthy,

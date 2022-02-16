@@ -272,25 +272,23 @@ REST_FRAMEWORK = {
 
 TAGGIT_CASE_INSENSITIVE = True
 
+CACHES = {
+    'default': {
+        # TODO reinstate redis once we update to Django 4
+        # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # 'LOCATION': 'redis://redis:6379',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
+
 CACHEOPS_REDIS = {
     'host': 'redis',  # redis-server is on same machine
     'port': 6379,  # default redis port
 }
 
-# Alternatively the redis connection can be defined using a URL:
-# CACHEOPS_REDIS = "redis://redis:6379/1"
-
 CACHEOPS = {
-    # cache User.objects.get() calls and all other plantit model gets for 15 minutes
-    # 'auth.user': {'ops': 'get', 'timeout': 60 * 15, 'cache_on_save': True},
     'plantit.*': {'ops': 'get', 'timeout': 60 * 15},
-
-    # Enable manual caching on all other models with default timeout of an hour
-    # Use Post.objects.cache().get(...)
-    #  or Tags.objects.filter(...).order_by(...).cache()
-    # to cache particular ORM request.
-    # Invalidation is still automatic
-    # '*.*': {'ops': (), 'timeout': 60*60},
 }
 
 # SWAGGER_SETTINGS = {

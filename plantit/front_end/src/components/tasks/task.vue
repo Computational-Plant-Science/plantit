@@ -2335,7 +2335,7 @@ export default {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
-                height: 220,
+                height: 180,
                 legend: {
                     orientation: 'h',
                     font: {

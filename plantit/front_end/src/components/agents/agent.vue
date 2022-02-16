@@ -181,9 +181,8 @@
                                                 </h5>
                                                 <b-row>
                                                     <b-col>
-                                                        <small>executor</small>
-                                                    </b-col>
-                                                    <b-col cols="9">
+                                                        <small>scheduler</small>
+                                                        <br/>
                                                         <b class="ml-3">
                                                             {{
                                                                 getAgent.executor
@@ -197,8 +196,7 @@
                                                             >working
                                                             directory</small
                                                         >
-                                                    </b-col>
-                                                    <b-col cols="9">
+                                                      <br/>
                                                         <b class="ml-3">
                                                             {{
                                                                 getAgent.workdir
@@ -209,11 +207,10 @@
                                                 <b-row>
                                                     <b-col>
                                                         <small
-                                                            >pre-commands</small
+                                                            >setup commands</small
                                                         >
-                                                    </b-col>
-                                                    <b-col cols="9"
-                                                        ><b class="ml-3"
+                                                      <br/>
+                                                        <b class="ml-3"
                                                             ><code>{{
                                                                 getAgent.pre_commands
                                                             }}</code></b
@@ -262,8 +259,8 @@
                                                             getAgent.max_mem
                                                         ) > 0
                                                     "
-                                                    >{{ getAgent.max_mem
-                                                    }}<small>
+                                                    ><b>{{ getAgent.max_mem
+                                                  }}</b><small>
                                                         GB memory</small
                                                     ></span
                                                 >
@@ -296,12 +293,12 @@
                                                 >
                                             </b-col>
                                         </b-row>
-                                        <hr />
+                                        <br />
                                         <b-row>
-                                            <b-col
-                                                class="ml-0"
-                                                md="auto"
-                                                align-self="end"
+                                            <b-col md="auto">
+                                                <h5>Connection Status</h5> </b-col
+                                            ><b-col></b-col
+                                            ><b-col class="ml-0" md="auto"
                                                 ><b-button
                                                     class="ml-0"
                                                     :variant="
@@ -310,6 +307,7 @@
                                                             : 'white'
                                                     "
                                                     size="sm"
+                                                    :disabled="checkingConnection"
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Verify connection to ' +
@@ -328,26 +326,27 @@
                                                                 ? 'light'
                                                                 : 'dark'
                                                         "
-                                                        class="ml-2 mb-1"
+                                                        class="ml-2"
                                                     ></b-spinner>
                                                     <i
                                                         v-else
                                                         class="fas fa-wave-square fa-fw"
                                                     ></i>
-                                                    Check Connection</b-button
+                                                    Check</b-button
                                                 ></b-col
                                             >
                                         </b-row>
+                                        <Plotly
+                                            v-if="healthchecks.length > 0"
+                                            :data="healthchecksTimeseriesData"
+                                            :layout="
+                                                healthchecksTimeseriesLayout
+                                            "
+                                        ></Plotly>
                                     </b-col>
                                 </b-row>
                             </div>
                         </b-card>
-                        <br />
-                        <Plotly
-                            v-if="healthchecks.length > 0"
-                            :data="healthchecksTimeseriesData"
-                            :layout="healthchecksTimeseriesLayout"
-                        ></Plotly>
                     </b-col>
                 </b-row>
             </div>
@@ -417,8 +416,14 @@ export default {
                     x: this.healthchecks.map((t) =>
                         moment(t.timestamp).format('YYYY-MM-DD HH:mm:ss')
                     ),
-                    y: this.healthchecks.map((t) =>
-                        t.healthy ? 'Healthy' : 'Unhealthy'
+                    y: this.healthchecks.map(
+                        () =>
+                            //t.healthy ? 'Healthy' : 'Unhealthy'
+                            ''
+                    ),
+                    hovertemplate: '<br>%{text}<br><extra></extra>',
+                    text: this.healthchecks.map((t) =>
+                        t.healthy ? `Succeeded` : `Failed`
                     ),
                     mode: 'markers',
                     type: 'scatter',
@@ -443,9 +448,9 @@ export default {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
-                height: 250,
+                height: 150,
                 title: {
-                    text: 'Recent Healthchecks',
+                    // text: 'Recent Healthchecks',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
@@ -458,7 +463,7 @@ export default {
                 },
                 xaxis: {
                     showgrid: false,
-                    showline: true,
+                    showline: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -473,6 +478,7 @@ export default {
                 },
                 yaxis: {
                     showticklabels: false,
+                    showline: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',

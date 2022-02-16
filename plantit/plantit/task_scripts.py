@@ -98,8 +98,6 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
         commands.append("$LAUNCHER_DIR/paramrun\n")
     # otherwise use SLURM job arrays
     else:
-        commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID test.txt | tail -1)")
-
         work_dir = options['workdir']
         image = options['image']
         command = options['command']
@@ -118,7 +116,8 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
 
         if 'input' in options:
             if options['input']['kind'] == 'files' or options['input']['kind'] == 'file':
-                commands.append(compose_singularity_invocation(
+                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID test.txt | tail -1)")
+                commands = commands + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
                     commands=command,
@@ -129,9 +128,9 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
                     gpus=gpus,
                     shell=shell,
                     docker_username=docker_username,
-                    docker_password=docker_password))
+                    docker_password=docker_password)
             elif options['input']['kind'] == 'directory':
-                commands.append(compose_singularity_invocation(
+                commands = commands + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
                     commands=command,
@@ -142,9 +141,9 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
                     gpus=gpus,
                     shell=shell,
                     docker_username=docker_username,
-                    docker_password=docker_password))
+                    docker_password=docker_password)
         else:
-            commands.append(compose_singularity_invocation(
+            commands = commands + compose_singularity_invocation(
                 work_dir=work_dir,
                 image=image,
                 commands=command,
@@ -155,7 +154,7 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
                 gpus=gpus,
                 shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password))
+                docker_password=docker_password)
 
     newline = '\n'
     logger.debug(f"Using container commands: {newline.join(commands)}")
@@ -380,7 +379,8 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     # round up to the nearest hour
     job_walltime = ceil(walltime.total_seconds() / 60 / 60)
     agent_walltime = int(int(task.agent.max_walltime) / 60)
-    hours = f"{min(job_walltime, agent_walltime)}"
+    hours = min(job_walltime, agent_walltime)
+    hours = '1' if hours == 0 else f"{hours}"
     if len(hours) == 1: hours = f"0{hours}"
     adjusted_str = f"{hours}:00:00"
 

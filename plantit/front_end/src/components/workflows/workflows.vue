@@ -315,6 +315,7 @@ export default {
             this.context = context;
         },
         sortWorkflows(a, b) {
+            // sort by name alphabetically
             if (a.config.name === b.config.name) {
                 if (a.branch.name < b.branch.name) return -1;
                 if (a.branch.name > b.branch.name) return 1;
@@ -370,9 +371,7 @@ export default {
         },
         getWorkflows() {
             if (this.context === 'Public')
-                return [...this.excludeExamples(this.publicWorkflows)].sort(
-                    this.sortWorkflows
-                );
+                return [...this.excludeExamples(this.publicWorkflows)].sort(this.sortWorkflows);
             else if (this.context === 'Yours')
                 return [...this.userWorkflows].sort(this.sortWorkflows);
             else if (
@@ -390,8 +389,8 @@ export default {
                     this.sortWorkflows
                 );
             else if (this.context === 'Featured') {
-                // todo: filter featured workflows
-                return [];
+                // return [...this.excludeExamples(this.publicWorkflows)]
+              return []
             } else
                 return [...this.orgWorkflows[this.context]].sort(
                     this.sortWorkflows

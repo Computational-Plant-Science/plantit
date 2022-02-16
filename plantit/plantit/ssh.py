@@ -87,8 +87,6 @@ def execute_command(
     errors = []
     for line in iter(lambda: stderr.readline(2048), ""):
         clean = clean_html(line)
-        # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
-        if 'WARNING' not in clean: errors.append(clean)
         logger.warning(f"Received stderr from '{ssh.host}': '{clean}'")
         yield clean
 

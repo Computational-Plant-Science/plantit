@@ -1,44 +1,37 @@
+import json
+import logging
 import os
 import subprocess
 import tempfile
-import logging
 import traceback
-from os import environ
-from os.path import join, isdir
-from pathlib import Path
-from typing import List, Tuple
-
-import binascii
-import json
 import uuid
 from datetime import timedelta
+from os.path import join, isdir
+from pathlib import Path
+from typing import List
 
-import yaml
-from asgiref.sync import async_to_sync
-
+import binascii
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
-
 from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
-from plantit import docker as docker
 import plantit.terrain as terrain
-from plantit.agents.models import Agent, AgentScheduler
+from plantit import docker as docker
+from plantit.agents.models import Agent
+from plantit.keypairs import get_user_private_key_path
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
+from plantit.task_resources import get_task_ssh_client
 from plantit.task_scripts import compose_job_script, compose_launcher_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
-from plantit.utils.misc import del_none
 from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns, \
     get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
-from plantit.keypairs import get_user_private_key_path
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +196,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     if 'input' in options:
         # create a directory for them
         logger.info(f"Creating input directory for task {task.guid}")
-        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}"))
+        for line in list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
 
         # get their filenames
         if 'input' not in options or options['input'] is None: inputs = []
@@ -214,9 +207,9 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
     else: inputs = []
 
-    # compose the task script and transfer it to the selected agent
+    # compose the job script and transfer it to the selected agent
     with tempfile.NamedTemporaryFile() as task_script:
-        lines = compose_task_run_script(task, options, inputs)
+        lines = compose_job_script(task, options, inputs)
         for line in lines: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
         logger.info(f"Uploading job script for task {task.guid}")
@@ -225,7 +218,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     # if the selected agent uses the TACC Launcher, create and upload a launcher script too
     if task.agent.launcher:
         with tempfile.NamedTemporaryFile() as launcher_script:
-            launcher_commands = compose_task_launcher_script(task, options, inputs)
+            launcher_commands = compose_launcher_script(task, options, inputs)
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
             logger.info(f"Uploading launcher script for task {task.guid}")
@@ -439,7 +432,6 @@ def list_result_files(task: Task) -> List[dict]:
                     'exists': exists
                 }
                 results.append(output)
-
 
                 # file_path = join(workdir, expected_name)
                 # stdin, stdout, stderr = ssh.client.exec_command(f"test -e {file_path} && echo exists")
