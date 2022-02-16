@@ -88,18 +88,74 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     return [command]
 
 
-def compose_container_commands(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
 
-    # if this resource uses TACC's launcher, create a parameter sweep script to invoke the Singularity container
+    # if this agent uses TACC's launcher, invoke the parameter sweep script
     if task.agent.launcher:
         commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
         commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}\n")
         commands.append("$LAUNCHER_DIR/paramrun\n")
     # otherwise use SLURM job arrays
     else:
-        # TODO: compose script to parse SLURM task ID and read appropriate input filename from file
-        pass
+        commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID test.txt | tail -1)")
+
+        work_dir = options['workdir']
+        image = options['image']
+        command = options['command']
+        env = options['env']
+        gpus = options[
+            'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+        parameters = (options['parameters'] if 'parameters' in options else []) + [
+            Parameter(key='OUTPUT', value=options['output']['from']),
+            Parameter(key='GPUS', value=str(gpus))]
+        bind_mounts = options['bind_mounts'] if (
+                    'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+        no_cache = options['no_cache'] if 'no_cache' in options else False
+        shell = options['shell'] if 'shell' in options else None
+        docker_username = environ.get('DOCKER_USERNAME', None)
+        docker_password = environ.get('DOCKER_PASSWORD', None)
+
+        if 'input' in options:
+            if options['input']['kind'] == 'files' or options['input']['kind'] == 'file':
+                commands.append(compose_singularity_invocation(
+                    work_dir=work_dir,
+                    image=image,
+                    commands=command,
+                    env=env,
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', '$file'))],
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
+                    gpus=gpus,
+                    shell=shell,
+                    docker_username=docker_username,
+                    docker_password=docker_password))
+            elif options['input']['kind'] == 'directory':
+                commands.append(compose_singularity_invocation(
+                    work_dir=work_dir,
+                    image=image,
+                    commands=command,
+                    env=env,
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
+                    gpus=gpus,
+                    shell=shell,
+                    docker_username=docker_username,
+                    docker_password=docker_password))
+        else:
+            commands.append(compose_singularity_invocation(
+                work_dir=work_dir,
+                image=image,
+                commands=command,
+                env=env,
+                parameters=parameters,
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                no_cache=no_cache,
+                gpus=gpus,
+                shell=shell,
+                docker_username=docker_username,
+                docker_password=docker_password))
 
     newline = '\n'
     logger.debug(f"Using container commands: {newline.join(commands)}")
@@ -196,7 +252,7 @@ def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> L
         template = [line.strip() for line in template_file if line != '']
         headers = compose_headers(task, options, inputs)
         pull = compose_pull_commands(task, options)
-        run = compose_container_commands(task, options, inputs)
+        run = compose_container_commands(task, options)
         zip = compose_zip_commands(task, options)
         push = compose_push_commands(task, options)
 

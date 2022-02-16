@@ -184,10 +184,6 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
-def get_inputs(task: Task, options: TaskOptions) -> List[str]:
-      # convert to names
-
-
 def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     # working directory
     work_dir = join(task.agent.workdir, task.workdir)
