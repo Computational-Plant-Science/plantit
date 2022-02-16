@@ -31,7 +31,7 @@ from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
-from plantit.task_scripts import compose_task_run_script, compose_task_launcher_script
+from plantit.task_scripts import compose_job_script, compose_launcher_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input

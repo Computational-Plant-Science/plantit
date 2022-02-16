@@ -139,7 +139,8 @@ class IDPViewSet(viewsets.ViewSet):
         return redirect(settings.GITHUB_AUTH_URI + '?' + urlencode({
             'client_id': settings.GITHUB_CLIENT_ID,
             'redirect_uri': settings.GITHUB_REDIRECT_URI,
-            'state': get_csrf_token(request)}))
+            'state': get_csrf_token(request),
+            'scope': 'repo'}))
 
     @action(methods=['get'], detail=False)
     def github_handle_temporary_code(self, request):
