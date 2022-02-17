@@ -36,7 +36,7 @@ def get(request, name):
 
         # if the requesting user doesn't own the agent and isn't on its
         # list of authorized users, they're not authorized to access it
-        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
+        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
     return JsonResponse(q.agent_to_dict(agent, request.user))
 
@@ -50,7 +50,7 @@ def exists(request, name):
 
         # if the requesting user doesn't own the agent and isn't on its
         # list of authorized users, they're not authorized to access it
-        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return JsonResponse({'exists': False})
+        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return JsonResponse({'exists': False})
         return JsonResponse({'exists': True})
     except: return JsonResponse({'exists': False})
 
@@ -64,7 +64,7 @@ def healthcheck(request, name):
 
         # if the requesting user doesn't own the agent and isn't on its
         # list of authorized users, they're not authorized to access it
-        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
+        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
 
     healthy, output = is_healthy(agent)
@@ -96,7 +96,7 @@ def healthchecks(request, name):
 
         # if the requesting user doesn't own the agent and isn't on its
         # list of authorized users, they're not authorized to access it
-        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
+        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
 
     redis = RedisClient.get()
@@ -113,6 +113,6 @@ def policies(request, name):
 
         # if the requesting user doesn't own the agent and isn't on its
         # list of authorized users, they're not authorized to access it
-        if not agent.public and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
+        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})

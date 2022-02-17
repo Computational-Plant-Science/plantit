@@ -100,10 +100,8 @@ def __handle_job_success(task: Task, message: str):
     task.job_status = 'COMPLETED'
     task.save()
 
-    # log status to file
+    # log status to file and push to client(s)
     log_task_orchestrator_status(task, [message])
-
-    # push status to client(s)
     async_to_sync(push_task_channel_event)(task)
 
     # push AWS SNS notification
@@ -123,10 +121,8 @@ def __handle_job_failure(task: Task, message: str):
     task.completed = now
     task.save()
 
-    # log status to file
+    # log status to file and push to client(s)
     log_task_orchestrator_status(task, [message])
-
-    # push status to client(s)
     async_to_sync(push_task_channel_event)(task)
 
     # push AWS SNS notification
@@ -421,7 +417,7 @@ def test_results(self, guid: str):
 
 
 @app.task(track_started=True, bind=True)
-def test_push(self, guid: str, attempts: int = 0):
+def test_push(self, guid: str):
     if guid is None:
         logger.warning(f"Aborting")
         self.request.callbacks = None
@@ -440,29 +436,18 @@ def test_push(self, guid: str, attempts: int = 0):
         expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}"))]
 
         if not set(expected).issubset(set(actual)):
-            logger.warning(f"Expected {len(expected)} uploads to CyVerse but found {len(actual)}")
+            message = f"Transfer to CyVerse directory {path} incomplete: expected {len(expected)} files but found {len(actual)}"
+            logger.warning(message)
 
-            # TODO make this configurable
-            max_attempts = 10
-            countdown = 30
-
-            if attempts < max_attempts:
-                message = f"Transfer to CyVerse directory {path} incomplete, checking again in {countdown} seconds (attempt {attempts})"
-                logger.warning(message)
-                test_push.s(guid, attempts + 1).apply_async(countdown=countdown)
-            else:
-                message = f"Transfer to CyVerse directory {path} failed to complete after {attempts * countdown} seconds"
-                logger.info(message)
-
-                # mark the task failed
-                now = timezone.now()
-                task.updated = now
-                task.completed = now
-                task.status = TaskStatus.FAILURE
-                task.transferred = True
-                task.results_transferred = len(expected)
-                task.transfer_path = path
-                task.save()
+            # mark the task failed
+            now = timezone.now()
+            task.updated = now
+            task.completed = now
+            task.status = TaskStatus.FAILURE
+            task.transferred = True
+            task.results_transferred = len(expected)
+            task.transfer_path = path
+            task.save()
         else:
             message = f"Transfer to CyVerse directory {path} completed"
             logger.info(message)
@@ -526,12 +511,13 @@ def unshare_data(self, guid: str):
 
         # mark the task completed
         now = timezone.now()
-        task.status = TaskStatus.COMPLETED
+        if task.status != TaskStatus.COMPLETED and task.status != TaskStatus.FAILURE:
+            task.status = TaskStatus.COMPLETED
         task.updated = now
         task.completed = now
         task.save()
 
-        log_task_orchestrator_status(task, [f"Task completed"])
+        log_task_orchestrator_status(task, [f"All done"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -570,7 +556,7 @@ def unshare_data(self, guid: str):
         task.completed = now
         task.save()
 
-        log_task_orchestrator_status(task, [f"Task completed"])
+        log_task_orchestrator_status(task, [f"All done"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid

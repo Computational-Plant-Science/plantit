@@ -296,7 +296,7 @@
                                         <br />
                                         <b-row>
                                             <b-col md="auto">
-                                                <h5>Connection Status</h5> </b-col
+                                                <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Connection Status</h5> </b-col
                                             ><b-col></b-col
                                             ><b-col class="ml-0" md="auto"
                                                 ><b-button
@@ -388,9 +388,7 @@ export default {
         ]),
         ...mapGetters('agents', ['agent', 'agentsLoading', 'agentsPermitted']),
         authorized() {
-            return this.getAgent.users_authorized.some(
-                (u) => u.username === this.profile.djangoProfile.username
-            );
+            return this.agentsPermitted(this.profile.djangoProfile.username).map(a => a.name).includes(this.getAgent.name);
         },
         agentLoading() {
             return this.agentsLoading;

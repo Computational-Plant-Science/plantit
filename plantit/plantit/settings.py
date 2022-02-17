@@ -45,6 +45,8 @@ assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENTS_
 assert 'AGENTS_HEALTHCHECKS_SAVED' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_SAVED"
 assert 'HTTP_TIMEOUT' in os.environ, f"{missing_variable} HTTP_TIMEOUT"
 assert 'STATS_WINDOW_WIDTH_DAYS' in os.environ, f"{missing_variable} STATS_WINDOW_WIDTH_DAYS"
+assert 'DOCKER_USERNAME' in os.environ, f"{missing_variable} DOCKER_USERNAME"
+assert 'DOCKER_PASSWORD' in os.environ, f"{missing_variable} DOCKER_PASSWORD"
 
 # global Celery task timeout
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
@@ -82,6 +84,8 @@ AGENTS_HEALTHCHECKS_MINUTES = os.environ.get("AGENTS_HEALTHCHECKS_MINUTES")
 AGENTS_HEALTHCHECKS_SAVED = os.environ.get("AGENTS_HEALTHCHECKS_SAVED")
 HTTP_TIMEOUT = os.environ.get("HTTP_TIMEOUT")
 STATS_WINDOW_WIDTH_DAYS = os.environ.get("STATS_WINDOW_WIDTH_DAYS")
+DOCKER_USERNAME = os.environ.get("DOCKER_USERNAME")
+DOCKER_PASSWORD = os.environ.get("DOCKER_PASSWORD")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

@@ -25,11 +25,11 @@ class UserEventConsumer(WebsocketConsumer):
             'notification': notification,
         }))
 
-    def task_log_event(self, event):
-        task = event['task']
-        logs = event['logs']
-        self.logger.info(f"Sending user {self.username} task {task['name']} log event (status {task['status']}) to client ({len(logs)} lines)")
-        self.send(text_data=json.dumps({'logs': logs}))
+    # def task_log_event(self, event):
+    #     task = event['task']
+    #     logs = event['logs']
+    #     self.logger.info(f"Sending user {self.username} task {task['name']} log event (status {task['status']}) to client ({len(logs)} lines)")
+    #     self.send(text_data=json.dumps({'logs': logs}))
 
     def task_event(self, event):
         task = event['task']

@@ -40,7 +40,6 @@ def compose_headers(task: Task, options: TaskOptions, inputs: List[str]) -> List
         commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
     if 'walltime' in jobqueue or 'time' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
-        async_to_sync(push_task_channel_event)(task)
         task.job_requested_walltime = walltime
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
@@ -71,15 +70,15 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     if 'input' not in options: return []
     input = options['input']
     if input is None: return []
-    kind = input['kind']
-    patterns = []
-    if kind != InputKind.FILE and 'patterns' in input:
-        # allow for both spellings of JPG
-        patterns = [pattern.lower() for pattern in input['patterns']]
-        if 'jpg' in patterns and 'jpeg' not in patterns:
-            patterns.append("jpeg")
-        elif 'jpeg' in patterns and 'jpg' not in patterns:
-            patterns.append("jpg")
+    # kind = input['kind']
+    # patterns = []
+    # if kind != InputKind.FILE and 'patterns' in input:
+    #     # allow for both spellings of JPG
+    #     patterns = [pattern.lower() for pattern in input['patterns']]
+    #     if 'jpg' in patterns and 'jpeg' not in patterns:
+    #         patterns.append("jpeg")
+    #     elif 'jpeg' in patterns and 'jpg' not in patterns:
+    #         patterns.append("jpg")
 
     # command = f"plantit terrain pull \"{input['path']}\"" \
     #           f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
@@ -87,8 +86,11 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     #           f""f" --terrain_token {task.user.profile.cyverse_access_token}"
     input_path = input['path']
     workdir = join(task.agent.workdir, task.workdir, 'input')
-    command = f"singularity exec docker://{settings.ICOMMANDS_IMAGE} --home {workdir}" \
-              f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iget {input_path} {workdir}\""
+    image = f"docker://{settings.ICOMMANDS_IMAGE}"
+    # command = f"SINGULARITY_DOCKER_USERNAME={settings.DOCKER_USERNAME} SINGULARITY_DOCKER_PASSWORD={settings.DOCKER_PASSWORD} " \
+    #           f"singularity exec --home {workdir} {image} iget {input_path} {workdir}"
+              # f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iget {input_path} {workdir}\""
+    command = f"singularity exec {image} iget {input_path} {workdir}"
 
     logger.debug(f"Using pull command: {command}")
     return [command]
@@ -218,43 +220,56 @@ def compose_zip_commands(task: Task, options: TaskOptions) -> List[str]:
 
 
 def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
-    command = ''
-    if 'output' not in options: return command
+    commands = []
+    if 'output' not in options: return commands
     output = options['output']
-    if output is None: return command
+    if output is None: return commands
 
     # add push command if we have a destination
-    if 'to' in output and output['to'] is not None:
-        # command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
+    if 'to' not in output or output['to'] is None:
+        return commands
 
-        # TODO: move all matching files to dedicated output directory
-        # if 'include' in output:
-        #     if 'patterns' in output['include']:
-        #         patterns = list(output['include']['patterns'])
-        #         patterns.append('.out')
-        #         patterns.append('.err')
-        #         patterns.append('.zip')
-        #         command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
-        #     if 'names' in output['include']:
-        #         command = command + ' ' + ' '.join(
-        #             ['--include_name ' + pattern for pattern in output['include']['names']])
-        # if 'exclude' in output:
-        #     if 'patterns' in output['exclude']:
-        #         command = command + ' ' + ' '.join(
-        #             ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-        #     if 'names' in output['exclude']:
-        #         command = command + ' ' + ' '.join(
-        #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+    staging_dir = f"{task.guid}_staging"
+    commands.append(f"mkdir -p {staging_dir}")
+    mv_command = f"mv -t {staging_dir}"
 
-        # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+    if 'include' in output:
+        if 'names' in output['include']:
+            mv_command = mv_command + ' ' + ' '.join([pattern for pattern in output['include']['names']])
+        if 'patterns' in output['include']:
+            patterns = list(output['include']['patterns'])
+            patterns.append('out')
+            patterns.append('err')
+            patterns.append('zip')
+            mv_command = mv_command + ' ' + ' '.join([f"*.{pattern}" for pattern in patterns])
+    else:
+        raise ValueError(f"Expected names & patterns to include")
 
-        to_path = output['to']
-        from_path = join(task.agent.workdir, task.workdir, output['from'])
-        command = f"singularity exec docker://{settings.ICOMMANDS_IMAGE} --home {from_path}" \
-                  f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iput {from_path} {to_path}\""
+    commands.append(mv_command)
 
-    logger.debug(f"Using push command: {command}")
-    return [command]
+    # if 'exclude' in output:
+    #     if 'patterns' in output['exclude']:
+    #         command = command + ' ' + ' '.join(
+    #             ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+    #     if 'names' in output['exclude']:
+    #         command = command + ' ' + ' '.join(
+    #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+
+    # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+
+    to_path = output['to']
+    from_path = join(task.agent.workdir, task.workdir, output['from'])
+    image = f"docker://{settings.ICOMMANDS_IMAGE}"
+    # push_command = f"SINGULARITY_DOCKER_USERNAME={settings.DOCKER_USERNAME} SINGULARITY_DOCKER_PASSWORD={settings.DOCKER_PASSWORD} " \
+    #                f"singularity exec --home {from_path} {image} iput {from_path} {to_path}"
+                   # f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iput {from_path} {to_path}\""
+    push_command = f"singularity exec {image} iput -f {staging_dir}/* {to_path}"
+
+    commands.append(push_command)
+
+    newline = '\n'
+    logger.debug(f"Using push commands: {newline.join(commands)}")
+    return commands
 
 
 # scripts
@@ -265,7 +280,7 @@ def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> L
         headers = compose_headers(task, options, inputs)
         pull = compose_pull_commands(task, options)
         run = compose_container_commands(task, options)
-        zip = compose_zip_commands(task, options)
+        # zip = compose_zip_commands(task, options)
         push = compose_push_commands(task, options)
 
         return template + \
@@ -273,7 +288,6 @@ def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> L
                [task.agent.pre_commands] + \
                pull + \
                run + \
-               zip + \
                push
 
 
@@ -289,7 +303,7 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
         Parameter(key='OUTPUT', value=options['output']['from']),
         Parameter(key='GPUS', value=str(gpus))]
     bind_mounts = options['bind_mounts'] if (
-                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+            'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
     no_cache = options['no_cache'] if 'no_cache' in options else False
     shell = options['shell'] if 'shell' in options else None
     docker_username = environ.get('DOCKER_USERNAME', None)
