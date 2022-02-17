@@ -138,6 +138,7 @@ TASKS_TEMPLATE_SCRIPT_LOCAL=/code/scripts/template_local_run.sh
 TASKS_TEMPLATE_SCRIPT_SLURM=/code/scripts/template_slurm_run.sh
 LAUNCHER_SCRIPT_NAME=launcher
 INPUTS_FILE_NAME=inputs.txt
+ICOMMANDS_IMAGE=computationalplantscience/icommands
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432

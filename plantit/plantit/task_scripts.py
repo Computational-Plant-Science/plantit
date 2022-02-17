@@ -45,8 +45,10 @@ def compose_headers(task: Task, options: TaskOptions, inputs: List[str]) -> List
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
     if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
-    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
+    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '':
+        commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    elif task.agent.queue is not None and task.agent.queue != '':
+        commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
@@ -70,20 +72,23 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     input = options['input']
     if input is None: return []
     kind = input['kind']
-
+    patterns = []
     if kind != InputKind.FILE and 'patterns' in input:
         # allow for both spellings of JPG
         patterns = [pattern.lower() for pattern in input['patterns']]
-        if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
-        elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
-    else:
-        patterns = []
+        if 'jpg' in patterns and 'jpeg' not in patterns:
+            patterns.append("jpeg")
+        elif 'jpeg' in patterns and 'jpg' not in patterns:
+            patterns.append("jpg")
 
-    # TODO: refactor to use `computationalplantscience/icommands-plantit` container (load name from settings)
-    command = f"plantit terrain pull \"{input['path']}\"" \
-              f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
-              f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-              f""f" --terrain_token {task.user.profile.cyverse_access_token}"
+    # command = f"plantit terrain pull \"{input['path']}\"" \
+    #           f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
+    #           f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
+    #           f""f" --terrain_token {task.user.profile.cyverse_access_token}"
+    input_path = input['path']
+    workdir = join(task.agent.workdir, task.workdir, 'input')
+    command = f"singularity exec docker://{settings.ICOMMANDS_IMAGE} --home {workdir}" \
+              f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iget {input_path} {workdir}\""
 
     logger.debug(f"Using pull command: {command}")
     return [command]
@@ -109,7 +114,7 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
             Parameter(key='OUTPUT', value=options['output']['from']),
             Parameter(key='GPUS', value=str(gpus))]
         bind_mounts = options['bind_mounts'] if (
-                    'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
         no_cache = options['no_cache'] if 'no_cache' in options else False
         shell = options['shell'] if 'shell' in options else None
         docker_username = environ.get('DOCKER_USERNAME', None)
@@ -220,28 +225,33 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
 
     # add push command if we have a destination
     if 'to' in output and output['to'] is not None:
-        # TODO: refactor to use `computationalplantscience/icommands-plantit` container (load name from settings)
-        command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
+        # command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
-        if 'include' in output:
-            if 'patterns' in output['include']:
-                patterns = list(output['include']['patterns'])
-                patterns.append('.out')
-                patterns.append('.err')
-                patterns.append('.zip')
-                command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
-            if 'names' in output['include']:
-                command = command + ' ' + ' '.join(
-                    ['--include_name ' + pattern for pattern in output['include']['names']])
-        if 'exclude' in output:
-            if 'patterns' in output['exclude']:
-                command = command + ' ' + ' '.join(
-                    ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-            if 'names' in output['exclude']:
-                command = command + ' ' + ' '.join(
-                    ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+        # TODO: move all matching files to dedicated output directory
+        # if 'include' in output:
+        #     if 'patterns' in output['include']:
+        #         patterns = list(output['include']['patterns'])
+        #         patterns.append('.out')
+        #         patterns.append('.err')
+        #         patterns.append('.zip')
+        #         command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
+        #     if 'names' in output['include']:
+        #         command = command + ' ' + ' '.join(
+        #             ['--include_name ' + pattern for pattern in output['include']['names']])
+        # if 'exclude' in output:
+        #     if 'patterns' in output['exclude']:
+        #         command = command + ' ' + ' '.join(
+        #             ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+        #     if 'names' in output['exclude']:
+        #         command = command + ' ' + ' '.join(
+        #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
-        command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+        # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+
+        to_path = output['to']
+        from_path = join(task.agent.workdir, task.workdir, output['from'])
+        command = f"singularity exec docker://{settings.ICOMMANDS_IMAGE} --home {from_path}" \
+                  f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iput {from_path} {to_path}\""
 
     logger.debug(f"Using push command: {command}")
     return [command]
@@ -273,11 +283,13 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
     image = options['image']
     command = options['command']
     env = options['env']
-    gpus = options['gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+    gpus = options[
+        'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
     parameters = (options['parameters'] if 'parameters' in options else []) + [
-                Parameter(key='OUTPUT', value=options['output']['from']),
-                Parameter(key='GPUS', value=str(gpus))]
-    bind_mounts = options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+        Parameter(key='OUTPUT', value=options['output']['from']),
+        Parameter(key='GPUS', value=str(gpus))]
+    bind_mounts = options['bind_mounts'] if (
+                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
     no_cache = options['no_cache'] if 'no_cache' in options else False
     shell = options['shell'] if 'shell' in options else None
     docker_username = environ.get('DOCKER_USERNAME', None)
@@ -363,9 +375,12 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     if 'time' in task.workflow and 'limit' in task.workflow['time'] and 'units' in task.workflow['time']:
         units = task.workflow['time']['units']
         limit = int(task.workflow['time']['limit'])
-        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
-        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
-        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
+        if units.lower() == 'hours':
+            walltime = timedelta(hours=limit, minutes=0, seconds=0)
+        elif units.lower() == 'minutes':
+            walltime = timedelta(hours=0, minutes=limit, seconds=0)
+        elif units.lower() == 'seconds':
+            walltime = timedelta(hours=0, minutes=0, seconds=limit)
 
     # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
     # need to compute suggested walltime as a function of workflow, agent, and number of inputs

@@ -24,6 +24,7 @@ assert 'TASKS_STEP_TIME_LIMIT_SECONDS' in os.environ, f"{missing_variable}: TASK
 assert 'TASKS_TEMPLATE_SCRIPT_SLURM' in os.environ, f"{missing_variable}: TASKS_TEMPLATE_SCRIPT_SLURM"
 assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
 assert 'INPUTS_FILE_NAME' in os.environ, f"{missing_variable}: INPUTS_FILE_NAME"
+assert 'ICOMMANDS_IMAGE' in os.environ, f"{missing_variable}: ICOMMANDS_IMAGE"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -73,6 +74,7 @@ TASKS_TEMPLATE_SCRIPT_SLURM = os.environ.get('TASKS_TEMPLATE_SCRIPT_SLURM')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 INPUTS_FILE_NAME = os.environ.get('INPUTS_FILE_NAME')
+ICOMMANDS_IMAGE = os.environ.get('ICOMMANDS_IMAGE')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")
 TUTORIALS_FILE = os.environ.get("TUTORIALS_FILE")
 FEEDBACK_FILE = os.environ.get("FEEDBACK_FILE")
