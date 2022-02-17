@@ -79,6 +79,7 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     else:
         patterns = []
 
+    # TODO: refactor to use `computationalplantscience/icommands-plantit` container (load name from settings)
     command = f"plantit terrain pull \"{input['path']}\"" \
               f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
               f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
@@ -191,6 +192,7 @@ def compose_zip_commands(task: Task, options: TaskOptions) -> List[str]:
                 output['exclude']['names'] = list(
                     set(output['exclude']['names'] + config['output']['exclude']['names']))
 
+    # TODO: refactor to use `zip`
     command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
     command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
@@ -218,6 +220,7 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
 
     # add push command if we have a destination
     if 'to' in output and output['to'] is not None:
+        # TODO: refactor to use `computationalplantscience/icommands-plantit` container (load name from settings)
         command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
 
         if 'include' in output:
