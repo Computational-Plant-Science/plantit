@@ -533,13 +533,13 @@ def unshare_data(self, guid: str):
         paths = [
             {
                 'path': options['output']['to'],
-                'permission': 'write'
+                # 'permission': 'write'
             }
         ]
         if 'input' in options:
             paths.append({
                 'path': options['input']['path'],
-                'permission': 'read'
+                # 'permission': 'read'
             })
 
         # revoke the plantit CyVerse user's access to the source and target collections
