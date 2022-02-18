@@ -2,6 +2,7 @@ from typing import List
 import logging
 
 from plantit.tasks.models import Task, InputKind, TaskOptions, Parameter, EnvironmentVariable, BindMount
+from plantit.utils.tasks import format_bind_mount
 
 logger = logging.getLogger(__name__)
 

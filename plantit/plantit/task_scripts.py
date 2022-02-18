@@ -90,7 +90,7 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     # command = f"SINGULARITY_DOCKER_USERNAME={settings.DOCKER_USERNAME} SINGULARITY_DOCKER_PASSWORD={settings.DOCKER_PASSWORD} " \
     #           f"singularity exec --home {workdir} {image} iget {input_path} {workdir}"
               # f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iget {input_path} {workdir}\""
-    command = f"singularity exec {image} iget {input_path} {workdir}"
+    command = f"singularity exec {image} iget -r {input_path} {workdir}"
 
     logger.debug(f"Using pull command: {command}")
     return [command]
@@ -123,14 +123,17 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
         docker_password = environ.get('DOCKER_PASSWORD', None)
 
         if 'input' in options:
-            if options['input']['kind'] == 'files' or options['input']['kind'] == 'file':
+            kind = options['input']['kind']
+            if kind == 'files' or kind == 'file':
+                input_path_name = options['input']['path'].rpartition('/')[2]
+                full_input_path = join(options['workdir'], 'input', input_path_name, '$file') if kind == 'files' else join(options['workdir'], 'input', '$file')
                 commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
                 commands = commands + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
                     commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', '$file'))],
+                    parameters=parameters + [Parameter(key='INPUT', value=full_input_path)],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,
@@ -138,12 +141,13 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
                     docker_username=docker_username,
                     docker_password=docker_password)
             elif options['input']['kind'] == 'directory':
+                input_path_name = options['input']['path'].rpartition('/')[2]
                 commands = commands + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
                     commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', input_path_name))],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,

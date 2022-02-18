@@ -654,10 +654,10 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
                 errors.append('Section \'jobqueue\'.\'processes\' must be a int')
         else:
             jobqueue['processes'] = task.agent.max_processes
-        if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
-            errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
-        elif task.agent.header_skip is not None and task.agent.header_skip != '':
-            jobqueue['header_skip'] = task.agent.header_skip
+        # if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
+        #     errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
+        # elif task.agent.header_skip is not None and task.agent.header_skip != '':
+        #     jobqueue['header_skip'] = [task.agent.header_skip]
         if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
             errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
 

@@ -543,7 +543,7 @@ def unshare_data(self, guid: str):
             })
 
         # revoke the plantit CyVerse user's access to the source and target collections
-        terrain.share_dir({
+        terrain.unshare_dir({
             'unshare': [
                 {
                     'user': task.user.username,
