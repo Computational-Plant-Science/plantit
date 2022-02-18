@@ -232,9 +232,18 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
             subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {inputs_file.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.INPUTS_FILE_NAME)}", shell=True)
 
 
-def submit_task_to_scheduler(task: Task, ssh: SSH) -> str:
+def submit_task_to_scheduler(task: Task, ssh: SSH, options: TaskOptions) -> str:
+    if 'input' not in options or options['input'] is None: inputs = []
+    else:
+        kind = options['input']['kind']
+        path = options['input']['path']
+        token = task.user.profile.cyverse_access_token
+        paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
+        inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
+
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
-    command = f"sbatch {task.guid}.sh"
+    if task.agent.launcher: command = f"sbatch {task.guid}.sh"
+    else: command = f"sbatch --array=1-{len(inputs)} {task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
 
     lines = []

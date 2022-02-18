@@ -124,7 +124,7 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
 
         if 'input' in options:
             if options['input']['kind'] == 'files' or options['input']['kind'] == 'file':
-                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID test.txt | tail -1)")
+                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
                 commands = commands + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,

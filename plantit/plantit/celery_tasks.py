@@ -239,7 +239,10 @@ def submit_job(self, guid: str):
         # submit the job to the cluster scheduler
         ssh = get_task_ssh_client(task)
         with ssh:
-            job_id = submit_task_to_scheduler(task, ssh)
+            parse_errors, options = parse_task_options(task)
+            if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+
+            job_id = submit_task_to_scheduler(task, ssh, options)
             log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
             async_to_sync(push_task_channel_event)(task)
 
