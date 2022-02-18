@@ -4,6 +4,7 @@ import tempfile
 from os.path import join
 from pathlib import Path
 
+from asgiref.sync import async_to_sync
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
@@ -70,6 +71,9 @@ def get_or_create(request):
 
             created = True
             task_dict = q.task_to_dict(task)
+
+            log_task_orchestrator_status(task, [f"Created task {task.guid} on {task.agent.name}"])
+            async_to_sync(push_task_channel_event)(task)
 
         # otherwise register delayed or repeating task
         elif task_type == 'after':

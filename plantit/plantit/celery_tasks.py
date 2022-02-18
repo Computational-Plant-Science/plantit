@@ -433,7 +433,10 @@ def test_push(self, guid: str):
         # check the expected filenames against the contents of the CyVerse collection
         path = task.workflow['output']['to']
         actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
-        expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}"))]
+        expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}")) if file['exists']]
+        from pprint import pprint
+        pprint(actual)
+        pprint(expected)
 
         if not set(expected).issubset(set(actual)):
             message = f"Transfer to CyVerse directory {path} incomplete: expected {len(expected)} files but found {len(actual)}"

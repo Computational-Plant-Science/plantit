@@ -169,84 +169,30 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
     return commands
 
 
-def compose_zip_commands(task: Task, options: TaskOptions) -> List[str]:
-    if 'output' in options:
-        output = options['output']
-    else:
-        output = dict()
-        output['include'] = dict()
-        output['include']['names'] = dict()
-        output['include']['patterns'] = dict()
-        output['exclude'] = dict()
-        output['exclude']['names'] = dict()
-        output['exclude']['patterns'] = dict()
-
-    # merge output patterns and files from workflow config
-    config = task.workflow
-    if 'output' in config:
-        if 'include' in config['output']:
-            if 'patterns' in config['output']['include']:
-                output['include']['patterns'] = list(
-                    set(output['include']['patterns'] + config['output']['include']['patterns']))
-            if 'names' in config['output']['include']:
-                output['include']['names'] = list(
-                    set(output['include']['names'] + config['output']['include']['names']))
-        if 'exclude' in config['output']:
-            if 'patterns' in config['output']['exclude']:
-                output['exclude']['patterns'] = list(
-                    set(output['exclude']['patterns'] + config['output']['exclude']['patterns']))
-            if 'names' in config['output']['exclude']:
-                output['exclude']['names'] = list(
-                    set(output['exclude']['names'] + config['output']['exclude']['names']))
-
-    # TODO: refactor to use `zip`
-    command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
-    logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
-    command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
-
-    if 'include' in output:
-        if 'patterns' in output['include']:
-            command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
-        if 'names' in output['include']:
-            command = f"{command} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
-    if 'exclude' in output:
-        if 'patterns' in output['exclude']:
-            command = f"{command} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
-        if 'names' in output['exclude']:
-            command = f"{command} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
-
-    logger.debug(f"Using zip command: {command}")
-    return [command]
-
-
 def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
-    if 'output' not in options: return commands
-    output = options['output']
-    if output is None: return commands
 
-    # add push command if we have a destination
-    if 'to' not in output or output['to'] is None:
-        return commands
-
+    # create staging directory
     staging_dir = f"{task.guid}_staging"
-    commands.append(f"mkdir -p {staging_dir}")
-    mv_command = f"mv -t {staging_dir}"
+    mkdir_command = f"mkdir -p {staging_dir}"
+    commands.append(mkdir_command)
 
+    # move results into staging directory
+    mv_command = f"mv -t {staging_dir} "
+    output = options['output']
     if 'include' in output:
         if 'names' in output['include']:
-            mv_command = mv_command + ' ' + ' '.join([pattern for pattern in output['include']['names']])
+            for name in output['include']['names']:
+                mv_command = mv_command + f"{name} "
         if 'patterns' in output['include']:
-            patterns = list(output['include']['patterns'])
-            patterns.append('out')
-            patterns.append('err')
-            patterns.append('zip')
-            mv_command = mv_command + ' ' + ' '.join([f"*.{pattern}" for pattern in patterns])
-    else:
-        raise ValueError(f"Expected names & patterns to include")
-
+            for pattern in (list(output['include']['patterns']) + ['out', 'err', 'zip']):
+                mv_command = mv_command + f"*.{pattern} "
+    else: raise ValueError(f"No output filenames & patterns to include")
     commands.append(mv_command)
 
+    # filter unwanted results from staging directory
+    # TODO: can we do this in a single step with mv?
+    # rm_command = f"rm "
     # if 'exclude' in output:
     #     if 'patterns' in output['exclude']:
     #         command = command + ' ' + ' '.join(
@@ -255,16 +201,13 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     #         command = command + ' ' + ' '.join(
     #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
-    # command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
+    # zip results
+    zip_command = f"zip -r {join(staging_dir, task.guid + '.zip')} {staging_dir}/*"
+    commands.append(zip_command)
 
-    to_path = output['to']
-    from_path = join(task.agent.workdir, task.workdir, output['from'])
+    path = output['to']
     image = f"docker://{settings.ICOMMANDS_IMAGE}"
-    # push_command = f"SINGULARITY_DOCKER_USERNAME={settings.DOCKER_USERNAME} SINGULARITY_DOCKER_PASSWORD={settings.DOCKER_PASSWORD} " \
-    #                f"singularity exec --home {from_path} {image} iput {from_path} {to_path}"
-                   # f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iput {from_path} {to_path}\""
-    push_command = f"singularity exec {image} iput -f {staging_dir}/* {to_path}"
-
+    push_command = f"singularity exec {image} iput -f {staging_dir}/* {path}"
     commands.append(push_command)
 
     newline = '\n'

@@ -255,7 +255,9 @@
                             </b-col>
                             <b-col
                                 v-if="
-                                    getTask.is_complete && getTask.can_restart && getWorkflow !== null
+                                    getTask.is_complete &&
+                                    getTask.can_restart &&
+                                    getWorkflow !== null
                                 "
                                 md="auto"
                                 class="m-0 mb-2"
@@ -382,9 +384,23 @@
                                             :linkable="true"
                                             :workflow="getWorkflow"
                                         ></WorkflowBlurb>
-                                      <b-row v-else><b-col><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                    ><h5>{{ workflowKey }}</h5><br/><i class="fas fa-exclamation-triangle fa-fw"></i> Workflow no longer exists.</span
-                ></b-col></b-row>
+                                        <b-row v-else
+                                            ><b-col
+                                                ><span
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-white'
+                                                            : 'text-dark'
+                                                    "
+                                                    ><h5>{{ workflowKey }}</h5>
+                                                    <br /><i
+                                                        class="fas fa-exclamation-triangle fa-fw"
+                                                    ></i>
+                                                    Workflow no longer
+                                                    exists.</span
+                                                ></b-col
+                                            ></b-row
+                                        >
                                     </b-card-body>
                                 </b-card>
                                 <b-row class="m-0 p-0 mt-1">
@@ -458,17 +474,15 @@
                                     >
                                 </b-row>
                                 <b-row
-                                    class="m-0 p-0 mt-2"
+                                    class="m-0 p-0 mt-1"
                                     v-if="getTask.status !== 'created'"
                                 >
-                                    <b-col class="m-0 p-1">
+                                    <b-col class="m-0 p-0">
                                         <Plotly
-                                            style="
-                                                position: relative;
-                                                top: 20px;
-                                            "
+                                            style="position: relative"
                                             :data="timeseriesData"
                                             :layout="timeseriesLayout"
+                                            :staticPlot="true"
                                         ></Plotly>
                                     </b-col>
                                 </b-row>
@@ -650,12 +664,19 @@
                                             "
                                         >
                                             <b-row
+                                                v-if="getTask.is_complete &&
+                                                        getTask.results_retrieved &&
+                                                        getTask.output_files !==
+                                                            undefined &&
+                                                        getTask.output_files
+                                                            .length > 0"
                                                 align-h="center"
                                                 align-v="center"
-                                                class="mt-2"
+                                                class="mt-2 mb-2"
                                             >
                                                 <b-col
-                                                    class="text-left"
+                                                    align-self="end"
+                                                    class="text-center"
                                                     v-if="
                                                         getTask.results_retrieved &&
                                                         getTask.output_files
@@ -685,20 +706,32 @@
                                                             "
                                                         ></b-spinner>
                                                         Loading</span
-                                                    >
-                                                    <br />
-                                                </b-col>
-                                                <b-col
-                                                    v-else
-                                                    align-self="center"
-                                                    class="text-center"
-                                                    ><span class="text-center"
-                                                        ><i
-                                                            class="far fa-folder-open fa-fw"
-                                                        ></i>
-                                                        No results found</span
-                                                    ></b-col
-                                                >
+                                                    >, {{
+                                                        getTask.results_transferred
+                                                    }}/{{
+                                                        getTask.output_files
+                                                            .length > 0
+                                                            ? getTask
+                                                                  .output_files
+                                                                  .length
+                                                            : '?'
+                                                    }}
+                                                    results
+                                                    transferred<b-progress
+                                                        :value="
+                                                            getTask.results_transferred
+                                                        "
+                                                        :max="
+                                                            getTask.output_files
+                                                                .length
+                                                        "
+                                                        :animated="
+                                                            getTask.results_transferred !==
+                                                            getTask.output_files
+                                                                .length
+                                                        "
+                                                    ></b-progress
+                                                ></b-col>
                                                 <b-col
                                                     v-if="
                                                         getTask.results_retrieved &&
@@ -707,6 +740,7 @@
                                                     "
                                                     md="auto"
                                                     align-self="end"
+                                                    class="mt-1"
                                                 >
                                                     <b-dropdown
                                                         :disabled="
@@ -717,6 +751,7 @@
                                                             getTask.output_files
                                                                 .length === 0
                                                         "
+                                                        size="sm"
                                                         class="text-right"
                                                         :text="
                                                             outputPageSize.toString()
@@ -759,137 +794,18 @@
                                                             >50</b-dropdown-item
                                                         >
                                                     </b-dropdown>
-                                                </b-col>
-                                                <!--<b-col
-                                                    md="auto"
-                                                    align-self="end"
-                                                    ><b-dropdown
-                                                        :disabled="
-                                                            getTask.output_files !==
-                                                                undefined &&
-                                                                getTask.output_files !==
-                                                                    null &&
-                                                                getTask
-                                                                    .output_files
-                                                                    .length ===
-                                                                    0
-                                                        "
-                                                        v-b-tooltip.hover
-                                                        :title="
-                                                            'Using ' +
-                                                                viewMode +
-                                                                ' view'
-                                                        "
-                                                        dropleft
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        class="text-right"
-                                                    >
-                                                        <template
-                                                            #button-content
-                                                        >
-                                                            {{ viewMode }}
-                                                        </template>
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setViewMode(
-                                                                    'List'
-                                                                )
-                                                            "
-                                                            >List</b-dropdown-item
-                                                        >
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setViewMode(
-                                                                    'Grid'
-                                                                )
-                                                            "
-                                                            >Grid</b-dropdown-item
-                                                        >
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setViewMode(
-                                                                    'Carousel'
-                                                                )
-                                                            "
-                                                            >Carousel</b-dropdown-item
-                                                        >
-                                                    </b-dropdown></b-col
-                                                >-->
-                                                <br />
-                                                <br />
-                                            </b-row>
-                                            <b-row
-                                                v-if="
-                                                    getTask.results_retrieved &&
-                                                    getTask.output_files !==
-                                                        undefined
-                                                "
-                                                v-show="viewMode !== 'Carousel'"
+                                                </b-col></b-row
                                             >
-                                                <b-col
-                                                    md="auto"
-                                                    align-self="end"
-                                                >
-                                                    <b-pagination
-                                                        v-model="outputFilePage"
-                                                        pills
-                                                        class="mt-3"
-                                                        size="md"
-                                                        :total-rows="
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                        :per-page="
-                                                            outputPageSize
-                                                        "
-                                                        aria-controls="outputList"
-                                                    >
-                                                        <template
-                                                            class="theme-dark"
-                                                            #page="{
-                                                                page,
-                                                                active,
-                                                            }"
-                                                        >
-                                                            <b v-if="active">{{
-                                                                page
-                                                            }}</b>
-                                                            <i v-else>{{
-                                                                page
-                                                            }}</i>
-                                                        </template>
-                                                    </b-pagination>
-                                                </b-col>
-                                                <b-col align-self="center"
-                                                    ><b-input-group
-                                                        class="mt-3"
-                                                        style="top: 2px"
-                                                        size="sm"
-                                                        ><template #prepend>
-                                                            <b-input-group-text
-                                                                ><i
-                                                                    class="fas fa-search"
-                                                                ></i
-                                                            ></b-input-group-text> </template
-                                                        ><b-form-input
-                                                            :class="
-                                                                profile.darkMode
-                                                                    ? 'theme-search-dark'
-                                                                    : 'theme-search-light'
-                                                            "
-                                                            size="lg"
-                                                            type="search"
-                                                            v-model="
-                                                                resultSearchText
-                                                            "
-                                                        ></b-form-input>
-                                                    </b-input-group>
-                                                </b-col>
-                                            </b-row>
+                                            <b-row v-else><b-col
+                                                    align-self="center"
+                                                    class="text-center"
+                                                    ><span class="text-center"
+                                                        ><i
+                                                            class="far fa-folder-open fa-fw"
+                                                        ></i>
+                                                        No results found</span
+                                                    ></b-col
+                                                ></b-row>
                                             <b-row
                                                 class="pl-1 pr-1 pb-1"
                                                 align-h="center"
@@ -1361,160 +1277,6 @@
                                                     </b-carousel>-->
                                                 </div>
                                             </b-overlay>
-                                        </div>
-                                        <div
-                                            class="m-3"
-                                            v-if="
-                                                getTask.results_retrieved &&
-                                                getTask.output_files !==
-                                                    undefined
-                                            "
-                                        >
-                                            <b-row
-                                                ><!--<b-col
-                                                    v-if="
-                                                        getWorkflow.config
-                                                            .input !== undefined
-                                                    "
-                                                    >{{
-                                                        Math.max(
-                                                            getTask.inputs_downloaded,
-                                                            getTask.inputs_submitted
-                                                        )
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    input(s) loaded<b-progress
-                                                        :value="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            )
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            ) !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            Math.max(
-                                                                getTask.inputs_downloaded,
-                                                                getTask.inputs_submitted
-                                                            ) !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                ><b-col
-                                                    v-if="
-                                                        getWorkflow.config
-                                                            .input !==
-                                                            undefined &&
-                                                            getWorkflow.config
-                                                                .input.kind !==
-                                                                'directory'
-                                                    "
-                                                    >{{
-                                                        getTask.inputs_submitted
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    container(s)
-                                                    submitted<b-progress
-                                                        :value="
-                                                            getTask.inputs_submitted
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            getTask.inputs_submitted !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.inputs_submitted !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                ><b-col
-                                                    v-if="
-                                                        getWorkflow.config
-                                                            .input !==
-                                                            undefined &&
-                                                            getWorkflow.config
-                                                                .input.kind !==
-                                                                'directory'
-                                                    "
-                                                    >{{
-                                                        getTask.inputs_completed
-                                                    }}/{{
-                                                        getTask.inputs_detected
-                                                    }}
-                                                    container(s)
-                                                    completed<b-progress
-                                                        :value="
-                                                            getTask.inputs_completed
-                                                        "
-                                                        :max="
-                                                            getTask.inputs_detected
-                                                        "
-                                                        :variant="
-                                                            getTask.inputs_completed !==
-                                                            getTask.inputs_detected
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.inputs_completed !==
-                                                                getTask.inputs_detected
-                                                        "
-                                                    ></b-progress></b-col
-                                                >--><b-col
-                                                    v-if="
-                                                        getTask.is_complete &&
-                                                        getTask.result_transfer
-                                                    "
-                                                    >{{
-                                                        getTask.results_transferred
-                                                    }}/{{
-                                                        getTask.output_files
-                                                            .length > 0
-                                                            ? getTask
-                                                                  .output_files
-                                                                  .length
-                                                            : '?'
-                                                    }}
-                                                    results
-                                                    transferred<b-progress
-                                                        :value="
-                                                            getTask.results_transferred
-                                                        "
-                                                        :max="
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                        :variant="
-                                                            getTask.results_transferred !==
-                                                            getTask.output_files
-                                                                .length
-                                                                ? 'warning'
-                                                                : 'success'
-                                                        "
-                                                        :animated="
-                                                            getTask.results_transferred !==
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                    ></b-progress></b-col
-                                            ></b-row>
                                         </div>
                                         <!--<div
                                                         v-else-if="
@@ -2311,11 +2073,11 @@ export default {
                     type: 'scatter',
                     mode: 'lines+markers',
                     line: {
-                        color: '#d6df5D',
+                        color: '#e9ecef',
                     },
                     marker: {
                         color: [
-                            '#e2e3b0',
+                            '#e9ecef',
                             this.getTask.is_success
                                 ? '#d6df5D'
                                 : 'rgb(255, 114, 114)',
@@ -2335,7 +2097,7 @@ export default {
                 font: {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
-                height: 180,
+                height: 200,
                 legend: {
                     orientation: 'h',
                     font: {
