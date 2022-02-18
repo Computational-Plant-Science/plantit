@@ -211,7 +211,7 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
 
     path = output['to']
     image = f"docker://{settings.ICOMMANDS_IMAGE}"
-    push_command = f"singularity exec {image} iput -f {staging_dir}/* {path}"
+    push_command = f"singularity exec {image} iput -f {staging_dir}/* {path}/"
     commands.append(push_command)
 
     newline = '\n'

@@ -2105,11 +2105,13 @@ export default {
                     },
                 },
                 xaxis: {
+                    showline: false,
                     showgrid: false,
                     lines: false,
                 },
                 yaxis: {
                     showticklabels: false,
+                    showline: false,
                     showgrid: false,
                     lines: false,
                 },

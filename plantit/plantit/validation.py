@@ -94,13 +94,13 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
             if path != '' and path is not None:
                 if type(path) is not str:
                     errors.append('Attribute \'input.path\' must be a str')
-                exists, actual_kind = terrain.path_exists_and_type(path, TerrainToken.get())
-                if not exists:
-                    errors.append('Attribute \'input.path\' must be a valid path in the CyVerse Data Store')
-                elif kind == 'file' and actual_kind != 'file':
-                    errors.append(f"Attribute 'input.kind' is 'file' but 'input.path' is of kind {actual_kind} (must be file)")
-                elif (kind == 'files' or kind == 'directory') and actual_kind != 'dir':
-                    errors.append(f"Attribute 'input.kind' is 'files' or 'directory' but attribute 'input.path' is of kind {actual_kind} (must be directory))")
+                # exists, actual_kind = terrain.path_exists_and_type(path, TerrainToken.get())
+                # if not exists:
+                #     errors.append('Attribute \'input.path\' must be a valid path in the CyVerse Data Store')
+                # if kind == 'file' and actual_kind != 'file':
+                #     errors.append(f"Attribute 'input.kind' is 'file' but 'input.path' is of kind {actual_kind} (must be file)")
+                # elif (kind == 'files' or kind == 'directory') and actual_kind != 'dir':
+                #     errors.append(f"Attribute 'input.kind' is 'files' or 'directory' but attribute 'input.path' is of kind {actual_kind} (must be directory))")
             else:
                 errors.append('Attribute \'input.path\' must be a valid path in the CyVerse Data Store')
 

@@ -201,7 +201,7 @@ def share_data(self, guid: str):
         terrain.share_dir({
             'sharing': [
                 {
-                    'user': task.user.username,
+                    'user': settings.CYVERSE_USERNAME,
                     'paths': paths
                 }
             ]
@@ -530,23 +530,17 @@ def unshare_data(self, guid: str):
 
     try:
         options = task.workflow
-        paths = [
-            {
-                'path': options['output']['to'],
-                # 'permission': 'write'
-            }
-        ]
-        if 'input' in options:
-            paths.append({
-                'path': options['input']['path'],
-                # 'permission': 'read'
-            })
+        paths = [options['output']['to']]
+        # if the input is a publicly shared directory, no need to revoke access (the request would fail anyway)
+        if 'input' in options and '/iplant/home/shared' not in options['input']['path']:
+            paths.append(options['input']['path'])
 
         # revoke the plantit CyVerse user's access to the source and target collections
         terrain.unshare_dir({
             'unshare': [
                 {
-                    'user': task.user.username,
+                    # 'user': task.user.username,
+                    'user': settings.CYVERSE_USERNAME,
                     'paths': paths
                 }
             ]

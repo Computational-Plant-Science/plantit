@@ -43,6 +43,7 @@ def get_weights(distances: np.ndarray, band: np.ndarray) -> np.ndarray:
     :return: The weights of the band points
     """
 
+    # TODO: figure out why array indexing fails sometimes here
     normed_ds = distances[band] / np.max(distances[band])
     bandwidth = len(band)
     mu = 0
