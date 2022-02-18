@@ -53,6 +53,60 @@ class SSH:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
     reraise=True)
+def execute_interactive_command(
+        ssh: SSH,
+        precommand: str,
+        command: str,
+        responses: List[str],
+        directory: str = None,
+        allow_stderr: bool = False) -> List[str]:
+    """
+        Executes the given command on the given SSH connection, providing the given new-line separated responses via stdin.
+        This method is a generator and will yield any output produced line by line.
+
+        Args:
+            ssh: The SSH client.
+            precommand: Commands to prepend to the primary command.
+            command: The command.
+            responses: The responses to be provided to input prompts following the command.
+            directory: Directory to run the command in.
+            allow_stderr: Whether to permit `stderr` output (by default an error is thrown).
+
+        Returns:
+
+        """
+    full_command = f"{precommand} && {command}"
+    if directory is not None: full_command = f"cd {directory} && {full_command}"
+
+    logger.info(f"Executing command on '{ssh.host}': {full_command}")
+    stdin, stdout, stderr = ssh.client.exec_command(f"bash --login -c '{full_command}'", get_pty=True)
+    for response in responses:
+        stdin.write(f"{response}\n")
+        stdin.flush()
+    stdin.close()
+
+    for line in iter(lambda: stdout.readline(2048), ""):
+        clean = clean_html(line)
+        logger.debug(f"Received stdout from '{ssh.host}': '{clean}'")
+        yield clean
+
+    errors = []
+    for line in iter(lambda: stderr.readline(2048), ""):
+        clean = clean_html(line)
+        logger.warning(f"Received stderr from '{ssh.host}': '{clean}'")
+        yield clean
+
+    if stdout.channel.recv_exit_status() != 0:
+        raise Exception(f"Received non-zero exit status from '{ssh.host}'")
+    elif not allow_stderr and len(errors) > 0:
+        raise Exception(f"Received stderr: {errors}")
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    reraise=True)
 def execute_command(
         ssh: SSH,
         precommand: str,
@@ -87,8 +141,6 @@ def execute_command(
     errors = []
     for line in iter(lambda: stderr.readline(2048), ""):
         clean = clean_html(line)
-        # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
-        if 'WARNING' not in clean: errors.append(clean)
         logger.warning(f"Received stderr from '{ssh.host}': '{clean}'")
         yield clean
 

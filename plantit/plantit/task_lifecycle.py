@@ -1,42 +1,37 @@
+import json
+import logging
 import os
 import subprocess
 import tempfile
-import logging
 import traceback
-from os import environ
-from os.path import join, isdir
-from pathlib import Path
-from typing import List, Tuple
-
-import binascii
-import json
 import uuid
 from datetime import timedelta
+from os.path import join, isdir
+from pathlib import Path
+from typing import List
 
-import yaml
-from asgiref.sync import async_to_sync
-
+import binascii
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTasks
-
 from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
+import plantit.terrain as terrain
 from plantit import docker as docker
-from plantit.agents.models import Agent, AgentScheduler
+from plantit.agents.models import Agent
+from plantit.keypairs import get_user_private_key_path
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
-from plantit.task_scripts import compose_task_run_script, compose_task_launcher_script
+from plantit.task_resources import get_task_ssh_client
+from plantit.task_scripts import compose_job_script, compose_launcher_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
-from plantit.utils.misc import del_none
 from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns, \
     get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
-from plantit.keypairs import get_user_private_key_path
 
 logger = logging.getLogger(__name__)
 
@@ -182,28 +177,8 @@ def create_repeating_task(user: User, workflow):
     return task, created
 
 
-def configure_task_environment(task: Task):
-    log_task_orchestrator_status(task, [f"Verifying configuration"])
-    async_to_sync(push_task_channel_event)(task)
-
-    parse_errors, cli_options = parse_task_cli_options(task)
-
-    if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
-
-    work_dir = join(task.agent.workdir, task.guid)
-    log_task_orchestrator_status(task, [f"Creating working directory"])
-    async_to_sync(push_task_channel_event)(task)
-
-    ssh = get_task_ssh_client(task)
-    with ssh:
-        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
-        log_task_orchestrator_status(task, [f"Uploading task"])
-        upload_task_script(task, ssh, cli_options)
-        async_to_sync(push_task_channel_event)(task)
-
-
-def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
-    # task working directory
+def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
+    # working directory
     work_dir = join(task.agent.workdir, task.workdir)
 
     # NOTE: paramiko is finicky about connecting to certain hosts.
@@ -217,48 +192,44 @@ def upload_task_script(task: Task, ssh: SSH, options: TaskOptions):
     #   it probably means the remote host's disk is full.
     #   could catch the error and show an alert in the UI.
 
-    # if this workflow has input files, create a directory for them
+    # if this workflow has input files...
     if 'input' in options:
+        # create a directory for them
         logger.info(f"Creating input directory for task {task.guid}")
-        list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}"))
+        for line in list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
 
-    # compose the task script, write a temporary local copy, then transfer it to the deployment target
+        # get their filenames
+        if 'input' not in options or options['input'] is None: inputs = []
+        kind = options['input']['kind']
+        path = options['input']['path']
+        token = task.user.profile.cyverse_access_token
+        paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
+        inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
+    else: inputs = []
+
+    # compose the job script and transfer it to the selected agent
     with tempfile.NamedTemporaryFile() as task_script:
-        lines = compose_task_run_script(task, options, environ.get('TASKS_TEMPLATE_SCRIPT_SLURM'))
+        lines = compose_job_script(task, options, inputs)
         for line in lines: task_script.write(f"{line}\n".encode('utf-8'))
         task_script.seek(0)
-        logger.info(os.stat(task_script.name))
-        cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh"
-        logger.info(f"Uploading job script for task {task.guid} using command: {cmd}")
-        subprocess.run(cmd, shell=True)
+        logger.info(f"Uploading job script for task {task.guid}")
+        subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
 
     # if the selected agent uses the TACC Launcher, create and upload a launcher script too
     if task.agent.launcher:
         with tempfile.NamedTemporaryFile() as launcher_script:
-            launcher_commands = compose_task_launcher_script(task, options)
+            launcher_commands = compose_launcher_script(task, options, inputs)
             for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
             launcher_script.seek(0)
-            logger.info(os.stat(launcher_script.name))
-            cmd = f"scp -v -o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, os.environ.get('LAUNCHER_SCRIPT_NAME'))}"
-            logger.info(f"Uploading launcher script for task {task.guid} using command: {cmd}")
-            subprocess.run(cmd, shell=True)
+            logger.info(f"Uploading launcher script for task {task.guid}")
+            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.LAUNCHER_SCRIPT_NAME)}", shell=True)
+    # otherwise upload a list of inputs for the SLURM job array
     else:
-        # set default directory for input files
-        if 'input' in options:
-            path = options['input']['path']
-            kind = options['input']['kind']
-            many = kind == InputKind.DIRECTORY or kind == InputKind.FILES
-            options['input']['path'] = 'input' if path == '' or many else f"input/{path.rpartition('/')[2]}"
-
-        # TODO support for more schedulers
-        options['jobqueue'] = {'slurm': options['jobqueue']}
-
-        # upload the config file for the CLI
-        logger.info(f"Uploading config for task {task.guid}")
-        with ssh.client.open_sftp() as sftp:
-            sftp.chdir(work_dir)
-            with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
-                yaml.dump(del_none(options), cli_file, default_flow_style=False)
+        with tempfile.NamedTemporaryFile() as inputs_file:
+            for line in inputs: inputs_file.write(f"{line}\n".encode('utf-8'))
+            inputs_file.seek(0)
+            logger.info(f"Uploading inputs file for task {task.guid}")
+            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {inputs_file.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.INPUTS_FILE_NAME)}", shell=True)
 
 
 def submit_task_to_scheduler(task: Task, ssh: SSH) -> str:
@@ -437,14 +408,14 @@ def list_result_files(task: Task) -> List[dict]:
     seen = []
     results = []
     ssh = get_task_ssh_client(task)
-    workdir = join(task.agent.workdir, task.workdir)
+    staging_dir = join(task.agent.workdir, task.workdir, f"{task.guid}_staging")
     expected_names = get_output_included_names(task)
     expected_patterns = get_output_included_patterns(task)
 
     with ssh:
         with ssh.client.open_sftp() as sftp:
             # list contents of task working directory
-            names = sftp.listdir(workdir)
+            names = sftp.listdir(staging_dir)
 
             # check for files by name
             logger.info(f"Looking for files by name: {', '.join(expected_patterns)}")
@@ -457,11 +428,10 @@ def list_result_files(task: Task) -> List[dict]:
 
                 output = {
                     'name': name,
-                    'path': join(workdir, name),
+                    'path': join(staging_dir, name),
                     'exists': exists
                 }
                 results.append(output)
-
 
                 # file_path = join(workdir, expected_name)
                 # stdin, stdout, stderr = ssh.client.exec_command(f"test -e {file_path} && echo exists")
@@ -485,7 +455,7 @@ def list_result_files(task: Task) -> List[dict]:
                         if not any(s == name for s in seen):
                             results.append({
                                 'name': name,
-                                'path': join(workdir, name),
+                                'path': join(staging_dir, name),
                                 'exists': True
                             })
 
@@ -496,7 +466,7 @@ def list_result_files(task: Task) -> List[dict]:
                 if not any_matched:
                     results.append({
                         'name': f"*.{pattern}",
-                        'path': join(workdir, f"*.{pattern}"),
+                        'path': join(staging_dir, f"*.{pattern}"),
                         'exists': False
                     })
 
@@ -504,8 +474,7 @@ def list_result_files(task: Task) -> List[dict]:
     return results
 
 
-
-def parse_task_cli_options(task: Task) -> (List[str], TaskOptions):
+def parse_task_options(task: Task) -> (List[str], TaskOptions):
     config = task.workflow
     config['workdir'] = join(task.agent.workdir, task.guid)
     config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"

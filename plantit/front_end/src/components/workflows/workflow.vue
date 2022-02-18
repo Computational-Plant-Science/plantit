@@ -3918,7 +3918,7 @@ export default {
                 from: '',
                 to: '',
                 include: {
-                    patterns: ['log', 'out', 'err'],
+                    patterns: ['out', 'err'],
                     names: [],
                 },
                 exclude: {

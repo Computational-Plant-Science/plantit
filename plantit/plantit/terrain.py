@@ -5,15 +5,17 @@ import multiprocessing
 import pprint
 from contextlib import closing
 from multiprocessing import Pool
-from os import environ, listdir
+from os import environ
 from os.path import basename, join, isfile, isdir
 from typing import List, Tuple
 
 import httpx
 import requests
-from requests import RequestException, ReadTimeout, Timeout, HTTPError
+from requests import RequestException, ReadTimeout, Timeout
 from requests.auth import HTTPBasicAuth
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+
+from plantit.utils.misc import list_local_files
 
 logger = logging.getLogger(__name__)
 
@@ -30,46 +32,15 @@ class BadResponse(Exception):
     pass
 
 
-def list_files(path,
-               include_patterns=None,
-               include_names=None,
-               exclude_patterns=None,
-               exclude_names=None):
-    # gather all files
-    all_paths = [join(path, file) for file in listdir(path) if isfile(join(path, file))]
-
-    # add files matching included patterns
-    included_by_pattern = [pth for pth in all_paths if any(
-        pattern.lower() in pth.lower() for pattern in include_patterns)] if include_patterns is not None else all_paths
-
-    # add files included by name
-    included_by_name = ([pth for pth in all_paths if pth.rpartition('/')[2] in [name for name in include_names]] \
-                            if include_names is not None else included_by_pattern) + \
-                       [pth for pth in all_paths if pth in [name for name in include_names]] \
-        if include_names is not None else included_by_pattern
-
-    # gather only included files
-    included = list(set(included_by_pattern + included_by_name))
-
-    # remove files matched excluded patterns
-    excluded_by_pattern = [name for name in included if all(pattern.lower() not in name.lower() for pattern in
-                                                            exclude_patterns)] if exclude_patterns is not None else included
-
-    # remove files excluded by name
-    excluded_by_name = [pattern for pattern in excluded_by_pattern if pattern.split('/')[
-        -1] not in exclude_names] if exclude_names is not None else excluded_by_pattern
-
-    return excluded_by_name
-
-
 @retry(
     reraise=True,
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def get_profile(username: str, access_token: str) -> dict:
+    logger.debug(f"Getting CyVerse profile for user {username}")
     response = requests.get(
         f"https://de.cyverse.org/terrain/secured/user-info?username={username}",
         headers={'Authorization': f"Bearer {access_token}"})
@@ -85,8 +56,9 @@ def get_profile(username: str, access_token: str) -> dict:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def refresh_tokens(username: str, refresh_token: str) -> (str, str):
+    logger.debug(f"Refreshing CyVerse tokens for user {username}")
     response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
         'grant_type': 'refresh_token',
         'client_id': environ.get('CYVERSE_CLIENT_ID'),
@@ -113,8 +85,9 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def list_dir(path: str, token: str) -> List[str]:
+    logger.debug(f"Listing data store directory {path}")
     with requests.get(
             f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
             headers={'Authorization': f"Bearer {token}"}) as response:
@@ -133,8 +106,9 @@ def list_dir(path: str, token: str) -> List[str]:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
-async def get_dirs(paths: List[str], token: str, timeout: int = 15):
+        Timeout)))
+async def get_dirs_async(paths: List[str], token: str, timeout: int = 15):
+    logger.debug(f"Listing data store directories: {', '.join(paths)}")
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}" for path in paths]
     headers = {
         "Authorization": f"Bearer {token}",
@@ -145,7 +119,15 @@ async def get_dirs(paths: List[str], token: str, timeout: int = 15):
         return results
 
 
-async def create_dir(path: str, token: str, timeout: int = 15):
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout)))
+async def create_dir_async(path: str, token: str, timeout: int = 15):
+    logger.debug(f"Creating data store directory {path}")
     headers = {
         "Authorization": f"Bearer {token}",
     }
@@ -160,14 +142,32 @@ async def create_dir(path: str, token: str, timeout: int = 15):
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
-async def share_dir(dir: dict, token: str, timeout: int = 15):
+        Timeout)))
+def share_dir(data: dict, token: str, timeout: int = 15):
+    logger.debug(f"Sharing data store path(s): {json.dumps(data)}")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json;charset=utf-8"
+    }
+    with requests.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(data), headers=headers, timeout=timeout) as response:
+        response.raise_for_status()
+
+
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout)))
+async def share_dir_async(data: dict, token: str, timeout: int = 15):
+    logger.debug(f"Sharing data store path(s): {json.dumps(data)}")
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json;charset=utf-8"
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(dir))
+        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(data))
         response.raise_for_status()
 
 
@@ -177,15 +177,32 @@ async def share_dir(dir: dict, token: str, timeout: int = 15):
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
-async def unshare_dir(path: str, token: str, timeout: int = 15):
+        Timeout)))
+def unshare_dir(data: dict, token: str, timeout: int = 15):
+    logger.debug(f"Unsharing data store path(s): {json.dumps(data)}")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": 'application/json;charset=utf-8'
+    }
+    with requests.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps(data), headers=headers, timeout=timeout) as response:
+        response.raise_for_status()
+
+
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout)))
+async def unshare_dir_async(data: dict, token: str, timeout: int = 15):
+    logger.debug(f"Unsharing data store path(s): {json.dumps(data)}")
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": 'application/json;charset=utf-8'
     }
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-        response = await client.post("https://de.cyverse.org/terrain/secured/unshare",
-                                     data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
+        response = await client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps(data))
         response.raise_for_status()
 
 
@@ -195,8 +212,9 @@ async def unshare_dir(path: str, token: str, timeout: int = 15):
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
-def get_file(path: str, token: str) -> List[str]:
+        Timeout)))
+def get_file(path: str, token: str) -> dict:
+    logger.debug(f"Getting data store file {path}")
     with requests.post(
             "https://de.cyverse.org/terrain/secured/filesystem/stat",
             data=json.dumps({'paths': [path]}),
@@ -217,7 +235,7 @@ def get_file(path: str, token: str) -> List[str]:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def path_exists(path, token) -> bool:
     """
     Checks whether a collection (directory) or object (file) exists at the given path.
@@ -228,6 +246,8 @@ def path_exists(path, token) -> bool:
 
     Returns: True if the path exists, otherwise False
     """
+
+    logger.debug(f"Checking if data store path exists: {path}")
 
     data = {'paths': [path]}
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json;charset=utf-8"}
@@ -254,17 +274,19 @@ def path_exists(path, token) -> bool:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def path_exists_and_type(path, token) -> Tuple[bool, str]:
     """
-        Checks whether a collection (directory) or object (file) exists at the given path, and returns its type.
+    Checks whether a collection (directory) or object (file) exists at the given path, and returns its type.
 
-        Args:
-            path: The path
-            token: The authentication token
+    Args:
+        path: The path
+        token: The authentication token
 
-        Returns: (True, type of object) if the path exists, otherwise (False, None)
-        """
+    Returns: (True, type of object) if the path exists, otherwise (False, None)
+    """
+
+    logger.debug(f"Checking if data store path exists (and type): {path}")
 
     data = {'paths': [path]}
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
@@ -286,7 +308,6 @@ def path_exists_and_type(path, token) -> Tuple[bool, str]:
     if 'paths' not in content: raise ValueError(f"No paths on response: {content}")
     if path not in content['paths'].keys(): return False, None
     return True, content['paths'][path]['type']
-
 
     # response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
     #                         headers={"Authorization": f"Bearer {token}"})
@@ -365,15 +386,15 @@ def path_exists_and_type(path, token) -> Tuple[bool, str]:
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
+        Timeout)))
 def push_file(from_path: str, to_prefix: str, token: str):
-    print(f"Uploading '{from_path}' to '{to_prefix}'")
+    logger.debug(f"Uploading {from_path} to data store path {to_prefix}")
     with open(from_path, 'rb') as file:
         with requests.post(f"https://de.cyverse.org/terrain/secured/fileio/upload?dest={to_prefix}",
                            headers={'Authorization': f"Bearer {token}"},
                            files={'file': (basename(from_path), file, 'application/octet-stream')}) as response:
             if response.status_code == 500 and response.json()['error_code'] == 'ERR_EXISTS':
-                print(f"File '{join(to_prefix, basename(file.name))}' already exists, skipping upload")
+                logger.warning(f"File '{join(to_prefix, basename(file.name))}' already exists, skipping upload")
             else:
                 response.raise_for_status()
 
@@ -384,14 +405,28 @@ def push_dir(from_path: str,
              include_names: List[str] = None,
              exclude_patterns: List[str] = None,
              exclude_names: List[str] = None):
+    """
+    Pushes the contents of the local directory (matching the given criteria, if provided) to the given data store collection.
+    Invokes `push_file()` internally, so no need for an outer retry policy.
+
+    Args:
+        from_path: The local directory path
+        to_prefix: The data store collection path
+        include_patterns: Filename patterns to include
+        include_names: Filenames to include
+        exclude_patterns: Filename patterns to exclude
+        exclude_names: Filenames to exclude
+    """
+
+    # check path type
     is_file = isfile(from_path)
     is_dir = isdir(from_path)
 
     if not (is_dir or is_file):
         raise FileNotFoundError(f"Local path '{from_path}' does not exist")
     elif is_dir:
-        from_paths = list_files(from_path, include_patterns, include_names, exclude_patterns, exclude_names)
-        print(f"Uploading directory '{from_path}' with {len(from_paths)} file(s) to '{to_prefix}'")
+        from_paths = list_local_files(from_path, include_patterns, include_names, exclude_patterns, exclude_names)
+        logger.debug(f"Uploading directory '{from_path}' with {len(from_paths)} file(s) to '{to_prefix}'")
         with closing(Pool(processes=multiprocessing.cpu_count())) as pool:
             pool.starmap(push_file, [(path, to_prefix) for path in [str(p) for p in from_paths]])
     elif is_file:

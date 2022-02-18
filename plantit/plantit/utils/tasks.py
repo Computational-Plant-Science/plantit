@@ -56,12 +56,12 @@ def get_output_included_names(task: Task) -> List[str]:
         included.append(f"plantit.{task.job_id}.out")
         included.append(f"plantit.{task.job_id}.err")
 
-    return included
+    return list(set(included))
 
 
 def get_output_included_patterns(task: Task) -> List[str]:
     try:
-        return list(task.workflow['output']['include']['patterns'])
+        return list(set(list(task.workflow['output']['include']['patterns'])))
     except:
         return []
 

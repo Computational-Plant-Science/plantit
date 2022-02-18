@@ -21,7 +21,10 @@ assert 'TASKS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: TASKS_TIM
 assert 'TASKS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: TASKS_REFRESH_SECONDS"
 assert 'TASKS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: TASKS_CLEANUP_MINUTES"
 assert 'TASKS_STEP_TIME_LIMIT_SECONDS' in os.environ, f"{missing_variable}: TASKS_STEP_TIME_LIMIT_SECONDS"
+assert 'TASKS_TEMPLATE_SCRIPT_SLURM' in os.environ, f"{missing_variable}: TASKS_TEMPLATE_SCRIPT_SLURM"
 assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
+assert 'INPUTS_FILE_NAME' in os.environ, f"{missing_variable}: INPUTS_FILE_NAME"
+assert 'ICOMMANDS_IMAGE' in os.environ, f"{missing_variable}: ICOMMANDS_IMAGE"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -42,6 +45,8 @@ assert 'AGENTS_HEALTHCHECKS_MINUTES' in os.environ, f"{missing_variable} AGENTS_
 assert 'AGENTS_HEALTHCHECKS_SAVED' in os.environ, f"{missing_variable} AGENTS_HEALTHCHECKS_SAVED"
 assert 'HTTP_TIMEOUT' in os.environ, f"{missing_variable} HTTP_TIMEOUT"
 assert 'STATS_WINDOW_WIDTH_DAYS' in os.environ, f"{missing_variable} STATS_WINDOW_WIDTH_DAYS"
+assert 'DOCKER_USERNAME' in os.environ, f"{missing_variable} DOCKER_USERNAME"
+assert 'DOCKER_PASSWORD' in os.environ, f"{missing_variable} DOCKER_PASSWORD"
 
 # global Celery task timeout
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
@@ -67,8 +72,11 @@ TASKS_TIMEOUT_MULTIPLIER = os.environ.get('TASKS_TIMEOUT_MULTIPLIER')
 TASKS_REFRESH_SECONDS = os.environ.get('TASKS_REFRESH_SECONDS')
 TASKS_CLEANUP_MINUTES = os.environ.get('TASKS_CLEANUP_MINUTES')
 TASKS_STEP_TIME_LIMIT_SECONDS = os.environ.get('TASKS_STEP_TIME_LIMIT_SECONDS')
+TASKS_TEMPLATE_SCRIPT_SLURM = os.environ.get('TASKS_TEMPLATE_SCRIPT_SLURM')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
+INPUTS_FILE_NAME = os.environ.get('INPUTS_FILE_NAME')
+ICOMMANDS_IMAGE = os.environ.get('ICOMMANDS_IMAGE')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")
 TUTORIALS_FILE = os.environ.get("TUTORIALS_FILE")
 FEEDBACK_FILE = os.environ.get("FEEDBACK_FILE")
@@ -76,6 +84,8 @@ AGENTS_HEALTHCHECKS_MINUTES = os.environ.get("AGENTS_HEALTHCHECKS_MINUTES")
 AGENTS_HEALTHCHECKS_SAVED = os.environ.get("AGENTS_HEALTHCHECKS_SAVED")
 HTTP_TIMEOUT = os.environ.get("HTTP_TIMEOUT")
 STATS_WINDOW_WIDTH_DAYS = os.environ.get("STATS_WINDOW_WIDTH_DAYS")
+DOCKER_USERNAME = os.environ.get("DOCKER_USERNAME")
+DOCKER_PASSWORD = os.environ.get("DOCKER_PASSWORD")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
@@ -268,25 +278,23 @@ REST_FRAMEWORK = {
 
 TAGGIT_CASE_INSENSITIVE = True
 
+CACHES = {
+    'default': {
+        # TODO reinstate redis once we update to Django 4
+        # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # 'LOCATION': 'redis://redis:6379',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
+
 CACHEOPS_REDIS = {
     'host': 'redis',  # redis-server is on same machine
     'port': 6379,  # default redis port
 }
 
-# Alternatively the redis connection can be defined using a URL:
-# CACHEOPS_REDIS = "redis://redis:6379/1"
-
 CACHEOPS = {
-    # cache User.objects.get() calls and all other plantit model gets for 15 minutes
-    # 'auth.user': {'ops': 'get', 'timeout': 60 * 15, 'cache_on_save': True},
     'plantit.*': {'ops': 'get', 'timeout': 60 * 15},
-
-    # Enable manual caching on all other models with default timeout of an hour
-    # Use Post.objects.cache().get(...)
-    #  or Tags.objects.filter(...).order_by(...).cache()
-    # to cache particular ORM request.
-    # Invalidation is still automatic
-    # '*.*': {'ops': (), 'timeout': 60*60},
 }
 
 # SWAGGER_SETTINGS = {

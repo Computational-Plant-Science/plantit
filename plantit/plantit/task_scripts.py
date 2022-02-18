@@ -11,250 +11,19 @@ from typing import List
 from django.conf import settings
 
 from plantit import terrain as terrain
-from plantit.agents.models import AgentScheduler
 from plantit.task_resources import push_task_channel_event, log_task_orchestrator_status
 
-from plantit.tasks.models import Task, InputKind, TaskOptions, EnvironmentVariable, BindMount, Parameter
+from plantit.tasks.models import Task, InputKind, TaskOptions, Parameter, EnvironmentVariable
 from plantit.utils.agents import has_virtual_memory
-from plantit.utils.tasks import format_bind_mount
+
+from plantit.singularity import compose_singularity_invocation
 
 logger = logging.getLogger(__name__)
 
 
-def compose_task_pull_command(task: Task, options: TaskOptions) -> str:
-    if 'input' not in options: return ''
-    input = options['input']
-    if input is None: return ''
-    kind = input['kind']
+# commands
 
-    if kind != InputKind.FILE and 'patterns' in input:
-        # allow for both spellings of JPG
-        patterns = [pattern.lower() for pattern in input['patterns']]
-        if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
-        elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
-    else:
-        patterns = []
-
-    command = f"plantit terrain pull \"{input['path']}\"" \
-              f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
-              f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-              f""f" --terrain_token {task.user.profile.cyverse_access_token}"
-
-    logger.debug(f"Using pull command: {command}")
-    return command
-
-
-def compose_task_run_commands(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
-    docker_username = environ.get('DOCKER_USERNAME', None)
-    docker_password = environ.get('DOCKER_PASSWORD', None)
-    commands = []
-
-    # if this resource uses TACC's launcher, create a parameter sweep script to invoke the Singularity container
-    if task.agent.launcher:
-        commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
-        commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}\n")
-        commands.append("$LAUNCHER_DIR/paramrun\n")
-    # otherwise use the CLI
-    else:
-        command = f"plantit run {task.guid}.yaml"
-        if task.agent.job_array and len(inputs) > 0:
-            command += f" --slurm_job_array"
-
-        if docker_username is not None and docker_password is not None:
-            command += f" --docker_username {docker_username} --docker_password {docker_password}"
-
-        commands.append(command)
-
-    newline = '\n'
-    logger.debug(f"Using CLI commands: {newline.join(commands)}")
-    return commands
-
-
-def compose_task_clean_commands(task: Task) -> str:
-    docker_username = environ.get('DOCKER_USERNAME', None)
-    docker_password = environ.get('DOCKER_PASSWORD', None)
-    cmd = f"plantit clean *.out -p {docker_username} -p {docker_password}"
-    cmd += f"\nplantit clean *.err -p {docker_username} -p {docker_password}"
-
-    if task.agent.launcher:
-        workdir = join(task.agent.workdir, task.workdir)
-        launcher_script = join(workdir, os.environ.get('LAUNCHER_SCRIPT_NAME'))
-        cmd += f"\nplantit clean {launcher_script} -p {docker_username} -p {docker_password} "
-
-    return cmd
-
-
-def compose_task_zip_command(task: Task, options: TaskOptions) -> str:
-    if 'output' in options:
-        output = options['output']
-    else:
-        output = dict()
-        output['include'] = dict()
-        output['include']['names'] = dict()
-        output['include']['patterns'] = dict()
-        output['exclude'] = dict()
-        output['exclude']['names'] = dict()
-        output['exclude']['patterns'] = dict()
-
-    # merge output patterns and files from workflow config
-    config = task.workflow
-    if 'output' in config:
-        if 'include' in config['output']:
-            if 'patterns' in config['output']['include']:
-                output['include']['patterns'] = list(
-                    set(output['include']['patterns'] + config['output']['include']['patterns']))
-            if 'names' in config['output']['include']:
-                output['include']['names'] = list(
-                    set(output['include']['names'] + config['output']['include']['names']))
-        if 'exclude' in config['output']:
-            if 'patterns' in config['output']['exclude']:
-                output['exclude']['patterns'] = list(
-                    set(output['exclude']['patterns'] + config['output']['exclude']['patterns']))
-            if 'names' in config['output']['exclude']:
-                output['exclude']['names'] = list(
-                    set(output['exclude']['names'] + config['output']['exclude']['names']))
-
-    command = f"plantit zip {output['from'] if 'from' in output and output['from'] != '' else '.'} -o . -n {task.guid}"
-    logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
-    command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
-
-    if 'include' in output:
-        if 'patterns' in output['include']:
-            command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
-        if 'names' in output['include']:
-            command = f"{command} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
-    if 'exclude' in output:
-        if 'patterns' in output['exclude']:
-            command = f"{command} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
-        if 'names' in output['exclude']:
-            command = f"{command} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
-
-    logger.debug(f"Using zip command: {command}")
-    return command
-
-
-def compose_task_push_command(task: Task, options: TaskOptions) -> str:
-    command = ''
-    if 'output' not in options: return command
-    output = options['output']
-    if output is None: return command
-
-    # add push command if we have a destination
-    if 'to' in output and output['to'] is not None:
-        command = f"plantit terrain push {output['to']} -p {join(task.agent.workdir, task.workdir, output['from'])} "
-
-        if 'include' in output:
-            if 'patterns' in output['include']:
-                patterns = list(output['include']['patterns'])
-                patterns.append('.out')
-                patterns.append('.err')
-                patterns.append('.zip')
-                command = command + ' ' + ' '.join(['--include_pattern ' + pattern for pattern in patterns])
-            if 'names' in output['include']:
-                command = command + ' ' + ' '.join(
-                    ['--include_name ' + pattern for pattern in output['include']['names']])
-        if 'exclude' in output:
-            if 'patterns' in output['exclude']:
-                command = command + ' ' + ' '.join(
-                    ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-            if 'names' in output['exclude']:
-                command = command + ' ' + ' '.join(
-                    ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
-
-        command += f" --terrain_token '{task.user.profile.cyverse_access_token}'"
-
-    logger.debug(f"Using push command: {command}")
-    return command
-
-
-def compose_task_run_script(task: Task, options: TaskOptions, template: str) -> List[str]:
-    with open(template, 'r') as template_file:
-        template_header = [line.strip() for line in template_file if line != '']
-
-    if 'input' in options and options['input'] is not None:
-        kind = options['input']['kind']
-        path = options['input']['path']
-        cyverse_token = task.user.profile.cyverse_access_token
-        inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path,
-                                                                                                         cyverse_token)
-    else:
-        inputs = []
-
-    resource_requests = compose_task_resource_requests(task, options, inputs)
-    cli_pull = compose_task_pull_command(task, options)
-    cli_run = compose_task_run_commands(task, options, inputs)
-    cli_clean = compose_task_clean_commands(task)
-    cli_zip = compose_task_zip_command(task, options)
-    cli_push = compose_task_push_command(task, options)
-
-    return template_header + \
-           resource_requests + \
-           [task.agent.pre_commands] + \
-           [cli_pull] + \
-           cli_run + \
-           [cli_clean] + \
-           [cli_zip] + \
-           [cli_push]
-
-
-def compose_task_singularity_command(
-        work_dir: str,
-        image: str,
-        command: str,
-        env: List[EnvironmentVariable] = None,
-        bind_mounts: List[BindMount] = None,
-        parameters: List[Parameter] = None,
-        no_cache: bool = False,
-        gpus: int = 0,
-        shell: str = None,
-        docker_username: str = None,
-        docker_password: str = None,
-        index: int = None) -> str:
-
-    cmd = ''
-
-    # prepend environment variables in SINGULARITYENV_<key> format
-    if env is not None:
-        if len(env) > 0: cmd += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}=\"{v['value']}\"" for v in env])
-        cmd += ' '
-
-    # substitute parameters
-    if parameters is None: parameters = []
-    if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
-    parameters.append(Parameter(key='WORKDIR', value=work_dir))
-    for parameter in parameters:
-        key = parameter['key'].upper().replace(' ', '_')
-        val = str(parameter['value'])
-        cmd += f" SINGULARITYENV_{key}=\"{val}\""
-
-    # singularity invocation and working directory
-    cmd += f" singularity exec --home {work_dir}"
-
-    # add bind mount arguments
-    if bind_mounts is not None and len(bind_mounts) > 0:
-        cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-
-    # whether to use the Singularity cache
-    if no_cache: cmd += ' --disable-cache'
-
-    # whether to use GPUs (Nvidia)
-    if gpus: cmd += ' --nv'
-
-    # append the command
-    if shell is None: shell = 'sh'
-    cmd += f" {image} {shell} -c '{command}'"
-
-    # don't want to reveal secrets, so log the command before prepending secret env vars
-    logger.debug(f"Using command: '{cmd}'")
-
-    # docker auth info (optional)
-    if docker_username is not None and docker_password is not None:
-        cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
-
-    return cmd
-
-
-def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+def compose_headers(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
     nodes = calculate_node_count(task, inputs)
     tasks = min(len(inputs), task.agent.max_cores)
     task.inputs_detected = len(inputs)
@@ -271,13 +40,14 @@ def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: Lis
         commands.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
     if 'walltime' in jobqueue or 'time' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
-        async_to_sync(push_task_channel_event)(task)
         task.job_requested_walltime = walltime
         task.save()
         commands.append(f"#SBATCH --time={walltime}")
     if gpus and task.agent.orchestrator_queue is None: commands.append(f"#SBATCH --gres=gpu:{gpus}")
-    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '': commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
-    elif task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.queue}")
+    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '':
+        commands.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    elif task.agent.queue is not None and task.agent.queue != '':
+        commands.append(f"#SBATCH --partition={task.agent.queue}")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0 and options['input']['kind'] == 'files':
         if task.agent.job_array: commands.append(f"#SBATCH --array=1-{len(inputs)}")
@@ -292,81 +62,243 @@ def compose_task_resource_requests(task: Task, options: TaskOptions, inputs: Lis
     commands.append("#SBATCH --error=plantit.%j.err")
 
     newline = '\n'
-    logger.debug(f"Using resource requests: {newline.join(commands)}")
+    logger.debug(f"Using headers: {newline.join(commands)}")
     return commands
 
 
-def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
-    lines = []
+def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
+    if 'input' not in options: return []
+    input = options['input']
+    if input is None: return []
+    # kind = input['kind']
+    # patterns = []
+    # if kind != InputKind.FILE and 'patterns' in input:
+    #     # allow for both spellings of JPG
+    #     patterns = [pattern.lower() for pattern in input['patterns']]
+    #     if 'jpg' in patterns and 'jpeg' not in patterns:
+    #         patterns.append("jpeg")
+    #     elif 'jpeg' in patterns and 'jpg' not in patterns:
+    #         patterns.append("jpg")
+
+    # command = f"plantit terrain pull \"{input['path']}\"" \
+    #           f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
+    #           f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
+    #           f""f" --terrain_token {task.user.profile.cyverse_access_token}"
+    input_path = input['path']
+    workdir = join(task.agent.workdir, task.workdir, 'input')
+    image = f"docker://{settings.ICOMMANDS_IMAGE}"
+    # command = f"SINGULARITY_DOCKER_USERNAME={settings.DOCKER_USERNAME} SINGULARITY_DOCKER_PASSWORD={settings.DOCKER_PASSWORD} " \
+    #           f"singularity exec --home {workdir} {image} iget {input_path} {workdir}"
+              # f"bash -c \"echo '{settings.CYVERSE_PASSWORD}' | iget {input_path} {workdir}\""
+    command = f"singularity exec {image} iget {input_path} {workdir}"
+
+    logger.debug(f"Using pull command: {command}")
+    return [command]
+
+
+def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
+    commands = []
+
+    # if this agent uses TACC's launcher, invoke the parameter sweep script
+    if task.agent.launcher:
+        commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
+        commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}\n")
+        commands.append("$LAUNCHER_DIR/paramrun\n")
+    # otherwise use SLURM job arrays
+    else:
+        work_dir = options['workdir']
+        image = options['image']
+        command = options['command']
+        env = options['env']
+        gpus = options[
+            'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+        parameters = (options['parameters'] if 'parameters' in options else []) + [
+            Parameter(key='OUTPUT', value=options['output']['from']),
+            Parameter(key='GPUS', value=str(gpus))]
+        bind_mounts = options['bind_mounts'] if (
+                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+        no_cache = options['no_cache'] if 'no_cache' in options else False
+        shell = options['shell'] if 'shell' in options else None
+        docker_username = environ.get('DOCKER_USERNAME', None)
+        docker_password = environ.get('DOCKER_PASSWORD', None)
+
+        if 'input' in options:
+            if options['input']['kind'] == 'files' or options['input']['kind'] == 'file':
+                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID test.txt | tail -1)")
+                commands = commands + compose_singularity_invocation(
+                    work_dir=work_dir,
+                    image=image,
+                    commands=command,
+                    env=env,
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', '$file'))],
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
+                    gpus=gpus,
+                    shell=shell,
+                    docker_username=docker_username,
+                    docker_password=docker_password)
+            elif options['input']['kind'] == 'directory':
+                commands = commands + compose_singularity_invocation(
+                    work_dir=work_dir,
+                    image=image,
+                    commands=command,
+                    env=env,
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
+                    gpus=gpus,
+                    shell=shell,
+                    docker_username=docker_username,
+                    docker_password=docker_password)
+        else:
+            commands = commands + compose_singularity_invocation(
+                work_dir=work_dir,
+                image=image,
+                commands=command,
+                env=env,
+                parameters=parameters,
+                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+                no_cache=no_cache,
+                gpus=gpus,
+                shell=shell,
+                docker_username=docker_username,
+                docker_password=docker_password)
+
+    newline = '\n'
+    logger.debug(f"Using container commands: {newline.join(commands)}")
+    return commands
+
+
+def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
+    commands = []
+
+    # create staging directory
+    staging_dir = f"{task.guid}_staging"
+    mkdir_command = f"mkdir -p {staging_dir}"
+    commands.append(mkdir_command)
+
+    # move results into staging directory
+    mv_command = f"mv -t {staging_dir} "
+    output = options['output']
+    if 'include' in output:
+        if 'names' in output['include']:
+            for name in output['include']['names']:
+                mv_command = mv_command + f"{name} "
+        if 'patterns' in output['include']:
+            for pattern in (list(output['include']['patterns']) + ['out', 'err', 'zip']):
+                mv_command = mv_command + f"*.{pattern} "
+    else: raise ValueError(f"No output filenames & patterns to include")
+    commands.append(mv_command)
+
+    # filter unwanted results from staging directory
+    # TODO: can we do this in a single step with mv?
+    # rm_command = f"rm "
+    # if 'exclude' in output:
+    #     if 'patterns' in output['exclude']:
+    #         command = command + ' ' + ' '.join(
+    #             ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+    #     if 'names' in output['exclude']:
+    #         command = command + ' ' + ' '.join(
+    #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+
+    # zip results
+    zip_command = f"zip -r {join(staging_dir, task.guid + '.zip')} {staging_dir}/*"
+    commands.append(zip_command)
+
+    path = output['to']
+    image = f"docker://{settings.ICOMMANDS_IMAGE}"
+    push_command = f"singularity exec {image} iput -f {staging_dir}/* {path}"
+    commands.append(push_command)
+
+    newline = '\n'
+    logger.debug(f"Using push commands: {newline.join(commands)}")
+    return commands
+
+
+# scripts
+
+def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+        template = [line.strip() for line in template_file if line != '']
+        headers = compose_headers(task, options, inputs)
+        pull = compose_pull_commands(task, options)
+        run = compose_container_commands(task, options)
+        # zip = compose_zip_commands(task, options)
+        push = compose_push_commands(task, options)
+
+        return template + \
+               headers + \
+               [task.agent.pre_commands] + \
+               pull + \
+               run + \
+               push
+
+
+def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    lines: List[str] = []
     work_dir = options['workdir']
     image = options['image']
     command = options['command']
     env = options['env']
-    gpus = options['gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+    gpus = options[
+        'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
     parameters = (options['parameters'] if 'parameters' in options else []) + [
-                Parameter(key='OUTPUT', value=options['output']['from']),
-                Parameter(key='GPUS', value=str(gpus))]
-    bind_mounts = options['bind_mounts'] if ('bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+        Parameter(key='OUTPUT', value=options['output']['from']),
+        Parameter(key='GPUS', value=str(gpus))]
+    bind_mounts = options['bind_mounts'] if (
+            'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
     no_cache = options['no_cache'] if 'no_cache' in options else False
     shell = options['shell'] if 'shell' in options else None
     docker_username = environ.get('DOCKER_USERNAME', None)
     docker_password = environ.get('DOCKER_PASSWORD', None)
 
     if 'input' in options:
-        files = list_input_files(task, options) if (
-                'input' in options and options['input']['kind'] == 'files') else []
-        task.inputs_detected = len(files)
-        task.save()
-
         if options['input']['kind'] == 'files':
-            for i, file in enumerate(files):
-                file_name = file.rpartition('/')[2]
-                lines.append(compose_task_singularity_command(
+            for i, file in enumerate(inputs):
+                lines = lines + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
-                    command=command,
+                    commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file))],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,
                     shell=shell,
                     docker_username=docker_username,
                     docker_password=docker_password,
-                    index=i))
+                    index=i)
         elif options['input']['kind'] == 'directory':
-            dir_name = 'input'
-            lines.append(compose_task_singularity_command(
+            lines = lines + compose_singularity_invocation(
                 work_dir=work_dir,
                 image=image,
-                command=command,
+                commands=command,
                 env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], dir_name))],
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
                 bind_mounts=bind_mounts,
                 no_cache=no_cache,
                 gpus=gpus,
                 shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password))
+                docker_password=docker_password)
         elif options['input']['kind'] == 'file':
-            file_name = options['input']['path'].rpartition('/')[2]
-            lines.append(compose_task_singularity_command(
+            lines = lines + compose_singularity_invocation(
                 work_dir=work_dir,
                 image=image,
-                command=command,
+                commands=command,
                 env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', inputs[0]))],
                 bind_mounts=bind_mounts,
                 no_cache=no_cache,
                 gpus=gpus,
                 shell=shell,
                 docker_username=docker_username,
-                docker_password=docker_password))
+                docker_password=docker_password)
     else:
-        lines.append(compose_task_singularity_command(
+        lines = lines + compose_singularity_invocation(
             work_dir=work_dir,
             image=image,
-            command=command,
+            commands=command,
             env=env,
             parameters=parameters,
             bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
@@ -374,22 +306,12 @@ def compose_task_launcher_script(task: Task, options: TaskOptions) -> List[str]:
             gpus=gpus,
             shell=shell,
             docker_username=docker_username,
-            docker_password=docker_password))
+            docker_password=docker_password)
 
     return lines
 
 
 # utils
-
-def list_input_files(task: Task, options: TaskOptions) -> List[str]:
-    input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
-    msg = f"Found {len(input_files)} input file(s)"
-    log_task_orchestrator_status(task, [msg])
-    async_to_sync(push_task_channel_event)(task)
-    logger.info(msg)
-
-    return input_files
-
 
 def calculate_node_count(task: Task, inputs: List[str]):
     node_count = min(len(inputs), task.agent.max_nodes)
@@ -410,9 +332,12 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     if 'time' in task.workflow and 'limit' in task.workflow['time'] and 'units' in task.workflow['time']:
         units = task.workflow['time']['units']
         limit = int(task.workflow['time']['limit'])
-        if units.lower() == 'hours': walltime = timedelta(hours=limit, minutes=0, seconds=0)
-        elif units.lower() == 'minutes': walltime = timedelta(hours=0, minutes=limit, seconds=0)
-        elif units.lower() == 'seconds': walltime = timedelta(hours=0, minutes=0, seconds=limit)
+        if units.lower() == 'hours':
+            walltime = timedelta(hours=limit, minutes=0, seconds=0)
+        elif units.lower() == 'minutes':
+            walltime = timedelta(hours=0, minutes=limit, seconds=0)
+        elif units.lower() == 'seconds':
+            walltime = timedelta(hours=0, minutes=0, seconds=limit)
 
     # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
     # need to compute suggested walltime as a function of workflow, agent, and number of inputs
@@ -429,7 +354,8 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     # round up to the nearest hour
     job_walltime = ceil(walltime.total_seconds() / 60 / 60)
     agent_walltime = int(int(task.agent.max_walltime) / 60)
-    hours = f"{min(job_walltime, agent_walltime)}"
+    hours = min(job_walltime, agent_walltime)
+    hours = '1' if hours == 0 else f"{hours}"
     if len(hours) == 1: hours = f"0{hours}"
     adjusted_str = f"{hours}:00:00"
 
