@@ -143,11 +143,13 @@ class TaskUtilsTests(TestCase):
         )
 
         # even if no output config is provided, we still want default inclusions
-        self.assertEqual(get_output_included_names(task), [
+        expected = sorted([
             f"{guid}.zip",
             f"plantit.{guid[0:7]}.out",
             f"plantit.{guid[0:7]}.err",
         ])
+        actual = sorted(get_output_included_names(task))
+        self.assertEqual(actual, expected)
 
         guid = str(uuid.uuid4())
         task = Task.objects.create(
@@ -164,11 +166,13 @@ class TaskUtilsTests(TestCase):
             }
         )
 
-        self.assertEqual(get_output_included_names(task), [
+        expected = sorted([
             f"{guid}.zip",
             f"plantit.{guid[0:7]}.out",
             f"plantit.{guid[0:7]}.err",
         ])
+        actual = sorted(get_output_included_names(task))
+        self.assertEqual(actual, expected)
 
         guid = str(uuid.uuid4())
         task = Task.objects.create(
