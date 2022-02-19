@@ -46,10 +46,7 @@
                             <span v-else-if="context === 'Public'"
                                 ><i class="fas fa-users fa-fw"></i> Public</span
                             >
-                            <span
-                                v-else-if="
-                                    context === 'Yours'
-                                "
+                            <span v-else-if="context === 'Yours'"
                                 ><i class="fas fa-user fa-fw"></i> Yours</span
                             >
                             <span
@@ -218,48 +215,51 @@
                         >No public workflows have been published yet.</span
                     ><span v-else-if="context === 'Examples'"
                         >There are no example workflows to show.</span
-                    ><span v-else-if="context === 'Yours'"
-                        >
-              <div
-            v-if="
-                !profile.loggedIntoGithub
-            "
-        >
-            <b-row align-v="center"
-                ><b-col class="text-center" align-self="center">
-                    <br />
-                    <br />
-                    <i
-                        class="fas fa-exclamation-circle fa-fw fa-3x text-warning"
-                    ></i
-                    ><br />
-                    We need to link your
-                    <i class="fab fa-github fa-fw fa-1x"></i
-                    ><b-img
-                        class="m-0"
-                        rounded
-                        style="max-height: 1.2rem"
-                        :src="
-                            profile.darkMode
-                                ? require('../../assets/logos/github_white.png')
-                                : require('../../assets/logos/github_black.png')
-                        "
-                    ></b-img>
-                    account before you can bind your own workflows.<br />Click the button below to log in.<br /><br /><b-button
-                        class="mt-1 text-left text-dark"
-                        variant="warning"
-                        size="md"
-                        href="/apis/v1/idp/github_request_identity/"
-                    >
-                        <i class="fab fa-github"></i>
-                        Log in to GitHub
-                    </b-button></b-col
-                ></b-row
-            >
-        </div>
-              <span v-else>You haven't created any workflow bindings yet. Add a
-                        <code>plantit.yaml</code> file to any public repository
-                        to bind a workflow.</span></span
+                    ><span v-else-if="context === 'Yours'">
+                        <div v-if="!profile.loggedIntoGithub">
+                            <b-row align-v="center"
+                                ><b-col class="text-center" align-self="center">
+                                    <br />
+                                    <br />
+                                    <i
+                                        class="
+                                            fas
+                                            fa-exclamation-circle fa-fw fa-3x
+                                            text-warning
+                                        "
+                                    ></i
+                                    ><br />
+                                    We need to link your
+                                    <i class="fab fa-github fa-fw fa-1x"></i
+                                    ><b-img
+                                        class="m-0"
+                                        rounded
+                                        style="max-height: 1.2rem"
+                                        :src="
+                                            profile.darkMode
+                                                ? require('../../assets/logos/github_white.png')
+                                                : require('../../assets/logos/github_black.png')
+                                        "
+                                    ></b-img>
+                                    account before you can bind your own
+                                    workflows.<br />Click the button below to
+                                    log in.<br /><br /><b-button
+                                        class="mt-1 text-left text-dark"
+                                        variant="warning"
+                                        size="md"
+                                        href="/apis/v1/idp/github_request_identity/"
+                                    >
+                                        <i class="fab fa-github"></i>
+                                        Log in to GitHub
+                                    </b-button></b-col
+                                ></b-row
+                            >
+                        </div>
+                        <span v-else
+                            >You haven't created any workflow bindings yet. Add
+                            a <code>plantit.yaml</code> file to any public
+                            repository to bind a workflow.</span
+                        ></span
                     ><span
                         v-else-if="
                             getProjects.map((c) => c.title).includes(context)
@@ -371,7 +371,9 @@ export default {
         },
         getWorkflows() {
             if (this.context === 'Public')
-                return [...this.excludeExamples(this.publicWorkflows)].sort(this.sortWorkflows);
+                return [...this.excludeExamples(this.publicWorkflows)].sort(
+                    this.sortWorkflows
+                );
             else if (this.context === 'Yours')
                 return [...this.userWorkflows].sort(this.sortWorkflows);
             else if (
@@ -389,8 +391,9 @@ export default {
                     this.sortWorkflows
                 );
             else if (this.context === 'Featured') {
-                // return [...this.excludeExamples(this.publicWorkflows)]
-              return []
+                return [...this.excludeExamples(this.publicWorkflows)].filter(
+                    (wf) => wf.featured
+                );
             } else
                 return [...this.orgWorkflows[this.context]].sort(
                     this.sortWorkflows
@@ -399,7 +402,7 @@ export default {
         workflowsLoading() {
             return this.context === ''
                 ? this.publicWorkflowsLoading
-                : (this.context === 'Yours')
+                : this.context === 'Yours'
                 ? this.userWorkflowsLoading
                 : this.orgWorkflowsLoading;
         },
@@ -411,13 +414,13 @@ export default {
 @import "../../scss/main.sass"
 
 .darkjson
-  background: #fff
-  white-space: nowrap
-  color: #525252
-  font-size: 14px
-  font-family: Consolas, Menlo, Courier, monospace
+    background: #fff
+    white-space: nowrap
+    color: #525252
+    font-size: 14px
+    font-family: Consolas, Menlo, Courier, monospace
 
-  .jv-ellipsis
+.jv-ellipsis
     color: #999
     background-color: #eee
     display: inline-block
@@ -429,37 +432,37 @@ export default {
     cursor: pointer
     user-select: none
 
-  .jv-button
+.jv-button
     color: #49b3ff
-  .jv-key
+.jv-key
     color: #111111
-  .jv-item
+.jv-item
     &.jv-array
-      color: #111111
+        color: #111111
     &.jv-boolean
-      color: #fc1e70
+        color: #fc1e70
     &.jv-function
-      color: #067bca
+        color: #067bca
     &.jv-number
-      color: #fc1e70
+        color: #fc1e70
     &.jv-number-float
-      color: #fc1e70
+        color: #fc1e70
     &.jv-number-integer
-      color: #fc1e70
+        color: #fc1e70
     &.jv-object
-      color: #111111
+        color: #111111
     &.jv-undefined
-      color: #e08331
+        color: #e08331
     &.jv-string
-      color: #42b983
-      word-break: break-word
-      white-space: normal
-  .jv-code
+        color: #42b983
+        word-break: break-word
+        white-space: normal
+.jv-code
     .jv-toggle
-      &:before
+    &:before
         padding: 0px 2px
         border-radius: 2px
-      &:hover
+    &:hover
         &:before
-          background: #eee
+            background: #eee
 </style>
