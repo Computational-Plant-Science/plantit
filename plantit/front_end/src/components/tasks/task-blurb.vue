@@ -28,13 +28,7 @@
                         ? 'text-white'
                         : 'text-dark'
                 "
-                >{{
-                    !task.agent.is_local &&
-                    !task.is_complete &&
-                    task.job_status !== null
-                        ? task.job_status.toUpperCase()
-                        : task.status.toUpperCase()
-                }}</b
+                >{{ getTaskStatus }}</b
             >
             <small class="ml-1 mr-1">on</small>
             <small>
@@ -73,7 +67,7 @@
                     },
                 }"
                 replace
-                >{{ task.guid}}</b-link
+                >{{ task.guid }}</b-link
             >
             <span v-if="project && task.project !== null">
                 <br />
@@ -131,11 +125,18 @@
                 :src="task.workflow_image_url"
             ></b-img>
             <small v-if="task.workflow_name !== null" class="mr-1 mb-0"
-                ><a
+                ><b-link
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    :href="`https://github.com/${task.workflow_owner}/${task.workflow_name}`"
+                    @click="
+                        openInNewTab(
+                            'https://github.com/' +
+                                task.workflow_owner +
+                                '/' +
+                                task.workflow_name
+                        )
+                    "
                     ><i class="fab fa-github fa-fw"></i>
-                    {{ task.workflow_owner }}/{{ task.workflow_name }}</a
+                    {{ task.workflow_owner }}/{{ task.workflow_name }}</b-link
                 >
             </small>
             <br />
@@ -191,9 +192,20 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
+        openInNewTab(url) {
+            window.open(url);
+        },
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
+        getTaskStatus() {
+            if (!this.task.is_complete) {
+                if (this.task.job_status === null)
+                    return this.task.status.toUpperCase();
+                else return this.task.job_status.toUpperCase();
+            }
+            return this.task.status.toUpperCase();
+        },
     },
 };
 </script>

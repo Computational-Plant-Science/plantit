@@ -889,6 +889,7 @@ export default {
         }
 
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
+        // TODO: is this still necessary?
         await Promise.all([
             store.dispatch('user/loadProfile'),
             this.getVersion(),
@@ -997,15 +998,9 @@ export default {
         showFeedbackModal() {
             this.$bvModal.show('feedback');
         },
-        hideFeedbackModal() {
-            this.$bvModal.hide('feedback');
-        },
         showTasksSidebar() {
             // this.$refs.tasks.show();
             if (this.profile.loggedIn) this.tasksSidebarOpen = true;
-        },
-        hideTasksSidebar() {
-            this.tasksSidebarOpen = false;
         },
         brandEnter() {
             if (this.profile.loggedIn) {
@@ -1071,26 +1066,28 @@ export default {
                 // notification event
                 await this.handleNotification(data.notification);
             } else {
-                // unrecognized event type
+                // TODO: log unrecognized event type
             }
         },
         async handleTask(task) {
-            // this.taskToasted = task;
-            // this.$bvToast.show('toast');
             await this.$store.dispatch('tasks/addOrUpdate', task);
             await this.$store.dispatch('alerts/add', {
                 variant: 'success',
                 message: `Task ${task.name} ${
-                    !task.agent.is_local &&
-                    !task.is_complete &&
-                    task.job_status !== null
-                        ? task.job_status.toUpperCase()
-                        : task.status.toUpperCase()
+                    this.getTaskStatus(task)
                 } on ${task.agent.name}: ${
                     task.orchestrator_logs[task.orchestrator_logs.length - 1]
                 }`,
                 guid: guid().toString(),
             });
+        },
+        getTaskStatus(task) {
+            if (!task.is_complete) {
+                if (task().job_status === null)
+                    return task.status.toUpperCase();
+                else return task.job_status.toUpperCase();
+            }
+            return task.status.toUpperCase();
         },
         async handleNotification(notification) {
             await this.$store.dispatch('notifications/update', notification);

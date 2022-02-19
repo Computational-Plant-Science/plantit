@@ -62,7 +62,7 @@
                     <b-link
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
                         @click="
-                            openRepo(
+                            openInNewTab(
                                 'https://github.com/' +
                                     workflow.repo.owner.login +
                                     '/' +
@@ -115,7 +115,7 @@ export default {
         },
     },
     methods: {
-        openRepo(url) {
+        openInNewTab(url) {
             window.open(url);
         },
     },

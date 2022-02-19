@@ -3,11 +3,14 @@ import traceback
 from datetime import timedelta, datetime
 from os.path import join
 from typing import List
+import logging
 
 from dateutil import parser
 from django.utils import timezone
 
 from plantit.tasks.models import Task, BindMount
+
+logger = logging.getLogger(__name__)
 
 
 def format_bind_mount(workdir: str, bind_mount: BindMount) -> str:

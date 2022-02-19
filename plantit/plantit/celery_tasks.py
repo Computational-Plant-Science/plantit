@@ -191,7 +191,8 @@ def share_data(self, guid: str):
                 'permission': 'write'
             }
         ]
-        if 'input' in options:
+        # if the input is a publicly shared directory, no need to grant temp access
+        if 'input' in options and '/iplant/home/shared' not in options['input']['path']:
             paths.append({
                 'path': options['input']['path'],
                 'permission': 'read'
@@ -207,8 +208,8 @@ def share_data(self, guid: str):
             ]
         }, task.user.profile.cyverse_access_token)
 
-        log_task_orchestrator_status(task, [f"Granted temporary data access"])
-        async_to_sync(push_task_channel_event)(task)
+        # log_task_orchestrator_status(task, [f"Granted temporary data access"])
+        # async_to_sync(push_task_channel_event)(task)
 
         return guid
     except Exception:
@@ -546,8 +547,8 @@ def unshare_data(self, guid: str):
             ]
         }, task.user.profile.cyverse_access_token)
 
-        log_task_orchestrator_status(task, [f"Revoked temporary data access"])
-        async_to_sync(push_task_channel_event)(task)
+        # log_task_orchestrator_status(task, [f"Revoked temporary data access"])
+        # async_to_sync(push_task_channel_event)(task)
 
         # mark the task completed
         now = timezone.now()
@@ -563,6 +564,7 @@ def unshare_data(self, guid: str):
     except Exception:
         self.request.callbacks = None
         message = f"Failed to revoke temporary data access: {traceback.format_exc()}"
+        logger.error(message)
 
         # mark the task failed and persist it
         task.status = TaskStatus.FAILURE
@@ -572,8 +574,8 @@ def unshare_data(self, guid: str):
         task.save()
 
         # log status update and push it to client
-        log_task_orchestrator_status(task, [message])
-        async_to_sync(push_task_channel_event)(task)
+        # log_task_orchestrator_status(task, [message])
+        # async_to_sync(push_task_channel_event)(task)
 
         # push AWS SNS notification
         if task.user.profile.push_notification_status == 'enabled':

@@ -70,6 +70,18 @@ If you do not provide a `jobqueue` section in your `plantit.yaml`, tasks deploye
 
 To indicate that your workflow can take advantage of GPUs (only available on select deployment targets) add a `gpu: True` line to your configuration file. When deployed to environments with GPUs, your task will have access to an environment variable `GPUS`, set to the number of GPU devices provided by the host.
 
+### Environment variables
+
+You can provide runtime environment variables in an `env` section, for instance:
+
+```yaml
+...
+env:
+  - LC_ALL=C.UTF-8
+  - LANG=C.UTF-8
+...
+```
+
 ### Parameters
 
 To parametrize your workflow, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:

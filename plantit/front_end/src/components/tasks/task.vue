@@ -33,132 +33,106 @@
                     </h6>
                 </b-col>
             </b-row>-->
-            <b-row>
-                <b-col>
-                    <div v-if="!tasksLoading">
-                        <b-row class="m-0 p-0">
-                            <b-col md="auto" align-self="end" class="m-0 p-0">
-                                <h4
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    <i class="fas fa-tasks fa-fw"></i>
-                                    {{ getTask.guid }}
-                                </h4></b-col
-                            ><b-col class="m-0 ml-2 p-0">
-                                <h5>
-                                    <b-badge
-                                        v-for="tag in getTask.tags"
-                                        v-bind:key="tag"
-                                        class="mr-2"
-                                        variant="secondary"
-                                        >{{ tag }}</b-badge
-                                    >
-                                </h5>
-                            </b-col>
-                            <b-col md="auto">
-                                <b-spinner
-                                    v-if="!getTask.is_complete"
-                                    class="mr-1"
-                                    small
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                </b-spinner>
-                                <b
-                                    :class="
-                                        getTask.is_failure || getTask.is_timeout
-                                            ? 'text-danger'
-                                            : getTask.is_cancelled
-                                            ? 'text-secondary'
-                                            : getTask.is_complete
-                                            ? 'text-success'
-                                            : profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >{{
-                                        !getTask.agent.is_local &&
-                                        !getTask.is_complete &&
-                                        getTask.job_status !== null
-                                            ? getTask.job_status.toUpperCase()
-                                            : getTask.status.toUpperCase()
-                                    }}</b
-                                >
-                                <small class="ml-1 mr-1">on</small>
-                                <b-link
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    :to="{
-                                        name: 'agent',
-                                        params: {
-                                            name: getTask.agent.name,
-                                        },
-                                    }"
-                                    ><b-img
-                                        v-if="getTask.agent.logo"
-                                        rounded
-                                        class="overflow-hidden"
-                                        style="max-height: 1rem"
-                                        :src="getTask.agent.logo"
-                                    ></b-img
-                                    ><i v-else class="fas fa-server fa-fw"></i>
-                                    {{
-                                        getTask.agent
-                                            ? getTask.agent.name
-                                            : '[agent removed]'
-                                    }}</b-link
-                                ></b-col
-                            >
-                        </b-row>
-                        <b-row
-                            ><b-col
-                                ><span
-                                    v-if="
-                                        getTask.output_path !== null &&
-                                        getTask.output_path !== ''
-                                    "
-                                >
-                                    <small v-if="getTask.input_path !== null"
-                                        ><i class="far fa-folder fa-fw mr-1"></i
-                                        >{{ getTask.input_path }}</small
-                                    ><small v-else
-                                        ><i
-                                            v-if="profile.darkMode"
-                                            class="far fa-circle text-white fa-fw"
-                                        ></i
-                                        ><i
-                                            v-else
-                                            class="far fa-circle text-dark fa-fw"
-                                        ></i
-                                    ></small>
-                                    <small
-                                        ><i
-                                            v-if="profile.darkMode"
-                                            class="fas fa-arrow-right text-white fa-fw mr-1 ml-1"
-                                        ></i
-                                        ><i
-                                            v-else
-                                            class="fas fa-arrow-right text-dark fa-fw mr-1 ml-1"
-                                        ></i
-                                    ></small>
-                                    <small v-if="getTask.output_path !== null"
-                                        ><i class="far fa-folder fa-fw mr-1"></i
-                                        >{{ getTask.output_path }}</small
-                                    >
-                                </span></b-col
-                            ></b-row
+            <b-row v-else class="m-0 p-0">
+                <b-col md="auto" align-self="end" class="m-0 p-0">
+                    <h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        <i class="fas fa-tasks fa-fw"></i>
+                        {{ getTask.guid }}
+                    </h4></b-col
+                ><b-col class="m-0 ml-2 p-0">
+                    <h5>
+                        <b-badge
+                            v-for="tag in getTask.tags"
+                            v-bind:key="tag"
+                            class="mr-2"
+                            variant="secondary"
+                            >{{ tag }}</b-badge
                         >
-                        <!--<b-row v-if="getTask.project !== null"
+                    </h5>
+                </b-col>
+                <b-col md="auto">
+                    <b-spinner
+                        v-if="!getTask.is_complete"
+                        class="mr-1"
+                        small
+                        :variant="profile.darkMode ? 'text-white' : 'text-dark'"
+                    >
+                    </b-spinner>
+                    <b
+                        :class="
+                            getTask.is_failure || getTask.is_timeout
+                                ? 'text-danger'
+                                : getTask.is_cancelled
+                                ? 'text-secondary'
+                                : getTask.is_complete
+                                ? 'text-success'
+                                : profile.darkMode
+                                ? 'text-white'
+                                : 'text-dark'
+                        "
+                        >{{ getTaskStatus }}</b
+                    >
+                    <small class="ml-1 mr-1">on</small>
+                    <b-link
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        :to="{
+                            name: 'agent',
+                            params: {
+                                name: getTask.agent.name,
+                            },
+                        }"
+                        ><b-img
+                            v-if="getTask.agent.logo"
+                            rounded
+                            class="overflow-hidden"
+                            style="max-height: 1rem"
+                            :src="getTask.agent.logo"
+                        ></b-img
+                        ><i v-else class="fas fa-server fa-fw"></i>
+                        {{
+                            getTask.agent
+                                ? getTask.agent.name
+                                : '[agent removed]'
+                        }}</b-link
+                    ></b-col
+                >
+            </b-row>
+            <b-row
+                ><b-col
+                    ><span
+                        v-if="
+                            getTask.output_path !== null &&
+                            getTask.output_path !== ''
+                        "
+                    >
+                        <small v-if="getTask.input_path !== null"
+                            ><i class="far fa-folder fa-fw mr-1"></i
+                            >{{ getTask.input_path }}</small
+                        ><small v-else
+                            ><i
+                                v-if="profile.darkMode"
+                                class="far fa-circle text-white fa-fw"
+                            ></i
+                            ><i v-else class="far fa-circle text-dark fa-fw"></i
+                        ></small>
+                        <small
+                            ><i
+                                v-if="profile.darkMode"
+                                class="fas fa-arrow-right text-white fa-fw mr-1 ml-1"
+                            ></i
+                            ><i
+                                v-else
+                                class="fas fa-arrow-right text-dark fa-fw mr-1 ml-1"
+                            ></i
+                        ></small>
+                        <small v-if="getTask.output_path !== null"
+                            ><i class="far fa-folder fa-fw mr-1"></i
+                            >{{ getTask.output_path }}</small
+                        >
+                    </span></b-col
+                ></b-row
+            >
+            <!--<b-row v-if="getTask.project !== null"
                             ><b-col md="auto"
                                 ><h5>
                                     <b-badge class="mr-2" variant="info">{{
@@ -172,16 +146,12 @@
                                 </h5></b-col
                             ></b-row
                         >-->
-                        <b-row class="m-0 p-0">
-                            <b-col align-self="end" class="m-0 p-0">
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'theme-dark'
-                                            : 'theme-light'
-                                    "
-                                >
-                                    <!--<b-badge
+            <b-row class="m-0 p-0">
+                <b-col align-self="end" class="m-0 p-0">
+                    <h5
+                        :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                    >
+                        <!--<b-badge
                                         :variant="
                                             getTask.is_failure ||
                                             getTask.is_timeout
@@ -198,813 +168,567 @@
                                     >
                                     <small> on </small>-->
 
-                                    <b-link
-                                        v-if="getTask.project !== null"
+                        <b-link
+                            v-if="getTask.project !== null"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-light ml-3'
+                                    : 'text-dark ml-3'
+                            "
+                            :to="{
+                                name: 'project',
+                                params: {
+                                    owner: getTask.project.owner,
+                                    title: getTask.project.title,
+                                },
+                            }"
+                            ><b-img
+                                class="mb-1 mr-1"
+                                style="max-width: 18px"
+                                :src="
+                                    profile.darkMode
+                                        ? require('../../assets/miappe_icon.png')
+                                        : require('../../assets/miappe_icon_black.png')
+                                "
+                            ></b-img>
+                            <span v-if="getTask.project !== null"
+                                >{{ getTask.project.title }}
+                                <small v-if="getTask.study !== null">{{
+                                    getTask.study.title
+                                }}</small></span
+                            ></b-link
+                        >
+                    </h5>
+                </b-col>
+                <b-col md="auto" class="m-0 mb-2" align-self="start">
+                    <b-button
+                        :disabled="canceling"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        :title="`${getTask.guid} (click to copy to clipboard)`"
+                        @click="copyGUID"
+                        ><i class="fas fa-copy fa-fw"></i>GUID</b-button
+                    >
+                </b-col>
+                <b-col
+                    v-if="
+                        getTask.is_complete &&
+                        getTask.can_restart &&
+                        getWorkflow !== null
+                    "
+                    md="auto"
+                    class="m-0 mb-2"
+                    align-self="start"
+                >
+                    <b-button
+                        :disabled="restarted"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        :title="'Restart this task'"
+                        @click="restart"
+                    >
+                        <i class="fas fa-level-up-alt fa-fw"></i>Restart
+                        <b-spinner
+                            small
+                            v-if="restarted"
+                            label="Loading..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            style="width: 0.7rem; height: 0.7rem"
+                        ></b-spinner>
+                    </b-button>
+                </b-col>
+                <b-col
+                    v-if="!getTask.is_complete"
+                    md="auto"
+                    class="m-0 mb-2"
+                    align-self="start"
+                >
+                    <b-button
+                        :disabled="canceling"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Cancel Task"
+                        @click="cancel"
+                    >
+                        <i class="fas fa-times fa-fw"></i>
+                        Cancel<b-spinner
+                            small
+                            v-if="canceling"
+                            label="Loading..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="ml-2 mb-1"
+                        ></b-spinner>
+                    </b-button>
+                </b-col>
+                <b-col md="auto" class="m-0 mb-2" align-self="start">
+                    <b-button
+                        v-if="getTask.is_complete"
+                        :disabled="tasksLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Refresh Task"
+                        @click="refresh"
+                    >
+                        <i class="fas fa-redo"></i>
+                        Refresh
+                        <b-spinner
+                            small
+                            v-if="tasksLoading"
+                            label="Loading..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="ml-2 mb-1"
+                        ></b-spinner>
+                    </b-button>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-card
+                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        border-variant="default"
+                        :footer-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
+                        style="min-height: 5rem"
+                        class="overflow-hidden mt-0"
+                        no-body
+                        :style="
+                            getTask.is_failure || getTask.is_timeout
+                                ? 'border-bottom: 5px solid red'
+                                : getTask.is_cancelled
+                                ? 'border-bottom: 5px solid lightgray'
+                                : getTask.is_complete
+                                ? 'border-bottom: 5px solid #d6df5D'
+                                : 'border-bottom: 5px solid #e2e3b0'
+                        "
+                    >
+                        <b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2">
+                            <WorkflowBlurb
+                                v-if="getWorkflow !== null"
+                                :linkable="true"
+                                :workflow="getWorkflow"
+                            ></WorkflowBlurb>
+                            <b-row v-else
+                                ><b-col
+                                    ><span
                                         :class="
                                             profile.darkMode
-                                                ? 'text-light ml-3'
-                                                : 'text-dark ml-3'
+                                                ? 'text-white'
+                                                : 'text-dark'
                                         "
-                                        :to="{
-                                            name: 'project',
-                                            params: {
-                                                owner: getTask.project.owner,
-                                                title: getTask.project.title,
-                                            },
-                                        }"
-                                        ><b-img
-                                            class="mb-1 mr-1"
-                                            style="max-width: 18px"
-                                            :src="
-                                                profile.darkMode
-                                                    ? require('../../assets/miappe_icon.png')
-                                                    : require('../../assets/miappe_icon_black.png')
-                                            "
-                                        ></b-img>
-                                        <span v-if="getTask.project !== null"
-                                            >{{ getTask.project.title }}
-                                            <small
-                                                v-if="getTask.study !== null"
-                                                >{{
-                                                    getTask.study.title
-                                                }}</small
-                                            ></span
-                                        ></b-link
-                                    >
-                                </h5>
-                            </b-col>
-                            <b-col
-                                md="auto"
-                                class="m-0 mb-2"
-                                align-self="start"
+                                        ><h5>{{ workflowKey }}</h5>
+                                        <br /><i
+                                            class="fas fa-exclamation-triangle fa-fw"
+                                        ></i>
+                                        Workflow no longer exists.</span
+                                    ></b-col
+                                ></b-row
                             >
-                                <b-button
-                                    :disabled="canceling"
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    :title="`${getTask.guid} (click to copy to clipboard)`"
-                                    @click="copyGUID"
-                                    ><i class="fas fa-copy fa-fw"></i
-                                    >GUID</b-button
-                                >
-                            </b-col>
-                            <b-col
-                                v-if="
-                                    getTask.is_complete &&
-                                    getTask.can_restart &&
-                                    getWorkflow !== null
+                        </b-card-body>
+                    </b-card>
+                    <b-row class="m-0 p-0 mt-1">
+                        <b-col class="m-0 p-0 text-center">
+                            <small>
+                                <i class="fas fa-seedling fa-fw"></i>
+                                Created
+                                {{ prettify(getTask.created) }}
+                            </small>
+                        </b-col>
+                        <b-col
+                            class="m-0 p-0 text-center"
+                            v-if="!getTask.is_complete"
+                        >
+                            <small>
+                                <i class="fas fa-satellite-dish fa-fw"></i>
+
+                                Last updated
+                                {{ prettify(getTask.updated) }}
+                            </small>
+                        </b-col>
+                        <b-col
+                            class="m-0 p-0 text-center"
+                            v-if="getTask.is_complete"
+                            ><small>
+                                <i class="fas fa-clock fa-fw"></i>
+                                Ran for
+                                {{ prettifyDuration(duration(getTask)) }}</small
+                            ></b-col
+                        >
+                        <b-col class="m-0 p-0 text-center">
+                            <small v-if="getTask.is_complete">
+                                <i class="fas fa-check fa-fw"></i>
+                                Completed
+                                {{ prettify(getTask.completed) }}</small
+                            >
+                            <small v-else>
+                                <i class="fas fa-flag-checkered fa-fw"></i>
+
+                                Due
+                                {{ prettify(getTask.due_time) }}
+                            </small>
+                        </b-col>
+
+                        <b-col
+                            class="m-0 p-0 text-center"
+                            v-if="
+                                getTask.is_complete &&
+                                getTask.cleanup_time !== null
+                            "
+                            ><small>
+                                <i class="fas fa-broom fa-fw"></i>
+
+                                Cleaning up
+                                {{ prettify(getTask.cleanup_time) }}</small
+                            ></b-col
+                        >
+                    </b-row>
+                    <b-row class="m-0 p-0 mt-2">
+                        <b-col class="m-0 p-1">
+                            <div
+                                :class="
+                                    profile.darkMode
+                                        ? 'theme-container-dark m-0 p-1 pt-3 pb-3'
+                                        : 'theme-container-light m-0 p-1 pt-3 pb-3'
                                 "
-                                md="auto"
-                                class="m-0 mb-2"
-                                align-self="start"
                             >
-                                <b-button
-                                    :disabled="restarted"
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    :title="'Restart this task'"
-                                    @click="restart"
-                                >
-                                    <i class="fas fa-level-up-alt fa-fw"></i
-                                    >Restart
-                                    <b-spinner
-                                        small
-                                        v-if="restarted"
-                                        label="Loading..."
-                                        :variant="
-                                            profile.darkMode ? 'light' : 'dark'
-                                        "
-                                        style="width: 0.7rem; height: 0.7rem"
-                                    ></b-spinner>
-                                </b-button>
-                            </b-col>
-                            <b-col
-                                v-if="!getTask.is_complete"
-                                md="auto"
-                                class="m-0 mb-2"
-                                align-self="start"
-                            >
-                                <b-button
-                                    :disabled="canceling"
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    title="Cancel Task"
-                                    @click="cancel"
-                                >
-                                    <i class="fas fa-times fa-fw"></i>
-                                    Cancel<b-spinner
-                                        small
-                                        v-if="canceling"
-                                        label="Loading..."
-                                        :variant="
-                                            profile.darkMode ? 'light' : 'dark'
-                                        "
-                                        class="ml-2 mb-1"
-                                    ></b-spinner>
-                                </b-button>
-                            </b-col>
-                            <b-col
-                                md="auto"
-                                class="m-0 mb-2"
-                                align-self="start"
-                            >
-                                <b-button
-                                    v-if="getTask.is_complete"
-                                    :disabled="tasksLoading"
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    title="Refresh Task"
-                                    @click="refresh"
-                                >
-                                    <i class="fas fa-redo"></i>
-                                    Refresh
-                                    <b-spinner
-                                        small
-                                        v-if="tasksLoading"
-                                        label="Loading..."
-                                        :variant="
-                                            profile.darkMode ? 'light' : 'dark'
-                                        "
-                                        class="ml-2 mb-1"
-                                    ></b-spinner>
-                                </b-button>
-                            </b-col>
-                        </b-row>
-                        <b-row>
-                            <b-col>
-                                <b-card
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :footer-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :footer-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    style="min-height: 5rem"
-                                    class="overflow-hidden mt-0"
-                                    no-body
-                                    :style="
-                                        getTask.is_failure || getTask.is_timeout
-                                            ? 'border-bottom: 5px solid red'
-                                            : getTask.is_cancelled
-                                            ? 'border-bottom: 5px solid lightgray'
-                                            : getTask.is_complete
-                                            ? 'border-bottom: 5px solid #d6df5D'
-                                            : 'border-bottom: 5px solid #e2e3b0'
-                                    "
-                                >
-                                    <b-card-body
-                                        class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
-                                    >
-                                        <WorkflowBlurb
-                                            v-if="getWorkflow !== null"
-                                            :linkable="true"
-                                            :workflow="getWorkflow"
-                                        ></WorkflowBlurb>
-                                        <b-row v-else
-                                            ><b-col
-                                                ><span
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-white'
-                                                            : 'text-dark'
-                                                    "
-                                                    ><h5>{{ workflowKey }}</h5>
-                                                    <br /><i
-                                                        class="fas fa-exclamation-triangle fa-fw"
-                                                    ></i>
-                                                    Workflow no longer
-                                                    exists.</span
-                                                ></b-col
-                                            ></b-row
-                                        >
-                                    </b-card-body>
-                                </b-card>
-                                <b-row class="m-0 p-0 mt-1">
-                                    <b-col class="m-0 p-0 text-center">
-                                        <small>
-                                            <i
-                                                class="fas fa-seedling fa-fw"
-                                            ></i>
-                                            Created
-                                            {{ prettify(getTask.created) }}
-                                        </small>
-                                    </b-col>
-                                    <b-col
-                                        class="m-0 p-0 text-center"
-                                        v-if="!getTask.is_complete"
-                                    >
-                                        <small>
-                                            <i
-                                                class="fas fa-satellite-dish fa-fw"
-                                            ></i>
-
-                                            Last updated
-                                            {{ prettify(getTask.updated) }}
-                                        </small>
-                                    </b-col>
-                                    <b-col
-                                        class="m-0 p-0 text-center"
-                                        v-if="getTask.is_complete"
-                                        ><small>
-                                            <i class="fas fa-clock fa-fw"></i>
-                                            Ran for
-                                            {{
-                                                prettifyDuration(
-                                                    duration(getTask)
-                                                )
-                                            }}</small
-                                        ></b-col
-                                    >
-                                    <b-col class="m-0 p-0 text-center">
-                                        <small v-if="getTask.is_complete">
-                                            <i class="fas fa-check fa-fw"></i>
-                                            Completed
-                                            {{
-                                                prettify(getTask.completed)
-                                            }}</small
-                                        >
-                                        <small v-else>
-                                            <i
-                                                class="fas fa-flag-checkered fa-fw"
-                                            ></i>
-
-                                            Due
-                                            {{ prettify(getTask.due_time) }}
-                                        </small>
-                                    </b-col>
-
-                                    <b-col
-                                        class="m-0 p-0 text-center"
-                                        v-if="
-                                            getTask.is_complete &&
-                                            getTask.cleanup_time !== null
-                                        "
-                                        ><small>
-                                            <i class="fas fa-broom fa-fw"></i>
-
-                                            Cleaning up
-                                            {{
-                                                prettify(getTask.cleanup_time)
-                                            }}</small
-                                        ></b-col
-                                    >
-                                </b-row>
-                                <b-row
-                                    class="m-0 p-0 mt-1"
-                                    v-if="getTask.status !== 'created'"
-                                >
-                                    <b-col class="m-0 p-0">
-                                        <Plotly
+                                <b-row class="m-0"
+                                    ><b-col
+                                        ><Plotly
                                             style="position: relative"
                                             :data="timeseriesData"
                                             :layout="timeseriesLayout"
-                                            :staticPlot="true"
-                                        ></Plotly>
+                                        ></Plotly></b-col
+                                ></b-row>
+                                <b-row class="m-0">
+                                    <b-col
+                                        v-if="
+                                            getTask.orchestrator_logs.length > 0
+                                        "
+                                        class="m-0 p-0 pl-3 pr-3"
+                                        style="white-space: pre-line"
+                                    >
+                                        <span
+                                            v-for="line in taskLogs"
+                                            v-bind:key="line"
+                                            v-show="
+                                                line !== undefined &&
+                                                line !== null
+                                            "
+                                            >{{ line + '\n' }}</span
+                                        >
                                     </b-col>
+                                    <b-col v-else
+                                        ><b-skeleton-wrapper
+                                            :loading="!getTask.is_complete"
+                                        >
+                                            <template #loading>
+                                                <b-skeleton
+                                                    width="15%"
+                                                ></b-skeleton
+                                                ><b-skeleton
+                                                    width="25%"
+                                                ></b-skeleton
+                                                ><b-skeleton
+                                                    width="20%"
+                                                ></b-skeleton></template></b-skeleton-wrapper
+                                    ></b-col>
                                 </b-row>
-                                <b-row class="m-0 p-0 mt-2">
-                                    <b-col class="m-0 p-1">
-                                        <div
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'theme-container-dark m-0 p-1 pt-3 pb-3'
-                                                    : 'theme-container-light m-0 p-1 pt-3 pb-3'
+                            </div>
+                            <div
+                                class="m-3"
+                                v-if="
+                                    getTask.is_complete &&
+                                    getTask.output_files !== undefined
+                                "
+                            >
+                                <b-row
+                                    v-if="
+                                        getTask.is_complete &&
+                                        getTask.results_retrieved &&
+                                        getTask.output_files !== undefined &&
+                                        getTask.output_files.length > 0
+                                    "
+                                    align-h="center"
+                                    align-v="center"
+                                    class="mt-2 mb-2"
+                                >
+                                    <b-col
+                                        align-self="center"
+                                        class="text-center"
+                                        v-if="
+                                            getTask.results_retrieved &&
+                                            getTask.output_files.length > 0
+                                        "
+                                    >
+                                        <span v-if="getTask.results_retrieved"
+                                            >{{
+                                                getTask.output_files.length
+                                            }}
+                                            results found</span
+                                        ><span
+                                            v-else-if="
+                                                getTask.status !== 'running'
                                             "
-                                        >
-                                            <div>
-                                                <b-row
-                                                    align-h="center"
-                                                    v-if="tasksLoading"
-                                                >
-                                                    <b-spinner
-                                                        class="mt-3"
-                                                        type="grow"
-                                                        label="Loading..."
-                                                        variant="secondary"
-                                                    ></b-spinner>
-                                                </b-row>
-                                                <!--<b-tabs align="center"
-                                                    ><b-tab active
-                                                        ><template #title
-                                                            >Orchestrator</template-->
-                                                <b-row class="m-0">
-                                                    <b-col
-                                                        v-if="
-                                                            getTask
-                                                                .orchestrator_logs
-                                                                .length > 0
-                                                        "
-                                                        class="m-0 p-0 pl-3 pr-3"
-                                                        style="
-                                                            white-space: pre-line;
-                                                        "
-                                                    >
-                                                        <span
-                                                            v-for="line in taskLogs"
-                                                            v-bind:key="line"
-                                                            v-show="
-                                                                line !==
-                                                                    undefined &&
-                                                                line !== null
-                                                            "
-                                                            >{{
-                                                                line + '\n'
-                                                            }}</span
-                                                        >
-                                                    </b-col>
-                                                    <b-col v-else
-                                                        ><b-skeleton-wrapper
-                                                            :loading="
-                                                                !getTask.is_complete
-                                                            "
-                                                        >
-                                                            <template #loading>
-                                                                <b-skeleton
-                                                                    width="15%"
-                                                                ></b-skeleton
-                                                                ><b-skeleton
-                                                                    width="25%"
-                                                                ></b-skeleton
-                                                                ><b-skeleton
-                                                                    width="20%"
-                                                                ></b-skeleton></template></b-skeleton-wrapper
-                                                    ></b-col> </b-row
-                                                ><!--</b-tab
-                                                    ><b-tab
-                                                        ><template #title
-                                                            >CLI</template
-                                                        ><b-row class="m-0">
-                                                            <b-col
-                                                                v-if="
-                                                                    schedulerLogs
-                                                                        .length >
-                                                                        0
-                                                                "
-                                                                class="m-0 p-0 pl-3 pr-3 pt-1"
-                                                                style="white-space: pre-line;"
-                                                            >
-                                                                <span
-                                                                    v-for="line in schedulerLogs"
-                                                                    v-bind:key="
-                                                                        line
-                                                                    "
-                                                                    v-show="
-                                                                        line !==
-                                                                            undefined &&
-                                                                            line !==
-                                                                                null
-                                                                    "
-                                                                    >{{
-                                                                        line +
-                                                                            '\n'
-                                                                    }}</span
-                                                                >
-                                                            </b-col>
-                                                            <b-col v-else
-                                                                ><b-skeleton-wrapper
-                                                                    :loading="
-                                                                        !getTask.is_complete
-                                                                    "
-                                                                >
-                                                                    <template
-                                                                        #loading
-                                                                    >
-                                                                        <b-skeleton
-                                                                            width="15%"
-                                                                        ></b-skeleton
-                                                                        ><b-skeleton
-                                                                            width="25%"
-                                                                        ></b-skeleton
-                                                                        ><b-skeleton
-                                                                            width="20%"
-                                                                        ></b-skeleton></template></b-skeleton-wrapper
-                                                            ></b-col> </b-row></b-tab
-                                                ><b-tab
-                                                        ><template #title
-                                                            >Container</template
-                                                        ><b-row class="m-0">
-                                                            <b-col
-                                                                v-if="
-                                                                    agentLogs
-                                                                        .length >
-                                                                        0
-                                                                "
-                                                                class="m-0 p-0 pl-3 pr-3 pt-1"
-                                                                style="white-space: pre-line;"
-                                                            >
-                                                                <span
-                                                                    v-for="line in agentLogs"
-                                                                    v-bind:key="
-                                                                        line
-                                                                    "
-                                                                    v-show="
-                                                                        line !==
-                                                                            undefined &&
-                                                                            line !==
-                                                                                null
-                                                                    "
-                                                                    >{{
-                                                                        line +
-                                                                            '\n'
-                                                                    }}</span
-                                                                >
-                                                            </b-col>
-                                                            <b-col v-else
-                                                                ><b-skeleton-wrapper
-                                                                    :loading="
-                                                                        !getTask.is_complete
-                                                                    "
-                                                                >
-                                                                    <template
-                                                                        #loading
-                                                                    >
-                                                                        <b-skeleton
-                                                                            width="15%"
-                                                                        ></b-skeleton
-                                                                        ><b-skeleton
-                                                                            width="25%"
-                                                                        ></b-skeleton
-                                                                        ><b-skeleton
-                                                                            width="20%"
-                                                                        ></b-skeleton></template></b-skeleton-wrapper
-                                                            ></b-col> </b-row></b-tab
-                                                ></b-tabs>-->
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="m-3"
-                                            v-if="
-                                                getTask.is_complete &&
-                                                getTask.output_files !==
-                                                    undefined
-                                            "
-                                        >
-                                            <b-row
-                                                v-if="getTask.is_complete &&
-                                                        getTask.results_retrieved &&
-                                                        getTask.output_files !==
-                                                            undefined &&
-                                                        getTask.output_files
-                                                            .length > 0"
-                                                align-h="center"
-                                                align-v="center"
-                                                class="mt-2 mb-2"
-                                            >
-                                                <b-col
-                                                    align-self="end"
-                                                    class="text-center"
-                                                    v-if="
-                                                        getTask.results_retrieved &&
-                                                        getTask.output_files
-                                                            .length > 0
-                                                    "
-                                                >
-                                                    <span
-                                                        v-if="
-                                                            getTask.results_retrieved
-                                                        "
-                                                        >{{
-                                                            getTask.output_files
-                                                                .length
-                                                        }}
-                                                        results found</span
-                                                    ><span
-                                                        v-else-if="
-                                                            getTask.status !==
-                                                            'running'
-                                                        "
-                                                        ><b-spinner
-                                                            small
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'light'
-                                                                    : 'dark'
-                                                            "
-                                                        ></b-spinner>
-                                                        Loading</span
-                                                    >, {{
-                                                        getTask.results_transferred
-                                                    }}/{{
-                                                        getTask.output_files
-                                                            .length > 0
-                                                            ? getTask
-                                                                  .output_files
-                                                                  .length
-                                                            : '?'
-                                                    }}
-                                                    results
-                                                    transferred<b-progress
-                                                        :value="
-                                                            getTask.results_transferred
-                                                        "
-                                                        :max="
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                        :animated="
-                                                            getTask.results_transferred !==
-                                                            getTask.output_files
-                                                                .length
-                                                        "
-                                                    ></b-progress
-                                                ></b-col>
-                                                <b-col
-                                                    v-if="
-                                                        getTask.results_retrieved &&
-                                                        getTask.output_files !==
-                                                            undefined
-                                                    "
-                                                    md="auto"
-                                                    align-self="end"
-                                                    class="mt-1"
-                                                >
-                                                    <b-dropdown
-                                                        :disabled="
-                                                            getTask.output_files !==
-                                                                undefined &&
-                                                            getTask.output_files !==
-                                                                null &&
-                                                            getTask.output_files
-                                                                .length === 0
-                                                        "
-                                                        size="sm"
-                                                        class="text-right"
-                                                        :text="
-                                                            outputPageSize.toString()
-                                                        "
-                                                        dropleft
-                                                        :title="
-                                                            'Showing ' +
-                                                            outputPageSize +
-                                                            ' files at once'
-                                                        "
-                                                        v-b-tooltip.hover
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                    >
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setOutputFilesPageSize(
-                                                                    10
-                                                                )
-                                                            "
-                                                            >10</b-dropdown-item
-                                                        >
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setOutputFilesPageSize(
-                                                                    20
-                                                                )
-                                                            "
-                                                            >20</b-dropdown-item
-                                                        >
-                                                        <b-dropdown-item
-                                                            @click="
-                                                                setOutputFilesPageSize(
-                                                                    50
-                                                                )
-                                                            "
-                                                            >50</b-dropdown-item
-                                                        >
-                                                    </b-dropdown>
-                                                </b-col></b-row
-                                            >
-                                            <b-row v-else><b-col
-                                                    align-self="center"
-                                                    class="text-center"
-                                                    ><span class="text-center"
-                                                        ><i
-                                                            class="far fa-folder-open fa-fw"
-                                                        ></i>
-                                                        No results found</span
-                                                    ></b-col
-                                                ></b-row>
-                                            <b-row
-                                                class="pl-1 pr-1 pb-1"
-                                                align-h="center"
-                                                v-if="loadingOutputFiles"
-                                            >
-                                                <b-spinner
-                                                    type="grow"
-                                                    label="Loading..."
-                                                    variant="secondary"
-                                                ></b-spinner>
-                                            </b-row>
-                                            <b-overlay
-                                                :show="downloading"
+                                            ><b-spinner
+                                                small
                                                 :variant="
                                                     profile.darkMode
-                                                        ? 'dark'
-                                                        : 'light'
+                                                        ? 'light'
+                                                        : 'dark'
                                                 "
-                                                rounded="sm"
+                                            ></b-spinner>
+                                            Loading</span
+                                        >, {{ getTask.results_transferred }}/{{
+                                            getTask.output_files.length > 0
+                                                ? getTask.output_files.length
+                                                : '?'
+                                        }}
+                                        results transferred<b-progress
+                                            :value="getTask.results_transferred"
+                                            :max="getTask.output_files.length"
+                                            :animated="
+                                                getTask.results_transferred !==
+                                                getTask.output_files.length
+                                            "
+                                        ></b-progress
+                                    ></b-col>
+                                    <b-col
+                                        v-if="
+                                            getTask.results_retrieved &&
+                                            getTask.output_files !== undefined
+                                        "
+                                        md="auto"
+                                        align-self="end"
+                                        class="mt-1"
+                                    >
+                                        <b-dropdown
+                                            :disabled="
+                                                getTask.output_files !==
+                                                    undefined &&
+                                                getTask.output_files !== null &&
+                                                getTask.output_files.length ===
+                                                    0
+                                            "
+                                            size="lg"
+                                            class="text-right"
+                                            :text="outputPageSize.toString()"
+                                            dropleft
+                                            :title="
+                                                'Showing ' +
+                                                outputPageSize +
+                                                ' files at once'
+                                            "
+                                            v-b-tooltip.hover
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                        >
+                                            <b-dropdown-item
+                                                @click="
+                                                    setOutputFilesPageSize(10)
+                                                "
+                                                class="darklinks"
+                                                >10</b-dropdown-item
                                             >
-                                                <div>
-                                                    <div
+                                            <b-dropdown-item
+                                                @click="
+                                                    setOutputFilesPageSize(20)
+                                                "
+                                                class="darklinks"
+                                                >20</b-dropdown-item
+                                            >
+                                            <b-dropdown-item
+                                                @click="
+                                                    setOutputFilesPageSize(50)
+                                                "
+                                                class="darklinks"
+                                                >50</b-dropdown-item
+                                            >
+                                        </b-dropdown>
+                                    </b-col></b-row
+                                >
+                                <b-row v-else
+                                    ><b-col
+                                        align-self="center"
+                                        class="text-center"
+                                        ><span class="text-center"
+                                            ><i
+                                                class="far fa-folder-open fa-fw"
+                                            ></i>
+                                            No results found</span
+                                        ></b-col
+                                    ></b-row
+                                >
+                                <b-row
+                                    class="pl-1 pr-1 pb-1"
+                                    align-h="center"
+                                    v-if="loadingOutputFiles"
+                                >
+                                    <b-spinner
+                                        type="grow"
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                </b-row>
+                                <b-overlay
+                                    :show="downloading"
+                                    :variant="
+                                        profile.darkMode ? 'dark' : 'light'
+                                    "
+                                    rounded="sm"
+                                >
+                                    <div>
+                                        <div v-if="viewMode === 'List'">
+                                            <b-row
+                                                id="outputList"
+                                                v-for="file in filteredResults"
+                                                v-bind:key="file.name"
+                                                class="p-1"
+                                            >
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('txt') ||
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('log')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-alt fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('csv')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-csv fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('zip')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-archive fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('xlsx')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-excel fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('pdf')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-pdf fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .includes('png') ||
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .includes('jpg') ||
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .includes('jpeg')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="far fa-file-image fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else
+                                                >
+                                                    <i
+                                                        class="fas fa-file fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="end"
+                                                    class="text-left"
+                                                    style="
+                                                        position: relative;
+                                                        top: -5px;
+                                                        left: -40px;
+                                                    "
+                                                >
+                                                    <b-spinner
+                                                        class="m-0 p-0"
                                                         v-if="
-                                                            viewMode === 'List'
+                                                            !file.exists &&
+                                                            !getTask.is_complete
                                                         "
-                                                    >
-                                                        <b-row
-                                                            id="outputList"
-                                                            v-for="file in filteredResults"
-                                                            v-bind:key="
-                                                                file.name
-                                                            "
-                                                            class="p-1"
-                                                            style="
-                                                                border-top: 1px
-                                                                    solid
-                                                                    rgba(
-                                                                        211,
-                                                                        211,
-                                                                        211,
-                                                                        0.5
-                                                                    );
-                                                            "
-                                                        >
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'txt'
-                                                                        ) ||
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'log'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-alt fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'csv'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-csv fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'zip'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-archive fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'xlsx'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-excel fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'pdf'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-pdf fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'png'
-                                                                        ) ||
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'jpg'
-                                                                        ) ||
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'jpeg'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="far fa-file-image fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
-                                                                class="text-left"
-                                                                style="
-                                                                    position: relative;
-                                                                    top: -5px;
-                                                                    left: -40px;
-                                                                "
-                                                            >
-                                                                <b-spinner
-                                                                    class="m-0 p-0"
-                                                                    v-if="
-                                                                        !file.exists &&
-                                                                        !getTask.is_complete
-                                                                    "
-                                                                    type="grow"
-                                                                    small
-                                                                    variant="warning"
-                                                                ></b-spinner>
-                                                                <i
-                                                                    v-else-if="
-                                                                        !file.exists &&
-                                                                        getTask.is_complete
-                                                                    "
-                                                                    class="far fa-times-circle text-danger fa-fw"
-                                                                ></i>
-                                                                <i
-                                                                    v-else
-                                                                    class="fas fa-check text-success fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                class="text-left"
-                                                            >
-                                                                {{ file.name }}
-                                                            </b-col>
-                                                        </b-row>
-                                                    </div>
-                                                    <!--<b-card-group
+                                                        type="grow"
+                                                        small
+                                                        variant="warning"
+                                                    ></b-spinner>
+                                                    <i
+                                                        v-else-if="
+                                                            !file.exists &&
+                                                            getTask.is_complete
+                                                        "
+                                                        class="far fa-times-circle text-danger fa-fw"
+                                                    ></i>
+                                                    <i
+                                                        v-else
+                                                        class="fas fa-check text-success fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    class="text-left"
+                                                >
+                                                    {{ file.name }}
+                                                </b-col>
+                                            </b-row>
+                                        </div>
+                                        <!--<b-card-group
                                                         v-else-if="
                                                             viewMode === 'Grid'
                                                         "
@@ -1100,7 +824,7 @@
                                                             </b-card-body>
                                                         </b-card>
                                                     </b-card-group>-->
-                                                    <!--<b-carousel
+                                        <!--<b-carousel
                                                         v-if="
                                                             viewMode ===
                                                                 'Carousel'
@@ -1275,10 +999,10 @@
                                                                     </b-col> </b-row></template
                                                         ></b-carousel-slide>
                                                     </b-carousel>-->
-                                                </div>
-                                            </b-overlay>
-                                        </div>
-                                        <!--<div
+                                    </div>
+                                </b-overlay>
+                            </div>
+                            <!--<div
                                                         v-else-if="
                                                             flow.config
                                                                 .output &&
@@ -1383,72 +1107,60 @@
                                                             </b-col>
                                                         </b-row>
                                                     </div>-->
-                                    </b-col>
-                                </b-row>
-                                <b-card
-                                    v-if="
-                                        getTask.is_complete &&
-                                        getTask.transferred
+                        </b-col>
+                    </b-row>
+                    <b-card
+                        v-if="getTask.is_complete && getTask.transferred"
+                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        border-variant="default"
+                        :footer-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
+                        no-body
+                    >
+                        <b-card-header
+                            class="mt-1"
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                            >
+                                <b-img
+                                    class="mr-2"
+                                    rounded
+                                    style="max-height: 1.7rem"
+                                    left
+                                    :src="
+                                        require('../../assets/logos/cyverse_bright.png')
                                     "
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :footer-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :footer-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    no-body
-                                >
-                                    <b-card-header
-                                        class="mt-1"
-                                        :header-bg-variant="
-                                            profile.darkMode ? 'dark' : 'white'
+                                ></b-img>
+                                Data Store
+                            </h5></b-card-header
+                        >
+                        <b-card-body>
+                            <b-row>
+                                <b-col>
+                                    <datatree
+                                        :node="userDatasets"
+                                        :upload="true"
+                                        :download="true"
+                                        :create="true"
+                                        :search="getTask.transfer_path"
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-dark'
+                                                : 'theme-light'
                                         "
-                                        ><h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            <b-img
-                                                class="mr-2"
-                                                rounded
-                                                style="max-height: 1.7rem"
-                                                left
-                                                :src="
-                                                    require('../../assets/logos/cyverse_bright.png')
-                                                "
-                                            ></b-img>
-                                            Data Store
-                                        </h5></b-card-header
-                                    >
-                                    <b-card-body>
-                                        <b-row>
-                                            <b-col>
-                                                <datatree
-                                                    :node="userDatasets"
-                                                    :upload="true"
-                                                    :download="true"
-                                                    :create="true"
-                                                    :search="
-                                                        getTask.transfer_path
-                                                    "
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'theme-dark'
-                                                            : 'theme-light'
-                                                    "
-                                                ></datatree></b-col
-                                        ></b-row>
-                                    </b-card-body>
-                                </b-card>
-                            </b-col>
-                        </b-row>
-                    </div>
+                                    ></datatree></b-col
+                            ></b-row>
+                        </b-card-body>
+                    </b-card>
                 </b-col>
             </b-row>
         </b-container>
@@ -2073,17 +1785,17 @@ export default {
                     type: 'scatter',
                     mode: 'lines+markers',
                     line: {
-                        color: '#e9ecef',
+                        color: '#adb5bd',
                     },
                     marker: {
                         color: [
-                            '#e9ecef',
+                            '#adb5bd',
                             this.getTask.is_success
                                 ? '#d6df5D'
                                 : 'rgb(255, 114, 114)',
                         ],
                         line: {
-                            color: '#e2e3b0',
+                            color: '#adb5bd',
                             width: 1,
                         },
                         symbol: 'hourglass',
@@ -2115,8 +1827,8 @@ export default {
                     showgrid: false,
                     lines: false,
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#f8f9fa',
+                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#f8f9fa',
             };
         },
         filteredResults() {
@@ -2134,6 +1846,14 @@ export default {
             let task = this.task(this.$router.currentRoute.params.guid);
             if (task !== undefined && task !== null) return task;
             return null;
+        },
+        getTaskStatus() {
+            if (!this.getTask.is_complete) {
+                if (this.getTask.job_status === null)
+                    return this.getTask.status.toUpperCase();
+                else return this.getTask.job_status.toUpperCase();
+            }
+            return this.getTask.status.toUpperCase();
         },
         taskLogs() {
             let all = this.getTask.orchestrator_logs.slice();

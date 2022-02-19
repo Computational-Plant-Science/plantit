@@ -18,19 +18,28 @@
                 </b-col>
             </b-row>
             <b-row v-if="workflowLoading">
-                <b-spinner
-                    small
-                    label="Loading..."
-                    :variant="profile.darkMode ? 'light' : 'dark'"
-                    class="mr-1"
-                ></b-spinner
-                ><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                    >Loading workflow...</span
-                >
+                <b-col>
+                    <b-spinner
+                        small
+                        label="Loading..."
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading workflow...</span
+                    >
+                </b-col>
             </b-row>
-            <b-row v-else-if="getWorkflow === null"><b-col><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                    ><i class="fas fa-exclamation-triangle fa-fw"></i> Workflow not found.</span
-                ></b-col></b-row>
+            <b-row v-else-if="getWorkflow === null"
+                ><b-col
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        ><i class="fas fa-exclamation-triangle fa-fw"></i>
+                        Workflow not found.</span
+                    ></b-col
+                ></b-row
+            >
             <b-row v-else>
                 <b-col>
                     <b-row>
@@ -49,12 +58,13 @@
                                 >This workflow's configuration is invalid. It
                                 cannot be used in this state.
                                 <b-link
-                                    :href="
-                                        'https://github.com/' +
-                                        this.owner +
-                                        '/' +
-                                        this.name +
-                                        '/issues/new'
+                                    @click="
+                                        openInNewTab(
+                                            'https://github.com/' +
+                                                this.owner +
+                                                '/' +
+                                                this.name
+                                        )
                                     "
                                     ><i
                                         class="fab fa-github fa-1x mr-1 fa-fw"
@@ -207,13 +217,18 @@
                                                                 ? 'text-light'
                                                                 : 'text-dark'
                                                         "
-                                                        :href="
-                                                            'https://github.com/' +
-                                                            getWorkflow.repo
-                                                                .owner.login +
-                                                            '/' +
-                                                            getWorkflow.repo
-                                                                .name
+                                                        @click="
+                                                            openInNewTab(
+                                                                'https://github.com/' +
+                                                                    getWorkflow
+                                                                        .repo
+                                                                        .owner
+                                                                        .login +
+                                                                    '/' +
+                                                                    getWorkflow
+                                                                        .repo
+                                                                        .name
+                                                            )
                                                         "
                                                     >
                                                         <i
@@ -523,7 +538,11 @@
                                                                         <b>{{
                                                                             getWorkflow
                                                                                 .config
-                                                                                .shell ? getWorkflow.config.shell : 'None'
+                                                                                .shell
+                                                                                ? getWorkflow
+                                                                                      .config
+                                                                                      .shell
+                                                                                : 'None'
                                                                         }}</b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1399,9 +1418,15 @@
                                                                                 .config
                                                                                 .input !==
                                                                                 undefined &&
-                                                                            getWorkflow.config.input.kind !==
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .input
+                                                                                .kind !==
                                                                                 undefined &&
-                                                                            getWorkflow.config.input.kind !==
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .input
+                                                                                .kind !==
                                                                                 null
                                                                         "
                                                                         :bg-variant="
@@ -3966,6 +3991,9 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
+        openInNewTab(url) {
+            window.open(url);
+        },
         // async deleteDelayed(name) {
         //     this.unschedulingDelayed = true;
         //     await axios
@@ -4281,8 +4309,13 @@ export default {
                 if (lastConfig.workflow.output !== undefined)
                     this.output = lastConfig.workflow.output;
                 if (lastConfig.agent !== undefined)
-                    // make sure the agent used in the last submission still exists
-                    if (this.getAgents.map(a => a.name).includes(lastConfig.agent)) this.selectedAgent = lastConfig.agent;
+                    if (
+                        this.getAgents
+                            .map((a) => a.name)
+                            .includes(lastConfig.agent)
+                    )
+                        // make sure the agent used in the last submission still exists
+                        this.selectedAgent = lastConfig.agent;
             }
 
             if (

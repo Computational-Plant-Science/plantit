@@ -508,7 +508,7 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     # include scheduler logs
     config['output']['include']['patterns'].append("out")
     config['output']['include']['patterns'].append("err")
-    config['output']['include']['patterns'].append("log")
+    # config['output']['include']['patterns'].append("log")
 
     if 'exclude' not in config['output']: config['output']['exclude'] = dict()
     if 'names' not in config['output']['exclude']: config['output']['exclude']['names'] = []

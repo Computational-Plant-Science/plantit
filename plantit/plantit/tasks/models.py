@@ -88,7 +88,8 @@ class Task(models.Model):
 
     @property
     def is_success(self):
-        return (self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED') and self.status == TaskStatus.COMPLETED
+        return ((self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED') and self.status == TaskStatus.COMPLETED) \
+               or self.status == 'success'  # legacy status handling (TODO: may no longer be necessary?)
 
     @property
     def is_failure(self):
@@ -104,7 +105,7 @@ class Task(models.Model):
 
     @property
     def is_complete(self):
-        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
+        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled or (self.status == TaskStatus.COMPLETED)
 
     def __str__(self):
         opts = self._meta
