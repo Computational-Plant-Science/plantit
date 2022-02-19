@@ -322,12 +322,21 @@ Some variables must be reconfigured for production environments (`scripts/deploy
 
 ### Configuring deployment targets
 
-Deployment targets may be configured programmatically or with the Django admin interface. An agent is an abstraction of a computing resource, such as a cluster or supercomputer. `plantit` interacts with agents via key-authenticated SSH and requires the SLURM scheduler to be installed. (Support for additional schedulers is in development.)
+An agent is an abstraction of a computing resource, such as a cluster or supercomputer. `plantit` interacts with agents via key-authenticated SSH and requires the SLURM scheduler to be installed. (Support for additional schedulers is in development.)
 
-#### Python
+Deployment targets may be configured programmatically or with the Django admin interface. To configure an agent via the Django admin site, make sure you're logged into `plantit`, then navigate to `http://localhost:3000/admin/` (`https://<host>/admin/` in production). Select the `Agents` tab on the left side of the screen, then `Add Agent`.
 
-TODO
+On many clusters it is customary to configure dependencies on a per-user basis with a module system, e.g. `module load <some software>`. The `pre_commands` agent property is the place for commands like these: when provided, they will be prepended to all commands `plantit` sends to the cluster for job orchestration.
 
-#### Admin site
+#### Agent requirements
 
-First make sure you're logged into the site, then navigate to the admin interface at `http://localhost:3000/admin/` (`https://<host>/admin/` in production). Select the `Agents` tab on the left side of the screen, then `Add Agent`.
+`plantit` deployment targets must run some Linux distribution with either the `sh` or `bash` shells available. Only 2 dependencies are required:
+
+- SLURM
+- Singularity
+
+`plantit` tasks expect standard SLURM commands (e.g., `sbatch`, `scancel`) to be available. Singularity must also be installed and available on the `$PATH`.
+
+#### Authenticating with Docker
+
+Docker Hub applies rate limits to unauthenticated users. These are easy to meet or exceed, since Singularity queries the Docker API on each `singularity exec docker://<some container>`. It is recommended to use `singularity remote login --username <your Docker username> docker://docker.io` with a paid Docker account: this will cache your Docker credentials on the deployment target for Singularity to use thereafter.
