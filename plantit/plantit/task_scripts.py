@@ -133,7 +133,7 @@ def compose_container_commands(task: Task, options: TaskOptions) -> List[str]:
                     image=image,
                     commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=full_input_path)],
+                    parameters=parameters + [Parameter(key='INPUT', value=full_input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,
