@@ -391,8 +391,9 @@ export default {
                     this.sortWorkflows
                 );
             else if (this.context === 'Featured') {
-                // return [...this.excludeExamples(this.publicWorkflows)]
-                return [];
+                return [...this.excludeExamples(this.publicWorkflows)].filter(
+                    (wf) => wf.featured
+                );
             } else
                 return [...this.orgWorkflows[this.context]].sort(
                     this.sortWorkflows
