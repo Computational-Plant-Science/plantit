@@ -200,7 +200,7 @@
                                                     ></b-badge
                                                 ></b-col
                                             >
-                                            <b-col v-if="!getWorkflow.example && !getWorkflow.featured">
+                                            <!--<b-col v-if="!getWorkflow.example && !getWorkflow.featured">
                                                 <b-button
                                                     id="featured-request"
                                                     :variant="
@@ -232,7 +232,7 @@
                                                         title="Feature Request"
                                                         >Click here to submit a request to make this a featured workflow. An administrator will review the request and contact you shortly.</b-popover
                                                     >
-                                            </b-col>
+                                            </b-col>-->
                                         </b-row>
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
