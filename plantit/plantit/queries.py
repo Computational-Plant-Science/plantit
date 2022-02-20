@@ -733,6 +733,7 @@ def get_total_counts(invalidate: bool = False) -> dict:
         agents = Agent.objects.count()
         tasks = TaskCounter.load().count
         running = len(list(Task.objects.exclude(status__in=[TaskStatus.COMPLETED, TaskStatus.FAILURE, TaskStatus.TIMEOUT, TaskStatus.CANCELED])))
+        institutions = len(get_institutions().keys())
         counts = {
             'users': users,
             'online': online,
@@ -740,7 +741,8 @@ def get_total_counts(invalidate: bool = False) -> dict:
             'developers': developers,
             'agents': agents,
             'tasks': tasks,
-            'running': running
+            'running': running,
+            'institutions': institutions
         }
 
         redis.set("stats_counts", json.dumps(counts))

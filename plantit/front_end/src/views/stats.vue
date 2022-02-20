@@ -210,7 +210,8 @@
                                     <br />
                                     Developers</b-button
                                 ></template
-                            ><b-card-group
+                            >
+                          <b-card-group
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -252,7 +253,8 @@
                                 ></b-card-group
                             ></b-tab
                         >
-                        <b-tab
+
+                      <b-tab
                             title="Tasks"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -261,8 +263,8 @@
                                 profile.darkMode
                                     ? 'theme-dark m-0 p-3'
                                     : 'theme-light m-0 p-3'
-                            "
-                            ><template #title
+                            ">
+                        <template #title
                                 ><h1 class="text-success text-center">
                                     <span v-if="taskCount >= 0">{{
                                         taskCount
@@ -292,7 +294,10 @@
                                     <br />
                                     Submissions
                                 </b-button></template
-                            ><b-row align-h="center"><b-col><h1 v-if="runningCount >= 0" class="text-success">
+                            >
+                          <b-row align-h="center">
+                            <b-col>
+                              <h1 v-if="runningCount >= 0" class="text-success">
                                 {{ runningCount }}
                             </h1>
                             <b-spinner
@@ -307,38 +312,62 @@
                                 "
                                 ><i class="fas fa-terminal fa-fw"></i>
                                 Running</b-badge
-                            ></b-col></b-row><br/><Plotly
+                            >
+                          </b-col>
+                          </b-row>
+                          <br/><Plotly
                                 v-if="showTasksTotalPlot"
                                 :data="tasksTotalPlotTraces"
                                 :layout="tasksTotalPlotLayout"
                             ></Plotly>
-                            </b-tab
-                        >
+                            </b-tab>
+                      <b-tab
+                            title="Institutions"
+                            :title-link-class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            :class="
+                                profile.darkMode
+                                    ? 'theme-dark m-0 p-3'
+                                    : 'theme-light m-0 p-3'
+                            "
+                            ><template #title
+                                ><h1 class="text-success text-center">
+                                    <span v-if="institutionCount >= 0">{{
+                                        institutionCount
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    >
+                                    </b-spinner>
+                                </h1>
+                                <b-button
+                                    :variant="
+                                        activeTab === 4
+                                            ? profile.darkMode
+                                                ? 'outline-success'
+                                                : 'success'
+                                            : profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    v-b-tooltip.hover
+                                    title="Institutions"
+                                    ><i class="fas fa-university fa-fw"></i>
+                                    <br />
+                                    Represented
+                                    <br />
+                                    Institutions
+                                </b-button></template>
+                        <b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>
+                        <!--<div id="map" style="height: 40rem; width: 100%"></div>-->
+                    </b-tab>
                     </b-tabs>
                 </b-col>
             </b-row>
-            <br />
-            <b-row>
-                <b-col class="text-center">
-                    <h4
-                        :class="profile.darkMode ? 'text-white' : 'text-theme'"
-                        style="text-decoration: underline; z-index: 100"
-                    >
-                        plant<small
-                            class="mb-3 text-success"
-                            style="
-                                text-decoration: underline;
-                                text-shadow: 1px 1px 2px black;
-                                z-index: 100;
-                            "
-                            ><small>IT</small></small
-                        ><small>user<small>institutions</small></small>
-                    </h4>
-                </b-col>
-            </b-row>
-            <br/>
           <div id="map" style="height: 40rem; width: 100%"></div>
-          <br/>
         </b-container>
     </div>
 </template>
@@ -374,6 +403,7 @@ export default {
             developerCount: -1,
             taskCount: -1,
             runningCount: -1,
+            institutionCount: -1,
             institutions: [],
             activeTab: 0,
         };
@@ -447,6 +477,7 @@ export default {
                     this.agentCount = response.data.agents;
                     this.taskCount = response.data.tasks;
                     this.runningCount = response.data.running;
+                    this.institutionCount = response.data.institutions;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
@@ -559,6 +590,9 @@ export default {
             'publicWorkflows',
             'publicWorkflowsLoading',
         ]),
+        getInstitutions() {
+          return Object.values(this.institutions);
+        },
         workflows() {
             return this.publicWorkflows.filter((wf) => !wf.example);
         },
