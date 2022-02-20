@@ -342,10 +342,10 @@ def task_to_dict(task: Task) -> dict:
         } if task.study is not None else None,
         'work_dir': task.workdir,
         'orchestrator_logs': orchestrator_logs,
-        'inputs_detected': task.inputs_detected,
-        'inputs_downloaded': task.inputs_downloaded,
-        'inputs_submitted': task.inputs_submitted,
-        'inputs_completed': task.inputs_completed,
+        # 'inputs_detected': task.inputs_detected,
+        # 'inputs_downloaded': task.inputs_downloaded,
+        # 'inputs_submitted': task.inputs_submitted,
+        # 'inputs_completed': task.inputs_completed,
         'agent': agent_to_dict(task.agent) if task.agent is not None else None,
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),
@@ -374,7 +374,7 @@ def task_to_dict(task: Task) -> dict:
         'output_files': json.loads(results) if results is not None else [],
         'job_id': task.job_id,
         'job_status': task.job_status,
-        'job_walltime': task.job_consumed_walltime,
+        # 'job_walltime': task.job_consumed_walltime,
         'delayed_id': task.delayed_id,
         'repeating_id': task.repeating_id
     }

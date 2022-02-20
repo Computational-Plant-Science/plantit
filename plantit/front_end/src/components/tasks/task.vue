@@ -439,7 +439,7 @@
                                     ></b-col>
                                 </b-row>
                             </div>
-                            <div
+                            <!--<div
                                 class="m-3"
                                 v-if="
                                     getTask.is_complete &&
@@ -728,7 +728,7 @@
                                                 </b-col>
                                             </b-row>
                                         </div>
-                                        <!--<b-card-group
+                                        <b-card-group
                                                         v-else-if="
                                                             viewMode === 'Grid'
                                                         "
@@ -823,8 +823,8 @@
                                                                 </b-button>
                                                             </b-card-body>
                                                         </b-card>
-                                                    </b-card-group>-->
-                                        <!--<b-carousel
+                                                    </b-card-group>
+                                        <b-carousel
                                                         v-if="
                                                             viewMode ===
                                                                 'Carousel'
@@ -998,10 +998,10 @@
                                                                         </b-button>
                                                                     </b-col> </b-row></template
                                                         ></b-carousel-slide>
-                                                    </b-carousel>-->
+                                                    </b-carousel>
                                     </div>
                                 </b-overlay>
-                            </div>
+                            </div>-->
                             <!--<div
                                                         v-else-if="
                                                             flow.config
@@ -1110,6 +1110,7 @@
                         </b-col>
                     </b-row>
                     <b-card
+                        class="mt-2"
                         v-if="getTask.is_complete && getTask.transferred"
                         :bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"

@@ -24,10 +24,9 @@ from plantit.queries import refresh_user_workflow_cache, refresh_online_users_wo
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
-from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_task_to_scheduler, \
-    check_job_logs_for_progress, \
-    get_job_status_and_walltime, list_result_files, cancel_task
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status, get_task_remote_logs
+from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
+    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TaskStatus
 
 logger = get_task_logger(__name__)
@@ -46,12 +45,12 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     if delayed_id is not None: task.delayed_id = delayed_id
     task.save()
 
-    # submit to Celery
-    (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+    # submit head of (task chain to) Celery
+    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
         countdown=5,  # TODO: make initial delay configurable
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
-    log_task_orchestrator_status(task, [f"Created {task.user.username}'s (delayed) task {task.guid} on {task.agent.name}"])
+    log_task_status(task, [f"Created {task.user.username}'s (delayed) task {task.guid} on {task.agent.name}"])
     async_to_sync(push_task_channel_event)(task)
 
 
@@ -68,18 +67,16 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
     if repeating_id is not None: task.delayed_id = repeating_id
     task.save()
 
-    # submit to Celery
-    (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+    # submit head of (task chain to) Celery
+    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
         countdown=5,  # TODO: make initial delay configurable
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
-    log_task_orchestrator_status(task, [f"Created {task.user.username}'s (repeating) task {task.guid} on {task.agent.name}"])
+    log_task_status(task, [f"Created {task.user.username}'s (repeating) task {task.guid} on {task.agent.name}"])
     async_to_sync(push_task_channel_event)(task)
 
 
-####################
 #  Task Lifecycle  #
-####################
 #
 # prep environment
 # share dataset
@@ -90,26 +87,25 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
 #   check transfer
 # unshare dataset
 # clean up
-#
-####################
+
 
 def __handle_job_success(task: Task, message: str):
     # update the task and persist it
     now = timezone.now()
     task.updated = now
-    task.job_status = 'COMPLETED'
+    task.job_status = TaskStatus.COMPLETED
     task.save()
 
     # log status to file and push to client(s)
-    log_task_orchestrator_status(task, [message])
+    log_task_status(task, [message])
     async_to_sync(push_task_channel_event)(task)
 
-    # push AWS SNS notification
+    # push AWS SNS task completion notification
     if task.user.profile.push_notification_status == 'enabled':
         SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
 
-    # check that we have the results we expect, revoke access to the user's datasets, and then clean up the task
-    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async()
+    # submit the outbound data transfer job
+    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
     tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
@@ -122,7 +118,7 @@ def __handle_job_failure(task: Task, message: str):
     task.save()
 
     # log status to file and push to client(s)
-    log_task_orchestrator_status(task, [message])
+    log_task_status(task, [message])
     async_to_sync(push_task_channel_event)(task)
 
     # push AWS SNS notification
@@ -139,7 +135,12 @@ def prep_environment(self, guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        logger.warning(f"Could not find task {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
         self.request.callbacks = None
         return
 
@@ -152,10 +153,10 @@ def prep_environment(self, guid: str):
         work_dir = join(task.agent.workdir, task.guid)
         ssh = get_task_ssh_client(task)
         with ssh:
-            for line in list(execute_command(ssh=ssh, precommand=':', command=f"mkdir -v {work_dir}")): logger.info(line)
+            for line in list(execute_command(ssh=ssh, setup_command=':', command=f"mkdir -v {work_dir}")): logger.info(line)
             upload_deployment_artifacts(task, ssh, options)
 
-        log_task_orchestrator_status(task, [f"Prepared environment"])
+        log_task_status(task, [f"Prepared environment"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -167,14 +168,19 @@ def prep_environment(self, guid: str):
 @app.task(track_started=True, bind=True)
 def share_data(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
     try:
         task = Task.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        logger.warning(f"Could not find task {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
         self.request.callbacks = None
         return
 
@@ -208,7 +214,7 @@ def share_data(self, guid: str):
             ]
         }, task.user.profile.cyverse_access_token)
 
-        # log_task_orchestrator_status(task, [f"Granted temporary data access"])
+        # log_task_status(task, [f"Granted temporary data access"])
         # async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -218,9 +224,9 @@ def share_data(self, guid: str):
 
 
 @app.task(track_started=True, bind=True)
-def submit_job(self, guid: str):
+def submit_jobs(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
@@ -231,32 +237,51 @@ def submit_job(self, guid: str):
         self.request.callbacks = None
         return
 
-    try:
-        # mark the task running
-        task.status = TaskStatus.RUNNING
-        task.celery_task_id = self.request.id  # set the Celery task's ID so user can cancel
-        task.save()
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
+        self.request.callbacks = None
+        return
 
-        # submit the job to the cluster scheduler
+    try:
+        # check task configuration for errors
+        parse_errors, options = parse_task_options(task)
+        if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+
         ssh = get_task_ssh_client(task)
         with ssh:
-            parse_errors, options = parse_task_options(task)
-            if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+            job_ids = []
 
-            job_id = submit_task_to_scheduler(task, ssh, options)
-            log_task_orchestrator_status(task, [f"Scheduled job {job_id}"])
+            # only schedule inbound transfer if we have inputs
+            if 'input' in options:
+                pull_id = submit_pull_to_scheduler(task, ssh)
+                async_to_sync(push_task_channel_event)(task)
+                job_ids.append(pull_id + ' (inbound transfer)')
+            else: pull_id = None
+
+            # schedule user workflow and outbound transfer jobs
+            job_id = submit_job_to_scheduler(task, ssh, pull_id=pull_id)
+            push_id = submit_push_to_scheduler(task, ssh, job_id=job_id)
+            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)'])
+
+            # persist the last job ID to the task
+            task.job_id = push_id
+            task.updated = timezone.now()
+            task.save()
+            logger.info(f"Task {task.guid} job ID: {task.job_id}")
+
+            log_task_status(task, [f"Scheduled jobs {', '.join(job_ids)}"])
             async_to_sync(push_task_channel_event)(task)
 
         return guid
     except Exception:
         self.request.callbacks = None
-        __handle_job_failure(task, f"Failed to schedule job: {traceback.format_exc()}")
+        __handle_job_failure(task, f"Failed to schedule jobs: {traceback.format_exc()}")
 
 
 @app.task(track_started=True, bind=True)
-def poll_job(self, guid: str):
+def poll_jobs(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
@@ -267,88 +292,78 @@ def poll_job(self, guid: str):
         self.request.callbacks = None  # stop the task chain
         return
 
-    # poll the scheduler for job status and walltime and update the task
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
+        self.request.callbacks = None
+        return
+
+    # poll the scheduler for job status and walltime
     try:
         refresh_delay = int(environ.get('TASKS_REFRESH_SECONDS'))
-        logger.info(f"Checking {task.agent.name} scheduler status for task {guid} (job {task.job_id})")
+        logger.info(f"Checking {task.agent.name} scheduler status for task {guid} job {task.job_id}")
+        job_status, _ = get_job_status_and_walltime(task)  # returns None if the job isn't found in the agent's scheduler.
 
-        # get the job status from the scheduler
-        check_job_logs_for_progress(task)
-        job_status, job_walltime = get_job_status_and_walltime(task)
-
-        # get_job_status() returns None if the job isn't found in the agent's scheduler.
-        # there are 2 reasons this might happen:
-        #   - the job was just submitted and hasn't been picked up for reporting by the scheduler yet
-        #   - the job already completed and we waited too long between polls to check its status
+        # there are 2 reasons a job might not be found:
+        #   - it was just submitted and hasn't been picked up for reporting by the scheduler yet
+        #   - it already completed and we waited too long between polls to check its status
         if job_status is None:
             # update the task and persist it
             now = timezone.now()
             task.updated = now
             task.job_status = job_status
-            task.job_consumed_walltime = job_walltime
+            # task.job_consumed_walltime = job_walltime
             task.save()
 
             # we might have just submitted the job; scheduler may take a moment to reflect new submissions
             if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
-                # log the status update
-                log_task_orchestrator_status(task, [f"Job {task.job_id} not found yet, retrying in {refresh_delay}s"])
-
-                # push status to client(s)
-                async_to_sync(push_task_channel_event)(task)
-
                 # wait and poll again
-                poll_job.s(guid).apply_async(countdown=refresh_delay)
+                logger.warning(f"Job {task.job_id} not found yet, retrying in {refresh_delay}s")
+                poll_jobs.s(guid).apply_async(countdown=refresh_delay)
             else:
                 # otherwise the job completed and the scheduler's forgotten about it in the interval between polls
-                __handle_job_success(task, f"Job {task.job_id} ended with unknown status" + (
-                    f" after {job_walltime}" if job_walltime is not None else ''))
+                __handle_job_success(task, f"Job {task.job_id} ended with unknown status")
 
             # in either case, return early
             return guid
 
-        # get remote log files
-        ssh = get_task_ssh_client(task)
-        get_task_remote_logs(task, ssh)
-
         # if job did not complete, go ahead and mark the task failed/cancelled/timed out/etc
         job_complete = False
-        if job_status == 'FAILED':
+        if job_status in Task.SLURM_FAILURE_STATES:
             task.status = TaskStatus.FAILURE
             job_complete = True
-        elif job_status == 'CANCELLED':
+        elif job_status in Task.SLURM_CANCELLED_STATES:
             task.status = TaskStatus.CANCELED
             job_complete = True
-        elif job_status == 'TIMEOUT':
+        elif job_status in task.SLURM_TIMEOUT_STATES:
             task.status = TaskStatus.TIMEOUT
             job_complete = True
-        # but if it succeeded, we still need to check results before determining success/failure
-        elif job_status == 'COMPLETED':
+        # but if it succeeded, we're not done yet
+        elif job_status in task.SLURM_SUCCESS_STATES:
             job_complete = True
 
         # update the task and persist it
         task.job_status = job_status
-        task.job_consumed_walltime = job_walltime
+        # task.job_consumed_walltime = job_walltime
         now = timezone.now()
         task.updated = now
         task.save()
 
         if job_complete:
-            __handle_job_success(task, f"Job {task.job_id} ended with status {job_status}" + (
-                f" after {job_walltime}" if job_walltime is not None else ''))
+            __handle_job_success(task, f"Job {task.job_id} ended with status {job_status}")
         else:
             # if past due time...
             if now > task.due_time:
                 cancel_task(task)
-                __handle_job_failure(task, f"Job {task.job_id} {job_status} (walltime {job_walltime}) is past its due time {str(task.due_time)}")
+                __handle_job_failure(task, f"Job {task.job_id} {job_status} is past its due time {str(task.due_time)} and was cancelled")
             else:
                 # log the status update
-                log_task_orchestrator_status(task, [f"Job {task.job_id} {job_status} (walltime {job_walltime}), refreshing in {refresh_delay}s"])
+                # log_task_status(task, [f"Job {task.job_id} {job_status}, refreshing in {refresh_delay}s"])
 
                 # push status to client(s)
                 async_to_sync(push_task_channel_event)(task)
 
                 # wait and poll again
-                poll_job.s(guid).apply_async(countdown=refresh_delay)
+                poll_jobs.s(guid).apply_async(countdown=refresh_delay)
     except:
         self.request.callbacks = None
         __handle_job_failure(task, f"Failed to poll job {task.job_id} status: {traceback.format_exc()}")
@@ -357,7 +372,7 @@ def poll_job(self, guid: str):
 @app.task(track_started=True, bind=True)
 def test_results(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
@@ -368,10 +383,15 @@ def test_results(self, guid: str):
         self.request.callbacks = None
         return
 
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
+        self.request.callbacks = None
+        return
+
     try:
         # get logs from agent filesystem
-        ssh = get_task_ssh_client(task)
-        get_task_remote_logs(task, ssh)
+        # ssh = get_task_ssh_client(task)
+        # get_task_remote_logs(task, ssh)
 
         # get results from agent filesystem, then save them to cache and update the task
         results = list_result_files(task)
@@ -390,7 +410,7 @@ def test_results(self, guid: str):
             message = f"Found {len(found)} results"
 
         # log status update and push it to client(s)
-        log_task_orchestrator_status(task, [message])
+        log_task_status(task, [message])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -406,7 +426,7 @@ def test_results(self, guid: str):
         task.save()
 
         # log status to file
-        log_task_orchestrator_status(task, [message])
+        log_task_status(task, [message])
 
         # push status to client(s)
         async_to_sync(push_task_channel_event)(task)
@@ -423,7 +443,7 @@ def test_results(self, guid: str):
 @app.task(track_started=True, bind=True)
 def test_push(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
@@ -431,6 +451,11 @@ def test_push(self, guid: str):
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        return
+
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
+        self.request.callbacks = None
         return
 
     try:
@@ -470,7 +495,7 @@ def test_push(self, guid: str):
             task.save()
 
         # log status update and push it to clients
-        log_task_orchestrator_status(task, [message])
+        log_task_status(task, [message])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -486,7 +511,7 @@ def test_push(self, guid: str):
         task.save()
 
         # log status update and push it to client
-        log_task_orchestrator_status(task, [message])
+        log_task_status(task, [message])
         async_to_sync(push_task_channel_event)(task)
 
         # push AWS SNS notification
@@ -501,7 +526,7 @@ def test_push(self, guid: str):
 @app.task(track_started=True, bind=True)
 def unshare_data(self, guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         self.request.callbacks = None
         return
 
@@ -509,6 +534,11 @@ def unshare_data(self, guid: str):
         task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
+        self.request.callbacks = None
+        return
+
+    if task.status == TaskStatus.CANCELED:
+        logger.warning(f"Task {guid} cancelled, aborting")
         self.request.callbacks = None
         return
 
@@ -524,7 +554,7 @@ def unshare_data(self, guid: str):
         task.completed = now
         task.save()
 
-        log_task_orchestrator_status(task, [f"All done"])
+        log_task_status(task, [f"All done"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -547,7 +577,7 @@ def unshare_data(self, guid: str):
             ]
         }, task.user.profile.cyverse_access_token)
 
-        # log_task_orchestrator_status(task, [f"Revoked temporary data access"])
+        # log_task_status(task, [f"Revoked temporary data access"])
         # async_to_sync(push_task_channel_event)(task)
 
         # mark the task completed
@@ -557,7 +587,7 @@ def unshare_data(self, guid: str):
         task.completed = now
         task.save()
 
-        log_task_orchestrator_status(task, [f"All done"])
+        log_task_status(task, [f"All done"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -574,7 +604,7 @@ def unshare_data(self, guid: str):
         task.save()
 
         # log status update and push it to client
-        # log_task_orchestrator_status(task, [message])
+        # log_task_status(task, [message])
         # async_to_sync(push_task_channel_event)(task)
 
         # push AWS SNS notification
@@ -588,7 +618,7 @@ def unshare_data(self, guid: str):
 @app.task()
 def tidy_up(guid: str):
     if guid is None:
-        logger.warning(f"Aborting")
+        logger.debug(f"Aborting")
         return
 
     try:
@@ -605,20 +635,20 @@ def tidy_up(guid: str):
         command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
         ssh = get_task_ssh_client(task)
         with ssh:
-            for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir,
+            for line in execute_command(ssh=ssh, setup_command=task.agent.pre_commands, command=command, directory=task.agent.workdir,
                                         allow_stderr=True):
                 logger.info(f"[{task.agent.name}] {line}")
 
         task.cleaned_up = True
         task.save()
 
-        log_task_orchestrator_status(task, [f"Cleaned up"])
+        log_task_status(task, [f"Cleaned up"])
         async_to_sync(push_task_channel_event)(task)
     except Exception:
         logger.error(f"Failed to clean up: {traceback.format_exc()}")
 
 
-# Miscellaneous tasks
+# Miscellaneous Tasks #
 #
 # These should only run one at a time (i.e., should not overlap).
 # To prevent overlap we use the Django cache as a lock mechanism,
@@ -656,7 +686,7 @@ def find_stranded():
             if (now - task.updated).total_seconds() > (5 * period):
                 logger.info(f"Trying to rescue stranded task: {task.guid}")
                 if task.job_id is not None:
-                    poll_job.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+                    poll_jobs.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
                 else:
                     logger.error(f"Couldn't rescue stranded task '{task.guid}' (no job ID)")
     finally:

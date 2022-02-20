@@ -37,7 +37,7 @@ def is_healthy(agent: Agent) -> (bool, List[str]):
         try:
             with ssh:
                 logger.info(f"Checking agent {agent.name}'s health")
-                for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
+                for line in execute_command(ssh=ssh, setup_command=':', command=f"pwd", directory=agent.workdir):
                     logger.info(line)
                     output.append(line)
                 logger.info(f"Agent {agent.name} healthcheck succeeded")
@@ -48,7 +48,7 @@ def is_healthy(agent: Agent) -> (bool, List[str]):
                 subprocess.run(f"ssh-keyscan {agent.hostname} >> /code/config/ssh/known_hosts", shell=True)
                 with ssh:
                     logger.info(f"Checking agent {agent.name}'s health")
-                    for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir):
+                    for line in execute_command(ssh=ssh, setup_command=':', command=f"pwd", directory=agent.workdir):
                         logger.info(line)
                         output.append(line)
                     logger.info(f"Agent {agent.name} healthcheck succeeded")

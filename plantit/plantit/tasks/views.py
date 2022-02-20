@@ -10,18 +10,17 @@ from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
-from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
 import plantit.queries as q
 from plantit import settings
-from plantit.celery_tasks import prep_environment, share_data, submit_job, poll_job
+from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_orchestrator_status
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
+from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
-    get_task_scheduler_log_file_path, \
+    get_job_log_file_path, \
     get_task_agent_log_file_path
 
 logger = logging.getLogger(__name__)
@@ -65,14 +64,14 @@ def get_or_create(request):
             task = create_immediate_task(request.user, task_config)
 
             # submit head of Celery (task chain ;)
-            (prep_environment.s(task.guid) | share_data.s() | submit_job.s() | poll_job.s()).apply_async(
+            (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
             task_dict = q.task_to_dict(task)
 
-            log_task_orchestrator_status(task, [f"Created task {task.guid} on {task.agent.name}"])
+            log_task_status(task, [f"Created task {task.guid} on {task.agent.name}"])
             async_to_sync(push_task_channel_event)(task)
 
         # otherwise register delayed or repeating task
@@ -253,7 +252,7 @@ def download_scheduler_logs(request, guid):
             return HttpResponseNotFound()
     except Task.DoesNotExist:
         return HttpResponseNotFound()
-    with open(get_task_scheduler_log_file_path(task)) as file:
+    with open(get_job_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
 
 
@@ -273,7 +272,7 @@ def get_scheduler_logs(request, guid):
             return HttpResponseNotFound()
     except Task.DoesNotExist:
         return HttpResponseNotFound()
-    with open(get_task_scheduler_log_file_path(task)) as file:
+    with open(get_job_log_file_path(task)) as file:
         return JsonResponse({'lines': file.readlines()})
 
 
@@ -317,16 +316,8 @@ def get_agent_logs(request, guid):
 
 
 def __cancel(task: Task):
-    # cancel the task and mark it canceled
     cancel_task(task)
-    now = timezone.now()
-    task.status = TaskStatus.CANCELED
-    task.updated = now
-    task.completed = now
-    task.save()
-
-    msg = f"Cancelled user {task.user.username}'s task {task.guid}"
-    log_task_orchestrator_status(task, [msg])
+    log_task_status(task, [f"Cancelled user {task.user.username}'s task {task.guid}"])
     push_task_channel_event(task)
 
 

@@ -39,12 +39,12 @@ def get_task_agent_log_file_path(task: Task):
     return join(os.environ.get('TASKS_LOGS'), get_task_agent_log_file_name(task))
 
 
-def get_task_scheduler_log_file_name(task: Task):
+def get_job_log_file_name(task: Task):
     return f"plantit.{task.job_id}.out"
 
 
-def get_task_scheduler_log_file_path(task: Task):
-    return join(os.environ.get('TASKS_LOGS'), get_task_scheduler_log_file_name(task))
+def get_job_log_file_path(task: Task):
+    return join(os.environ.get('TASKS_LOGS'), get_job_log_file_name(task))
 
 
 def get_output_included_names(task: Task) -> List[str]:
@@ -54,19 +54,25 @@ def get_output_included_names(task: Task) -> List[str]:
         included = []
 
     # default inclusions: scheduler log files and zip file
-    included.append(f"{task.guid}.zip")
-    if task.job_id is not None and task.job_id != '':
-        included.append(f"plantit.{task.job_id}.out")
-        included.append(f"plantit.{task.job_id}.err")
+    # included.append(f"{task.guid}.zip")
+    # if task.job_id is not None and task.job_id != '':
+    #     included.append(f"plantit.{task.job_id}.out")
+    #     included.append(f"plantit.{task.job_id}.err")
 
     return list(set(included))
 
 
 def get_output_included_patterns(task: Task) -> List[str]:
     try:
-        return list(set(list(task.workflow['output']['include']['patterns'])))
+        included = list(task.workflow['output']['include']['patterns'])
     except:
-        return []
+        included = []
+
+    included.append('out')
+    included.append('err')
+    included.append('zip')
+
+    return list(set(included))
 
 
 def has_output_target(task: Task) -> bool:
@@ -111,7 +117,7 @@ def parse_task_walltime(walltime: str) -> timedelta:
     return timedelta(hours=time_hours, minutes=time_minutes, seconds=time_seconds)
 
 
-def parse_task_job_id(line: str) -> str:
+def parse_job_id(line: str) -> str:
     try:
         return str(int(line.replace('Submitted batch job', '').strip()))
     except:

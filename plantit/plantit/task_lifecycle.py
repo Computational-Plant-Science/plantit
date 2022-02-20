@@ -1,8 +1,6 @@
 import json
 import logging
 import os
-import subprocess
-import tempfile
 import traceback
 import uuid
 from datetime import timedelta
@@ -21,17 +19,16 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_i
 import plantit.terrain as terrain
 from plantit import docker as docker
 from plantit.agents.models import Agent
-from plantit.keypairs import get_user_private_key_path
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_resources import get_task_ssh_client
-from plantit.task_scripts import compose_job_script, compose_launcher_script
+from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
-from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_task_job_id, get_output_included_names, get_output_included_patterns, \
-    get_task_scheduler_log_file_path, get_task_scheduler_log_file_name, parse_bind_mount, parse_task_miappe_info
+from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_job_id, get_output_included_names, get_output_included_patterns, \
+    get_job_log_file_path, get_job_log_file_name, parse_bind_mount, parse_task_miappe_info
 
 logger = logging.getLogger(__name__)
 
@@ -181,22 +178,11 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     # working directory
     work_dir = join(task.agent.workdir, task.workdir)
 
-    # NOTE: paramiko is finicky about connecting to certain hosts.
-    # the equivalent paramiko implementation is commented below,
-    # but for now we just perform each step manually.
-    #
-    # issues #239: https://github.com/Computational-Plant-Science/plantit/issues/239
-    #
-    # misc:
-    # - if sftp throws an IOError or complains about filesizes,
-    #   it probably means the remote host's disk is full.
-    #   could catch the error and show an alert in the UI.
-
-    # if this workflow has input files...
+    # if this workflow has input files, get a list of them
     if 'input' in options:
         # create a directory for them
         logger.info(f"Creating input directory for task {task.guid}")
-        for line in list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
+        for line in list(execute_command(ssh=ssh, setup_command=':', command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
 
         # get their filenames
         if 'input' not in options or options['input'] is None: inputs = []
@@ -207,32 +193,87 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
     else: inputs = []
 
-    # compose the job script and transfer it to the selected agent
-    with tempfile.NamedTemporaryFile() as task_script:
-        lines = compose_job_script(task, options, inputs)
-        for line in lines: task_script.write(f"{line}\n".encode('utf-8'))
-        task_script.seek(0)
-        logger.info(f"Uploading job script for task {task.guid}")
-        subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {task_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, task.guid)}.sh", shell=True)
+    # save the expected number of input files to the task
+    task.inputs_detected = len(inputs)
+    task.save()
 
-    # if the selected agent uses the TACC Launcher, create and upload a launcher script too
-    if task.agent.launcher:
-        with tempfile.NamedTemporaryFile() as launcher_script:
-            launcher_commands = compose_launcher_script(task, options, inputs)
-            for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
-            launcher_script.seek(0)
-            logger.info(f"Uploading launcher script for task {task.guid}")
-            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {launcher_script.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.LAUNCHER_SCRIPT_NAME)}", shell=True)
-    # otherwise upload a list of inputs for the SLURM job array
-    else:
-        with tempfile.NamedTemporaryFile() as inputs_file:
-            for line in inputs: inputs_file.write(f"{line}\n".encode('utf-8'))
-            inputs_file.seek(0)
-            logger.info(f"Uploading inputs file for task {task.guid}")
-            subprocess.run(f"scp{' -v ' if settings.DEBUG else ' '}-o StrictHostKeyChecking=no -i {str(get_user_private_key_path(task.agent.user.username))} {inputs_file.name} {task.agent.username}@{task.agent.hostname}:{join(work_dir, settings.INPUTS_FILE_NAME)}", shell=True)
+    # misc notes:
+    # - if sftp throws an IOError or complains about filesizes,
+    #   it probably means the remote host's disk is full.
+    #   could catch the error and show an alert in the UI.
+    with ssh.client.open_sftp() as sftp:
+
+        # if we have inputs, compose and transfer the pull script
+        if len(inputs) > 0:
+            pull_script_path = join(work_dir, f"{task.guid}_pull.sh")
+            with sftp.file(join(work_dir, pull_script_path), 'w') as pull_script:
+                lines = compose_pull_script(task, options)
+                for line in lines: pull_script.write(f"{line}\n".encode('utf-8'))
+                pull_script.seek(0)
+                logger.info(f"Uploaded pull script {pull_script_path} for task {task.guid}")
+
+            # if this agent doesn't use the TACC launcher, we also need a file listing inputs for the job array to consume
+            if not task.agent.launcher:
+                inputs_file_path = join(work_dir, settings.INPUTS_FILE_NAME)
+                with sftp.file(inputs_file_path, 'w') as inputs_file:
+                    for line in inputs: inputs_file.write(f"{line}\n".encode('utf-8'))
+                    inputs_file.seek(0)
+                    logger.info(f"Uploaded inputs file {inputs_file_path} for task {task.guid}")
+
+        # compose and transfer the job script
+        job_script_path = join(work_dir, f"{task.guid}.sh")
+        with sftp.file(job_script_path, 'w') as job_script:
+            lines = compose_job_script(task, options, inputs)
+            for line in lines: job_script.write(f"{line}\n".encode('utf-8'))
+            job_script.seek(0)
+            logger.info(f"Uploaded job script {job_script_path} for task {task.guid}")
+
+        # if the selected agent uses the TACC Launcher, create and upload a launcher script too
+        if task.agent.launcher:
+            launcher_script_path = join(work_dir, settings.LAUNCHER_SCRIPT_NAME)
+            with sftp.file(launcher_script_path, 'w') as launcher_script:
+                launcher_commands = compose_launcher_script(task, options, inputs)
+                for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
+                launcher_script.seek(0)
+                logger.info(f"Uploaded launcher script {launcher_script_path} for task {task.guid}")
+
+        # compose and transfer the push script
+        push_script_path = join(work_dir, f"{task.guid}_push.sh")
+        with sftp.file(push_script_path, 'w') as push_script:
+            lines = compose_push_script(task, options)
+            for line in lines: push_script.write(f"{line}\n".encode('utf-8'))
+            push_script.seek(0)
+            logger.info(f"Uploaded push script {push_script_path} for task {task.guid}")
 
 
-def submit_task_to_scheduler(task: Task, ssh: SSH, options: TaskOptions) -> str:
+def submit_pull_to_scheduler(task: Task, ssh: SSH) -> str:
+    # setup command
+    setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+
+    # command
+    command = f"sbatch {task.guid}_pull.sh"
+
+    # workdir
+    workdir = join(task.agent.workdir, task.workdir)
+
+    # submit to agent's scheduler
+    lines = []
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+        stripped = line.strip()
+        if stripped:
+            logger.info(f"[{task.agent.name}] {stripped}")
+            lines.append(stripped)
+
+    pull_id = parse_job_id(lines[-1])
+    return pull_id
+
+
+def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
+    # parse the task configuration
+    parse_errors, options = parse_task_options(task)
+    if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+
+    # inputs
     if 'input' not in options or options['input'] is None: inputs = []
     else:
         kind = options['input']['kind']
@@ -241,58 +282,96 @@ def submit_task_to_scheduler(task: Task, ssh: SSH, options: TaskOptions) -> str:
         paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
         inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
 
-    precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
-    if task.agent.launcher: command = f"sbatch {task.guid}.sh"
-    else: command = f"sbatch --array=1-{len(inputs)} {task.guid}.sh"
+    # setup command
+    setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+
+    # command
+    depend_clause = ' ' if pull_id is None else (' --depend=afterany:' + pull_id + ' ')
+    if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
+    else: command = f"sbatch{depend_clause}--array=1-{len(inputs)} {task.guid}.sh"
+
+    # workdir
     workdir = join(task.agent.workdir, task.workdir)
 
+    # submit the job to the agent's scheduler
     lines = []
-    for line in execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True):
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
         stripped = line.strip()
         if stripped:
             logger.info(f"[{task.agent.name}] {stripped}")
-            # log_task_orchestrator_status(task, [f"[{task.agent.name}] {stripped}"])
             lines.append(stripped)
 
-    job_id = parse_task_job_id(lines[-1])
-    task.job_id = job_id
-    task.updated = timezone.now()
-    task.save()
-
-    logger.info(f"Set task {task.guid} job ID: {task.job_id}")
+    job_id = parse_job_id(lines[-1])
     return job_id
 
 
+def submit_push_to_scheduler(task: Task, ssh: SSH, job_id: str = None) -> str:
+    # setup command
+    setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+
+    # command
+    command = f"sbatch{' ' if job_id is None else (' --depend=afterany:' + job_id + ' ')}{task.guid}_push.sh"
+
+    # workdir
+    workdir = join(task.agent.workdir, task.workdir)
+
+    # submit to agent's scheduler
+    lines = []
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+        stripped = line.strip()
+        if stripped:
+            logger.info(f"[{task.agent.name}] {stripped}")
+            lines.append(stripped)
+
+    push_id = parse_job_id(lines[-1])
+    return push_id
+
+
 def cancel_task(task: Task):
-    ssh = get_task_ssh_client(task)
-    with ssh:
-        lines = []
-        try:
+    try:
+        # mark task cancelled
+        now = timezone.now()
+        task.status = TaskStatus.CANCELED
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # cancel any jobs associated with the task
+        ssh = get_task_ssh_client(task)
+        with ssh:
+            lines = []
             for line in execute_command(
                     ssh=ssh,
-                    precommand=':',
+                    setup_command=':',
                     command=f"squeue -u {task.agent.username}",
                     directory=join(task.agent.workdir, task.workdir),
                     allow_stderr=True):
                 logger.info(line)
                 lines.append(line)
 
-            if task.job_id is None and not any([task.job_id in r for r in lines]):
-                return  # run doesn't exist, so no need to cancel
-        except:
-            logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
-            return
-
-        # TODO support PBS/other scheduler cancellation commands, not just SLURM
-        if task.job_id is not None:
-            try:
+            if task.pull_id is not None and any((task.pull_id in r) for r in lines):
                 execute_command(
                     ssh=ssh,
-                    precommand=':',
+                    setup_command=':',
+                    command=f"scancel {task.pull_id}",
+                    directory=join(task.agent.workdir, task.workdir))
+
+            if task.job_id is not None and any((task.job_id in r) for r in lines):
+                execute_command(
+                    ssh=ssh,
+                    setup_command=':',
                     command=f"scancel {task.job_id}",
                     directory=join(task.agent.workdir, task.workdir))
-            except:
-                logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
+
+            if task.push_id is not None and any((task.push_id in r) for r in lines):
+                execute_command(
+                    ssh=ssh,
+                    setup_command=':',
+                    command=f"scancel {task.push_id}",
+                    directory=join(task.agent.workdir, task.workdir))
+    except:
+        logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
+        return
 
 
 def check_job_logs_for_progress(task: Task):
@@ -303,9 +382,9 @@ def check_job_logs_for_progress(task: Task):
         task: The task
     """
 
-    scheduler_log_file_path = get_task_scheduler_log_file_path(task)
+    scheduler_log_file_path = get_job_log_file_path(task)
     if not Path(scheduler_log_file_path).is_file():
-        logger.warning(f"Scheduler log file {get_task_scheduler_log_file_name(task)} does not exist yet")
+        logger.warning(f"Scheduler log file {get_job_log_file_name(task)} does not exist yet")
         return
 
     with open(scheduler_log_file_path, 'r') as scheduler_log_file:
@@ -339,7 +418,7 @@ def get_job_status_and_walltime(task: Task):
         # first get the job's walltime
         lines = execute_command(
             ssh=ssh,
-            precommand=":",
+            setup_command=":",
             command=f"squeue --user={task.agent.username}",
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
@@ -355,7 +434,7 @@ def get_job_status_and_walltime(task: Task):
         # next get the job's status
         lines = execute_command(
             ssh=ssh,
-            precommand=':',
+            setup_command=':',
             command=f"sacct -j {task.job_id}",
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
@@ -372,7 +451,7 @@ def get_job_status_and_walltime(task: Task):
         # about this job so we don't miss a cancellation/timeout/failure/completion
         with ssh.client.open_sftp() as sftp:
 
-            log_file_path = get_task_scheduler_log_file_path(task)
+            log_file_path = join(task.workdir, f"{task.guid}_staging", get_job_log_file_name(task))
             stdin, stdout, stderr = ssh.client.exec_command(f"test -e {log_file_path} && echo exists")
 
             # if log file doesn't exist, return None
@@ -382,23 +461,18 @@ def get_job_status_and_walltime(task: Task):
             else:
                 with sftp.open(log_file_path, 'r') as log_file:
                     logger.info(f"Checking scheduler log file {log_file_path} for job {task.job_id} status")
-
                     for line in log_file.readlines():
                         # if we find success or failure, stop
-                        if 'FAILED' in line or 'FAILURE' in line or 'NODE_FAIL' in line:
-                            status = 'FAILED'
-                            break
-                        if 'SUCCESS' in line or 'COMPLETED' in line:
-                            status = 'SUCCESS'
-                            break
+                        for s in (Task.SLURM_FAILURE_STATES + Task.SLURM_TIMEOUT_STATES + Task.SLURM_SUCCESS_STATES):
+                            if s in line:
+                                status = s
+                                break
 
                         # otherwise use the most recent status (last line of the log file)
-                        if 'CANCELLED' in line or 'CANCELED' in line:
-                            status = 'CANCELED'
-                            continue
-                        if 'TIMEOUT' in line:
-                            status = 'TIMEOUT'
-                            continue
+                        for s in (Task.SLURM_CANCELLED_STATES + Task.SLURM_TIMEOUT_STATES + Task.SLURM_SUCCESS_STATES + Task.SLURM_RUNNING_STATES):
+                            if s in line:
+                                status = s
+                                continue
 
     return status, walltime
 

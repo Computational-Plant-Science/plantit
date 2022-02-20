@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 from itertools import chain
 from typing import TypedDict, List
 
@@ -8,10 +9,9 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
-from enum import Enum
 from taggit.managers import TaggableManager
 
-from plantit.agents.models import Agent, AgentScheduler
+from plantit.agents.models import Agent
 from plantit.miappe.models import Investigation, Study
 
 
@@ -86,27 +86,6 @@ class Task(models.Model):
     delayed_id = models.CharField(max_length=250, null=True, blank=True)
     repeating_id = models.CharField(max_length=250, null=True, blank=True)
 
-    @property
-    def is_success(self):
-        return ((self.job_status == 'SUCCESS' or self.job_status == 'COMPLETED') and self.status == TaskStatus.COMPLETED) \
-               or self.status == 'success'  # legacy status handling (TODO: may no longer be necessary?)
-
-    @property
-    def is_failure(self):
-        return self.status == TaskStatus.FAILURE or self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL' or self.status == 'FAILURE'
-
-    @property
-    def is_timeout(self):
-        return self.status == TaskStatus.TIMEOUT or self.job_status == 'TIMEOUT'
-
-    @property
-    def is_cancelled(self):
-        return self.status == TaskStatus.CANCELED or self.job_status == 'REVOKED' or self.job_status == 'CANCELLED' or self.job_status == 'CANCELED'
-
-    @property
-    def is_complete(self):
-        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled or (self.status == TaskStatus.COMPLETED)
-
     def __str__(self):
         opts = self._meta
         data = {}
@@ -116,14 +95,97 @@ class Task(models.Model):
             data[f.name] = [i.id for i in f.value_from_object(self)]
         return json.dumps(data)
 
-    # jobqueue stuff
+    # SLURM #
+
+    SLURM_RUNNING_STATES = [
+        'CF', 'CONFIGURING',
+        'PD', 'PENDING',
+        'R', 'RUNNING',
+        'RD', 'RESV_DEL_HOLD',
+        'RF', 'REQUEUE_FED',
+        'RH', 'REQUEUE_HOLD',
+        'RQ', 'REQUEUED',
+        'RS', 'RESIZING',
+        'SI', 'SIGNALING',
+        'SO', 'STAGE_OUT',
+        'S', 'SUSPENDED',
+        'ST', 'STOPPED'
+    ]
+
+    SLURM_SUCCESS_STATES = [
+        'CG', 'COMPLETING',
+        'CD', 'COMPLETED',
+    ]
+
+    SLURM_CANCELLED_STATES = [
+        'CA', 'CANCELLED',
+        'RV', 'REVOKED'
+    ]
+
+    SLURM_TIMEOUT_STATES = [
+        'DL', 'DEADLINE',
+        'TO', 'TIMEOUT'
+    ]
+
+    SLURM_FAILURE_STATES = [
+        'BF', 'BOOT_FAIL',
+        'F', 'FAILED',
+        'NF', 'NODE_FAIL',
+        'OOM', 'OUT_OF_MEMORY',
+        'PR', 'PREEMPTED',
+    ]
+
+    # inbound data transfer
+    pull_id = models.CharField(max_length=50, null=True, blank=True)
+    pull_status = models.CharField(max_length=15, null=True, blank=True)
+
+    # main job (user workflow)
     job_id = models.CharField(max_length=50, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
     job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
+    # outbound data transfer
+    push_id = models.CharField(max_length=50, null=True, blank=True)
+    push_status = models.CharField(max_length=15, null=True, blank=True)
 
-# scheduled tasks
+    # State props #
+
+    @property
+    def is_success(self):
+        return (self.pull_status in self.SLURM_SUCCESS_STATES
+                and self.job_status in self.SLURM_SUCCESS_STATES
+                and self.push_status in self.SLURM_SUCCESS_STATES) \
+               or (self.status == TaskStatus.COMPLETED or
+                   self.status == 'success')  # legacy (TODO: may no longer be necessary?)
+
+    @property
+    def is_failure(self):
+        return self.pull_status in self.SLURM_FAILURE_STATES \
+               or self.job_status in self.SLURM_FAILURE_STATES \
+               or self.push_status in self.SLURM_FAILURE_STATES \
+               or self.status == TaskStatus.FAILURE
+
+    @property
+    def is_timeout(self):
+        return self.pull_status in self.SLURM_TIMEOUT_STATES \
+               or self.job_status in self.SLURM_TIMEOUT_STATES \
+               or self.push_status in self.SLURM_TIMEOUT_STATES \
+               or self.status == TaskStatus.TIMEOUT
+
+    @property
+    def is_cancelled(self):
+        return self.pull_status in self.SLURM_CANCELLED_STATES \
+               or self.job_status in self.SLURM_CANCELLED_STATES \
+               or self.push_status in self.SLURM_CANCELLED_STATES \
+               or self.status == TaskStatus.CANCELED
+
+    @property
+    def is_complete(self):
+        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
+
+
+# Scheduled Tasks #
 
 class DelayedTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
@@ -145,7 +207,7 @@ class RepeatingTask(PeriodicTask):
     eta = models.DateTimeField(null=False, blank=False)
 
 
-# task options
+# Task Options #
 
 class BindMount(TypedDict):
     host_path: str

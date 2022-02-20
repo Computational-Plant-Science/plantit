@@ -55,7 +55,7 @@ class SSH:
     reraise=True)
 def execute_interactive_command(
         ssh: SSH,
-        precommand: str,
+        setup_command: str,
         command: str,
         responses: List[str],
         directory: str = None,
@@ -66,7 +66,7 @@ def execute_interactive_command(
 
         Args:
             ssh: The SSH client.
-            precommand: Commands to prepend to the primary command.
+            setup_command: Commands to prepend to the primary command.
             command: The command.
             responses: The responses to be provided to input prompts following the command.
             directory: Directory to run the command in.
@@ -75,7 +75,7 @@ def execute_interactive_command(
         Returns:
 
         """
-    full_command = f"{precommand} && {command}"
+    full_command = f"{setup_command} && {command}"
     if directory is not None: full_command = f"cd {directory} && {full_command}"
 
     logger.info(f"Executing command on '{ssh.host}': {full_command}")
@@ -109,7 +109,7 @@ def execute_interactive_command(
     reraise=True)
 def execute_command(
         ssh: SSH,
-        precommand: str,
+        setup_command: str,
         command: str,
         directory: str = None,
         allow_stderr: bool = False) -> List[str]:
@@ -118,7 +118,7 @@ def execute_command(
 
     Args:
         ssh: The SSH client.
-        precommand: Commands to prepend to the primary command.
+        setup_command: Commands to prepend to the primary command.
         command: The command.
         directory: Directory to run the command in.
         allow_stderr: Whether to permit `stderr` output (by default an error is thrown).
@@ -126,7 +126,7 @@ def execute_command(
     Returns:
 
     """
-    full_command = f"{precommand} && {command}"
+    full_command = f"{setup_command} && {command}"
     if directory is not None: full_command = f"cd {directory} && {full_command}"
 
     logger.info(f"Executing command on '{ssh.host}': {full_command}")
