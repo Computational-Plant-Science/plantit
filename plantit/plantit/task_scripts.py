@@ -171,15 +171,15 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 
     # cores per task
     if 'cores' in jobqueue:
-        headers.append(f"#SBATCH -c {int(jobqueue['cores'])}")
+        headers.append(f"#SBATCH -c {min(int(jobqueue['cores']), task.agent.max_cores)}")
 
     # nodes & tasks per node
-    nodes = calculate_node_count(task, inputs)
-    tasks = min(len(inputs), task.agent.max_cores)
     if len(inputs) > 0 and options['input']['kind'] == 'files':
-        if task.agent.job_array: headers.append(f"#SBATCH --array=1-{len(inputs)}")
+        nodes = calculate_node_count(task, inputs)
+        tasks = min(len(inputs), task.agent.max_tasks)
+        # if task.agent.job_array: headers.append(f"#SBATCH --array=1-{len(inputs)}")
         headers.append(f"#SBATCH -N {nodes}")
-        headers.append(f"#SBATCH --ntasks={tasks if inputs is not None and not task.agent.job_array else 1}")
+        headers.append(f"#SBATCH --ntasks={tasks}")
     else:
         headers.append(f"#SBATCH -N 1")
         headers.append("#SBATCH --ntasks=1")

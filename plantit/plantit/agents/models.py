@@ -31,6 +31,7 @@ class Agent(models.Model):
     max_walltime = models.PositiveIntegerField(blank=True, null=True, default=10)
     max_mem = models.IntegerField(blank=True, null=True, default=5)
     max_cores = models.IntegerField(blank=True, null=True, default=1)
+    max_tasks = models.IntegerField(blank=True, null=True, default=20)
     max_processes = models.IntegerField(blank=True, null=True, default=1)
     max_nodes = models.IntegerField(blank=True, null=True, default=1)
     orchestrator_queue = models.CharField(max_length=250, null=True, blank=True)
