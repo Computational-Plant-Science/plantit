@@ -24,7 +24,7 @@ from plantit.users.models import Profile
 logger = logging.getLogger(__name__)
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['get'])
 def sharing(request):
@@ -39,7 +39,7 @@ def sharing(request):
     return JsonResponse({'datasets': [q.dataset_access_policy_to_dict(policy) for policy in policies]})
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @sync_to_async
 @login_required
 @async_to_sync

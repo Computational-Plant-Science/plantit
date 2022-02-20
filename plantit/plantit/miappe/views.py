@@ -16,7 +16,7 @@ from plantit.miappe.models import EnvironmentParameter, ExperimentalFactor, Stud
 logger = logging.getLogger(__name__)
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def suggested_environment_parameters(request):
@@ -24,7 +24,7 @@ def suggested_environment_parameters(request):
         return JsonResponse({'suggested_environment_parameters': yaml.safe_load(file)})
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def suggested_experimental_factors(request):
@@ -32,7 +32,7 @@ def suggested_experimental_factors(request):
         return JsonResponse({'suggested_experimental_factors': yaml.safe_load(file)})
 
 
-@swagger_auto_schema(method='post', auto_schema=None)
+# @swagger_auto_schema(method='post', auto_schema=None)
 @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET', 'POST'])
@@ -51,7 +51,7 @@ def list_or_create(request):
         return JsonResponse(q.project_to_dict(project))
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def list_by_owner(request, owner):
@@ -61,8 +61,8 @@ def list_by_owner(request, owner):
     return JsonResponse({'projects': projects})
 
 
-@swagger_auto_schema(method='delete', auto_schema=None)
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(method='delete', auto_schema=None)
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET', 'DELETE'])
 def get_or_delete(request, owner, title):
@@ -80,7 +80,7 @@ def get_or_delete(request, owner, title):
         return JsonResponse({'projects': projects})
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def exists(request, owner, title):
@@ -93,7 +93,7 @@ def exists(request, owner, title):
         return JsonResponse({'exists': False})
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def add_team_member(request, owner, title):
@@ -115,7 +115,7 @@ def add_team_member(request, owner, title):
     return JsonResponse(q.project_to_dict(project))
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def remove_team_member(request, owner, title):
@@ -137,7 +137,7 @@ def remove_team_member(request, owner, title):
     return JsonResponse(q.project_to_dict(project))
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def add_study(request, owner, title):
@@ -158,7 +158,7 @@ def add_study(request, owner, title):
     return JsonResponse(q.project_to_dict(project))
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def remove_study(request, owner, title):
@@ -181,7 +181,7 @@ def remove_study(request, owner, title):
     return JsonResponse(q.project_to_dict(project))
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def edit_study(request, owner, title):

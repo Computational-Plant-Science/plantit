@@ -18,7 +18,7 @@ from plantit.redis import RedisClient
 logger = logging.getLogger(__name__)
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def list(request):
@@ -27,7 +27,7 @@ def list(request):
     return JsonResponse({'agents': [q.agent_to_dict(agent, request.user) for agent in agents]})
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def get(request, name):
@@ -41,7 +41,7 @@ def get(request, name):
     return JsonResponse(q.agent_to_dict(agent, request.user))
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def exists(request, name):
@@ -55,7 +55,7 @@ def exists(request, name):
     except: return JsonResponse({'exists': False})
 
 
-@swagger_auto_schema(methods='post')
+# @swagger_auto_schema(methods='post')
 @login_required
 @api_view(['POST'])
 def healthcheck(request, name):
@@ -75,7 +75,7 @@ def healthcheck(request, name):
     }
 
     # persist health status to DB
-    plantit.healthchecks.is_healthy = healthy
+    agent.is_healthy = healthy
     agent.save()
 
     # update cache
@@ -87,7 +87,7 @@ def healthcheck(request, name):
     return JsonResponse(check)
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def healthchecks(request, name):
@@ -104,7 +104,7 @@ def healthchecks(request, name):
     return JsonResponse({'healthchecks': checks})
 
 
-@swagger_auto_schema(methods='get')
+# @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def policies(request, name):
