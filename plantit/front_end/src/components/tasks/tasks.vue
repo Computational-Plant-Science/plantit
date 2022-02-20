@@ -124,117 +124,65 @@
                             >
                                 No tasks found.
                             </p>
-                            <div v-else class="ml-2 mr-2">
-                                <b-row
-                                    class="m-3 mb-1 pl-0 pr-0 text-center"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Delayed</b></b-col>
-                                </b-row>
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksDelayed.length === 0
-                                    "
-                                    class="m-0 pl-0 pr-0 text-center"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-center text-light pl-3 pr-3'
-                                                    : 'text-center text-dark pl-3 pr-3'
-                                            "
-                                        >
-                                            No delayed tasks are scheduled.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <delayedtaskblurb
-                                        v-for="task in tasksDelayed"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                    ></delayedtaskblurb>
-                                </b-list-group>
-                                <b-row
-                                    class="m-3 mb-1 pl-0 pr-0 text-center"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Repeating</b></b-col>
-                                </b-row>
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksRepeating.length === 0
-                                    "
-                                    class="m-0 pl-0 pr-0 text-center"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-center text-light pl-3 pr-3'
-                                                    : 'text-center text-dark pl-3 pr-3'
-                                            "
-                                        >
-                                            No repeating tasks are scheduled.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <repeatingtaskblurb
-                                        v-for="task in tasksRepeating"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                    ></repeatingtaskblurb>
-                                </b-list-group>
-                                <!--<b-row
-                                    class="m-3 mb-1 pl-0 pr-0 text-center"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Repeating</b></b-col>
-                                </b-row>
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksRepeating.length === 0
-                                    "
-                                    class="m-0 pl-0 pr-0 text-center"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-center text-light pl-3 pr-3'
-                                                    : 'text-center text-dark pl-3 pr-3'
-                                            "
-                                        >
-                                            No repeating tasks are scheduled.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                </b-list-group>-->
-                                <b-row
-                                    class="m-3 mb-1 pl-0 pr-0 text-center"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Running</b></b-col>
-                                </b-row>
+                                <b-tabs
+                                    v-model="activeTab"
+                                            nav-class="bg-transparent"
+                                            active-nav-item-class="bg-transparent text-dark"
+                                            pills>
+                                  <b-tab
+                                  title="Running"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                ">
+                                    <template #title>
+                                                    <b-button
+                                                        id="running-tasks"
+                                                        :variant="
+                                                            activeTab === 0
+                                                                ? profile.darkMode
+                                                                    ? 'outline-success'
+                                                                    : 'success'
+                                                                : profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        title="Running tasks"
+                                                        ><i
+                                                            class="
+                                                                fas
+                                                                fa-running fa-fw
+                                                            "
+                                                        ></i>
+                                                        Running
+                                                    </b-button><b-popover
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
+                                                        placement="bottomleft"
+                                                        target="running-tasks"
+                                                        title="Running Tasks"
+                                                        >Click here to view currently running tasks.</b-popover
+                                                    ></template
+                                                >
                                 <b-row
                                     v-if="
                                         !tasksLoading &&
                                         tasksRunning.length === 0
                                     "
-                                    class="m-0 pl-0 pr-0 text-center"
+                                    class="m-0 pl-0 pr-0"
                                 >
                                     <b-col>
                                         <p
                                             :class="
                                                 profile.darkMode
-                                                    ? 'text-center text-light pl-3 pr-3'
-                                                    : 'text-center text-dark pl-3 pr-3'
+                                                    ? 'text-light'
+                                                    : 'text-dark'
                                             "
                                         >
                                             No tasks are running.
@@ -248,334 +196,62 @@
                                         :task="task"
                                         :project="true"
                                     ></taskblurb>
-                                    <!--<b-card
-                                        v-for="task in filtered"
-                                        v-bind:key="task.guid"
-                                        class="mt-2 pt-1"
-                                        :bg-variant="
-                                            profile.darkMode ? 'dark' : 'white'
-                                        "
-                                        :header-text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        :text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        :body-text-variant="
-                                            profile.darkMode ? 'white' : 'dark'
-                                        "
-                                        no-body
-                                        :style="
-                                            task.is_failure || task.is_timeout
-                                                ? 'border-bottom: 5px solid red'
-                                                : task.is_cancelled
-                                                ? 'border-bottom: 5px solid lightgray'
-                                                : task.is_complete
-                                                ? 'border-bottom: 5px solid #d6df5D'
-                                                : 'border-bottom: 5px solid #e2e3b0'
-                                        "
-                                    >
-                                        <b-card-body>
-                                            <b-img
-                                                v-if="
-                                                    task.workflow_image_url !==
-                                                        undefined &&
-                                                        task.workflow_image_url !==
-                                                            null
-                                                "
-                                                rounded
-                                                style="max-width: 3rem;"
-                                                :src="task.workflow_image_url"
-                                            ></b-img>
-                                            <b-link
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-light'
-                                                        : 'text-dark'
-                                                "
-                                                :to="{
-                                                    name: 'task',
-                                                    params: {
-                                                        owner: task.owner,
-                                                        name: task.name
-                                                    }
-                                                }"
-                                                replace
-                                                >{{ task.name }}</b-link
-                                            >
-                                            <span
-                                                v-if="
-                                                    task.tags !== undefined &&
-                                                        task.tags.length > 0
-                                                "
-                                            >
-                                                <b-badge
-                                                    v-for="tag in task.tags"
-                                                    v-bind:key="tag"
-                                                    class="ml-2 mb-2"
-                                                    variant="secondary"
-                                                    >{{ tag }}
-                                                </b-badge>
-                                            </span>
-                                            <br />
-                                            <span v-if="!task.is_complete"
-                                                ><b-spinner
-                                                    class="mb-1 mr-1"
-                                                    style="width: 0.7rem; height: 0.7rem;"
-                                                    variant="warning"
-                                                >
-                                                </b-spinner>
-                                                <small>Running on </small></span
-                                            >
-                                            <small v-else>Ran on </small>
-                                            <small>
-                                                <b-link
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :to="{
-                                                        name: 'agent',
-                                                        params: {
-                                                            name:
-                                                                task.agent.name
-                                                        }
-                                                    }"
-                                                    ><b-img
-                                                        v-if="task.agent.logo"
-                                                        rounded
-                                                        class="overflow-hidden"
-                                                        style="max-height: 1rem;"
-                                                        :src="task.agent.logo"
-                                                    ></b-img
-                                                    ><i
-                                                        v-else
-                                                        class="fas fa-server fa-fw"
-                                                    ></i>
-                                                    {{
-                                                        task.agent
-                                                            ? task.agent.name
-                                                            : '[agent removed]'
-                                                    }}</b-link
-                                                >
-
-                                                {{
-                                                    prettify(task.updated)
-                                                }}</small
-                                            >
-                                            <br />
-                                            <b-img
-                                                v-if="
-                                                    task.workflow_image_url !==
-                                                        undefined &&
-                                                        task.workflow_image_url !==
-                                                            null
-                                                "
-                                                rounded
-                                                class="card-img-right"
-                                                style="max-width: 3rem;position: absolute;right: -15px;top: -25px;z-index:1;"
-                                                right
-                                                :src="
-                                                    `https://raw.githubusercontent.com/${task.workflow_owner}/${task.workflow_name}/master/${task.workflow_image_url}`
-                                                "
-                                            ></b-img>
-                                            <small
-                                                v-if="
-                                                    task.workflow_name !== null
-                                                "
-                                                class="mr-1"
-                                                ><a
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                    :href="
-                                                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
-                                                    "
-                                                    ><i
-                                                        class="fab fa-github fa-fw"
-                                                    ></i>
-                                                    {{ task.workflow_owner }}/{{
-                                                        task.workflow_name
-                                                    }}</a
-                                                >
-                                            </small>
-                                            <b-row class="mt-0"
-                                                ><b-col
-                                                    style="top: 27px;position: relative; font-size: 15pt"
-                                                    align-self="end"
-                                                    :class="
-                                                        task.is_failure ||
-                                                        task.is_timeout
-                                                            ? 'text-danger'
-                                                            : task.is_cancelled
-                                                            ? 'text-secondary'
-                                                            : task.is_complete
-                                                            ? 'text-success'
-                                                            : 'text-warning'
-                                                    "
-                                                    ><b>{{
-                                                        task.status.toUpperCase()
-                                                    }}</b></b-col
-                                                ></b-row
-                                            >
-                                        </b-card-body>
-                                    </b-card>-->
-                                    <!--<b-list-group-item
-                                        style="box-shadow: -2px 2px 2px #adb5bd"
-                                        v-for="task in filtered"
-                                        v-bind:key="task.name"
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                                : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
-                                        "
-                                    >
-                                        <b-img
-                                            v-if="
-                                                task.workflow_image_url !==
-                                                    undefined &&
-                                                    task.workflow_image_url !==
-                                                        null
-                                            "
-                                            rounded
-                                            class="card-img-right"
-                                            style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
-                                            right
-                                            :src="task.workflow_image_url"
-                                        ></b-img>
-                                        <b-link
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light mr-1'
-                                                    : 'text-dark mr-1'
-                                            "
-                                            :to="{
-                                                name: 'task',
-                                                params: {
-                                                    owner: task.owner,
-                                                    name: task.name
-                                                }
-                                            }"
-                                            replace
-                                            >{{ task.name }}</b-link
-                                        ><b-badge
-                                            v-for="tag in task.tags"
-                                            v-bind:key="tag"
-                                            class="mr-2"
-                                            variant="secondary"
-                                            >{{ tag }}
-                                        </b-badge>
-                                        <span v-if="task.project !== null">
-                                            <b-badge
-                                                class="mr-2"
-                                                variant="info"
-                                                >{{
-                                                    task.project.title
-                                                }}</b-badge
-                                            ><small v-if="task.study !== null"
-                                                ><b-badge
-                                                    class="mr-2"
-                                                    variant="info"
-                                                    >{{
-                                                        task.study.title
-                                                    }}</b-badge
-                                                ></small
-                                            >
-                                        </span>
-                                        <br />
-                                        <b-spinner
-                                            class="mb-1 mr-1"
-                                            style="width: 0.7rem; height: 0.7rem;"
-                                            v-if="!task.is_complete"
-                                            variant="warning"
-                                        >
-                                        </b-spinner>
-                                        <b-badge
-                                            variant="warning"
-                                            v-if="!task.is_complete"
-                                            >Running</b-badge
-                                        >
-                                        <b-badge
-                                            :variant="
-                                                task.is_failure ||
-                                                task.is_timeout
-                                                    ? 'danger'
-                                                    : task.is_cancelled
-                                                    ? 'secondary'
-                                                    : 'success'
-                                            "
-                                            v-else
-                                            >{{
-                                                task.status.toUpperCase()
-                                            }}</b-badge
-                                        >
-                                        <small>
-                                            on
-                                            <b-link
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-light'
-                                                        : 'text-dark'
-                                                "
-                                                :to="{
-                                                    name: 'agent',
-                                                    params: {
-                                                        name: task.agent.name
-                                                    }
-                                                }"
-                                                >{{
-                                                    task.agent
-                                                        ? task.agent.name
-                                                        : '[agent removed]'
-                                                }}</b-link
-                                            >
-                                            {{ prettify(task.updated) }}</small
-                                        >
-                                        <br />
-                                        <small
-                                            v-if="task.workflow_name !== null"
-                                            class="mr-1"
-                                            ><a
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-light'
-                                                        : 'text-dark'
-                                                "
-                                                :href="
-                                                    `https://github.com/${task.workflow_owner}/${task.workflow_name}`
-                                                "
-                                                ><i
-                                                    class="fab fa-github fa-fw"
-                                                ></i>
-                                                {{ task.workflow_owner }}/{{
-                                                    task.workflow_name
-                                                }}</a
-                                            >
-                                        </small>
-                                    </b-list-group-item>-->
                                 </b-list-group>
-                                <b-row
-                                    class="m-3 mb-1 pl-0 pr-0 text-center"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Completed</b></b-col>
-                                </b-row>
+                                  </b-tab>
+                                  <b-tab
+                                  title="Completed"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                ">
+                                    <template #title>
+                                                    <b-button
+                                                        id="completed-tasks"
+                                                        :variant="
+                                                            activeTab === 1
+                                                                ? profile.darkMode
+                                                                    ? 'outline-success'
+                                                                    : 'success'
+                                                                : profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        title="Completed tasks"
+                                                        ><i
+                                                            class="
+                                                                fas
+                                                                fa-check fa-fw
+                                                            "
+                                                        ></i>
+                                                        Completed
+                                                    </b-button><b-popover
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
+                                                        placement="bottomleft"
+                                                        target="completed-tasks"
+                                                        title="Completed Tasks"
+                                                        >Click here to view completed tasks.</b-popover
+                                                    ></template
+                                                >
                                 <b-row
                                     v-if="
                                         !tasksLoading &&
                                         tasksCompleted.length === 0
                                     "
-                                    class="m-0 pl-0 pr-0 text-center"
+                                    class="m-0 pl-0 pr-0"
                                 >
                                     <b-col>
                                         <p
                                             :class="
                                                 profile.darkMode
-                                                    ? 'text-center text-light pl-3 pr-3'
-                                                    : 'text-center text-dark pl-3 pr-3'
+                                                    ? 'text-light'
+                                                    : 'text-dark'
                                             "
                                         >
                                             No completed tasks.
@@ -590,7 +266,120 @@
                                         :project="true"
                                     ></taskblurb>
                                 </b-list-group>
-                            </div>
+                                  </b-tab>
+                                  <b-tab
+                                  title="Scheduled"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                ">
+                                    <template #title>
+                                                    <b-button
+                                                        id="scheduled-tasks"
+                                                        :variant="
+                                                            activeTab === 2
+                                                                ? profile.darkMode
+                                                                    ? 'outline-success'
+                                                                    : 'success'
+                                                                : profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        title="Scheduled tasks"
+                                                        ><i
+                                                            class="
+                                                                fas
+                                                                fa-clock fa-fw
+                                                            "
+                                                        ></i>
+                                                        Scheduled
+                                                    </b-button><b-popover
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
+                                                        placement="bottomleft"
+                                                        target="scheduled-tasks"
+                                                        title="Scheduled Tasks"
+                                                        >Click here to view scheduled delayed and repeating tasks.</b-popover
+                                                    ></template
+                                                >
+                                      <b-row>
+                                        <b-col>
+                                          <b-row
+                                    class="m-3 mb-1 pl-0 pr-0"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Delayed</b></b-col>
+                                </b-row>
+                                      <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksDelayed.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            No delayed tasks are scheduled.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                    <delayedtaskblurb
+                                        v-for="task in tasksDelayed"
+                                        v-bind:key="task.guid"
+                                        :task="task"
+                                    ></delayedtaskblurb>
+                                </b-list-group>
+                                      </b-col>
+                                        <b-col>
+<b-row
+                                    class="m-3 mb-1 pl-0 pr-0"
+                                    align-v="center"
+                                >
+                                    <b-col><b>Repeating</b></b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="
+                                        !tasksLoading &&
+                                        tasksRepeating.length === 0
+                                    "
+                                    class="m-0 pl-0 pr-0"
+                                >
+                                    <b-col>
+                                        <p
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            No repeating tasks are scheduled.
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                                <b-list-group class="text-left m-0 p-0 mt-1">
+                                    <repeatingtaskblurb
+                                        v-for="task in tasksRepeating"
+                                        v-bind:key="task.guid"
+                                        :task="task"
+                                    ></repeatingtaskblurb>
+                                </b-list-group>
+                                        </b-col>
+                                      </b-row>
+                                  </b-tab>
+                                </b-tabs>
                         </b-col>
                     </b-row>
                 </b-col>
@@ -624,6 +413,7 @@ export default {
     data: function () {
         return {
             searchText: '',
+            activeTab: 0
         };
     },
     methods: {

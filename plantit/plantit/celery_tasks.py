@@ -463,9 +463,9 @@ def test_push(self, guid: str):
         path = task.workflow['output']['to']
         actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
         expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}")) if file['exists']]
-        from pprint import pprint
-        pprint(actual)
-        pprint(expected)
+        newline = '\n'
+        logger.debug(f"Expected results for task {task.guid}: {newline.join(expected)}")
+        logger.debug(f"Actual results for task {task.guid}: {newline.join(actual)}")
 
         if not set(expected).issubset(set(actual)):
             message = f"Transfer to CyVerse directory {path} incomplete: expected {len(expected)} files but found {len(actual)}"
@@ -495,8 +495,8 @@ def test_push(self, guid: str):
             task.save()
 
         # log status update and push it to clients
-        log_task_status(task, [message])
-        async_to_sync(push_task_channel_event)(task)
+        # log_task_status(task, [message])
+        # async_to_sync(push_task_channel_event)(task)
 
         return guid
     except Exception:
@@ -554,7 +554,7 @@ def unshare_data(self, guid: str):
         task.completed = now
         task.save()
 
-        log_task_status(task, [f"All done"])
+        log_task_status(task, [f"Task {task.guid} completed"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
@@ -587,7 +587,7 @@ def unshare_data(self, guid: str):
         task.completed = now
         task.save()
 
-        log_task_status(task, [f"All done"])
+        log_task_status(task, [f"Task {task.guid} completed"])
         async_to_sync(push_task_channel_event)(task)
 
         return guid

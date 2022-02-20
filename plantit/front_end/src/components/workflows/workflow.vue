@@ -200,17 +200,17 @@
                                                     ></b-badge
                                                 ></b-col
                                             >
-                                            <b-col>
+                                            <b-col v-if="!getWorkflow.example && !getWorkflow.featured">
                                                 <b-button
                                                     id="featured-request"
                                                     :variant="
                                                         profile.darkMode
-                                                            ? 'outline-dark'
-                                                            : 'light'
+                                                            ? 'dark'
+                                                            : 'outline-light'
                                                     "
                                                     size="sm"
                                                     @click="
-                                                        sendFeaturedRequest()
+                                                        sendFeaturedRequest
                                                     "
                                                     class="
                                                         justify-self-flex-end
@@ -222,11 +222,18 @@
                                                             fa-certificate fa-fw
                                                         "
                                                     ></i>
-                                                    Request Featured Status
+                                                    Feature Request
                                                 </b-button>
+                                                <b-popover
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
+                                                        placement="bottomleft"
+                                                        target="featured-request"
+                                                        title="Feature Request"
+                                                        >Click here to submit a request to make this a featured workflow. An administrator will review the request and contact you shortly.</b-popover
+                                                    >
                                             </b-col>
                                         </b-row>
-
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <h5>
@@ -350,7 +357,14 @@
                                                             "
                                                         ></i>
                                                         Info
-                                                    </b-button></template
+                                                    </b-button><b-popover
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
+                                                        placement="bottomleft"
+                                                        target="about-workflow"
+                                                        title="Workflow Info"
+                                                        >Click here to view this workflow's metadata and description, configuration, resource requirements, and associated publications.</b-popover
+                                                    ></template
                                                 >
                                                 <b-row class="mb-3">
                                                     <b-col>
@@ -1003,10 +1017,8 @@
                                                         Submit
                                                     </b-button>
                                                     <b-popover
-                                                        :show.sync="
-                                                            profile.hints
-                                                        "
-                                                        triggers="manual"
+                                                        v-if="profile.hints"
+                                                        triggers="hover"
                                                         placement="bottomleft"
                                                         target="submit-workflow"
                                                         title="Submit Workflow"
@@ -4372,7 +4384,9 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
-        sendFeaturedRequest() {},
+        sendFeaturedRequest() {
+
+        },
         openInNewTab(url) {
             window.open(url);
         },

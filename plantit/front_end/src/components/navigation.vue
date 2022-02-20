@@ -133,7 +133,7 @@
             <b-collapse is-nav align="center">
                 <b-navbar-nav class="overflow-hidden" align="center"
                     ><b-nav-item class="overflow-hidden" href="/">
-                        <h4
+                        <h5
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-theme'
                             "
@@ -142,8 +142,9 @@
                             <b-img
                                 style="
                                     max-width: 1.5rem;
-                                    position: relative;
-                                    top: -10px;
+                                    position: absolute;
+                                    top: -5px;
+                                    left: 10px;
                                 "
                                 :src="require('../assets/logo.png')"
                                 left
@@ -169,7 +170,7 @@
                                                 class="fas fa-spinner"
                                                 v-else
                                             ></i></b-badge></small></small
-                            ></small></h4
+                            ></small></h5
                     ></b-nav-item>
                     <b-row align-v="center" class="pl-3 pr-3">
                         <b-nav-item
@@ -413,6 +414,7 @@
                                         ')'
                                     "
                                     v-if="notificationsUnread.length > 0"
+                                    class="mr-2"
                                     ><i
                                         v-if="profile.darkMode"
                                         class="fas fa-bell fa-1x text-light"
@@ -425,7 +427,7 @@
                                 <span
                                     :title="'Showing Hints'"
                                     v-if="profile.hints"
-                                    class="fa-stack mr-2"
+                                    class="mr-2"
                                     ><i
                                         v-if="profile.darkMode"
                                         class="fas fa-question fa-1x text-light"
