@@ -169,9 +169,9 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
     if task.agent.project is not None and task.agent.project != '':
         headers.append(f"#SBATCH -A {task.agent.project}")
 
-    # cores per node
+    # cores per task
     if 'cores' in jobqueue:
-        headers.append(f"#SBATCH -n {int(jobqueue['cores'])}")
+        headers.append(f"#SBATCH -c {int(jobqueue['cores'])}")
 
     # nodes & tasks per node
     nodes = calculate_node_count(task, inputs)
