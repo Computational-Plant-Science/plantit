@@ -89,7 +89,9 @@ class TaskUtilsTests(TestCase):
         )
 
         # even if no output config is provided, we still want default inclusions
-        self.assertEqual(get_output_included_patterns(task), [])
+        expected = sorted(['zip', 'err', 'out'])
+        actual = sorted(get_output_included_patterns(task))
+        self.assertEqual(actual, expected)
 
         guid = str(uuid.uuid4())
         task = Task.objects.create(
@@ -105,7 +107,8 @@ class TaskUtilsTests(TestCase):
             }
         )
 
-        self.assertEqual(get_output_included_patterns(task), [])
+        actual = sorted(get_output_included_patterns(task))
+        self.assertEqual(actual, expected)
 
         guid = str(uuid.uuid4())
         task = Task.objects.create(
@@ -124,7 +127,8 @@ class TaskUtilsTests(TestCase):
             }
         )
 
-        patterns = get_output_included_patterns(task)
+        patterns = sorted(get_output_included_patterns(task))
+        for pattern in expected: self.assertIn(pattern, patterns)
         self.assertIn('txt', patterns)
         self.assertIn('png', patterns)
 
@@ -144,9 +148,9 @@ class TaskUtilsTests(TestCase):
 
         # even if no output config is provided, we still want default inclusions
         expected = sorted([
-            f"{guid}.zip",
-            f"plantit.{guid[0:7]}.out",
-            f"plantit.{guid[0:7]}.err",
+            # f"{guid}.zip",
+            # f"plantit.{guid[0:7]}.out",
+            # f"plantit.{guid[0:7]}.err",
         ])
         actual = sorted(get_output_included_names(task))
         self.assertEqual(actual, expected)
@@ -167,9 +171,9 @@ class TaskUtilsTests(TestCase):
         )
 
         expected = sorted([
-            f"{guid}.zip",
-            f"plantit.{guid[0:7]}.out",
-            f"plantit.{guid[0:7]}.err",
+            # f"{guid}.zip",
+            # f"plantit.{guid[0:7]}.out",
+            # f"plantit.{guid[0:7]}.err",
         ])
         actual = sorted(get_output_included_names(task))
         self.assertEqual(actual, expected)
@@ -195,9 +199,9 @@ class TaskUtilsTests(TestCase):
         names = get_output_included_names(task)
         self.assertIn('file1.txt', names)
         self.assertIn('file2.png', names)
-        self.assertIn(f"{guid}.zip", names)
-        self.assertIn(f"plantit.{guid[0:7]}.out", names)
-        self.assertIn(f"plantit.{guid[0:7]}.err", names)
+        # self.assertIn(f"{guid}.zip", names)
+        # self.assertIn(f"plantit.{guid[0:7]}.out", names)
+        # self.assertIn(f"plantit.{guid[0:7]}.err", names)
 
     def test_parse_task_eta(self):
         user = User.objects.get(username='wbonelli')

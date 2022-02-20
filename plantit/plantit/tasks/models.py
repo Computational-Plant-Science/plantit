@@ -135,49 +135,32 @@ class Task(models.Model):
         'PR', 'PREEMPTED',
     ]
 
-    # inbound data transfer
-    pull_id = models.CharField(max_length=50, null=True, blank=True)
-    pull_status = models.CharField(max_length=15, null=True, blank=True)
-
-    # main job (user workflow)
     job_id = models.CharField(max_length=50, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
-    job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
-    job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
-
-    # outbound data transfer
-    push_id = models.CharField(max_length=50, null=True, blank=True)
-    push_status = models.CharField(max_length=15, null=True, blank=True)
+    # job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
+    # job_consumed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
     # State props #
 
     @property
     def is_success(self):
-        return (self.pull_status in self.SLURM_SUCCESS_STATES
-                and self.job_status in self.SLURM_SUCCESS_STATES
-                and self.push_status in self.SLURM_SUCCESS_STATES) \
+        return self.job_status in self.SLURM_SUCCESS_STATES \
                or (self.status == TaskStatus.COMPLETED or
                    self.status == 'success')  # legacy (TODO: may no longer be necessary?)
 
     @property
     def is_failure(self):
-        return self.pull_status in self.SLURM_FAILURE_STATES \
-               or self.job_status in self.SLURM_FAILURE_STATES \
-               or self.push_status in self.SLURM_FAILURE_STATES \
+        return self.job_status in self.SLURM_FAILURE_STATES \
                or self.status == TaskStatus.FAILURE
 
     @property
     def is_timeout(self):
-        return self.pull_status in self.SLURM_TIMEOUT_STATES \
-               or self.job_status in self.SLURM_TIMEOUT_STATES \
-               or self.push_status in self.SLURM_TIMEOUT_STATES \
+        return self.job_status in self.SLURM_TIMEOUT_STATES \
                or self.status == TaskStatus.TIMEOUT
 
     @property
     def is_cancelled(self):
-        return self.pull_status in self.SLURM_CANCELLED_STATES \
-               or self.job_status in self.SLURM_CANCELLED_STATES \
-               or self.push_status in self.SLURM_CANCELLED_STATES \
+        return self.job_status in self.SLURM_CANCELLED_STATES \
                or self.status == TaskStatus.CANCELED
 
     @property

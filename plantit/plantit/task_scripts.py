@@ -155,8 +155,8 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
     # walltime
     if 'walltime' in jobqueue or 'time' in jobqueue:
         walltime = calculate_walltime(task, options, inputs)
-        task.job_requested_walltime = walltime
-        task.save()
+        # task.job_requested_walltime = walltime
+        # task.save()
         headers.append(f"#SBATCH --time={walltime}")
 
     # queue/partition
