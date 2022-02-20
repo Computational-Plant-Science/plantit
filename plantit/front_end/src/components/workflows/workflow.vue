@@ -140,7 +140,10 @@
                                                     "
                                                 >
                                                     <i
-                                                        class="fas fa-stream fa-fw"
+                                                        class="
+                                                            fas
+                                                            fa-stream fa-fw
+                                                        "
                                                     ></i>
                                                     {{
                                                         getWorkflow.config.name
@@ -148,7 +151,12 @@
                                                 </h4>
                                                 <h4 v-else class="text-danger">
                                                     <i
-                                                        class="fas fa-exclamation-circle text-danger mr-2"
+                                                        class="
+                                                            fas
+                                                            fa-exclamation-circle
+                                                            text-danger
+                                                            mr-2
+                                                        "
                                                     ></i>
                                                     <small
                                                         >(name not
@@ -174,17 +182,49 @@
                                                                 .public
                                                         "
                                                         ><i
-                                                            class="fas fa-lock-open fa-fw"
+                                                            class="
+                                                                fas
+                                                                fa-lock-open
+                                                                fa-fw
+                                                            "
                                                         ></i>
                                                         Public</span
                                                     ><span v-else
                                                         ><i
-                                                            class="fas fa-lock fa-fw"
+                                                            class="
+                                                                fas
+                                                                fa-lock fa-fw
+                                                            "
                                                         ></i>
                                                         Private</span
                                                     ></b-badge
                                                 ></b-col
                                             >
+                                            <b-col>
+                                                <b-button
+                                                    id="featured-request"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-dark'
+                                                            : 'light'
+                                                    "
+                                                    size="sm"
+                                                    @click="
+                                                        sendFeaturedRequest()
+                                                    "
+                                                    class="
+                                                        justify-self-flex-end
+                                                        ml-0
+                                                    "
+                                                    ><i
+                                                        class="
+                                                            fas
+                                                            fa-certificate fa-fw
+                                                        "
+                                                    ></i>
+                                                    Request Featured Status
+                                                </b-button>
+                                            </b-col>
                                         </b-row>
 
                                         <b-row>
@@ -232,7 +272,10 @@
                                                         "
                                                     >
                                                         <i
-                                                            class="fab fa-github fa-fw"
+                                                            class="
+                                                                fab
+                                                                fa-github fa-fw
+                                                            "
                                                         ></i>
                                                         {{
                                                             getWorkflow.repo
@@ -247,7 +290,10 @@
                                             <b-col md="auto" class="mr-0 ml-0"
                                                 ><small
                                                     ><i
-                                                        class="fas fa-star fa-fw"
+                                                        class="
+                                                            fas
+                                                            fa-star fa-fw
+                                                        "
                                                     ></i>
                                                     {{
                                                         getWorkflow.repo
@@ -298,7 +344,10 @@
                                                         "
                                                         :title="`About ${getWorkflow.config.name}`"
                                                         ><i
-                                                            class="fas fa-info fa-fw"
+                                                            class="
+                                                                fas
+                                                                fa-info fa-fw
+                                                            "
                                                         ></i>
                                                         Info
                                                     </b-button></template
@@ -804,7 +853,9 @@
                                                             <b-col
                                                                 align-self="end"
                                                                 md="auto"
-                                                                class="text-right"
+                                                                class="
+                                                                    text-right
+                                                                "
                                                                 v-if="
                                                                     getWorkflow
                                                                         .config
@@ -838,7 +889,9 @@
                                                             </b-col>
                                                             <b-col
                                                                 align-self="end"
-                                                                class="text-left"
+                                                                class="
+                                                                    text-left
+                                                                "
                                                                 v-else
                                                             >
                                                                 <b-row>
@@ -941,7 +994,11 @@
                                                         "
                                                         :title="`Submit ${getWorkflow.config.name}`"
                                                         ><i
-                                                            class="fas fa-terminal fa-fw"
+                                                            class="
+                                                                fas
+                                                                fa-terminal
+                                                                fa-fw
+                                                            "
                                                         ></i>
                                                         Submit
                                                     </b-button>
@@ -1012,7 +1069,12 @@
                                                                     Sections
                                                                     marked with
                                                                     <i
-                                                                        class="fas fa-exclamation text-danger fa-fw"
+                                                                        class="
+                                                                            fas
+                                                                            fa-exclamation
+                                                                            text-danger
+                                                                            fa-fw
+                                                                        "
                                                                     ></i>
                                                                     are
                                                                     required.
@@ -1058,7 +1120,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                         ><b-row>
                                                                             <b-col
                                                                                 md="auto"
@@ -1069,7 +1133,9 @@
                                                                             >
                                                                                 <b-button
                                                                                     size="sm"
-                                                                                    class="m-0"
+                                                                                    class="
+                                                                                        m-0
+                                                                                    "
                                                                                     :variant="
                                                                                         profile.darkMode
                                                                                             ? 'dark'
@@ -1080,11 +1146,17 @@
                                                                                         v-if="
                                                                                             idVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -1099,7 +1171,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-hashtag fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-hashtag
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             ID
                                                                                         </h5>
@@ -1130,16 +1206,28 @@
                                                                                                     submitType ===
                                                                                                     'Every'
                                                                                                 "
-                                                                                                class="far fa-circle text-secondary fa-fw"
+                                                                                                class="
+                                                                                                    far
+                                                                                                    fa-circle
+                                                                                                    text-secondary
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             <i
                                                                                                 v-else-if="
                                                                                                     nameValid
                                                                                                 "
-                                                                                                class="fas fa-check text-success fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-check
+                                                                                                    text-success
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             <span
-                                                                                                class="text-danger"
+                                                                                                class="
+                                                                                                    text-danger
+                                                                                                "
                                                                                                 v-if="
                                                                                                     taskNameExists
                                                                                                 "
@@ -1150,7 +1238,12 @@
                                                                                                 v-if="
                                                                                                     !nameValid
                                                                                                 "
-                                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-exclamation
+                                                                                                    text-danger
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i></h5
                                                                                     ></b-col>
                                                                                 </b-row>
@@ -1187,7 +1280,9 @@
                                                                                         </b-col>
                                                                                     </b-row>
                                                                                     <b-row
-                                                                                        class="mt-1"
+                                                                                        class="
+                                                                                            mt-1
+                                                                                        "
                                                                                     >
                                                                                         <b-col>
                                                                                             <b-form-input
@@ -1243,7 +1338,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -1251,7 +1348,9 @@
                                                                             >
                                                                                 <b-button
                                                                                     size="sm"
-                                                                                    class="m-0"
+                                                                                    class="
+                                                                                        m-0
+                                                                                    "
                                                                                     :variant="
                                                                                         profile.darkMode
                                                                                             ? 'dark'
@@ -1262,11 +1361,17 @@
                                                                                         v-if="
                                                                                             timeLimitVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -1281,7 +1386,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-stopwatch fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-stopwatch
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             Time
                                                                                         </h5>
@@ -1316,7 +1425,13 @@
                                                                                             ><span
                                                                                                 v-else
                                                                                                 ><i
-                                                                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        fa-fw
+                                                                                                        ml-1
+                                                                                                        text-success
+                                                                                                    "
                                                                                                 ></i
                                                                                             ></span></h5
                                                                                     ></b-col>
@@ -1348,7 +1463,9 @@
                                                                                         </b-col>
                                                                                     </b-row>
                                                                                     <b-row
-                                                                                        class="mt-2"
+                                                                                        class="
+                                                                                            mt-2
+                                                                                        "
                                                                                         ><b-col
                                                                                             md="auto"
                                                                                             ><b-form-spinbutton
@@ -1376,7 +1493,9 @@
                                                                                                         timeLimitUnits
                                                                                                     }}</template
                                                                                                 ><b-dropdown-item
-                                                                                                    class="darklinks"
+                                                                                                    class="
+                                                                                                        darklinks
+                                                                                                    "
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Minutes'
@@ -1384,7 +1503,9 @@
                                                                                                     "
                                                                                                     >Minutes</b-dropdown-item
                                                                                                 ><b-dropdown-item
-                                                                                                    class="darklinks"
+                                                                                                    class="
+                                                                                                        darklinks
+                                                                                                    "
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Hours'
@@ -1392,7 +1513,9 @@
                                                                                                     "
                                                                                                     >Hours</b-dropdown-item
                                                                                                 ><b-dropdown-item
-                                                                                                    class="darklinks"
+                                                                                                    class="
+                                                                                                        darklinks
+                                                                                                    "
                                                                                                     @click="
                                                                                                         setTimeLimitUnits(
                                                                                                             'Days'
@@ -1454,7 +1577,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -1472,11 +1597,17 @@
                                                                                         v-if="
                                                                                             inputVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -1491,7 +1622,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-download fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-download
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             Input
                                                                                             <!--{{
@@ -1524,22 +1659,42 @@
                                                                                                                 selectedInput.type ===
                                                                                                                 'file'
                                                                                                             "
-                                                                                                            class="fas fa-file fa-fw mr-1"
+                                                                                                            class="
+                                                                                                                fas
+                                                                                                                fa-file
+                                                                                                                fa-fw
+                                                                                                                mr-1
+                                                                                                            "
                                                                                                         ></i>
                                                                                                         <i
                                                                                                             v-else
-                                                                                                            class="fas fa-folder fa-fw mr-1"
+                                                                                                            class="
+                                                                                                                fas
+                                                                                                                fa-folder
+                                                                                                                fa-fw
+                                                                                                                mr-1
+                                                                                                            "
                                                                                                         ></i
                                                                                                         >{{
                                                                                                             selectedInput.path
                                                                                                         }}
                                                                                                         <i
-                                                                                                            class="fas fa-check text-success fa-fw"
+                                                                                                            class="
+                                                                                                                fas
+                                                                                                                fa-check
+                                                                                                                text-success
+                                                                                                                fa-fw
+                                                                                                            "
                                                                                                         ></i>
                                                                                                     </span>
                                                                                                     <i
                                                                                                         v-else
-                                                                                                        class="fas fa-exclamation text-danger fa-fw"
+                                                                                                        class="
+                                                                                                            fas
+                                                                                                            fa-exclamation
+                                                                                                            text-danger
+                                                                                                            fa-fw
+                                                                                                        "
                                                                                                     ></i></h5
                                                                                             ></b-col>
                                                                                         </b-row>
@@ -1597,7 +1752,9 @@
                                                                                                     Store.
                                                                                                 </b>
                                                                                                 <b-tabs
-                                                                                                    class="mt-2"
+                                                                                                    class="
+                                                                                                        mt-2
+                                                                                                    "
                                                                                                     pills
                                                                                                     nav-class="bg-transparent"
                                                                                                     active-nav-item-class="bg-info text-dark"
@@ -1813,7 +1970,9 @@
                                                                                                     input.kind !==
                                                                                                     'directory'
                                                                                                 "
-                                                                                                class="mt-1"
+                                                                                                class="
+                                                                                                    mt-1
+                                                                                                "
                                                                                                 :variant="
                                                                                                     inputFiletypeSelected
                                                                                                         ? 'success'
@@ -1835,16 +1994,26 @@
                                                                                                     v-if="
                                                                                                         inputFiletypeSelected
                                                                                                     "
-                                                                                                    class="fas fa-check text-success"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        text-success
+                                                                                                    "
                                                                                                 ></i>
                                                                                                 <i
                                                                                                     v-else
-                                                                                                    class="fas fa-exclamation text-danger"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-exclamation
+                                                                                                        text-danger
+                                                                                                    "
                                                                                                 ></i>
                                                                                             </b-alert>
                                                                                             <b-alert
                                                                                                 v-else
-                                                                                                class="mt-1"
+                                                                                                class="
+                                                                                                    mt-1
+                                                                                                "
                                                                                                 :variant="
                                                                                                     inputValid
                                                                                                         ? 'success'
@@ -1863,11 +2032,19 @@
                                                                                                     v-if="
                                                                                                         inputValid
                                                                                                     "
-                                                                                                    class="fas fa-check text-success"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        text-success
+                                                                                                    "
                                                                                                 ></i>
                                                                                                 <i
                                                                                                     v-else
-                                                                                                    class="fas fa-exclamation text-danger"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-exclamation
+                                                                                                        text-danger
+                                                                                                    "
                                                                                                 ></i>
                                                                                             </b-alert>
                                                                                         </b-collapse>
@@ -1911,7 +2088,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -1929,11 +2108,17 @@
                                                                                         v-if="
                                                                                             outputVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -1951,11 +2136,21 @@
                                                                                                 v-if="
                                                                                                     profile.darkMode
                                                                                                 "
-                                                                                                class="fas fa-upload fa-fw text-white"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-upload
+                                                                                                    fa-fw
+                                                                                                    text-white
+                                                                                                "
                                                                                             ></i>
                                                                                             <i
                                                                                                 v-else
-                                                                                                class="fas fa-upload fa-fw text-dark"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-upload
+                                                                                                    fa-fw
+                                                                                                    text-dark
+                                                                                                "
                                                                                             ></i>
                                                                                             Target
                                                                                         </h5>
@@ -1977,20 +2172,36 @@
                                                                                                 "
                                                                                             >
                                                                                                 <i
-                                                                                                    class="fas fa-folder fa-fw mr-1"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-folder
+                                                                                                        fa-fw
+                                                                                                        mr-1
+                                                                                                    "
                                                                                                 ></i
                                                                                                 >{{
                                                                                                     selectedOutput.path
                                                                                                 }}
                                                                                                 <i
-                                                                                                    class="fas fa-check text-success fa-fw"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        text-success
+                                                                                                        fa-fw
+                                                                                                    "
                                                                                                 ></i>
                                                                                             </span>
                                                                                             <span
                                                                                                 v-else
                                                                                             >
                                                                                                 <i
-                                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-exclamation
+                                                                                                        text-danger
+                                                                                                        fa-fw
+                                                                                                        ml-1
+                                                                                                    "
                                                                                                 ></i
                                                                                             ></span></h5
                                                                                     ></b-col>
@@ -2229,7 +2440,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -2247,11 +2460,17 @@
                                                                                         v-if="
                                                                                             agentVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -2266,7 +2485,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-server fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-server
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             Agent
                                                                                         </h5>
@@ -2288,12 +2511,24 @@
                                                                                                 v-if="
                                                                                                     agentValid
                                                                                                 "
-                                                                                                class="fas fa-check text-success fa-fw ml-1"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-check
+                                                                                                    text-success
+                                                                                                    fa-fw
+                                                                                                    ml-1
+                                                                                                "
                                                                                             ></i>
                                                                                             <span
                                                                                                 v-else
                                                                                                 ><i
-                                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-exclamation
+                                                                                                        text-danger
+                                                                                                        fa-fw
+                                                                                                        ml-1
+                                                                                                    "
                                                                                                 ></i>
                                                                                             </span></h5
                                                                                     ></b-col>
@@ -2349,7 +2584,9 @@
                                                                                             v-else
                                                                                         >
                                                                                             <b-row
-                                                                                                class="text-right"
+                                                                                                class="
+                                                                                                    text-right
+                                                                                                "
                                                                                                 v-for="agent in getAgents"
                                                                                                 v-bind:key="
                                                                                                     agent.name
@@ -2359,7 +2596,10 @@
                                                                                                     md="auto"
                                                                                                     ><b-button
                                                                                                         size="md"
-                                                                                                        class="text-left pt-2"
+                                                                                                        class="
+                                                                                                            text-left
+                                                                                                            pt-2
+                                                                                                        "
                                                                                                         @click="
                                                                                                             agentSelected(
                                                                                                                 agent
@@ -2423,7 +2663,9 @@
                                                                                                             ) >
                                                                                                             0
                                                                                                         "
-                                                                                                        class="text-danger"
+                                                                                                        class="
+                                                                                                            text-danger
+                                                                                                        "
                                                                                                         >{{
                                                                                                             agent.max_mem
                                                                                                         }}
@@ -2491,7 +2733,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -2509,11 +2753,17 @@
                                                                                         v-if="
                                                                                             tagsVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -2528,7 +2778,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-tags fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-tags
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             Tags
                                                                                         </h5>
@@ -2550,7 +2804,12 @@
                                                                                                     tags.length >
                                                                                                     0
                                                                                                 "
-                                                                                                class="fas fa-check text-success fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-check
+                                                                                                    text-success
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i></h5
                                                                                     ></b-col>
                                                                                 </b-row>
@@ -2578,7 +2837,9 @@
                                                                                         </b-col>
                                                                                     </b-row>
                                                                                     <b-row
-                                                                                        class="mt-2"
+                                                                                        class="
+                                                                                            mt-2
+                                                                                        "
                                                                                     >
                                                                                         <b-col>
                                                                                             <multiselect
@@ -2676,7 +2937,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                     >
                                                                         <b-row>
                                                                             <b-col
@@ -2694,11 +2957,17 @@
                                                                                         v-if="
                                                                                             parametersVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -2713,7 +2982,11 @@
                                                                                             "
                                                                                         >
                                                                                             <i
-                                                                                                class="fas fa-keyboard fa-fw"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-keyboard
+                                                                                                    fa-fw
+                                                                                                "
                                                                                             ></i>
                                                                                             Parameters
                                                                                         </h5> </b-col
@@ -2738,11 +3011,23 @@
                                                                                                 v-if="
                                                                                                     paramsValid
                                                                                                 "
-                                                                                                class="fas fa-check text-success fa-fw ml-1"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-check
+                                                                                                    text-success
+                                                                                                    fa-fw
+                                                                                                    ml-1
+                                                                                                "
                                                                                             ></i>
                                                                                             <i
                                                                                                 v-else
-                                                                                                class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                                class="
+                                                                                                    fas
+                                                                                                    fa-exclamation
+                                                                                                    text-danger
+                                                                                                    fa-fw
+                                                                                                    ml-1
+                                                                                                "
                                                                                             ></i></h5
                                                                                     ></b-col>
                                                                                 </b-row>
@@ -2770,10 +3055,14 @@
                                                                                         </b-col>
                                                                                     </b-row>
                                                                                     <b-row
-                                                                                        class="mt-2"
+                                                                                        class="
+                                                                                            mt-2
+                                                                                        "
                                                                                         ><b-col>
                                                                                             <b-row
-                                                                                                class="mt-1"
+                                                                                                class="
+                                                                                                    mt-1
+                                                                                                "
                                                                                                 v-for="param in params"
                                                                                                 v-bind:key="
                                                                                                     param.name
@@ -2785,35 +3074,60 @@
                                                                                                             param.type ===
                                                                                                             'number'
                                                                                                         "
-                                                                                                        class="fas fa-calculator fa-fw mr-1"
+                                                                                                        class="
+                                                                                                            fas
+                                                                                                            fa-calculator
+                                                                                                            fa-fw
+                                                                                                            mr-1
+                                                                                                        "
                                                                                                     ></i>
                                                                                                     <i
                                                                                                         v-else-if="
                                                                                                             param.type ===
                                                                                                             'boolean'
                                                                                                         "
-                                                                                                        class="far fa-flag fa-fw mr-1"
+                                                                                                        class="
+                                                                                                            far
+                                                                                                            fa-flag
+                                                                                                            fa-fw
+                                                                                                            mr-1
+                                                                                                        "
                                                                                                     ></i>
                                                                                                     <i
                                                                                                         v-else-if="
                                                                                                             param.type ===
                                                                                                             'string'
                                                                                                         "
-                                                                                                        class="fas fa-edit fa-fw mr-1"
+                                                                                                        class="
+                                                                                                            fas
+                                                                                                            fa-edit
+                                                                                                            fa-fw
+                                                                                                            mr-1
+                                                                                                        "
                                                                                                     ></i>
                                                                                                     <i
                                                                                                         v-else-if="
                                                                                                             param.type ===
                                                                                                             'select'
                                                                                                         "
-                                                                                                        class="fas fa-list fa-fw mr-1"
+                                                                                                        class="
+                                                                                                            fas
+                                                                                                            fa-list
+                                                                                                            fa-fw
+                                                                                                            mr-1
+                                                                                                        "
                                                                                                     ></i>
                                                                                                     <i
                                                                                                         v-else-if="
                                                                                                             param.type ===
                                                                                                             'multiselect'
                                                                                                         "
-                                                                                                        class="fas fa-th-list fa-fw mr-1"
+                                                                                                        class="
+                                                                                                            fas
+                                                                                                            fa-th-list
+                                                                                                            fa-fw
+                                                                                                            mr-1
+                                                                                                        "
                                                                                                     ></i>
                                                                                                     {{
                                                                                                         param.name.toLowerCase()
@@ -2937,7 +3251,9 @@
                                                                                 ? 'white'
                                                                                 : 'dark'
                                                                         "
-                                                                        class="mb-4"
+                                                                        class="
+                                                                            mb-4
+                                                                        "
                                                                         ><b-row>
                                                                             <b-col
                                                                                 md="auto"
@@ -2954,11 +3270,17 @@
                                                                                         v-if="
                                                                                             projectVisible
                                                                                         "
-                                                                                        class="fas fa-minus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-minus
+                                                                                        "
                                                                                     ></i
                                                                                     ><i
                                                                                         v-else
-                                                                                        class="fas fa-plus"
+                                                                                        class="
+                                                                                            fas
+                                                                                            fa-plus
+                                                                                        "
                                                                                     ></i
                                                                                 ></b-button>
                                                                             </b-col>
@@ -2973,7 +3295,9 @@
                                                                                             "
                                                                                         >
                                                                                             <b-img
-                                                                                                class="mb-1"
+                                                                                                class="
+                                                                                                    mb-1
+                                                                                                "
                                                                                                 style="
                                                                                                     max-width: 25px;
                                                                                                 "
@@ -3028,7 +3352,13 @@
                                                                                             ><span
                                                                                                 v-else
                                                                                                 ><i
-                                                                                                    class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        fa-fw
+                                                                                                        ml-1
+                                                                                                        text-success
+                                                                                                    "
                                                                                                 ></i
                                                                                             ></span></h5
                                                                                     ></b-col>
@@ -3065,7 +3395,9 @@
                                                                                             userProjects.length >
                                                                                             0
                                                                                         "
-                                                                                        class="mt-2"
+                                                                                        class="
+                                                                                            mt-2
+                                                                                        "
                                                                                         ><b-col
                                                                                             cols="3"
                                                                                             ><i
@@ -3084,7 +3416,9 @@
                                                                                     >
                                                                                     <b-row
                                                                                         v-else
-                                                                                        class="mt-2"
+                                                                                        class="
+                                                                                            mt-2
+                                                                                        "
                                                                                         ><b-col
                                                                                             cols="3"
                                                                                             ><i
@@ -3097,7 +3431,9 @@
                                                                                         ></b-row
                                                                                     >
                                                                                     <b-row
-                                                                                        class="mt-1"
+                                                                                        class="
+                                                                                            mt-1
+                                                                                        "
                                                                                         v-for="project in userProjects"
                                                                                         v-bind:key="
                                                                                             project.title
@@ -3130,7 +3466,13 @@
                                                                                                         selectedProject.title ===
                                                                                                             project.title
                                                                                                     "
-                                                                                                    class="fas fa-check fa-fw text-success ml-1"
+                                                                                                    class="
+                                                                                                        fas
+                                                                                                        fa-check
+                                                                                                        fa-fw
+                                                                                                        text-success
+                                                                                                        ml-1
+                                                                                                    "
                                                                                                 ></i
                                                                                             ></b-button> </b-col
                                                                                         ><b-col
@@ -3176,7 +3518,13 @@
                                                                                                                 selectedProject ===
                                                                                                                     project
                                                                                                             "
-                                                                                                            class="fas fa-check fa-fw ml-1 text-success"
+                                                                                                            class="
+                                                                                                                fas
+                                                                                                                fa-check
+                                                                                                                fa-fw
+                                                                                                                ml-1
+                                                                                                                text-success
+                                                                                                            "
                                                                                                         ></i></b-button></b-col></b-row></b-col
                                                                                     ></b-row>
                                                                                 </b-collapse>
@@ -3210,11 +3558,18 @@
                                                                         "
                                                                         label="Loading..."
                                                                         variant="dark"
-                                                                        class="mr-2"
+                                                                        class="
+                                                                            mr-2
+                                                                        "
                                                                     ></b-spinner
                                                                     ><i
                                                                         v-else
-                                                                        class="fas fa-chevron-right fa-fw mr-1"
+                                                                        class="
+                                                                            fas
+                                                                            fa-chevron-right
+                                                                            fa-fw
+                                                                            mr-1
+                                                                        "
                                                                     ></i>
                                                                     Start</b-button
                                                                 ></b-col
@@ -3251,7 +3606,9 @@
                                                                                 }}
                                                                             </template>
                                                                             <b-dropdown-item
-                                                                                class="darklinks"
+                                                                                class="
+                                                                                    darklinks
+                                                                                "
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Now'
@@ -3259,7 +3616,9 @@
                                                                                 >Now</b-dropdown-item
                                                                             >
                                                                             <b-dropdown-item
-                                                                                class="darklinks"
+                                                                                class="
+                                                                                    darklinks
+                                                                                "
                                                                                 @click="
                                                                                     submitType =
                                                                                         'After'
@@ -3267,7 +3626,9 @@
                                                                                 >After</b-dropdown-item
                                                                             >
                                                                             <b-dropdown-item
-                                                                                class="darklinks"
+                                                                                class="
+                                                                                    darklinks
+                                                                                "
                                                                                 @click="
                                                                                     submitType =
                                                                                         'Every'
@@ -3334,7 +3695,11 @@
                                                                                     delayUnits
                                                                                 }}
                                                                                 <i
-                                                                                    class="fas fa-caret-down fa-fw"
+                                                                                    class="
+                                                                                        fas
+                                                                                        fa-caret-down
+                                                                                        fa-fw
+                                                                                    "
                                                                                 ></i>
                                                                             </template>
                                                                             <b-dropdown-item
@@ -3405,7 +3770,9 @@
                                                                                     ? 'light'
                                                                                     : 'dark'
                                                                             "
-                                                                            class="mr-1"
+                                                                            class="
+                                                                                mr-1
+                                                                            "
                                                                         ></b-spinner></b-col
                                                                 ></b-row>
                                                                 <b-row
@@ -3433,7 +3800,13 @@
                                                                 </b-row>
                                                                 <b-list-group
                                                                     v-else
-                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                    class="
+                                                                        text-left
+                                                                        m-0
+                                                                        p-0
+                                                                        mt-2
+                                                                        mb-2
+                                                                    "
                                                                 >
                                                                     <delayedtaskblurb
                                                                         v-for="task in delayedTasks"
@@ -3467,7 +3840,9 @@
                                                                                     ? 'light'
                                                                                     : 'dark'
                                                                             "
-                                                                            class="mr-1"
+                                                                            class="
+                                                                                mr-1
+                                                                            "
                                                                         ></b-spinner></b-col
                                                                 ></b-row>
                                                                 <b-row
@@ -3495,7 +3870,13 @@
                                                                 </b-row>
                                                                 <b-list-group
                                                                     v-else
-                                                                    class="text-left m-0 p-0 mt-2 mb-2"
+                                                                    class="
+                                                                        text-left
+                                                                        m-0
+                                                                        p-0
+                                                                        mt-2
+                                                                        mb-2
+                                                                    "
                                                                 >
                                                                     <repeatingtaskblurb
                                                                         v-for="task in repeatingTasks"
@@ -3991,6 +4372,7 @@ export default {
         if (this.selectedAgent === null) this.agentVisible = true;
     },
     methods: {
+        sendFeaturedRequest() {},
         openInNewTab(url) {
             window.open(url);
         },
