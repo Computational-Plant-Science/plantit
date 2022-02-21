@@ -21,7 +21,7 @@
                 replace
                 >{{ task.guid }}</b-link
             >
-            <br/>
+            <br />
             <span v-if="!task.is_complete"
                 ><b-spinner
                     class="mb-1 mr-1"
@@ -198,11 +198,11 @@ export default {
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         getTaskStatus() {
-            if (!this.task.is_complete) {
-                if (this.task.job_status === null)
-                    return this.task.status.toUpperCase();
-                else return this.task.job_status.toUpperCase();
-            }
+            // if (!this.task.is_complete) {
+            //     if (this.task.job_status === null)
+            //         return this.task.status.toUpperCase();
+            //     else return this.task.job_status.toUpperCase();
+            // }
             return this.task.status.toUpperCase();
         },
     },

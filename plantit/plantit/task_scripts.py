@@ -150,7 +150,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
     # memory
     if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
         memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
-        headers.append(f"#SBATCH --mem={'1GB' if task.agent.orchestrator_queue is not None else memory}")
+        headers.append(f"#SBATCH --mem={memory}")
 
     # walltime
     if 'walltime' in jobqueue or 'time' in jobqueue:

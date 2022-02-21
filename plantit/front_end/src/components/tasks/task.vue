@@ -1851,11 +1851,11 @@ export default {
             return null;
         },
         getTaskStatus() {
-            if (!this.getTask.is_complete) {
-                if (this.getTask.job_status === null)
-                    return this.getTask.status.toUpperCase();
-                else return this.getTask.job_status.toUpperCase();
-            }
+            // if (!this.getTask.is_complete) {
+            //     if (this.getTask.job_status === null)
+            //         return this.getTask.status.toUpperCase();
+            //     else return this.getTask.job_status.toUpperCase();
+            // }
             return this.getTask.status.toUpperCase();
         },
         taskLogs() {
