@@ -314,19 +314,30 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     mkdir_command = f"mkdir -p {staging_dir}"
     commands.append(mkdir_command)
 
-    # move results into staging directory
-    mv_command = f"mv -t {staging_dir} "
+    # create zip directory
+    zip_dir = f"{task.guid}_zip"
+    mkdir_command = f"mkdir -p {zip_dir}"
+    commands.append(mkdir_command)
+
+    # move results into staging and zip directories
+    mv_staging_dir_command = f"mv -t {staging_dir} "
+    mv_zip_dir_command = f"mv -t {zip_dir} "
     output = options['output']
     if 'include' in output:
         if 'names' in output['include']:
             for name in output['include']['names']:
-                mv_command = mv_command + f"{name} "
+                mv_staging_dir_command = mv_staging_dir_command + f"{name} "
+                mv_zip_dir_command = mv_zip_dir_command + f"{name} "
         if 'patterns' in output['include']:
-            # include all scheduler log files
-            for pattern in (list(output['include']['patterns']) + ['out', 'err']):
-                mv_command = mv_command + f"*.{pattern} "
+            for pattern in (list(output['include']['patterns'])):
+                mv_staging_dir_command = mv_staging_dir_command + f"*.{pattern} "
+                mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
+            # include all scheduler log files in zip file
+            for pattern in ['out', 'err']:
+                mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
     else: raise ValueError(f"No output filenames & patterns to include")
-    commands.append(mv_command)
+    commands.append(mv_staging_dir_command)
+    commands.append(mv_zip_dir_command)
 
     # filter unwanted results from staging directory
     # TODO: can we do this in a single step with mv?
@@ -345,7 +356,11 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     zip_command = f"zip -r {zip_path} {staging_dir}/*"
     commands.append(zip_command)
 
-    # transfer results to CyVerse
+    # move zip file into staging dir
+    mv_zip_command = f"mv {zip_path} {join(staging_dir, zip_name)}"
+    commands.append(mv_zip_command)
+
+    # transfer contents of staging dir to CyVerse
     path = output['to']
     image = f"docker://{settings.ICOMMANDS_IMAGE}"
     # force = output['force']

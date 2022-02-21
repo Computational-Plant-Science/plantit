@@ -90,7 +90,7 @@ class TaskUtilsTests(TestCase):
         )
 
         # even if no output config is provided, we still want default inclusions
-        expected = sorted(['zip', f"{task.job_id}.err", f"{task.job_id}.out"])
+        expected = sorted(['zip'])
         actual = sorted(get_output_included_patterns(task))
         self.assertEqual(actual, expected)
 
