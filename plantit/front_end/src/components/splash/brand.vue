@@ -258,32 +258,45 @@
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
                         >
-                            Submit phenomics pipelines from the browser,
-                            with automatic transfers to/from the
+                            Submit phenomics pipelines from the browser, with
+                            automatic transfers to/from the
                             <b-link href="https://www.cyverse.org/data-store"
                                 >CyVerse Data Store</b-link
                             >.
                         </p>
                         <hr />
-                    <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Built For</h5>-->
+                        <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Built For</h5>-->
                         <p
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
-                        ><small>
-                            <b>Researchers:</b> Deploy simulations or analyses
-                            to a supercomputer from the browser.
-                            <br/>
-                            <b>Developers:</b> Publish container workflows to
-                            the worldwide research community.
-                          </small>
+                        >
+                            <small>
+                                <b>Researchers:</b> Deploy simulations or
+                                analyses to a supercomputer from the browser.
+                                <br />
+                                <b>Developers:</b> Publish container workflows
+                                to the worldwide research community.
+                            </small>
                         </p>
-                  <hr />
-                  <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Disclaimer</h5>-->
-                  <p :class="
+                        <!--<hr />-->
+                        <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Disclaimer</h5>-->
+                        <!--<p
+                            :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
-                            "><small>Platform developers make no guarantees regarding the products of analyses performed on the platform. Researchers must ensure the validity of their own results. We encourage contacting workflow developers via GitHub or the other mechanisms provided in workflow descriptions to confirm suitability for your use case.</small></p>
-                </b-col
+                            "
+                        >
+                            <small
+                                >Platform developers make no guarantees
+                                regarding the products of analyses performed on
+                                the platform. Researchers must ensure the
+                                validity of their own results. We encourage
+                                contacting workflow developers via GitHub or the
+                                other mechanisms provided in workflow
+                                descriptions to confirm suitability for your use
+                                case.</small
+                            >
+                        </p>--></b-col
                     ><b-col
                         class="text-left"
                         style="overflow-y: scroll; height: 30rem"

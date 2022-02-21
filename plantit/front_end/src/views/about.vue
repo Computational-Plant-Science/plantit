@@ -142,6 +142,14 @@
                         >
                         regarding a use case.
                     </p>
+                    <p>
+                        <code>plantit</code> developers make no guarantees
+                        regarding the products of analyses performed on the
+                        platform. Researchers must ensure the validity of their
+                        own results. We encourage contacting workflow developers
+                        via GitHub or the other mechanisms provided in workflow
+                        descriptions to confirm suitability for your use case.
+                    </p>
                 </b-col>
             </b-row>
             <br />
@@ -150,7 +158,7 @@
             <b-row class="text-center">
                 <b-col>
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Project Staff
+                        Project Team
                     </h5>
                 </b-col></b-row
             >
