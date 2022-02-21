@@ -189,14 +189,15 @@ def share_data(self, guid: str):
         return
 
     # if any other running tasks share the same outbound transfer path, we already have access (no need to share)
-    if Task.objects\
-            .filter(user=task.user, status__in=[TaskStatus.CREATED, TaskStatus.RUNNING], transfer_path=task.transfer_path)\
-            .exclude(guid=task.guid)\
-            .count() != 0:
-        logger.warning(
-            f"Task {guid} outbound path {task.transfer_path} used by another task, not granting temporary data access")
-        self.request.callbacks = None
-        return guid
+    # TODO remove after unblocked here: https://github.com/Computational-Plant-Science/plantit/issues/225
+    # if Task.objects\
+    #         .filter(user=task.user, status__in=[TaskStatus.CREATED, TaskStatus.RUNNING], transfer_path=task.transfer_path)\
+    #         .exclude(guid=task.guid)\
+    #         .count() != 0:
+    #     logger.warning(
+    #         f"Task {guid} outbound path {task.transfer_path} used by another task, not granting temporary data access")
+    #     self.request.callbacks = None
+    #     return guid
 
     # if the admin user owns this task, we don't need to share/unshare datasets
     if task.user.username == settings.CYVERSE_USERNAME:
@@ -555,11 +556,18 @@ def unshare_data(self, guid: str):
         self.request.callbacks = None
         return
 
-    # if any other running tasks share the same outbound transfer path, don't unshare
-    if Task.objects.filter(completed__isnull=True, transfer_path=task.transfer_path).count() != 0:
-        logger.warning(f"Task {guid} outbound path {task.transfer_path} used by another task, not revoking temporary data access")
-        self.request.callbacks = None
-        return guid
+    # TODO if any other running tasks share the same outbound transfer path, don't unshare
+    # ... or use iRODS tickets (after unblocked here: https://github.com/Computational-Plant-Science/plantit/issues/225)
+    # if Task.objects \
+    #         .filter(user=task.user, status__in=[TaskStatus.CREATED, TaskStatus.RUNNING], transfer_path=task.transfer_path) \
+    #         .exclude(guid=task.guid) \
+    #         .count() != 0:
+    #     logger.warning(f"Task {guid} outbound path {task.transfer_path} used by another task, not revoking temporary data access")
+    #     self.request.callbacks = None
+    #     return guid
+
+    logger.warning(f"Not revoking temporary data access for task {guid} outbound path {task.transfer_path}")
+    return guid
 
     # if the admin user owns this task, we don't need to share/unshare datasets
     if task.user.username == settings.CYVERSE_USERNAME:

@@ -430,7 +430,7 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
             input_path = join(options['workdir'], 'input', input_dir_name)
             parameters = parameters + [Parameter(key='INPUT', value=input_path)]
         elif input_kind == 'file':
-            input_path = join(options['workdir'], 'input', input_dir_name, inputs[0])
+            input_path = join(options['workdir'], 'input', inputs[0])
             parameters = parameters + [Parameter(key='INPUT', value=input_path)]
         else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
 
