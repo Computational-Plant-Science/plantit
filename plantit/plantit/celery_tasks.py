@@ -582,7 +582,8 @@ def unshare_data(self, guid: str):
 
         # mark the task completed
         now = timezone.now()
-        task.status = TaskStatus.COMPLETED
+        if task.status != TaskStatus.COMPLETED and task.status != TaskStatus.FAILURE:
+            task.status = TaskStatus.COMPLETED
         task.updated = now
         task.completed = now
         task.save()

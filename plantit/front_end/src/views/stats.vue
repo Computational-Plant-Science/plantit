@@ -361,7 +361,7 @@
                                     <br />
                                     Institutions
                                 </b-button></template>
-                        <b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>
+                        <!--<b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>-->
                         <!--<div id="map" style="height: 40rem; width: 100%"></div>-->
                     </b-tab>
                     </b-tabs>
