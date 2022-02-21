@@ -698,6 +698,8 @@ export default {
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
+
+
                 },
                 showlegend: false,
                 height: 350,
@@ -858,11 +860,15 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                showlegend: true,
                 legend: {
                     // orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
+                    yanchor: 'bottom',
+                    x: 0.5,
+                    y: -1
                 },
                 xaxis: {
                     showgrid: false,
@@ -914,11 +920,15 @@ export default {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
                 },
+                showlegend: true,
                 legend: {
                     // orientation: 'h',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
+                    yanchor: 'bottom',
+                    x: 0.5,
+                    y: -1
                 },
                 xaxis: {
                     showgrid: false,

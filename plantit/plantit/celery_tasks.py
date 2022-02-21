@@ -184,6 +184,13 @@ def share_data(self, guid: str):
         self.request.callbacks = None
         return
 
+    # if any other running tasks share the same outbound transfer path, we already have access (no need to share)
+    if Task.objects.filter(completed__isnull=True, transfer_path=task.transfer_path).count() != 0:
+        logger.warning(
+            f"Task {guid} outbound path {task.transfer_path} used by another task, not granting temporary data access")
+        self.request.callbacks = None
+        return guid
+
     # if the admin user owns this task, we don't need to share/unshare datasets
     if task.user.username == settings.CYVERSE_USERNAME:
         logger.info(f"Admin user {settings.CYVERSE_USERNAME} owns task {guid}, no need to grant temporary data access")
@@ -541,10 +548,11 @@ def unshare_data(self, guid: str):
         self.request.callbacks = None
         return
 
-    # if any other running tasks share the same outbound transfer path, don't unshare!
-    if Task.objects.filter(transfer_path=task.transfer_path).count() != 0:
+    # if any other running tasks share the same outbound transfer path, don't unshare
+    if Task.objects.filter(completed__isnull=True, transfer_path=task.transfer_path).count() != 0:
         logger.warning(f"Task {guid} outbound path {task.transfer_path} used by another task, not revoking temporary data access")
         self.request.callbacks = None
+        return guid
 
     # if the admin user owns this task, we don't need to share/unshare datasets
     if task.user.username == settings.CYVERSE_USERNAME:

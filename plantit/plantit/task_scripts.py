@@ -320,23 +320,21 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     commands.append(mkdir_command)
 
     # move results into staging and zip directories
-    mv_staging_dir_command = f"mv -t {staging_dir} "
     mv_zip_dir_command = f"mv -t {zip_dir} "
     output = options['output']
     if 'include' in output:
         if 'names' in output['include']:
             for name in output['include']['names']:
-                mv_staging_dir_command = mv_staging_dir_command + f"{name} "
+                commands.append(f"cp {name} {join(staging_dir, name)}")
                 mv_zip_dir_command = mv_zip_dir_command + f"{name} "
         if 'patterns' in output['include']:
             for pattern in (list(output['include']['patterns'])):
-                mv_staging_dir_command = mv_staging_dir_command + f"*.{pattern} "
+                commands.append(f"cp *.{pattern} {staging_dir}/")
                 mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
             # include all scheduler log files in zip file
             for pattern in ['out', 'err']:
                 mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
     else: raise ValueError(f"No output filenames & patterns to include")
-    commands.append(mv_staging_dir_command)
     commands.append(mv_zip_dir_command)
 
     # filter unwanted results from staging directory
