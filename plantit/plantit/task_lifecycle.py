@@ -505,7 +505,7 @@ def list_result_files(task: Task) -> List[dict]:
             names = sftp.listdir(staging_dir)
 
             # check for files by name
-            logger.info(f"Looking for files by name: {', '.join(expected_patterns)}")
+            logger.info(f"Looking for files by name: {', '.join(expected_names)}")
             for name in expected_names:
                 if name in names:
                     exists = True
@@ -584,8 +584,8 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if 'patterns' not in config['output']['include']: config['output']['exclude']['patterns'] = []
 
     # include scheduler logs
-    config['output']['include']['patterns'].append("out")
-    config['output']['include']['patterns'].append("err")
+    # config['output']['include']['patterns'].append("out")
+    # config['output']['include']['patterns'].append("err")
     # config['output']['include']['patterns'].append("log")
 
     if 'exclude' not in config['output']: config['output']['exclude'] = dict()

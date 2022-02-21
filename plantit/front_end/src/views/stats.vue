@@ -94,7 +94,7 @@
                                         profile.darkMode ? 'white' : 'dark'
                                     "
                                     class="overflow-hidden text-left p-2"
-                                    v-for="workflow in workflows"
+                                    v-for="workflow in featuredWorkflows"
                                     v-bind:key="
                                         workflow.config.name +
                                         '/' +
@@ -107,6 +107,27 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
+                          <span text-center>
+                                <h1 class="text-success">
+                                    <span v-if="featuredWorkflows.length >= 0">{{
+                                        featuredWorkflows.length
+                                    }}</span>
+                                    <b-spinner
+                                        v-else
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                </h1>
+                                <b-badge
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    ><i class="fas fa-signal fa-fw"></i>
+                                    Featured</b-badge
+                                ></span
+                            >
                         </b-tab>
                         <b-tab
                             :title-link-class="
@@ -608,6 +629,9 @@ export default {
         workflows() {
             return this.publicWorkflows.filter((wf) => !wf.example);
         },
+        featuredWorkflows() {
+            return this.publicWorkflows.filter(wf => wf.featured);
+        },
         developers() {
             return Array.from(
                 new Set(this.workflows.map((wf) => wf.repo.owner.login))
@@ -666,8 +690,8 @@ export default {
                     showticklabels: false,
                     autotick: false
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showTasksTotalPlot() {
@@ -727,8 +751,8 @@ export default {
                     side: 'right'
                   },
                 height: 400,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showTasksUsagePlot() {
@@ -783,8 +807,8 @@ export default {
                     autotick: false
                 },
                 height: 400,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showWorkflowsUsagePlot() {
@@ -838,8 +862,8 @@ export default {
                     autotick: false
                 },
                 height: 400,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
     },

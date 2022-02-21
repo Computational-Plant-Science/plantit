@@ -85,7 +85,7 @@
                             v-if="getTask.agent.logo"
                             rounded
                             class="overflow-hidden"
-                            style="max-height: 1rem"
+                            style="max-height: 1rem; top: -5px"
                             :src="getTask.agent.logo"
                         ></b-img
                         ><i v-else class="fas fa-server fa-fw"></i>

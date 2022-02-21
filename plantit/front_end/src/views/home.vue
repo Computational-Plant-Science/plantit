@@ -180,6 +180,7 @@
                                                 </h4>
                                             </b-col>
                                         </b-row>
+                                        <hr/>
                                         <b-row>
                                             <b-col md="auto" class="mt-3">
                                                 <h5
@@ -333,7 +334,7 @@
                                         </b-row>
                                     </b-col>
                                 </b-row>
-                                <hr />
+                                <br/>
                                 <b-row align-v="start">
                                     <b-col md="auto">
                                         <h4
@@ -347,6 +348,7 @@
                                         </h4>
                                     </b-col>
                                 </b-row>
+                                <hr />
                                 <div v-if="anyRecentUsageStats">
                                     <b-row>
                                         <b-col
@@ -371,11 +373,8 @@
                                                 :layout="
                                                     workflowsUsagePlotLayout
                                                 "
-                                            ></Plotly></b-col
-                                    ></b-row>
-                                    <br />
-                                    <b-row
-                                        ><b-col
+                                            ></Plotly></b-col>
+                                        <b-col
                                             ><Plotly
                                                 v-if="showAgentsUsagePlot"
                                                 :data="agentsUsagePlotTraces"
@@ -389,7 +388,7 @@
                                         recently.</b-col
                                     ></b-row
                                 >
-                                <hr />
+                                <br />
                                 <b-row align-v="start">
                                     <b-col md="auto">
                                         <h4
@@ -403,6 +402,7 @@
                                         </h4>
                                     </b-col>
                                 </b-row>
+                                <hr/>
                                 <b-row v-if="anyCumulativeUsageStats">
                                     <b-col>
                                         <Plotly
@@ -895,7 +895,7 @@ export default {
         showAgentsUsagePlot() {
             return (
                 this.timeseriesAgentsUsage !== null &&
-                Object.keys(this.timeseriesAgentsUsage).length > 1
+                Object.keys(this.timeseriesAgentsUsage).length > 0
             );
         },
         agentsUsagePlotTraces() {

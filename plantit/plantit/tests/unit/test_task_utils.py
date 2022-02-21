@@ -81,6 +81,7 @@ class TaskUtilsTests(TestCase):
         guid = str(uuid.uuid4())
         task = Task.objects.create(
             guid=guid,
+            job_id=guid,
             name=guid,
             user=user,
             workflow={
@@ -89,7 +90,7 @@ class TaskUtilsTests(TestCase):
         )
 
         # even if no output config is provided, we still want default inclusions
-        expected = sorted(['zip', 'err', 'out'])
+        expected = sorted(['zip', f"{task.job_id}.err", f"{task.job_id}.out"])
         actual = sorted(get_output_included_patterns(task))
         self.assertEqual(actual, expected)
 

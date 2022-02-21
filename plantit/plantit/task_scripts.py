@@ -322,7 +322,8 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
             for name in output['include']['names']:
                 mv_command = mv_command + f"{name} "
         if 'patterns' in output['include']:
-            for pattern in (list(output['include']['patterns']) + ['out', 'err', 'zip']):
+            # include all scheduler log files
+            for pattern in (list(output['include']['patterns']) + ['out', 'err']):
                 mv_command = mv_command + f"*.{pattern} "
     else: raise ValueError(f"No output filenames & patterns to include")
     commands.append(mv_command)

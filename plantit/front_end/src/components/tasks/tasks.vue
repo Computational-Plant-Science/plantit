@@ -112,7 +112,7 @@
             </b-row>
             <b-row v-else>
                 <b-col>
-                    <b-row class="pl-0 pr-0"
+                    <b-row class="pl-0 pr-0 mt-2"
                         ><b-col class="m-0 pl-0 pr-0">
                             <p
                                 :class="
@@ -138,8 +138,8 @@
                                                 "
                                                 :class="
                                                     profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
+                                                        ? 'theme-dark m-0 pl-3 pr-3'
+                                                        : 'theme-light m-0 pl-3 pr-3'
                                                 ">
                                     <template #title>
                                                     <b-button
@@ -147,8 +147,8 @@
                                                         :variant="
                                                             activeTab === 0
                                                                 ? profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
+                                                                    ? 'outline-warning'
+                                                                    : 'warning'
                                                                 : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
@@ -157,7 +157,7 @@
                                                         ><i
                                                             class="
                                                                 fas
-                                                                fa-running fa-fw
+                                                                fa-terminal fa-fw
                                                             "
                                                         ></i>
                                                         Running
@@ -207,8 +207,8 @@
                                                 "
                                                 :class="
                                                     profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
+                                                        ? 'theme-dark m-0 pl-3 pr-3'
+                                                        : 'theme-light m-0 pl-3 pr-3'
                                                 ">
                                     <template #title>
                                                     <b-button
@@ -216,8 +216,8 @@
                                                         :variant="
                                                             activeTab === 1
                                                                 ? profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
+                                                                    ? 'outline-warning'
+                                                                    : 'warning'
                                                                 : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
@@ -276,8 +276,8 @@
                                                 "
                                                 :class="
                                                     profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
+                                                        ? 'theme-dark m-0 pl-3 pr-3'
+                                                        : 'theme-light m-0 pl-3 pr-3'
                                                 ">
                                     <template #title>
                                                     <b-button
@@ -285,8 +285,8 @@
                                                         :variant="
                                                             activeTab === 2
                                                                 ? profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
+                                                                    ? 'outline-warning'
+                                                                    : 'warning'
                                                                 : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'

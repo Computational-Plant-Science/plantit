@@ -343,8 +343,8 @@
                                                         :variant="
                                                             activeTab === 0
                                                                 ? profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
+                                                                    ? 'outline-warning'
+                                                                    : 'warning'
                                                                 : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
@@ -1000,8 +1000,8 @@
                                                         :variant="
                                                             activeTab === 1
                                                                 ? profile.darkMode
-                                                                    ? 'outline-success'
-                                                                    : 'success'
+                                                                    ? 'outline-warning'
+                                                                    : 'warning'
                                                                 : profile.darkMode
                                                                 ? 'outline-light'
                                                                 : 'white'
@@ -2164,7 +2164,7 @@
                                                                                                     text-dark
                                                                                                 "
                                                                                             ></i>
-                                                                                            Target
+                                                                                            Output
                                                                                         </h5>
                                                                                     </b-col>
                                                                                     <b-col
@@ -4336,7 +4336,7 @@ export default {
                 from: '',
                 to: '',
                 include: {
-                    patterns: ['out', 'err'],
+                    patterns: [],
                     names: [],
                 },
                 exclude: {
@@ -4733,13 +4733,16 @@ export default {
         inputSelected(node) {
             this.input.path = node.path;
             this.loadSelectedInput(node.path);
+            this.inputVisible = false;
         },
         outputSelected(node) {
             this.output.to = node.path;
             this.loadSelectedOutput(node.path);
+            this.outputVisible = false;
         },
         agentSelected(agent) {
             this.selectedAgent = agent.name;
+            this.agentVisible = false;
         },
         agentUnsupported(agent) {
             if (this.getWorkflow.config.jobqueue === undefined) return false;

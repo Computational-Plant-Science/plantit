@@ -58,8 +58,8 @@
                         isDir
                             ? `${subDirCount} ${
                                   subDirCount === 1
-                                      ? 'subdirectory'
-                                      : 'subdirectories'
+                                      ? 'folder'
+                                      : 'folders'
                               }, ${fileCount} ${
                                   fileCount === 1 ? 'file' : 'files'
                               }`
@@ -212,7 +212,7 @@
                             v-if="!isShared"
                             class="ml-1 mr-1"
                             size="sm"
-                            title="Create Subdirectory"
+                            title="Create Folder"
                             @click="showCreateDirectoryModal"
                             :variant="
                                 profile.darkMode
@@ -226,7 +226,7 @@
                             class="ml-1 mr-1"
                             size="sm"
                             :disabled="deletingDirectory"
-                            title="Delete Subdirectory"
+                            title="Delete Folder"
                             @click="
                                 deletePath(
                                     internalLoaded
@@ -435,7 +435,7 @@
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        >The directory name</span
+                                        >The folder name</span
                                     ></template
                                 >
                                 <b-form-input
@@ -446,7 +446,7 @@
                                     "
                                     size="sm"
                                     v-model="newDirectoryName"
-                                    :placeholder="'Enter a directory name'"
+                                    :placeholder="'Enter a folder name'"
                                 ></b-form-input>
                             </b-form-group>
                             <div v-if="showingProjectSelection">
@@ -645,7 +645,7 @@
                             >
                                 Project <b>{{ projectToUnbind.title }}</b> study
                                 <b>{{ studyToUnbind.title }}</b> will no longer
-                                be bound to directory
+                                be bound to folder
                                 <b>{{
                                     internalLoaded
                                         ? internalNode.path
@@ -777,7 +777,7 @@
                                             : 'text-dark'
                                     "
                                     ><small
-                                        >Choose who to share this directory
+                                        >Choose who to share this folder
                                         with.</small
                                     ></b-col
                                 ><b-col md="auto"
@@ -1077,7 +1077,7 @@
             class="text-center text-secondary"
         >
             <b-col v-if="creatingDirectory">
-                <small>Creating directory...</small>
+                <small>Creating folder...</small>
                 <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
         </b-row>

@@ -68,8 +68,10 @@ def get_output_included_patterns(task: Task) -> List[str]:
     except:
         included = []
 
-    included.append('out')
-    included.append('err')
+    # by default, only include log files for user workflow
+    # if task.job_id is not None:
+    #     included.append(f"{task.job_id}.out")
+    #     included.append(f"{task.job_id}.err")
     included.append('zip')
 
     return list(set(included))

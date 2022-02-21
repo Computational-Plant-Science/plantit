@@ -50,6 +50,9 @@ class TaskLifecycleTests(TestCase):
                 'name': 'Hello world',
                 'image': 'docker://alpine',
                 'commands': 'echo "Hello, world"',
+                'output': {
+                    'to': '/my/collection/path'
+                }
             },
             'repo': {
                 'owner': 'Computational-Plant-Science',
@@ -60,6 +63,7 @@ class TaskLifecycleTests(TestCase):
                 'project': 'Test Project',
                 'study': 'Test Study'
             }
+
         }
         user = User.objects.get(username='wbonelli')
         task = create_immediate_task(user, config)
@@ -71,6 +75,7 @@ class TaskLifecycleTests(TestCase):
         self.assertEqual(task.agent, agent)
         self.assertEqual(task.project, project)
         self.assertEqual(task.study, study)
+        self.assertEqual(task.transfer_path, '/my/collection/path')
         tags = [str(tag) for tag in task.tags.all()]
         self.assertEqual(len(tags), 2)
         self.assertTrue('testing' in tags)
