@@ -10,7 +10,7 @@
             >it</small>
 </h3>
 
-HPC/HTC plant phenotyping in the browser
+high-throughput phenotyping in the browser
 
 ![commit](https://github.com/Computational-Plant-Science/plantit/workflows/commit/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
@@ -51,7 +51,7 @@ HPC/HTC plant phenotyping in the browser
 
 ## About
 
-`plantit` is a science gateway for image-based plant phenotyping. It's simultaneously a portal to supercomputing clusters for researchers and a continuous delivery tool for developers. (Of course one may wear both hats.)
+`plantit` is a science gateway for image-based plant phenotyping. It's simultaneously a portal to clusters for researchers and a continuous delivery platform for developers. (Of course one may wear both hats.)
 
 ### Status
 
@@ -59,11 +59,11 @@ HPC/HTC plant phenotyping in the browser
 
 ### Motivation
 
-Plant phenomics is outgrowing single-purpose desktop GUI applications. High-throughput phenotyping is resource-intensive and may demand institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration tooling. Deployment details are often incidental to the aims of biologists, however. Research software should insulate its users from nonessential concerns, freeing up time and attention for the problem domain. This is what computers are for!
+Plant phenomics is outgrowing single-purpose desktop GUI applications. High-throughput phenotyping is resource-intensive and may demand institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration software, even though deployment details are often incidental to the aims of biologists. Phenomics tooling should insulate its users from nonessential concerns, freeing up time and attention for the problem domain.
 
 ### Overview
 
-In a sentence: `plantit` runs phenotyping container workflows in high-throughput computing environments (by default, [XSEDE's](https://www.xsede.org/) [Stampede2](https://www.tacc.utexas.edu/systems/stampede2) cluster). All you need to get started is a [CyVerse](https://cyverse.org/) account.
+In a sentence: `plantit` runs phenomics container workflows in high-throughput computing environments (by default, [XSEDE's](https://www.xsede.org/) [Stampede2](https://www.tacc.utexas.edu/systems/stampede2) cluster). All you need to get started is a [CyVerse](https://cyverse.org/) account.
 
 ### Features
 
@@ -83,7 +83,7 @@ Bind your own software by packaging it into a [Docker](https://www.docker.com/) 
 
 `plantit` workflows run in [Singularity](https://sylabs.io/) containers. This insulates workflows from their deployment environment and makes results easier to reproduce.
 
-#### Share at your pace
+#### Share & collaborate
 
 Keep your datasets and workflows private, share them with a small team, or publish to the entire research community.
 
