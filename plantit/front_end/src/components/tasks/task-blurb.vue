@@ -9,6 +9,19 @@
         no-body
     >
         <b-card-body>
+            <b-link
+                :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                :to="{
+                    name: 'task',
+                    params: {
+                        owner: task.owner,
+                        guid: task.guid,
+                    },
+                }"
+                replace
+                >{{ task.guid }}</b-link
+            >
+            <br/>
             <span v-if="!task.is_complete"
                 ><b-spinner
                     class="mb-1 mr-1"
@@ -54,20 +67,6 @@
                 >
 
                 {{ prettify(task.updated) }}</small
-            >
-
-            <br />
-            <b-link
-                :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                :to="{
-                    name: 'task',
-                    params: {
-                        owner: task.owner,
-                        guid: task.guid,
-                    },
-                }"
-                replace
-                >{{ task.guid }}</b-link
             >
             <span v-if="project && task.project !== null">
                 <br />
