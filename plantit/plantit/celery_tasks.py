@@ -156,6 +156,10 @@ def prep_environment(self, guid: str):
             for line in list(execute_command(ssh=ssh, setup_command=':', command=f"mkdir -v {work_dir}")): logger.info(line)
             upload_deployment_artifacts(task, ssh, options)
 
+        # set task to running
+        task.status = TaskStatus.RUNNING
+        task.save()
+
         log_task_status(task, [f"Prepared environment"])
         async_to_sync(push_task_channel_event)(task)
 

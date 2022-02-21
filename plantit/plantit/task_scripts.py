@@ -227,44 +227,28 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
         shell = options['shell'] if 'shell' in options else None
 
         if 'input' in options:
-            kind = options['input']['kind']
-            if kind == 'files' or kind == 'file':
-                input_path_name = options['input']['path'].rpartition('/')[2]
-                full_input_path = join(options['workdir'], 'input', input_path_name, '$file') if kind == 'files' else join(options['workdir'], 'input', '$file')
+            input_kind = options['input']['kind']
+            input_dir_name = options['input']['path'].rpartition('/')[2]
+
+            if input_kind == 'files' or input_kind == 'file':
+                input_path = join(options['workdir'], 'input', input_dir_name, '$file') if input_kind == 'files' else join(options['workdir'], 'input', '$file')
+                parameters = parameters + [Parameter(key='INPUT', value=input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')]
                 commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
-                commands = commands + compose_singularity_invocation(
-                    work_dir=work_dir,
-                    image=image,
-                    commands=command,
-                    env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=full_input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')],
-                    bind_mounts=bind_mounts,
-                    no_cache=no_cache,
-                    gpus=gpus,
-                    shell=shell)
             elif options['input']['kind'] == 'directory':
-                input_path_name = options['input']['path'].rpartition('/')[2]
-                commands = commands + compose_singularity_invocation(
-                    work_dir=work_dir,
-                    image=image,
-                    commands=command,
-                    env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', input_path_name))],
-                    bind_mounts=bind_mounts,
-                    no_cache=no_cache,
-                    gpus=gpus,
-                    shell=shell)
-        else:
-            commands = commands + compose_singularity_invocation(
-                work_dir=work_dir,
-                image=image,
-                commands=command,
-                env=env,
-                parameters=parameters,
-                bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
-                no_cache=no_cache,
-                gpus=gpus,
-                shell=shell)
+                input_path = join(options['workdir'], 'input', input_dir_name)
+                parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+            else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
+
+        commands = commands + compose_singularity_invocation(
+            work_dir=work_dir,
+            image=image,
+            commands=command,
+            env=env,
+            parameters=parameters,
+            bind_mounts=bind_mounts,
+            no_cache=no_cache,
+            gpus=gpus,
+            shell=shell)
 
     newline = '\n'
     logger.debug(f"Using container commands: {newline.join(commands)}")
@@ -422,51 +406,39 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
     shell = options['shell'] if 'shell' in options else None
 
     if 'input' in options:
-        if options['input']['kind'] == 'files':
-            for i, file in enumerate(inputs):
+        input_kind = options['input']['kind']
+        input_dir_name = options['input']['path'].rpartition('/')[2]
+
+        if input_kind == 'files':
+            for i, file_name in enumerate(inputs):
+                input_path = join(options['workdir'], 'input', input_dir_name, file_name)
                 lines = lines + compose_singularity_invocation(
                     work_dir=work_dir,
                     image=image,
                     commands=command,
                     env=env,
-                    parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file))],
+                    parameters=parameters + [Parameter(key='INPUT', value=input_path)],
                     bind_mounts=bind_mounts,
                     no_cache=no_cache,
                     gpus=gpus,
                     shell=shell,
                     index=i)
-        elif options['input']['kind'] == 'directory':
-            lines = lines + compose_singularity_invocation(
-                work_dir=work_dir,
-                image=image,
-                commands=command,
-                env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
-                bind_mounts=bind_mounts,
-                no_cache=no_cache,
-                gpus=gpus,
-                shell=shell)
-        elif options['input']['kind'] == 'file':
-            lines = lines + compose_singularity_invocation(
-                work_dir=work_dir,
-                image=image,
-                commands=command,
-                env=env,
-                parameters=parameters + [Parameter(key='INPUT', value=join(options['workdir'], 'input', inputs[0]))],
-                bind_mounts=bind_mounts,
-                no_cache=no_cache,
-                gpus=gpus,
-                shell=shell)
-    else:
-        lines = lines + compose_singularity_invocation(
-            work_dir=work_dir,
-            image=image,
-            commands=command,
-            env=env,
-            parameters=parameters,
-            bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
-            no_cache=no_cache,
-            gpus=gpus,
-            shell=shell)
+            return lines
+        elif input_kind == 'directory':
+            input_path = join(options['workdir'], 'input', input_dir_name)
+            parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+        elif input_kind == 'file':
+            input_path = join(options['workdir'], 'input', input_dir_name, inputs[0])
+            parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+        else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
 
-    return lines
+    return lines + compose_singularity_invocation(
+        work_dir=work_dir,
+        image=image,
+        commands=command,
+        env=env,
+        parameters=parameters,
+        bind_mounts=bind_mounts,
+        no_cache=no_cache,
+        gpus=gpus,
+        shell=shell)
