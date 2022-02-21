@@ -352,29 +352,34 @@
                                 class="ml-2 mb-1"
                             ></b-spinner>
                         </b-button>
-                        <hr/>
+                        <hr />
                         <h5>Workflows</h5>
-                        You're ready to start submitting! Head over to <b-badge
+                        You're ready to start submitting! Head over to
+                        <b-badge
                             :variant="
                                 profile.darkMode ? 'outline-dark' : 'light'
                             "
-                            ><i class="fas fa-stream fa-fw"></i> Workflows</b-badge
-                        > to explore available phenotyping tools.
-                      <span v-if="!profile.loggedIntoGitHub">Note that to integrate your own workflows, you'll first need to bind your GitHub account.
-                      <b-button
-                        class="mt-2 text-left"
-                        :variant="
-                                profile.darkMode ? 'outline-dark' : 'light'
-                            "
-                        size="sm"
-                        block
-                        href="/apis/v1/idp/github_request_identity/"
-                    >
-                        <i class="fab fa-github fa-fw"></i>
-                        Log in to GitHub
-                    </b-button>
-                      </span>
-                        <hr/>
+                            ><i class="fas fa-stream fa-fw"></i>
+                            Workflows</b-badge
+                        >
+                        to explore available phenotyping tools.
+                        <span v-if="!profile.loggedIntoGitHub"
+                            >Note that to integrate your own workflows, you'll
+                            first need to bind your GitHub account.
+                            <b-button
+                                class="mt-2 text-left"
+                                :variant="
+                                    profile.darkMode ? 'outline-dark' : 'light'
+                                "
+                                size="sm"
+                                block
+                                href="/apis/v1/idp/github_request_identity/"
+                            >
+                                <i class="fab fa-github fa-fw"></i>
+                                Log in to GitHub
+                            </b-button>
+                        </span>
+                        <hr />
                         <b-button
                             block
                             size="sm"
@@ -594,16 +599,16 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                             title="Log in to GitHub"
-                        href="/apis/v1/idp/github_request_identity/"
+                            href="/apis/v1/idp/github_request_identity/"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                    >
-                        <i class="fab fa-github fa-fw"></i>
-                        Log in to GitHub
-                    </b-dropdown-item>
+                        >
+                            <i class="fab fa-github fa-fw"></i>
+                            Log in to GitHub
+                        </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
@@ -1075,9 +1080,9 @@ export default {
             await this.$store.dispatch('tasks/addOrUpdate', task);
             await this.$store.dispatch('alerts/add', {
                 variant: 'success',
-                message: `Task ${task.name} ${
-                    this.getTaskStatus(task)
-                } on ${task.agent.name}: ${
+                message: `Task ${task.name} ${this.getTaskStatus(task)} on ${
+                    task.agent.name
+                }: ${
                     task.orchestrator_logs[task.orchestrator_logs.length - 1]
                 }`,
                 guid: guid().toString(),

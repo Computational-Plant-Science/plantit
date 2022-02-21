@@ -276,7 +276,9 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
     # inputs
-    if 'input' not in options or options['input'] is None: inputs = []
+    if 'input' not in options or options['input'] is None:
+        inputs = []
+        kind = None
     else:
         kind = options['input']['kind']
         path = options['input']['path']
@@ -288,11 +290,12 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
 
     # command
+    n_inputs = len(inputs)
     depend_clause = ' ' if pull_id is None else (' --depend=afterany:' + pull_id + ' ')
+    array_clause = ' ' if (n_inputs == 0 or kind == InputKind.DIRECTORY) else (' --array=1-' + str(n_inputs) + ' ')
     if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
     else:
-        n_inputs = len(inputs)
-        command = f"sbatch{depend_clause}{' ' if n_inputs == 0 else (' --array=1-' + str(n_inputs) + ' ')}{task.guid}.sh"
+        command = f"sbatch{depend_clause}{array_clause}{task.guid}.sh"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)
