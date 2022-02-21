@@ -354,18 +354,15 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     zip_command = f"zip -r {zip_path} {zip_dir}/*"
     commands.append(zip_command)
 
-    # move zip file into staging dir
-    mv_zip_command = f"mv {zip_path} {join(staging_dir, zip_name)}"
-    commands.append(mv_zip_command)
-
     # transfer contents of staging dir to CyVerse
-    path = output['to']
+    to_path = output['to']
     image = f"docker://{settings.ICOMMANDS_IMAGE}"
     # force = output['force']
     force = False
     # just_zip = output['just_zip']
     just_zip = False
-    push_command = f"singularity exec {image} iput{' -f ' if force else ' '}{staging_dir}{('/' + zip_name) if just_zip else '/*'} {path}"
+    # push_command = f"singularity exec {image} iput -r{' -f ' if force else ' '}{staging_dir}{('/' + zip_name) if just_zip else '/*'} {to_path}/"
+    push_command = f"singularity exec {image} iput -f {staging_dir}{('/' + zip_name) if just_zip else '/*'} {to_path}/"
     commands.append(push_command)
 
     newline = '\n'

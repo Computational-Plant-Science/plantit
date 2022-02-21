@@ -495,14 +495,14 @@ def list_result_files(task: Task) -> List[dict]:
     seen = []
     results = []
     ssh = get_task_ssh_client(task)
-    staging_dir = join(task.agent.workdir, task.workdir, f"{task.guid}_staging")
+    zip_dir = join(task.agent.workdir, task.workdir, f"{task.guid}_staging")
     expected_names = get_output_included_names(task)
     expected_patterns = get_output_included_patterns(task)
 
     with ssh:
         with ssh.client.open_sftp() as sftp:
             # list contents of task working directory
-            names = sftp.listdir(staging_dir)
+            names = sftp.listdir(zip_dir)
 
             # check for files by name
             logger.info(f"Looking for files by name: {', '.join(expected_names)}")
@@ -515,7 +515,7 @@ def list_result_files(task: Task) -> List[dict]:
 
                 output = {
                     'name': name,
-                    'path': join(staging_dir, name),
+                    'path': join(zip_dir, name),
                     'exists': exists
                 }
                 results.append(output)
@@ -542,7 +542,7 @@ def list_result_files(task: Task) -> List[dict]:
                         if not any(s == name for s in seen):
                             results.append({
                                 'name': name,
-                                'path': join(staging_dir, name),
+                                'path': join(zip_dir, name),
                                 'exists': True
                             })
 
@@ -553,7 +553,7 @@ def list_result_files(task: Task) -> List[dict]:
                 if not any_matched:
                     results.append({
                         'name': f"*.{pattern}",
-                        'path': join(staging_dir, f"*.{pattern}"),
+                        'path': join(zip_dir, f"*.{pattern}"),
                         'exists': False
                     })
 

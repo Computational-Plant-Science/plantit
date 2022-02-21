@@ -185,7 +185,10 @@ def share_data(self, guid: str):
         return
 
     # if any other running tasks share the same outbound transfer path, we already have access (no need to share)
-    if Task.objects.filter(completed__isnull=True, transfer_path=task.transfer_path).count() != 0:
+    if Task.objects\
+            .filter(user=task.user, status__in=[TaskStatus.CREATED, TaskStatus.RUNNING], transfer_path=task.transfer_path)\
+            .exclude(guid=task.guid)\
+            .count() != 0:
         logger.warning(
             f"Task {guid} outbound path {task.transfer_path} used by another task, not granting temporary data access")
         self.request.callbacks = None
