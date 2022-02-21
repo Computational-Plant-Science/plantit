@@ -6,6 +6,7 @@
                     <b-link
                         :disabled="!linkable"
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        style="text-decoration: underline"
                         variant="outline-dark"
                         v-b-tooltip.hover
                         :to="{
@@ -20,7 +21,8 @@
                         {{ workflow.config.name }}
                     </b-link>
                 </h5>
-                <h2 v-else>
+                <small v-if="workflow.config.author">{{ workflow.config.author }}</small>
+                <h5 v-else>
                     <b-link
                         class="text-danger"
                         :to="{
@@ -37,12 +39,12 @@
                         ></i>
                         <small>(name not provided)</small>
                     </b-link>
-                </h2>
-                <h5>
-                    <b-badge variant="secondary">{{
+                </h5>
+                <div>
+                    <b-badge variant="warning">{{
                         workflow.branch.name
                     }}</b-badge>
-                </h5>
+                </div>
                 <div
                     v-if="
                         workflow.repo.topics !== undefined &&
