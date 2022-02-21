@@ -149,8 +149,9 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 
     # memory
     if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
-        memory = jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']
-        headers.append(f"#SBATCH --mem={memory}")
+        memory = int((jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']).replace('GB', ''))
+        memory = min(memory, task.agent.max_mem)
+        headers.append(f"#SBATCH --mem={str(memory)}GB")
 
     # walltime
     if 'walltime' in jobqueue or 'time' in jobqueue:
@@ -160,10 +161,11 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
         headers.append(f"#SBATCH --time={walltime}")
 
     # queue/partition
-    if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '':
-        headers.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
-    else:
-        headers.append(f"#SBATCH --partition={task.agent.queue}")
+    # if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '':
+    #     headers.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+    # else:
+    #     headers.append(f"#SBATCH --partition={task.agent.queue}")
+    headers.append(f"#SBATCH --partition={task.agent.queue}")
 
     # allocation
     if task.agent.project is not None and task.agent.project != '':
