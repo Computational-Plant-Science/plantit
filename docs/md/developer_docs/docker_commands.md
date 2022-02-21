@@ -1,7 +1,7 @@
 "docker ps"
 pulls up containter id's that are running
 
-"docker exec -it <containterID> bash"
+"docker exec -it (containterID) bash"
 how to enter container
 
 "./manage.py"
