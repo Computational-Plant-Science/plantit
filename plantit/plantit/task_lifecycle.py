@@ -762,6 +762,7 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if jobqueue is not None: options['jobqueue'] = jobqueue
     if no_cache is not None: options['no_cache'] = no_cache
     if gpu is not None: options['gpus'] = task.agent.gpus
+    if image is not None: options['image'] = image
     if shell is not None: options['shell'] = shell
 
     return errors, options

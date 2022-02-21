@@ -113,33 +113,33 @@ def compose_pull_headers(task: Task) -> List[str]:
 
 
 def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
-    if 'input' not in options: return []
+    commands = []
+
+    # job arrays may cause an invalid singularity cache due to lots of simultaneous pulls of the same image...
+    # just pull it once ahead of time so it's already cached
+    # TODO: set the image path to the cached one
+    workflow_image = options['image']
+    workflow_shell = options.get('shell', None)
+    if workflow_shell is None: workflow_shell = 'sh'
+    pull_image_command = f"singularity exec {workflow_image} {workflow_shell} -c 'echo \"refreshing {workflow_image}\"'"
+    commands.append(pull_image_command)
+
+    # make sure we have inputs
+    if 'input' not in options: return commands
     input = options['input']
     if input is None: return []
-    # kind = input['kind']
-    # patterns = []
-    # if kind != InputKind.FILE and 'patterns' in input:
-    #     # allow for both spellings of JPG
-    #     patterns = [pattern.lower() for pattern in input['patterns']]
-    #     if 'jpg' in patterns and 'jpeg' not in patterns:
-    #         patterns.append("jpeg")
-    #     elif 'jpeg' in patterns and 'jpg' not in patterns:
-    #         patterns.append("jpg")
-
-    # command = f"plantit terrain pull \"{input['path']}\"" \
-    #           f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
-    #           f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-    #           f""f" --terrain_token {task.user.profile.cyverse_access_token}"
-    input_path = input['path']
-    workdir = join(task.agent.workdir, task.workdir, 'input')
-    image = f"docker://{settings.ICOMMANDS_IMAGE}"
 
     # singularity must be pre-authenticated on the agent, e.g. with `singularity remote login --username <your username> docker://docker.io`
     # also, if this is a job array, all jobs will invoke iget, but files will only be downloaded once (since we don't use -f for force)
-    command = f"singularity exec {image} iget -r {input_path} {workdir}"
+    input_path = input['path']
+    workdir = join(task.agent.workdir, task.workdir, 'input')
+    icommands_image = f"docker://{settings.ICOMMANDS_IMAGE}"
+    pull_data_command = f"singularity exec {icommands_image} iget -r {input_path} {workdir}"
+    commands.append(pull_data_command)
 
-    logger.debug(f"Using pull command: {command}")
-    return [command]
+    newline = '\n'
+    logger.debug(f"Using pull command: {newline.join(commands)}")
+    return commands
 
 
 def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
