@@ -508,6 +508,9 @@ export default {
                         type: 'line',
                         mode: 'lines',
                         line: { color: '#d6df5D', shape: 'spline' },
+                        connectgaps: true,
+                        colorscale: 'Greens',
+                        fill: 'tozeroy',
                     };
                     this.timeseriesTasksTotal = {
                         x: response.data.tasks_total.map((tuple) =>
@@ -518,6 +521,9 @@ export default {
                         type: 'line',
                         mode: 'lines',
                         line: { color: '#d6df5D', shape: 'spline' },
+                        connectgaps: true,
+                        colorscale: 'Greens',
+                        fill: 'tozeroy',
                     };
                     this.timeseriesTasksUsage = {
                         x: Object.keys(response.data.tasks_usage).map((key) =>
@@ -531,6 +537,9 @@ export default {
                         type: 'line',
                         mode: 'lines',
                         line: { color: '#f0e68c', shape: 'spline' },
+                        connectgaps: true,
+                        colorscale: 'Greens',
+                        fill: 'tozeroy',
                     };
                     this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
@@ -547,6 +556,9 @@ export default {
                                     type: 'line',
                                     mode: 'lines',
                                     line: { shape: 'spline' },
+                                    connectgaps: true,
+                                    colorscale: 'Greens',
+                                    fill: 'tozeroy',
                                 },
                             ]
                         )
@@ -619,7 +631,7 @@ export default {
                     color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                 },
                 autosize: true,
-                height: 350,
+                height: 300,
                 // title: {
                 //     text: 'Total',
                 //     font: {
@@ -648,7 +660,11 @@ export default {
                     },
                 },
                 yaxis: {
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
@@ -698,13 +714,19 @@ export default {
                     },
                 },
                 yaxis: {
+                    dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
                 yaxis2: {
                   showticklabels: false,
                     overlaying: 'y',
                     side: 'right'
                   },
+                height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -754,8 +776,13 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
+                height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };
@@ -804,8 +831,13 @@ export default {
                 },
                 yaxis: {
                     dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
+                height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
             };

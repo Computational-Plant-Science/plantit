@@ -339,12 +339,19 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
     # zip results
-    zip_command = f"zip -r {join(staging_dir, task.guid + '.zip')} {staging_dir}/*"
+    zip_name = f"{task.guid}.zip"
+    zip_path = join(staging_dir, zip_name)
+    zip_command = f"zip -r {zip_path} {staging_dir}/*"
     commands.append(zip_command)
 
+    # transfer results to CyVerse
     path = output['to']
     image = f"docker://{settings.ICOMMANDS_IMAGE}"
-    push_command = f"singularity exec {image} iput -f {staging_dir}/* {path}"
+    # force = output['force']
+    force = False
+    # just_zip = output['just_zip']
+    just_zip = False
+    push_command = f"singularity exec {image} iput{' -f ' if force else ' '}{staging_dir}{('/' + zip_name) if just_zip else '/*'} {path}"
     commands.append(push_command)
 
     newline = '\n'

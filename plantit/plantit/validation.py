@@ -119,11 +119,20 @@ def validate_workflow_configuration(config: dict) -> (bool, List[str]):
 
     # output
     if 'output' in config:
-        # path
-        if 'path' in config['output']:
-            path = config['output']['path']
+        # source path
+        if 'from' in config['output']:
+            path = config['output']['from']
             if path is not None and type(path) is not str:
-                errors.append('Attribute \'output.path\' must be a str')
+                errors.append('Attribute \'output.from\' must be a str')
+
+        # target path
+        if 'to' in config['output']:
+            path = config['output']['to']
+            if path is not None and type(path) is not str:
+                errors.append('Attribute \'output.to\' must be a str')
+
+        # TODO whether to overwrite existing files
+        # if 'force' in config['output']:
 
         # include
         if 'include' in config['output']:

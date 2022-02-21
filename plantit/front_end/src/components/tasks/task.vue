@@ -1820,10 +1820,12 @@ export default {
                 xaxis: {
                     showline: false,
                     showgrid: false,
+                    zeroline: false,
                     lines: false,
                 },
                 yaxis: {
                     showticklabels: false,
+                    zeroline: false,
                     showline: false,
                     showgrid: false,
                     lines: false,

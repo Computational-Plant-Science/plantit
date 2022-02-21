@@ -67,11 +67,13 @@ def create_immediate_task(user: User, config: dict):
 
     # create the task right meow
     now = timezone.now()
+    workflow = config['workflow']
     task = Task.objects.create(
         guid=guid,
         name=guid if name is None or name == '' else name,
         user=user,
-        workflow=config['workflow'],
+        workflow=workflow,
+        transfer_path=workflow['output']['to'],
         workflow_owner=repo_owner,
         workflow_name=repo_name,
         workflow_branch=repo_branch,
@@ -288,7 +290,9 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
     # command
     depend_clause = ' ' if pull_id is None else (' --depend=afterany:' + pull_id + ' ')
     if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
-    else: command = f"sbatch{depend_clause}--array=1-{len(inputs)} {task.guid}.sh"
+    else:
+        n_inputs = len(inputs)
+        command = f"sbatch{depend_clause}{' ' if n_inputs == 0 else (' --array=1-' + str(n_inputs) + ' ')}{task.guid}.sh"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)

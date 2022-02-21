@@ -350,6 +350,7 @@ def poll_jobs(self, guid: str):
 
         if job_complete:
             __handle_job_success(task, f"Job {task.job_id} ended with status {job_status}")
+            return guid
         else:
             # if past due time...
             if now > task.due_time:
@@ -478,7 +479,6 @@ def test_push(self, guid: str):
             task.status = TaskStatus.FAILURE
             task.transferred = True
             task.results_transferred = len(expected)
-            task.transfer_path = path
             task.save()
         else:
             message = f"Transfer to CyVerse directory {path} completed"
@@ -491,7 +491,6 @@ def test_push(self, guid: str):
             task.status = TaskStatus.COMPLETED if task.status != TaskStatus.FAILURE else task.status
             task.transferred = True
             task.results_transferred = len(expected)
-            task.transfer_path = path
             task.save()
 
         # log status update and push it to clients

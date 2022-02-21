@@ -1,7 +1,7 @@
 <template>
     <b-container
         fluid
-        class="m-0 mt-3 p-3"
+        class="m-0 mt-4 p-4"
         style="background-color: transparent"
     >
         <div v-if="profileLoading">
@@ -489,6 +489,7 @@ export default {
             await axios
                 .get(`/apis/v1/stats/user_timeseries/`)
                 .then((response) => {
+                    // set timeseries traces
                     this.timeseriesTasksUsage = {
                         x: Object.keys(response.data.tasks_usage).map((key) =>
                             moment(key).format('YYYY-MM-DD HH:mm:ss')
@@ -496,7 +497,10 @@ export default {
                         y: Object.values(response.data.tasks_usage),
                         type: 'line',
                         mode: 'lines',
-                        line: { color: '#d6df5D', shape: 'spline' },
+                        fill: 'tozeroy',
+                        line: { color: '#d6df5D', shape: 'spline', },
+                        connectgaps: true,
+                        colorscale: 'Greens',
                     };
                     this.timeseriesWorkflowsUsage = Object.fromEntries(
                         Object.entries(response.data.workflows_usage).map(
@@ -512,7 +516,10 @@ export default {
                                     name: k,
                                     type: 'line',
                                     mode: 'lines',
-                                    line: { shape: 'spline' },
+                                    fill: 'tozeroy',
+                                    line: { shape: 'spline', },
+                                    connectgaps: true,
+                                    stackgroup: 'one'
                                 },
                             ]
                         )
@@ -531,7 +538,10 @@ export default {
                                     name: k,
                                     type: 'line',
                                     mode: 'lines',
-                                    line: { shape: 'spline' },
+                                    fill: 'tozeroy',
+                                    line: { shape: 'spline', },
+                                    connectgaps: true,
+                                    colorscale: 'Greens',
                                 },
                             ]
                         )
@@ -587,12 +597,23 @@ export default {
                 this.profile.stats.project_usage.labels.length > 0
             );
         },
+        pieColors() {
+          return [
+                          'rgb(146, 123, 21)', 'rgb(177, 180, 34)', 'rgb(206, 206, 40)', 'rgb(175, 51, 21)', 'rgb(35, 36, 21)',
+                          'rgb(177, 127, 38)', 'rgb(205, 152, 36)', 'rgb(99, 79, 37)', 'rgb(129, 180, 179)', 'rgb(124, 103, 37)',
+                          'rgb(33, 75, 99)', 'rgb(79, 129, 102)', 'rgb(151, 179, 100)', 'rgb(175, 49, 35)', 'rgb(36, 73, 147)',
+                          'rgb(56, 75, 126)', 'rgb(18, 36, 37)', 'rgb(34, 53, 101)', 'rgb(36, 55, 57)', 'rgb(6, 4, 4)'
+          ];
+        },
         workflowPieData() {
             return [
                 {
                     values: this.profile.stats.workflow_usage.values,
                     labels: this.profile.stats.workflow_usage.labels,
                     type: 'pie',
+                    marker: {
+                      colors: this.pieColors
+                    }
                 },
             ];
         },
@@ -612,9 +633,9 @@ export default {
                     },
                 },
                 showlegend: false,
-                // height: 250,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 350,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         agentPieTraces() {
@@ -623,6 +644,9 @@ export default {
                     values: this.profile.stats.agent_usage.values,
                     labels: this.profile.stats.agent_usage.labels,
                     type: 'pie',
+                    marker: {
+                      colors: this.pieColors
+                    }
                 },
             ];
         },
@@ -642,9 +666,10 @@ export default {
                     },
                 },
                 showlegend: false,
-                // height: 250,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 350,
+                piecolorway: 'Greens',
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         projectPieData() {
@@ -653,6 +678,9 @@ export default {
                     values: this.profile.stats.project_usage.values,
                     labels: this.profile.stats.project_usage.labels,
                     type: 'pie',
+                    marker: {
+                      colors: this.pieColors
+                    }
                 },
             ];
         },
@@ -672,9 +700,9 @@ export default {
                     },
                 },
                 showlegend: false,
-                // height: 250,
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 350,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         tasksStatusPlotTraces() {
@@ -727,6 +755,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    zeroline: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -740,10 +769,15 @@ export default {
                     },
                 },
                 yaxis: {
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 300,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showTasksUsagePlot() {
@@ -777,6 +811,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    zeroline: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -790,11 +825,15 @@ export default {
                     },
                 },
                 yaxis: {
-                    dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 300,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showWorkflowsUsagePlot() {
@@ -828,6 +867,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    zeroline: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -841,11 +881,15 @@ export default {
                     },
                 },
                 yaxis: {
-                    dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 300,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
         showAgentsUsagePlot() {
@@ -879,6 +923,7 @@ export default {
                 xaxis: {
                     showgrid: false,
                     showline: true,
+                    zeroline: false,
                     linecolor: 'rgb(102, 102, 102)',
                     titlefont: {
                         font: {
@@ -892,11 +937,15 @@ export default {
                     },
                 },
                 yaxis: {
-                    dtick: 1,
+                    showgrid: false,
+                    showline: true,
+                    zeroline: false,
                     showticklabels: false,
+                    autotick: false
                 },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
+                height: 300,
+                paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
+                plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
             };
         },
     },
