@@ -206,18 +206,21 @@ def share_data(self, guid: str):
 
     try:
         options = task.workflow
+        output_path = options['output']['to']
         paths = [
             {
-                'path': options['output']['to'],
+                'path': output_path,
                 'permission': 'write'
             }
         ]
-        # if the input is a publicly shared directory, no need to grant temp access
-        if 'input' in options and '/iplant/home/shared' not in options['input']['path']:
-            paths.append({
-                'path': options['input']['path'],
-                'permission': 'read'
-            })
+        if 'input' in options:
+            input_path = options['input']['path']
+            if ('/iplant/home/shared' not in input_path and  # if the input is a publicly shared directory, no need to grant temp access
+                    input_path != output_path):              # also skip the read permissions if we're reading and writing from same dir
+                paths.append({
+                    'path': input_path,
+                    'permission': 'read'
+                })
 
         # share the user's source and target collections with the plantit CyVerse user
         terrain.share_dir({
