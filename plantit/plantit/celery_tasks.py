@@ -219,7 +219,7 @@ def share_data(self, guid: str):
                     input_path != output_path):              # skip input permissions if reading and writing from same dir
                 paths.append({
                     'path': input_path,
-                    'permission': 'white'
+                    'permission': 'write'
                 })
 
         # share the user's source and target collections with the plantit CyVerse user
