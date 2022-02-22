@@ -215,11 +215,11 @@ def share_data(self, guid: str):
         ]
         if 'input' in options:
             input_path = options['input']['path']
-            if ('/iplant/home/shared' not in input_path and  # if the input is a publicly shared directory, no need to grant temp access
-                    input_path != output_path):              # also skip the read permissions if we're reading and writing from same dir
+            if ('/iplant/home/shared' not in input_path and  # no need for temporary access if input is public shared dir
+                    input_path != output_path):              # skip input permissions if reading and writing from same dir
                 paths.append({
                     'path': input_path,
-                    'permission': 'read'
+                    'permission': 'white'
                 })
 
         # share the user's source and target collections with the plantit CyVerse user
