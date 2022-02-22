@@ -188,7 +188,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 
     # gpus
     gpus = options['gpus'] if 'gpus' in options else 0
-    if gpus and task.agent.orchestrator_queue is None:
+    if gpus:
         headers.append(f"#SBATCH --gres=gpu:{gpus}")
 
     # email notifications
