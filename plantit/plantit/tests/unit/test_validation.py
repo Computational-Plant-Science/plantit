@@ -22,6 +22,16 @@ class ValidationTests(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Missing attribute \'image\'' in result[1])
 
+    def test_validate_config_when_is_valid_image_with_comment(self):
+        result = validate_workflow_configuration({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'commands': 'echo "Hello, world!"',
+            'image': 'docker://alpine  # this is the image'
+        })
+        self.assertTrue(result[0])
+        # self.assertTrue('Missing attribute \'image\'' in result[1])
+
     def test_validate_config_when_is_not_valid_shell_wrong_type(self):
         result = validate_workflow_configuration({
             'name': 'Test Flow',
