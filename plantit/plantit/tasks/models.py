@@ -81,6 +81,7 @@ class Task(models.Model):
     celery_task_id = models.CharField(max_length=50, null=True, blank=True)
     transferred = models.BooleanField(default=False)
     transfer_path = models.CharField(max_length=250, null=True, blank=True)
+    time_limit = models.DurationField(blank=True, null=True)
     due_time = models.DateTimeField(null=True, blank=True)
     cleanup_time = models.DateTimeField(null=True, blank=True)
     delayed_id = models.CharField(max_length=250, null=True, blank=True)
@@ -134,6 +135,8 @@ class Task(models.Model):
         'OOM', 'OUT_OF_MEMORY',
         'PR', 'PREEMPTED',
     ]
+
+    # TODO: move scheduler jobs into their own model in the DB (one-to-many relationship to tasks)
 
     job_id = models.CharField(max_length=50, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
@@ -191,6 +194,7 @@ class RepeatingTask(PeriodicTask):
 
 
 # Task Options #
+
 
 class BindMount(TypedDict):
     host_path: str

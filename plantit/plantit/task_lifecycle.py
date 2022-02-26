@@ -60,10 +60,13 @@ def create_immediate_task(user: User, config: dict):
     # if we have a time limit, calculate due time
     time = config.get('time', None)
     if time is not None:
-        time_limit = parse_task_time_limit(time)
-        logger.info(f"Using task time limit {time_limit}s")
-        due_time = timezone.now() + timedelta(seconds=time_limit)
-    else: due_time = None
+        time_limit = timedelta(seconds=parse_task_time_limit(time))
+        due_time = timezone.now() + time_limit
+        logger.debug(f"Using task time limit {time_limit} (due time {due_time})")
+    else:
+        time_limit = None
+        due_time = None
+        logger.info(f"Not using time limit")
 
     # create the task right meow
     now = timezone.now()
@@ -81,6 +84,7 @@ def create_immediate_task(user: User, config: dict):
         status=TaskStatus.CREATED,
         created=now,
         updated=now,
+        time_limit=time_limit,
         due_time=due_time,
         token=binascii.hexlify(os.urandom(20)).decode())
 
@@ -356,26 +360,13 @@ def cancel_task(task: Task):
                 logger.info(line)
                 lines.append(line)
 
-            if task.pull_id is not None and any((task.pull_id in r) for r in lines):
-                execute_command(
-                    ssh=ssh,
-                    setup_command=':',
-                    command=f"scancel {task.pull_id}",
-                    directory=join(task.agent.workdir, task.workdir))
-
             if task.job_id is not None and any((task.job_id in r) for r in lines):
                 execute_command(
                     ssh=ssh,
                     setup_command=':',
                     command=f"scancel {task.job_id}",
-                    directory=join(task.agent.workdir, task.workdir))
-
-            if task.push_id is not None and any((task.push_id in r) for r in lines):
-                execute_command(
-                    ssh=ssh,
-                    setup_command=':',
-                    command=f"scancel {task.push_id}",
-                    directory=join(task.agent.workdir, task.workdir))
+                    directory=join(task.agent.workdir, task.workdir),
+                    allow_stderr=True)
     except:
         logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
         return

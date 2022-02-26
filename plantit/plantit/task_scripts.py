@@ -30,28 +30,7 @@ def calculate_node_count(task: Task, inputs: List[str]):
 
 def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     # TODO: refactor (https://github.com/Computational-Plant-Science/plantit/issues/205)
-
-    # by default, use the suggested walltime provided in plantit.yaml
-    jobqueue = options['jobqueue']
-    walltime = jobqueue['walltime' if 'walltime' in jobqueue else 'time']
-    split_time = walltime.split(':')
-    hours = int(split_time[0])
-    minutes = int(split_time[1])
-    seconds = int(split_time[2])
-    walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-    # if we have a manual (or preset) override, use that instead
-    if 'time' in task.workflow and 'limit' in task.workflow['time'] and 'units' in task.workflow['time']:
-        units = task.workflow['time']['units']
-        limit = int(task.workflow['time']['limit'])
-        if units.lower() == 'hours':
-            walltime = timedelta(hours=limit, minutes=0, seconds=0)
-        elif units.lower() == 'minutes':
-            walltime = timedelta(hours=0, minutes=limit, seconds=0)
-        elif units.lower() == 'seconds':
-            walltime = timedelta(hours=0, minutes=0, seconds=limit)
-
-    # TODO adjust to compensate for number of input files and parallelism [requested walltime * input files / nodes]
+    # adjust based on number of input files and parallelism [requested walltime * input files / nodes]
     # need to compute suggested walltime as a function of workflow, agent, and number of inputs
     # how to do this? cache suggestions for each combination independently?
     # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
@@ -63,16 +42,30 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     #   nodes = calculate_node_count(task, inputs)
     #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
 
-    # round up to the nearest hour
-    job_walltime = ceil(walltime.total_seconds() / 60 / 60)
-    agent_walltime = int(int(task.agent.max_walltime) / 60)
-    hours = min(job_walltime, agent_walltime)
-    hours = '1' if hours == 0 else f"{hours}"
-    if len(hours) == 1: hours = f"0{hours}"
-    adjusted_str = f"{hours}:00:00"
+    # if a time limit was requested at submission time, use that
+    if task.time_limit is not None:
+        requested = task.time_limit
+        limit_type = 'user-requested'
+    else:
+        # otherwise use the default time limit from the workflow configuration
+        jobqueue = options['jobqueue']
+        spl = jobqueue['walltime' if 'walltime' in jobqueue else 'time'].split(':')
+        hours = int(spl[0])
+        minutes = int(spl[1])
+        seconds = int(spl[2])
+        requested = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        limit_type = 'workflow-default'
 
-    logger.info(f"Using walltime {adjusted_str} for {task.user.username}'s task {task.guid}")
-    return adjusted_str
+    # round to the nearest hour, making sure not to exceed agent's maximum, then convert to HH:mm:ss string
+    requested_hours = ceil(requested.total_seconds() / 60 / 60)
+    permitted_hours = ceil(task.agent.max_time.total_seconds() / 60 / 60)
+    hours = requested_hours if requested_hours <= permitted_hours else permitted_hours
+    hours = '1' if hours == 0 else f"{hours}"  # if we rounded down to zero, bump to 1
+    if len(hours) == 1: hours = f"0{hours}"
+    walltime = f"{hours}:00:00"
+
+    logger.info(f"Using {limit_type} walltime {walltime} for {task.user.username}'s task {task.guid}")
+    return walltime
 
 
 # Commands (script subcomponents) #

@@ -259,7 +259,7 @@
                             v-if="canceling"
                             label="Loading..."
                             :variant="profile.darkMode ? 'light' : 'dark'"
-                            class="ml-2 mb-1"
+                            class="ml-2"
                         ></b-spinner>
                     </b-button>
                 </b-col>
@@ -280,7 +280,7 @@
                             v-if="tasksLoading"
                             label="Loading..."
                             :variant="profile.darkMode ? 'light' : 'dark'"
-                            class="ml-2 mb-1"
+                            class="ml-2"
                         ></b-spinner>
                     </b-button>
                 </b-col>

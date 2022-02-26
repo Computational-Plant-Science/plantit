@@ -28,7 +28,6 @@ def image_exists(name, owner=None, tag=None):
 
 def parse_image_components(value):
     container_split = value.split('#', 1)[0].strip().split('/')  # get rid of comments first
-    print(container_split)
     container_name = container_split[-1]
     container_owner = None if container_split[-2] == '' else container_split[-2]
     if ':' in container_name:
