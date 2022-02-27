@@ -271,7 +271,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first': user.profile.first_login,
             },
             'stats': async_to_sync(q.get_user_statistics)(user),
-            'projects': [p.guid for p in user.project_teams.all()]
+            # 'projects': [p.guid for p in user.project_teams.all()],
+            'users': q.list_users(),
+            'tasks': q.get_tasks(user, page=1),
+            'notifications': q.get_notifications(user, page=1),
+            'agents': q.get_agents(user),
+            'workflows': {
+                'public': q.list_public_workflows(),
+                'project': q.list_user_project_workflows(user)
+            },
+            'projects': q.get_user_projects(user),
+
         }
 
         if request.user.profile.cyverse_access_token != '':
@@ -288,10 +298,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         profile = Profile.objects.get(user=request.user)
         if q.has_github_info(profile):
             try:
-                github_profile = async_to_sync(q.get_user_github_profile)(user)
-                github_organizations = async_to_sync(q.get_user_github_organizations)(user)
-                response['github_profile'] = github_profile
-                response['organizations'] = github_organizations
+                response['github_profile'] = async_to_sync(q.get_user_github_profile)(user)
+                response['organizations'] = async_to_sync(q.get_user_github_organizations)(user)
+                response['workflows']['user'] = q.list_user_workflows(profile.github_username)
+                response['workflows']['org'] = async_to_sync(q.list_user_org_workflows)(user)
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
                 response['github_profile'] = None

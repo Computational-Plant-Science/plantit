@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @api_view(['GET'])
 def list(request):
-    # only return public agents and agents the requesting user is authorized to access
-    agents = [agent for agent in Agent.objects.all() if agent.public or agent.user == request.user or request.user.username in [u.username for u in agent.users_authorized.all()]]
-    return JsonResponse({'agents': [q.agent_to_dict(agent, request.user) for agent in agents]})
+    return JsonResponse({'agents': q.get_agents(request.user)})
 
 
 # @swagger_auto_schema(methods='get')

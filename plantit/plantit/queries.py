@@ -6,7 +6,7 @@ import traceback
 from collections import Counter, namedtuple, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import jwt
 import numpy as np
@@ -15,6 +15,7 @@ from asgiref.sync import sync_to_async, async_to_sync
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
+from django.core.paginator import Paginator
 from django.db.models import Count
 from django.utils import timezone
 
@@ -164,6 +165,18 @@ def list_public_workflows() -> List[dict]:
 def list_user_workflows(owner: str) -> List[dict]:
     redis = RedisClient.get()
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
+
+
+async def list_user_org_workflows(user: User) -> Dict[str, List[dict]]:
+    orgs = await get_user_github_organizations(user)
+    workflows = dict()
+    for org in orgs: workflows[org['login']] = await sync_to_async(list_org_workflows)(org['login'])
+    return workflows
+
+
+def list_user_project_workflows(user: User) -> Dict[str, List[dict]]:
+    projects = list_user_projects(user)
+    return {project.guid: list_project_workflows(project) for project in projects}
 
 
 def list_org_workflows(organization: str) -> List[dict]:
@@ -464,6 +477,14 @@ def project_to_dict(project: Investigation) -> dict:
     }
 
 
+def get_user_projects(user: User):
+    return [project_to_dict(project) for project in Investigation.objects.filter(owner=user)]
+
+
+def get_projects(team=None):
+    return [project_to_dict(project) for project in (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
+
+
 def list_user_projects(user: User):
     return list(user.project_teams.all()) + list(Investigation.objects.filter(owner=user))
 
@@ -542,6 +563,41 @@ async def get_user_github_organizations(user: User) -> List[dict]:
         return []
 
     return await github.list_user_organizations(profile.github_username, profile.github_token)
+
+
+def get_agents(user: User):
+    # only return public agents and agents the requesting user is authorized to access
+    agents = [agent for agent in Agent.objects.all() if agent.public or agent.user == user or user.username in [u.username for u in agent.users_authorized.all()]]
+    return [agent_to_dict(agent, user.username) for agent in agents]
+
+
+def get_notifications(user: User, page: int = 1):
+    start = int(page - 1) * 20
+    count = start + 20
+    notifications = list(Notification.objects.filter(user=user))
+    notifications = notifications[start:(start + count)]
+    return [notification_to_dict(notification) for notification in notifications]
+
+
+def get_tasks(user: User, page: int = 1):
+    tasks = Task.objects.filter(user=user)
+    paginator = Paginator(tasks, 20)
+    paged = paginator.get_page(page)
+    return {
+        'previous_page': paged.has_previous() and paged.previous_page_number() or None,
+        'next_page': paged.has_next() and paged.next_page_number() or None,
+        'tasks': [task_to_dict(task) for task in list(paged)]
+    }
+
+
+# TODO: paginate
+def get_delayed_tasks(user: User):
+    return [delayed_task_to_dict(task) for task in DelayedTask.objects.filter(user=user, enabled=True)]
+
+
+# TODO: paginate
+def get_repeating_tasks(user: User):
+    return [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=user, enabled=True)]
 
 
 @sync_to_async
