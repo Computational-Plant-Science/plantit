@@ -271,9 +271,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first': user.profile.first_login,
             },
             'stats': async_to_sync(q.get_user_statistics)(user),
-            # 'projects': [p.guid for p in user.project_teams.all()],
             'users': q.list_users(),
             'tasks': q.get_tasks(user, page=1),
+            'delayed_tasks': q.get_delayed_tasks(user),
+            'repeating_tasks': q.get_repeating_tasks(user)
             'notifications': q.get_notifications(user, page=1),
             'agents': q.get_agents(user),
             'workflows': {
@@ -281,7 +282,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'project': q.list_user_project_workflows(user)
             },
             'projects': q.get_user_projects(user),
-
         }
 
         if request.user.profile.cyverse_access_token != '':

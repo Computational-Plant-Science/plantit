@@ -6,7 +6,7 @@ export const notifications = {
     namespaced: true,
     state: () => ({
         notifications: [],
-        loading: true
+        loading: true,
     }),
     mutations: {
         setAll(state, notifications) {
@@ -17,11 +17,11 @@ export const notifications = {
         },
         addOrUpdate(state, notification) {
             let i = state.notifications.findIndex(
-                n => n.id === notification.id
+                (n) => n.id === notification.id
             );
             if (i === -1) state.notifications.unshift(notification);
             else Vue.set(state.notifications, i, notification);
-        }
+        },
     },
     actions: {
         async setAll({ commit }, notifications) {
@@ -33,28 +33,28 @@ export const notifications = {
                 .get(
                     `/apis/v1/notifications/${rootState.user.profile.djangoProfile.username}/`
                 )
-                .then(response => {
+                .then((response) => {
                     var ids = [];
                     var notifications = Array.prototype.slice.call(
                         response.data.notifications
                     );
 
                     // filter unique?
-                    notifications = notifications.filter(function(n) {
+                    notifications = notifications.filter(function (n) {
                         if (ids.indexOf(n.id) >= 0) return false;
                         ids.push(n.id);
                         return true;
                     });
 
                     // sort by last created
-                    notifications.sort(function(a, b) {
+                    notifications.sort(function (a, b) {
                         return new Date(b.created) - new Date(a.created);
                     });
 
                     commit('setAll', notifications);
                     commit('setLoading', false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     commit('setLoading', false);
                     if (error.response.status === 500) throw error;
@@ -62,17 +62,19 @@ export const notifications = {
         },
         async addOrUpdate({ commit }, notification) {
             commit('addOrUpdate', notification);
-        }
+        },
     },
     getters: {
-        notification: state => id => {
-            let found = state.notifications.find(n => id === n.id);
+        notification: (state) => (id) => {
+            let found = state.notifications.find((n) => id === n.id);
             if (found !== undefined) return found;
-            return state.notifications.find(n => id === n.id);
+            return state.notifications.find((n) => id === n.id);
         },
-        notifications: state => state.notifications === undefined ? [] : state.notifications,
-        notificationsRead: state => state.notifications.filter(n => n.read),
-        notificationsUnread: state => state.notifications.filter(n => !n.read),
-        notificationsLoading: state => state.loading,
-    }
+        notifications: (state) =>
+            state.notifications === undefined ? [] : state.notifications,
+        notificationsRead: (state) => state.notifications.filter((n) => n.read),
+        notificationsUnread: (state) =>
+            state.notifications.filter((n) => !n.read),
+        notificationsLoading: (state) => state.loading,
+    },
 };
