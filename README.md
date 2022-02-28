@@ -55,7 +55,7 @@ high-throughput phenotyping in the browser
 
 ### Status
 
-`plantit` is currently in public beta with the release of `v1.0.0` planned to coincide with [NAPPN 2022](https://www.plantphenotyping.org/conference-home) (Feb. 22-25). See [Releases](https://github.com/Computational-Plant-Science/plantit/releases) for changelog and [Roadmap](https://github.com/Computational-Plant-Science/plantit/wiki/Changelog-&-Roadmap) for planned features, fixes, and future releases.
+`plantit` debuted (as [pre-release v0.1.0](https://github.com/Computational-Plant-Science/plantit/releases/tag/v0.1.0)) at [NAPPN 2022](https://www.plantphenotyping.org/conference-home) (Feb. 22-25). See [Releases](https://github.com/Computational-Plant-Science/plantit/releases) for changelog and [Roadmap](https://github.com/Computational-Plant-Science/plantit/wiki/Changelog-&-Roadmap) for planned features and fixes. Capabilities will likely continue to evolve for some time, with "official" releases following an eventually forthcoming publication.
 
 ### Motivation
 
@@ -99,9 +99,9 @@ Read on if you're interested in contributing to `plantit` or hosting your own in
 
 An instantiation of a `plantit` workflow is called a *task*. When a task is submitted from the browser client, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is essentially just a chain of callbacks, some of which trigger state transitions.
 
-Architecture | Task Lifecycle    |            Task Detail             | Cluster Orchestration | 
-|:---------:|:----------------------------:|:-------------------------------------:|:-----------------------:|
-![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) | ![](docs/media/stack.jpg) 
+Architecture | Task Lifecycle    |            Task Detail             |
+|:---------:|:----------------------------:|:-------------------------------------:|
+![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) 
 
 
 ### Requirements
