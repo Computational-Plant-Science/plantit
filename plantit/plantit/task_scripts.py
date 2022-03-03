@@ -216,8 +216,7 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
         parameters = (options['parameters'] if 'parameters' in options else []) + [
             Parameter(key='OUTPUT', value=options['output']['from']),
             Parameter(key='GPUS', value=str(gpus))]
-        bind_mounts = options['bind_mounts'] if (
-                'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+        bind_mounts = options['mount'] if ('mount' in options and isinstance(options['mount'], list)) else []
         no_cache = options['no_cache'] if 'no_cache' in options else False
         shell = options['shell'] if 'shell' in options else None
 
@@ -395,8 +394,7 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
     parameters = (options['parameters'] if 'parameters' in options else []) + [
         Parameter(key='OUTPUT', value=options['output']['from']),
         Parameter(key='GPUS', value=str(gpus))]
-    bind_mounts = options['bind_mounts'] if (
-            'bind_mounts' in options and isinstance(options['bind_mounts'], list)) else []
+    bind_mounts = options['mount'] if ('mount' in options and isinstance(options['mount'], list)) else []
     no_cache = options['no_cache'] if 'no_cache' in options else False
     shell = options['shell'] if 'shell' in options else None
 

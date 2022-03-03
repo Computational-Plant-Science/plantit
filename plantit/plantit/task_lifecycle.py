@@ -644,12 +644,12 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
         else:
             parameters = [Parameter(key=param['name'], value=param['value']) for param in config['parameters']]
 
-    bind_mounts = None
-    if 'bind_mounts' in config:
-        if not all(mount_point != '' for mount_point in config['bind_mounts']):
-            errors.append('Every mount point must be non-empty')
+    mount = None
+    if 'mount' in config:
+        if not all(mount_point != '' for mount_point in config['mount']):
+            errors.append('Every bind mount must be non-empty')
         else:
-            bind_mounts = [parse_bind_mount(work_dir, mount_point) for mount_point in config['bind_mounts']]
+            mount = [parse_bind_mount(work_dir, mount_point) for mount_point in config['mount']]
 
     input = None
     if 'input' in config:
@@ -750,7 +750,7 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if output is not None: options['output'] = output
     if parameters is not None: options['parameters'] = parameters
     if env is not None: options['env'] = env
-    if bind_mounts is not None: options['bind_mounts'] = bind_mounts
+    if mount is not None: options['mount'] = mount
     # if checksums is not None: options['checksums'] = checksums
     if log_file is not None: options['log_file'] = log_file
     if jobqueue is not None: options['jobqueue'] = jobqueue
