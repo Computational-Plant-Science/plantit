@@ -468,6 +468,44 @@
                                                         </b-row>
                                                     </b-col>
                                                 </b-row>
+                                          <b-row
+                                                    class="mb-3"
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .email !==
+                                                            undefined &&
+                                                        getWorkflow.config
+                                                            .email !== null
+                                                    "
+                                                    ><b-col>
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                        >
+                                                            Contact
+                                                        </h5>
+                                            <b-row>
+                                                            <b-col>
+                                                               <b-link
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :href="`mailto:${getWorkflow.config.email}`"
+                                                                            ><i class="fas fa-envelope fa-fw"></i> {{
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .email
+                                                                            }}</b-link
+                                                                        >
+                                                            </b-col>
+                                            </b-row>
+                                          </b-col>
+                                          </b-row>
                                                 <b-row
                                                     class="mb-3"
                                                     v-if="

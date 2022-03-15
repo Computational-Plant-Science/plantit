@@ -1,6 +1,5 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Defining Workflows](#defining-workflows)
   - [The `plantit.yaml` file](#the-plantityaml-file)
@@ -41,6 +40,10 @@ Certain environment variables will be configured in the Singularity container ru
 - INPUT: the path to an input file or directory
 - OUTPUT: the path to the directory results will be written to
 - INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+
+### Contact email
+
+You can provide a contact email via an `email` attribute. If this attribute is provided, a `mailto` link will be shown in the user interface to allow your workflow's users to easily contact you.
 
 ### Jobqueue deployment targets
 
