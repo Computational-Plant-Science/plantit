@@ -445,7 +445,14 @@
                                 <b-img
                                     id="avatar"
                                     v-if="profile.loggedIntoGitHub"
-                                    class="avatar m-0 mb-1 p-0 github-hover logo"
+                                    class="
+                                        avatar
+                                        m-0
+                                        mb-1
+                                        p-0
+                                        github-hover
+                                        logo
+                                    "
                                     style="
                                         min-width: 20px;
                                         min-height: 20px;
@@ -898,16 +905,16 @@ export default {
         // otherwise need to fetch user profile first to get tokens/etc for other API requests
         // TODO: is this still necessary?
         await Promise.all([
-            store.dispatch('user/loadProfile'),
+            this.loadProfile(),
             this.getVersion(),
             this.loadMaintenanceWindows(),
         ]);
 
         // load the rest of the model
-        await Promise.all([
+        /* await Promise.all([
             this.$store.dispatch('users/loadAll'),
-            this.$store.dispatch('tasks/loadAll'),
-            this.$store.dispatch('tasks/loadDelayed'),
+            this.$store.dispatch('tasks/setAll'),
+            this.$store.dispatch('tasks/setDelayed'),
             this.$store.dispatch('tasks/loadRepeating'),
             this.$store.dispatch('notifications/loadAll'),
             this.$store.dispatch('workflows/loadPublic'),
@@ -921,7 +928,7 @@ export default {
             this.$store.dispatch('datasets/loadSharing'),
             this.$store.dispatch('projects/loadUser'),
             this.$store.dispatch('projects/loadOthers'),
-        ]);
+        ]); */
 
         // TODO move websockets to vuex
         // connect to this user's event stream, pushed from backend channel
@@ -940,6 +947,131 @@ export default {
         },
     },
     methods: {
+        async loadProfile() {
+            this.$store.dispatch('user/setProfleLoading', true);
+            await axios
+                .get(`/apis/v1/users/get_current/`)
+                .then((response) => {
+                    // determine whether user is logged in
+                    let decoded = jwtDecode(
+                        response.data.django_profile.cyverse_token
+                    );
+                    let now = Math.floor(Date.now() / 1000);
+                    if (now > decoded.exp)
+                        this.$store.dispatch('user/setLoggedIn', false);
+                    else this.$store.dispatch('user/setLoggedIn', true);
+
+                    // determine whether user is logged into GitHub
+                    this.$store.dispatch(
+                        'user/setLoggedIntoGithub',
+                        response.data.github_profile !== undefined &&
+                            response.data.github_profile !== null
+                    );
+
+                    // set profile info
+                    this.$store.dispatch(
+                        'user/setDjangoProfile',
+                        response.data.django_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setCyverseProfile',
+                        response.data.cyverse_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setGithubProfile',
+                        response.data.github_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setOrganizations',
+                        response.data.organizations
+                    );
+                    this.$store.dispatch(
+                        'user/setFirst',
+                        response.data.django_profile.first
+                    );
+                    this.$store.dispatch(
+                        'user/setDarkMode',
+                        response.data.django_profile.dark_mode
+                    );
+                    this.$store.dispatch(
+                        'user/setHints',
+                        response.data.django_profile.hints
+                    );
+                    this.$store.dispatch(
+                        'user/setPushNotifications',
+                        response.data.django_profile.push_notifications
+                    );
+                    this.$store.dispatch(
+                        'user/user/setStats',
+                        response.data.stats
+                    );
+                    this.$store.dispatch(
+                        'user/setMaintenanceWindows',
+                        response.data.maintenance_windows
+                    );
+                    this.$store.dispatch('user/setProfileLoading', false);
+                    this.$store.dispatch('user/setProfleLoading', true);
+                    //promise.all
+                    this.$store.dispatch('users/setAll', response.data.users),
+                        this.$store.dispatch(
+                            'tasks/setAll',
+                            response.data.tasks.tasks
+                        ),
+                        this.$store.dispatch(
+                            'tasks/setDelayed',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch(
+                            'tasks/setRepeating',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch(
+                            'notifications/setAll',
+                            response.data.notifications
+                        ),
+                        this.$store.dispatch(
+                            'workflows/setPublic',
+                            response.data.workflows.public
+                        ),
+                        this.$store.dispatch(
+                            'workflows/setUser',
+                            response.data.workflows.user
+                        ),
+                        this.$store.dispatch(
+                            'workflows/setOrg',
+                            response.data.workflows.org
+                        ),
+                        this.$store.dispatch(
+                            'workflows/loadProject',
+                            response.data.workflows.project
+                        ),
+                        this.$store.dispatch(
+                            'agents/setAll',
+                            response.data.users
+                        ),
+                        this.$store.dispatch(
+                            'projects/setUser',
+                            response.data.projects
+                        ),
+                        this.$store.dispatch(
+                            'projects/setOthers',
+                            response.data.projects
+                        );
+                })
+                .catch((error) => {
+                    commit('setProfileLoading', false);
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                    else if (
+                        error.response.status === 401 ||
+                        error.response.status === 403
+                    ) {
+                        // if we get a 401 or 403, log the user out
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
+                });
+        },
         async loadMaintenanceWindows() {
             await axios
                 .get('/apis/v1/misc/maintenance/')
@@ -1153,19 +1285,17 @@ export default {
 @import '../scss/main.sass'
 @import '../scss/_colors.sass'
 
-
-
 .not-found
     color: $red
     border: 2px solid $red
     -webkit-transform: rotate(180deg)
-        transform: rotate(180deg)
+    transform: rotate(180deg)
 
 .not-found:hover
     color: $dark
     border: 2px solid $white
     -webkit-transform: rotate(90deg)
-        transform: rotate(90deg)
+    transform: rotate(90deg)
 
 .mirror
     -moz-transform: scale(-1, 1)
@@ -1200,7 +1330,7 @@ export default {
 
 .brand-img
     -webkit-transition: -webkit-transform .1s ease-in-out
-        transition: transform .1s ease-in-out
+    transition: transform .1s ease-in-out
 
 .brand-img-nl
     -webkit-transition: -webkit-transform .1s ease-in-out
@@ -1213,42 +1343,39 @@ export default {
     transform: rotate(90deg)
 
 .github-hover:hover
-  color: $color-highlight !important
-  background-color: $dark !important
-
+    color: $color-highlight !important
+    background-color: $dark !important
 
 .avatar
-  max-height: 15px
-  border: 1px solid $dark
+    max-height: 15px
+    border: 1px solid $dark
 
 .crumb-dark
-  font-size: 14px
-  font-weight: 400
-  color: white !important
-  // text-decoration: underline
-  // text-decoration-color: $color-button
+    font-size: 14px
+    font-weight: 400
+    color: white !important
 
 .dropdown-custom
-  border: none !important
+    border: none !important
 
 .dropdown-custom:hover
-  background-color: transparent !important
-  border: none !important
-  box-shadow: none !important
+    background-color: transparent !important
+    border: none !important
+    box-shadow: none !important
 
 .crumb-light
-  font-size: 14px
-  font-weight: 400
-  color: $dark !important
+    font-size: 14px
+    font-weight: 400
+    color: $dark !important
 
 a
-  text-decoration: none
-  text-decoration-color: $color-button
+    text-decoration: none
+    text-decoration-color: $color-button
 
 a:hover
-  text-decoration: underline
-  text-decoration-color: $color-button
+    text-decoration: underline
+    text-decoration-color: $color-button
 
 .darkk
-  background-color: #292b2c
+    background-color: #292b2c
 </style>

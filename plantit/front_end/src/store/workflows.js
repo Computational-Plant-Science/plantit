@@ -116,6 +116,21 @@ export const workflows = {
         },
     },
     actions: {
+        setPublic({ commit }, workflows) {
+            commit('setPublic', workflows);
+        },
+        setUser({ commit }, workflows) {
+            commit('setUser', workflows);
+        },
+        setOrg({ commit }, workflows) {
+            commit('setOrg', workflows);
+        },
+        setProject({ commit }, workflows) {
+            commit('setProject', workflows);
+        },
+        
+
+        
         async loadPublic({ commit }) {
             commit('setPublicLoading', true);
             await axios

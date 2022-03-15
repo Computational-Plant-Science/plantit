@@ -30,6 +30,12 @@ export const projects = {
         },
     },
     actions: {
+        setUser({ commit }, user) {
+            commit('setUser', user);
+        },
+        setOthers({ commit }, user) {
+            commit('setOthers', user);
+        },
         async loadUser({ commit, rootState }) {
             commit('setLoading', true);
             await axios

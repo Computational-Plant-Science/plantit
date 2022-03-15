@@ -30,6 +30,9 @@ export const users = {
                     if (error.response.status === 500) throw error;
                 });
         },
+        setAll({ commit }, users) {
+            commit('set', users);
+        },
     },
     getters: {
         allUsers: (state) => state.users,
