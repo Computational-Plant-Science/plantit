@@ -4935,7 +4935,7 @@ export default {
                 logo: this.getWorkflow.config.logo,
                 gpu: this.getWorkflow.config.gpu,
                 env: this.getWorkflow.config.env,
-                bind_mounts: this.getWorkflow.config.mount,
+                mount: this.getWorkflow.config.mount,
                 jobqueue:
                     this.getWorkflow.config.jobqueue !== undefined
                         ? this.getWorkflow.config.jobqueue
