@@ -73,7 +73,7 @@ In a sentence: `plantit` runs phenomics container workflows in high-throughput c
 
 #### Browser submissions
 
-Choose which workflow to apply to which data, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
+Choose a workflow and dataset, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
 
 #### Easy integration
 
@@ -94,15 +94,6 @@ Contextualize datasets according to the emerging [MIAPPE](https://www.miappe.org
 ## Development
 
 Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
-
-### Architecture
-
-An instantiation of a `plantit` workflow is called a *task*. When a task is submitted from the browser client, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is essentially just a chain of callbacks, some of which trigger state transitions.
-
-Architecture | Task Lifecycle    |            Task Detail             |
-|:---------:|:----------------------------:|:-------------------------------------:|
-![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) 
-
 
 ### Requirements
 

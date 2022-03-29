@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'plantit'
-copyright = '2021, Computational Plant Science Lab'
+copyright = '2022, Computational Plant Science Lab'
 author = 'Computational Plant Science Lab'
 
 # The full version, including alpha/beta/rc tags
