@@ -25,22 +25,17 @@
 
 ## The `plantit.yaml` file
 
-To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
+To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. At minimum, it should look something like this:
 
 ```yaml
-name: Hello Groot             # (optional but encouraged)
-author: Groot                 # (optional but encouraged)
-public: True                  # visible to other users of PlantIT? (required)
-image: docker://alpine        # Docker image to use (required)
-commands: echo "I am Groot!"  # your entry point (required)
+name: Hello Groot             
+author: Groot                
+public: True                  # visible to other users of PlantIT?
+image: docker://alpine        # Docker image to use
+commands: echo "I am Groot!"  # your entry point
 ```
 
-Certain environment variables will be configured in the Singularity container runtime, in case you need to reference them in your startup command. These are:
-
-- WORKDIR: the current working directory
-- INPUT: the path to an input file or directory
-- OUTPUT: the path to the directory results will be written to
-- INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+There are a number of optional attributes as well.
 
 ### Contact email
 
@@ -76,7 +71,14 @@ To indicate that your workflow can take advantage of GPUs (only available on sel
 
 ### Environment variables
 
-You can provide runtime environment variables in an `env` section, for instance:
+Certain environment variables will be automatically set in the Singularity container runtime when a workflow is submitted as a task, in case you need to reference them in your entry point command or script:
+
+- WORKDIR: the current working directory
+- INPUT: the path to an input file or directory
+- OUTPUT: the path to the directory results will be written to
+- INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+
+You can provide custom environment variables in an `env` section, for instance:
 
 ```yaml
 ...
@@ -208,7 +210,7 @@ output:
 
 If only an `include` section is provided, only the file patterns and names specified will be included. If only an `exclude` section is present, all files except the patterns and names specified will be included. If you provide both `include` and `exclude` sections, the `include` rules will first be applied to generate a subset of files, which will then be filtered by the `exclude` rules.
 
-### A super simple example
+## A simple example
 
 The following workflow prints the content of an input file and then writes it to an output file located in the same working directory.
 

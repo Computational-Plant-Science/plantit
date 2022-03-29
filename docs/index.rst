@@ -13,7 +13,7 @@ Welcome to PlantIT's documentation!
    md/about.md
    md/architecture.md
    md/user_guide/user_quickstart.md
-   md/user_guide/defining_workflows.md
+   md/developer_docs/defining_workflows.md
 
 
 Indices and tables
