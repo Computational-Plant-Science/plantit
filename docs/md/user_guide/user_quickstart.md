@@ -1,6 +1,7 @@
+# Quickstart
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Quickstart](#quickstart)
   - [Conceptual model](#conceptual-model)
@@ -9,8 +10,6 @@
     - [Tasks](#tasks)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Quickstart
 
 `plantit` is designed to support two broadly defined use cases, corresponding to user groups with different concerns and priorities.
 
