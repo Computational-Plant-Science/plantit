@@ -13,7 +13,7 @@
 
 `plantit` is middleware binding GitHub and CyVerse to various institutional clusters & supercomputers via a web interface. The `plantit` stack is predominantly Python, including Django, Gunicorn, Celery, Postgres, Redis, & NGINX, defined with Docker Compose.
 
-![PlantIT Architecture Diagram](../media/plantit.jpg)
+![Architecture](../media/plantit.jpg)
 
 There are 3 major abstractions in `plantit`:
 
@@ -21,7 +21,7 @@ There are 3 major abstractions in `plantit`:
 - workflow
 - task
 
-A *dataset* is a collection of data objects in the CyVerse data store. A *workflow* is a containerized research application configured to run on `plantit`. An instantiation of a workflow is called a *task*. 
+
 
 ### Datasets
 
