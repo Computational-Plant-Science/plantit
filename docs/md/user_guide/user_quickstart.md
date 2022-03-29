@@ -31,7 +31,7 @@ A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a collection of dat
 
 ##### Workflows
 
-A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime.
+A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](../developer_docs/defining_workflows.md).
 
 ##### Tasks
 

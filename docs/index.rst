@@ -8,24 +8,12 @@ Welcome to PlantIT's documentation!
 
 .. toctree::
    :maxdepth: 3
-   :caption: Overview
+   :caption: Table of Contents
 
    md/about.md
    md/architecture.md
-
-.. toctree::
-   :maxdepth: 3
-   :caption: User Guide
-
    md/user_guide/user_quickstart.md
-   md/user_guide/running_workflows.md
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Developer Docs
-
-   md/developer_docs/developer_quickstart.md
-   md/developer_docs/defining_workflows.md
+   md/user_guide/defining_workflows.md
 
 
 Indices and tables
