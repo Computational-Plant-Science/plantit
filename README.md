@@ -32,10 +32,9 @@ high-throughput phenotyping in the browser
     - [Browser submissions](#browser-submissions)
     - [Easy integration](#easy-integration)
     - [Portable workflows](#portable-workflows)
-    - [Share at your pace](#share-at-your-pace)
+    - [Share & collaborate](#share--collaborate)
     - [Metadata & annotation](#metadata--annotation)
 - [Development](#development)
-  - [Architecture](#architecture)
   - [Requirements](#requirements)
   - [Installation](#installation)
     - [Setting up a development environment](#setting-up-a-development-environment)
@@ -44,8 +43,8 @@ high-throughput phenotyping in the browser
       - [SSL Certificates](#ssl-certificates)
   - [Configuring environment variables](#configuring-environment-variables)
   - [Configuring deployment targets](#configuring-deployment-targets)
-    - [Python](#python)
-    - [Admin site](#admin-site)
+    - [Agent requirements](#agent-requirements)
+    - [Authenticating with Docker](#authenticating-with-docker)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
