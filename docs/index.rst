@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PlantIT's documentation!
+plantit: high-throughput phenotyping in the browser
 ===================================
 
 .. toctree::
@@ -11,12 +11,9 @@ Welcome to PlantIT's documentation!
    :caption: Table of Contents
 
    md/about.md
+   md/quickstart.md
    md/architecture.md
-   md/user_guide/user_quickstart.md
-   md/developer_docs/defining_workflows.md
-
-
-Indices and tables
-==================
-
-* :ref:`search`
+   md/workflows.md
+   md/datasets.md
+   md/tasks.md
+   md/projects.md

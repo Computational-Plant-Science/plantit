@@ -32,12 +32,12 @@ A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a collection of dat
 
 ### Workflows
 
-A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](../developer_docs/defining_workflows.md).
+A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](workflows.md).
 
 ### Tasks
 
 A <i class="fas fa-tasks fa-1x fa-fw"></i> **Task** is a single instance of a workflow. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is a simple state machine strung together from Celery tasks.
 
-![Task Lifecycle](../../media/task.jpg)
+![Task Lifecycle](../media/task.jpg)
 
 When a task successfully completes, results are automatically transferred to the selected location in the CyVerse data store. The user is then shown results produced and may download them from the browser individually or bundled into a single archive.

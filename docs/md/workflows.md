@@ -1,4 +1,4 @@
-# Defining workflows
+# <i class="fas fa-stream fa-1x fa-fw"></i> **Workflows**
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -23,9 +23,9 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## The `plantit.yaml` file
+## Binding workflows: the `plantit.yaml` file
 
-To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. At minimum, it should look something like this:
+To host software (a <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow**) on PlantIT, add a `plantit.yaml` file to your GitHub repository. At minimum, it should look something like this:
 
 ```yaml
 name: Hello Groot             
@@ -41,7 +41,7 @@ There are a number of optional attributes as well.
 
 You can provide a contact email via an `email` attribute. If this attribute is provided, a `mailto` link will be shown in the user interface to allow your workflow's users to easily contact you.
 
-### Jobqueue deployment targets
+### Jobqueue requests
 
 To make sure your workflow can take full advantage of cluster resources, add a `jobqueue` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1 GB of memory for 1 hour:
 
@@ -53,6 +53,8 @@ jobqueue:
   cores: 1
 ```
 
+If you do not provide a `jobqueue` section in your `plantit.yaml`, tasks deployed to any agent will request 1 hour of walltime, 10 GB of RAM, 1 process, and 1 core.
+
 #### Walltime
 
 When a `plantit` task is submitted, values provided for the `jobqueue.walltime` attribute will be passed through transparently to the selected deployment target's scheduler. The `plantit` web UI will timestamp each task submission,  If such a time limit is provided at submission time, `plantit` will attempt to cancel your task if it fails to complete before the time limit has elapsed.
@@ -60,10 +62,6 @@ When a `plantit` task is submitted, values provided for the `jobqueue.walltime` 
 #### Virtual memory
 
 Note that some deployment targets (namely the default public agent, [TACC's Stampede2](https://www.tacc.utexas.edu/systems/stampede2)) are equipped with virtual memory. For tasks deployed to agents with virtual memory, `plantit` will ignore values provided for the `jobqueue.memory` attribute and defer to the cluster scheduler: on Stampede2, for instance, all tasks have access to 98GB of RAM.
-
-#### Default resource requests
-
-If you do not provide a `jobqueue` section in your `plantit.yaml`, tasks deployed to any agent will request 1 hour of walltime, 10 GB of RAM, 1 process, and 1 core.
 
 ### GPU mode
 
@@ -115,7 +113,7 @@ Four parameter types are supported by `plantit`:
 
 See the `Computational-Plant-Science/plantit-example-parameters` workflow [on GitHub](https://github.com/Computational-Plant-Science/plantit-example-parameters/blob/master/plantit.yaml) for an example of how to use parameters.
 
-#### Default parameter values
+#### Default values
 
 To provide default values for your workflow's parameters, you can use a `default` attribute. For instance:
 
@@ -136,11 +134,11 @@ For these reasons `plantit` provides a `shell` option. If provided, this option 
 - `sh`
 - `zsh`
 
-### Workflow input/output
+### Input/output
 
 `plantit` can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) or [Data Commons](https://cyverse.org/data-commons) onto the file system in your deployment environment, then push results back to the Data Store after your task completes. To configure inputs and outputs for a workflow, add `input` and `output` attributes to your configuration.
 
-#### Workflow inputs
+#### Inputs
 
 If your workflow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this workflow operates on a single `file`, multiple `files`, or an entire `directory`.
 
@@ -182,7 +180,7 @@ input:
 
 *Note that while the `input.path` and `input.filetypes` attributes are optional, you must provide a `kind` attribute if you provide an `input` section.*
 
-#### Workflow output
+#### Outputs
 
 If your workflow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your workflow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your workflow will deposit output files in a directory `output/directory` relative to the workflow's working directory:
 
@@ -228,3 +226,21 @@ output:
     names:                              
       - cowsaid.txt
 ```
+
+## Using workflows: the `plantit` web UI
+
+To explore and run workflows deployed to `plantit`, navigate to the <i class="fas fa-stream fa-1x fa-fw"></i> **Workflows** tab from the home view.
+
+![Task Lifecycle](../media/workflows.jpg)
+
+By default, this page will display the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** workflow context: a curated set of applications provided by the Computational Plant Science lab, collaborators, and other researchers. 
+
+Click the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** dropdown to select a different context. Options include:
+
+- <i class="fas fa-pin fa-1x fa-fw"></i> **Examples**: a small set of simple workflows to serve as templates and examples
+- <i class="fas fa-users fa-1x fa-fw"></i> **Public**: all publicly available workflows
+- <i class="fas fa-user fa-1x fa-fw"></i> **Yours**: your own workflows (private and public)
+- <i class="fas fa-building fa-1x fa-fw"></i> **[Organization]**: workflows belonging to a particular organization
+- - <i class="fas fa-sprout fa-1x fa-fw"></i> **[Project]**: workflows associated with a particular MIAPPE project
+
+The `plantit` web application scrapes GitHub for repository information for all logged-in users every 5 minutes. (If you've just updated a repository, you may need to wait several minutes then reload the workflow page.)
