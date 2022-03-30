@@ -21,6 +21,9 @@ Axios.defaults.xsrfCookieName = 'csrftoken';
 Axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
 
 Vue.config.productionTip = false;
+Vue.config.devtools = true;
+Vue.config.performance = true;
+Vue.config.performance = process.env.NODE_ENV !== 'production';
 
 Vue.use(VueMarkdown);
 Vue.use(AsyncComputed);
