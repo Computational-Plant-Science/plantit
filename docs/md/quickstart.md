@@ -3,11 +3,10 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Quickstart](#quickstart)
-  - [Conceptual model](#conceptual-model)
-    - [Datasets](#datasets)
-    - [Workflows](#workflows)
-    - [Tasks](#tasks)
+- [Conceptual model](#conceptual-model)
+  - [Datasets](#datasets)
+  - [Workflows](#workflows)
+  - [Tasks](#tasks)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

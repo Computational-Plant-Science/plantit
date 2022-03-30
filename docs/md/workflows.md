@@ -3,23 +3,23 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [The `plantit.yaml` file](#the-plantityaml-file)
+- [Binding workflows: the `plantit.yaml` file](#binding-workflows-the-plantityaml-file)
   - [Contact email](#contact-email)
-  - [Jobqueue deployment targets](#jobqueue-deployment-targets)
+  - [Jobqueue requests](#jobqueue-requests)
     - [Walltime](#walltime)
     - [Virtual memory](#virtual-memory)
-    - [Default resource requests](#default-resource-requests)
   - [GPU mode](#gpu-mode)
   - [Environment variables](#environment-variables)
   - [Parameters](#parameters)
-    - [Default parameter values](#default-parameter-values)
+    - [Default values](#default-values)
   - [Shell selection](#shell-selection)
-  - [Workflow input/output](#workflow-inputoutput)
-    - [Workflow inputs](#workflow-inputs)
+  - [Input/output](#inputoutput)
+    - [Inputs](#inputs)
       - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
       - [Input filetypes](#input-filetypes)
-    - [Workflow output](#workflow-output)
-  - [A super simple example](#a-super-simple-example)
+    - [Outputs](#outputs)
+- [A simple example](#a-simple-example)
+- [Using workflows: the `plantit` web UI](#using-workflows-the-plantit-web-ui)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -231,7 +231,7 @@ output:
 
 To explore and run workflows deployed to `plantit`, navigate to the <i class="fas fa-stream fa-1x fa-fw"></i> **Workflows** tab from the home view.
 
-![Task Lifecycle](../media/workflows.jpg)
+![Workflows](../media/workflows.png)
 
 By default, this page will display the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** workflow context: a curated set of applications provided by the Computational Plant Science lab, collaborators, and other researchers. 
 
@@ -241,6 +241,6 @@ Click the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** dropdown t
 - <i class="fas fa-users fa-1x fa-fw"></i> **Public**: all publicly available workflows
 - <i class="fas fa-user fa-1x fa-fw"></i> **Yours**: your own workflows (private and public)
 - <i class="fas fa-building fa-1x fa-fw"></i> **[Organization]**: workflows belonging to a particular organization
-- - <i class="fas fa-sprout fa-1x fa-fw"></i> **[Project]**: workflows associated with a particular MIAPPE project
+- <i class="fas fa-sprout fa-1x fa-fw"></i> **[Project]**: workflows associated with a particular MIAPPE project
 
 The `plantit` web application scrapes GitHub for repository information for all logged-in users every 5 minutes. (If you've just updated a repository, you may need to wait several minutes then reload the workflow page.)
