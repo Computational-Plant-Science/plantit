@@ -17,6 +17,6 @@
 
 The `plantit` stack is predominantly Python. The backend is Nginx, Gunicorn, Django + Channels, Celery, Redis, & Postgres, orchestrated with Docker Compose. The frontend is Vue.
 
-![Architecture](../media/plantit.jpg)
+![Architecture](../../media/plantit.jpg)
 
 Feel free to [reach out](mailto:wbonelli@uga.edu) if you'd like to contribute to `plantit` development, start your own instance of `plantit` somewhere, modify it for another discipline, etc.

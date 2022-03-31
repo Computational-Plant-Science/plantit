@@ -34,14 +34,6 @@ high-throughput phenotyping in the browser
 
 .. toctree::
    :maxdepth: 3
-   :caption: Tutorials
-
-   md/tutorials/hello_world.md
-   md/tutorials/parameters.md
-   md/tutorials/data.md
-
-.. toctree::
-   :maxdepth: 3
    :caption: Developers
 
    md/developers/examples.md

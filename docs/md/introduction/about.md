@@ -17,7 +17,7 @@
 - *SaaS*: store, publish, and access data with CyVerse, run (possibly highly parallel) simulations and analyses from a browser
 - *Paas*: built on GitHub and Docker, add a `plantit.yaml` file to GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers
 
-![](../media/p1.png)
+![What it is](../../media/p1.png)
 
 ## What isn't it?
 
@@ -29,7 +29,7 @@
 - a container automation system (e.g., [Kubernetes](https://kubernetes.io/))
 - a cluster scheduler (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
 
-![](../media/p2.png)
+![What it's not](../../media/p2.png)
 
 ## What can I use it for?
 
