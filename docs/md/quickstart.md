@@ -78,7 +78,7 @@ Select a workflow to view its authorship, related publications, parameter list, 
 
 ### Submitting a task
 
-![Submission](../media/workflow_info.png)
+![Task information](../media/workflow_info.png)
 
 To configure and submit a task for the workflow you've selected, click <i class="fas fa-terminal fa-1x fa-fw"></i> **Submit**. This will present some configuration options including (at least):
 
@@ -90,7 +90,7 @@ To configure and submit a task for the workflow you've selected, click <i class=
 
 If the workflow requires input files or parameters, corresponding configuration sections will be shown.
 
-![Submission](../media/workflow_submit.png)
+![Task submission](../media/workflow_submit.png)
 
 After all fields have been configured, click the <i class="fas fa-angle-right fa-1x fa-fw"></i> **Start** button to submit the task.
 
@@ -98,18 +98,18 @@ After all fields have been configured, click the <i class="fas fa-angle-right fa
 
 After a moment the task page will appear. At first there may be no log messages.
 
-![Task](../media/task_created.png)
+![Task status: `CREATED`](../media/task_created.png)
 
 Before long the task should be created, scheduled, and started on the appropriate agent. At this point you should see a few lines of log output:
 
-![Task](../media/task_running.png)
+![Task status: `RUNNING`](../media/task_running.png)
 
 When a task completes successfully, the status will change from `RUNNING` to `COMPLETED`.
 
-![Task](../media/task_completed.png)
+![Task status: `COMPLETED`](../media/task_completed.png)
 
 ### Retrieving results
 
 The output folder in the CyVerse data store section will eventually open at the bottom of the view (you may need to reload the page). Results will be zipped into a file with name matching the task's ID.
 
-![Task](../media/task_results.png)
+![Task results](../media/task_results.png)
