@@ -15,5 +15,6 @@ plantit: high-throughput phenotyping in the browser
    md/architecture.md
    md/workflows.md
    md/datasets.md
+   md/agents.md
    md/tasks.md
    md/projects.md
