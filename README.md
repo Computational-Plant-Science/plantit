@@ -330,3 +330,11 @@ On many clusters it is customary to configure dependencies on a per-user basis w
 #### Authenticating with Docker
 
 Docker Hub applies rate limits to unauthenticated users. These are easy to meet or exceed, since Singularity queries the Docker API on each `singularity exec docker://<some container>`. It is recommended to use `singularity remote login --username <your Docker username> docker://docker.io` with a paid Docker account: this will cache your Docker credentials on the deployment target for Singularity to use thereafter.
+
+### Building the documentation
+
+To build the `sphinx` documentation locally, use:
+
+```shell
+docker run -v $(pwd):/opt/dev -w /opt/dev computationalplantscience/plantit sphinx-build -b html docs docs_output
+```
