@@ -22,7 +22,7 @@
     - [Walltime](#walltime)
     - [Virtual memory](#virtual-memory)
 - [A simple example](#a-simple-example)
-- [Using workflows: the `plantit` web UI](#using-workflows-the-plantit-web-ui)
+- [Repository refresh rate](#repository-refresh-rate)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -247,20 +247,6 @@ output:
       - cowsaid.txt
 ```
 
-## Using workflows: the `plantit` web UI
-
-To explore and run workflows deployed to `plantit`, navigate to the <i class="fas fa-stream fa-1x fa-fw"></i> **Workflows** tab from the home view.
-
-![Workflows](../media/workflows.png)
-
-By default, this page will display the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** workflow context: a curated set of applications provided by the Computational Plant Science lab, collaborators, and other researchers. 
-
-Click the <i class="fas fa-certificate fa-1x fa-fw"></i> **Featured** dropdown to select a different context. Options include:
-
-- <i class="fas fa-pin fa-1x fa-fw"></i> **Examples**: a small set of simple workflows to serve as templates and examples
-- <i class="fas fa-users fa-1x fa-fw"></i> **Public**: all publicly available workflows
-- <i class="fas fa-user fa-1x fa-fw"></i> **Yours**: your own workflows (private and public)
-- <i class="fas fa-building fa-1x fa-fw"></i> **[Organization]**: workflows belonging to a particular organization
-- <i class="fas fa-sprout fa-1x fa-fw"></i> **[Project]**: workflows associated with a particular MIAPPE project
+## Repository refresh rate
 
 The `plantit` web application scrapes GitHub for repository information for all logged-in users every 5 minutes. (If you've just updated a repository, you may need to wait several minutes then reload the workflow page.)
