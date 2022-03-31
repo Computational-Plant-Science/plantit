@@ -45,6 +45,7 @@ high-throughput phenotyping in the browser
   - [Configuring deployment targets](#configuring-deployment-targets)
     - [Agent requirements](#agent-requirements)
     - [Authenticating with Docker](#authenticating-with-docker)
+  - [Building the documentation](#building-the-documentation)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
