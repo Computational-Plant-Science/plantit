@@ -24,20 +24,20 @@ Below is a list of handy commands for managing the `plantit` application.
 
 ### Docker Compose
 
-`docker-compose -f docker-compose.dev.yml up`: bring the full application (all containers) up
-`docker-compose -f docker-compose.dev.yml down`: bring the full application (all containers) down
-`docker-compose -f docker-compose.dev.yml run plantit <command>` run a command in the `plantit` container (starting containers as needed)
-`docker-compose -f docker-compose.dev.yml exec plantit <command>` run a command in the `plantit` container (assumes all containers are up)
+- `docker-compose -f docker-compose.dev.yml up`: bring the full application (all containers) up
+- `docker-compose -f docker-compose.dev.yml down`: bring the full application (all containers) down
+- `docker-compose -f docker-compose.dev.yml run plantit <command>` run a command in the `plantit` container (starting containers as needed)
+- `docker-compose -f docker-compose.dev.yml exec plantit <command>` run a command in the `plantit` container (assumes all containers are up)
 
 ### Docker
 
-`docker ps`: list running containers
-`docker exec -it <container ID> bash`:  enter an already running container
+- `docker ps`: list running containers
+- `docker exec -it <container ID> bash`:  enter an already running container
 
 ### Django
 
-`./manage.py`: list Django commands
-`./manage.py makemigrations`: create plan for django migrations
-`./manage.py migrate`: run django migrations
-`./manage.py shell`: opens Django Python interpreter
+- `./manage.py`: list Django commands
+- `./manage.py makemigrations`: create plan for django migrations
+- `./manage.py migrate`: run django migrations
+- `./manage.py shell`: opens Django Python interpreter
 
