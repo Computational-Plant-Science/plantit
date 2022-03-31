@@ -3,24 +3,47 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-HPC/HTC phenotyping in the browser
+high-throughput phenotyping in the browser
 ==========================
 
 .. toctree::
    :maxdepth: 3
-   :caption: Overview
+   :caption: Introduction
 
-   md/about.md
-   md/quickstart.md
-   md/architecture.md
-   md/examples.md
+   md/introduction/about.md
+   md/introduction/quickstart.md
 
 .. toctree::
    :maxdepth: 3
-   :caption: Model
+   :caption: Concepts
 
-   md/workflows.md
-   md/datasets.md
-   md/agents.md
-   md/tasks.md
-   md/projects.md
+   md/concepts/workflows.md
+   md/concepts/datasets.md
+   md/concepts/agents.md
+   md/concepts/tasks.md
+   md/concepts/projects.md
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Use Cases
+
+   md/use_cases/dirt.md
+   md/use_cases/dirt3d.md
+   md/use_cases/dirtmu.md
+   md/use_cases/smart.md
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Tutorials
+
+   md/tutorials/hello_world.md
+   md/tutorials/parameters.md
+   md/tutorials/data.md
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Developers
+
+   md/developers/examples.md
+   md/developers/architecture.md
+   md/developers/contributions.md
