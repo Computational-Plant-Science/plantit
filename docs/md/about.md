@@ -1,16 +1,16 @@
-# What is `plantit`?
+# About
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-<!--
-- [PlantIT is...](#plantit-is)
-- [PlantIT is not...](#plantit-is-not)
+- [What is it?](#what-is-it)
+- [What isn't it?](#what-isnt-it)
 - [What can I use it for?](#what-can-i-use-it-for)
--->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## What is it?
 
 `plantit` is a workflow automation tool for computational plant science. It is simultaneously *software-as-a-service* for researchers and a *platform-as-a-service* for programmers & developers.
 
@@ -18,6 +18,8 @@
 - *Paas*: built on GitHub and Docker, add a `plantit.yaml` file to GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers
 
 ![](../media/p1.png)
+
+## What isn't it?
 
 `plantit` is none of the following (although it tries to glue these systems together in helpful ways).
 
@@ -28,5 +30,7 @@
 - a cluster scheduler (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
 
 ![](../media/p2.png)
+
+## What can I use it for?
 
 PlantIT is flexible enough to run most container-friendly workloads, but if you want to do genomics, an established tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit. Feel free to [get in touch](https://github.com/Computational-Plant-Science/plantit/discussions) with questions about your use case.

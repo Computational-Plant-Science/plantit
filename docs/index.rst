@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-plantit: high-throughput phenotyping in the browser
-===================================
+phenotyping in the browser
+==========================
 
 .. toctree::
    :maxdepth: 3
@@ -17,7 +17,7 @@ plantit: high-throughput phenotyping in the browser
 
 .. toctree::
    :maxdepth: 3
-   :caption: Conceptual Model
+   :caption: Model
 
    md/workflows.md
    md/datasets.md
