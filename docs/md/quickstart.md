@@ -28,12 +28,16 @@ A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a set of data objec
 
 ### Datasets
 
-A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a collection of data objects in the CyVerse data store. 
+A <i class="fas fa-database fa-1x fa-fw"></i> [**Dataset**](datasets.md) is a collection of data objects in the CyVerse data store. 
+
+### Agents
+
+An <i class="fas fa-server fa-1x fa-fw"></i> [**Agent**](agents.md) is a deployment target: an abstraction of a cluster or supercomputer along with SLURM scheduler configuration details.
 
 ### Workflows
 
-A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](workflows.md).
+A <i class="fas fa-stream fa-1x fa-fw"></i> [**Workflow**](workflows.md) is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](workflows.md).
 
 ### Tasks
 
-A <i class="fas fa-tasks fa-1x fa-fw"></i> **Task** is a single instance of a workflow. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is a simple state machine strung together from Celery tasks.
+A <i class="fas fa-tasks fa-1x fa-fw"></i> [**Task**](tasks.md) is an instance of a workflow, deployed to an agent. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is a simple state machine strung together from Celery tasks.

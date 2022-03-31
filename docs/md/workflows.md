@@ -53,7 +53,9 @@ There are a number of optional properties and sections as well:
 - `gpu`: whether this workflow should use GPUs (if available)
 - `env`: environment variables to provide to your container runtime(s)
 - `params`: parameters to be configured at submission time in the `plantit` web UI
-- 
+- `input`: the kind, names, patterns, and optionally, the default path of any inputs to the workflow
+- `output`: the kind, names and patterns of results expected from the workflow
+- `jobqueue`: the resources to request from the cluster scheduler
 
 ### Contact email
 
