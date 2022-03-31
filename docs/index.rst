@@ -8,11 +8,17 @@ plantit: high-throughput phenotyping in the browser
 
 .. toctree::
    :maxdepth: 3
-   :caption: Table of Contents
+   :caption: Overview
 
    md/about.md
    md/quickstart.md
    md/architecture.md
+   md/examples.md
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Conceptual Model
+
    md/workflows.md
    md/datasets.md
    md/agents.md
