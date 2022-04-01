@@ -15,16 +15,40 @@ A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a folder in the CyV
 
 ## Viewing data
 
-TODO
+To view datasets, navigate to the <i class="fas fa-database fa-1x fa-fw"></i> **Datasets** tab from the home view. This will present a page with three (3) tabs:
+
+- `Yours`: your own personal datasets
+- `Shared`: datasets other users have shared with you
+- `Sharing`: datasets you're sharing with other users
+
+![Expand folder](../../media/personal_data.png)
+
+To expand a folder in the data tree, click the caret button on the right side of the frame.
+
+![Expand folder](../../media/expand_data.png)
 
 ## Downloading data
 
-TODO
+To download a file from the CyVerse data store, click the download button on the right side of the menu.
+
+![Download file](../../media/download_data.png)
+
+The data tree will disable itself while the file downloads.
+
+![Download file](../../media/downloading_data.png)
+
+Finally a download popup will appear.
 
 ## Sharing data
 
-TODO
+To share a folder with another user, select the share button on the right side of the menu, then select one or more users to share the folder with.
+
+![Share folder](../../media/share_data.png)
+
+After sharing a folder, the receiving user will be able to access it under their `Shared` datasets tab.
 
 ## Deleting data
 
-TODO
+To delete a personal file or folder in the data store, select the red delete button on the right side of the menu.
+
+![Delete data](../../media/delete_data.png)

@@ -4,6 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [Running workflows](#running-workflows)
 - [Binding workflows: the `plantit.yaml` file](#binding-workflows-the-plantityaml-file)
   - [Required attributes](#required-attributes)
   - [Optional sections](#optional-sections)
@@ -27,6 +28,10 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is a unit of work wrapped into a container for execution in a SLURM cluster environment.
+
+## Running workflows
+
+For a tutorial on exploring and submitting `plantit` workflows, see the [quickstart](../introduction/quickstart.md).
 
 ## Binding workflows: the `plantit.yaml` file
 

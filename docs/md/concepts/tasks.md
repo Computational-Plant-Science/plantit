@@ -13,7 +13,7 @@ A <i class="fas fa-tasks fa-1x fa-fw"></i> **Task** is a single instance of a wo
 
 ## Task monitoring
 
-TODO
+For a tutorial on monitoring a task and retrieving results, see the [quickstart](../introduction/quickstart.md).
 
 ## Task lifecycle
 
