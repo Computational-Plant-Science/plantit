@@ -20,7 +20,7 @@
 
 ![Developers](../../media/p2.png)
 
-**Paas for developers**: built on GitHub and Docker, add a `plantit.yaml` file to GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers.
+**Paas for developers**: built on GitHub and Docker, add a `plantit.yaml` file to any public GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers.
 
 ## What isn't it?
 
