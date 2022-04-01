@@ -14,13 +14,13 @@
 
 `plantit` is a workflow automation tool for computational plant science. It is simultaneously *software-as-a-service* for researchers and a *platform-as-a-service* for programmers & developers.
 
-- *SaaS*: store, publish, and access data with CyVerse, run (possibly highly parallel) simulations and analyses from a browser
+![Researchers](../../media/p1.png)
 
-![For researchers](../../media/p1.png)
+**SaaS for researchers**: store, publish, and access data with CyVerse, run (possibly highly parallel) simulations and analyses from a browser.
 
-- *Paas*: built on GitHub and Docker, add a `plantit.yaml` file to GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers
+![Developers](../../media/p2.png)
 
-![For developers](../../media/p2.png)
+**Paas for developers**: built on GitHub and Docker, add a `plantit.yaml` file to GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers.
 
 ## What isn't it?
 
