@@ -17,6 +17,6 @@ TODO
 
 ## Task lifecycle
 
-![Task Lifecycle](../media/lifecycle.jpg)
+![Task Lifecycle](../../media/lifecycle.jpg)
 
 When a task successfully completes, results are automatically transferred to the selected location in the CyVerse data store. The user is then shown results produced and may download them from the browser individually or bundled into a single archive.
