@@ -3,32 +3,39 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PlantIT's documentation!
-===================================
+high-throughput phenotyping in the browser
+==========================
 
 .. toctree::
    :maxdepth: 3
-   :caption: About
+   :caption: Introduction
 
-   md/about.md
-   md/architecture.md
-
-.. toctree::
-   :maxdepth: 3
-   :caption: User Guide
-
-   md/user_guide/user_quickstart.md
-   md/user_guide/running_workflows.md
+   md/introduction/about.md
+   md/introduction/quickstart.md
 
 .. toctree::
    :maxdepth: 3
-   :caption: Developer Docs
+   :caption: Concepts
 
-   md/developer_docs/developer_quickstart.md
-   md/developer_docs/defining_workflows.md
+   md/concepts/workflows.md
+   md/concepts/datasets.md
+   md/concepts/agents.md
+   md/concepts/tasks.md
+   md/concepts/projects.md
 
+.. toctree::
+   :maxdepth: 3
+   :caption: Use Cases
 
-Indices and tables
-==================
+   md/use_cases/dirt.md
+   md/use_cases/dirt3d.md
+   md/use_cases/dirtmu.md
+   md/use_cases/smart.md
 
-* :ref:`search`
+.. toctree::
+   :maxdepth: 3
+   :caption: Developers
+
+   md/developers/examples.md
+   md/developers/architecture.md
+   md/developers/contributions.md

@@ -1,70 +1,80 @@
+# <i class="fas fa-stream fa-1x fa-fw"></i> **Workflows**
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Defining Workflows](#defining-workflows)
-  - [The `plantit.yaml` file](#the-plantityaml-file)
-    - [Jobqueue deployment targets](#jobqueue-deployment-targets)
-      - [Walltime](#walltime)
-      - [Virtual memory](#virtual-memory)
-      - [Default resource requests](#default-resource-requests)
-    - [GPU mode](#gpu-mode)
-    - [Parameters](#parameters)
-      - [Default parameter values](#default-parameter-values)
-    - [Shell selection](#shell-selection)
-    - [Workflow input/output](#workflow-inputoutput)
-      - [Workflow inputs](#workflow-inputs)
-        - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
-        - [Input filetypes](#input-filetypes)
-      - [Workflow output](#workflow-output)
-    - [A super simple example](#a-super-simple-example)
+
+- [Running workflows](#running-workflows)
+- [Binding workflows: the `plantit.yaml` file](#binding-workflows-the-plantityaml-file)
+  - [Required attributes](#required-attributes)
+  - [Optional sections](#optional-sections)
+  - [Contact email](#contact-email)
+  - [Shell selection](#shell-selection)
+  - [GPU mode](#gpu-mode)
+  - [Environment variables](#environment-variables)
+  - [Parameters](#parameters)
+    - [Default values](#default-values)
+  - [Input/output](#inputoutput)
+    - [Inputs](#inputs)
+      - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
+      - [Input filetypes](#input-filetypes)
+    - [Outputs](#outputs)
+  - [Jobqueue configuration](#jobqueue-configuration)
+    - [Walltime](#walltime)
+    - [Virtual memory](#virtual-memory)
+- [A simple example](#a-simple-example)
+- [Repository refresh rate](#repository-refresh-rate)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Defining Workflows
+A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is a unit of work wrapped into a container for execution in a SLURM cluster environment.
 
-## The `plantit.yaml` file
+## Running workflows
 
-To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
+For a tutorial on exploring and submitting `plantit` workflows, see the [quickstart](../introduction/quickstart.md).
 
-```yaml
-name: Hello Groot             # (optional but encouraged)
-author: Groot                 # (optional but encouraged)
-public: True                  # visible to other users of PlantIT? (required)
-image: docker://alpine        # Docker image to use (required)
-commands: echo "I am Groot!"  # your entry point (required)
-```
+## Binding workflows: the `plantit.yaml` file
 
-Certain environment variables will be configured in the Singularity container runtime, in case you need to reference them in your startup command. These are:
+To host a <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** on `plantit`, add a `plantit.yaml` file to some branch in any public GitHub repository.
 
-- WORKDIR: the current working directory
-- INPUT: the path to an input file or directory
-- OUTPUT: the path to the directory results will be written to
-- INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+### Required attributes
 
-### Jobqueue deployment targets
-
-To make sure your workflow can take full advantage of cluster resources, add a `jobqueue` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1 GB of memory for 1 hour:
+At minimum, the `plantit.yaml` file should look something like this:
 
 ```yaml
-jobqueue:
-  walltime: "01:00:00"
-  memory: "1GB"
-  processes: 1
-  cores: 1
+name: Hello Groot             
+author: Groot                
+public: True                  # visible to other users of PlantIT?
+image: docker://alpine        # Docker image to use
+commands: echo "I am Groot!"  # your entry point
 ```
 
-#### Walltime
+### Optional sections
 
-When a `plantit` task is submitted, values provided for the `jobqueue.walltime` attribute will be passed through transparently to the selected deployment target's scheduler. The `plantit` web UI will timestamp each task submission,  If such a time limit is provided at submission time, `plantit` will attempt to cancel your task if it fails to complete before the time limit has elapsed.
+There are a number of optional properties and sections as well:
 
-#### Virtual memory
+- `email`: your (the workflow developer's) preferred email address, e.g. for support/questions
+- `shell`: the shell to use to invoke your entry point ('sh', 'bash', or 'zsh')
+- `gpu`: whether this workflow should use GPUs (if available)
+- `env`: environment variables to provide to your container runtime(s)
+- `params`: parameters to be configured at submission time in the `plantit` web UI
+- `input`: the kind, names, patterns, and optionally, the default path of any inputs to the workflow
+- `output`: the kind, names and patterns of results expected from the workflow
+- `jobqueue`: the resources to request from the cluster scheduler
 
-Note that some deployment targets (namely the default public agent, [TACC's Stampede2](https://www.tacc.utexas.edu/systems/stampede2)) are equipped with virtual memory. For tasks deployed to agents with virtual memory, `plantit` will ignore values provided for the `jobqueue.memory` attribute and defer to the cluster scheduler: on Stampede2, for instance, all tasks have access to 98GB of RAM.
+### Contact email
 
-#### Default resource requests
+You can provide a contact email via an `email` attribute. If this attribute is provided, a `mailto` link will be shown in the user interface to allow your workflow's users to easily contact you.
 
-If you do not provide a `jobqueue` section in your `plantit.yaml`, tasks deployed to any agent will request 1 hour of walltime, 10 GB of RAM, 1 process, and 1 core.
+### Shell selection
+
+By default, the `command` specified in `plantit.yaml` is invoked directly from the Singularity container runtime, i.e., `singularity exec <image> <command>`. Since [Singularity runs in a modified shell environment](https://stackoverflow.com/a/56490063) some behavior may differ from that produced by Docker. Some Anaconda-based images can be configured to automatically activate an environment, for instance. With Singularity this cannot be achieved without wrapping the `command` with `bash -c '<command>'` and [editing bash startup files in the container definition](https://stackoverflow.com/a/57441264).
+
+For these reasons `plantit` provides a `shell` option. If provided, this option will cause `plantit` to wrap the `command` with `... <shell> -c 'command'` when invoking Singularity. Supported values include:
+
+- `bash`
+- `sh`
+- `zsh`
 
 ### GPU mode
 
@@ -72,7 +82,14 @@ To indicate that your workflow can take advantage of GPUs (only available on sel
 
 ### Environment variables
 
-You can provide runtime environment variables in an `env` section, for instance:
+Certain environment variables will be automatically set in the Singularity container runtime when a workflow is submitted as a task, in case you need to reference them in your entry point command or script:
+
+- WORKDIR: the current working directory
+- INPUT: the path to an input file or directory
+- OUTPUT: the path to the directory results will be written to
+- INDEX: the index of the current input file (if there are multiple, otherwise defaults to 1 for single-file or -directory tasks)
+
+You can provide custom environment variables in an `env` section, for instance:
 
 ```yaml
 ...
@@ -109,7 +126,7 @@ Four parameter types are supported by `plantit`:
 
 See the `Computational-Plant-Science/plantit-example-parameters` workflow [on GitHub](https://github.com/Computational-Plant-Science/plantit-example-parameters/blob/master/plantit.yaml) for an example of how to use parameters.
 
-#### Default parameter values
+#### Default values
 
 To provide default values for your workflow's parameters, you can use a `default` attribute. For instance:
 
@@ -120,21 +137,11 @@ params:
    default: 'Hello, world!'
 ```
 
-### Shell selection
-
-By default, the `command` specified in `plantit.yaml` is invoked directly from the Singularity container runtime, i.e., `singularity exec <image> <command>`. Since [Singularity runs in a modified shell environment](https://stackoverflow.com/a/56490063) some behavior may differ from that produced by Docker. Some Anaconda-based images can be configured to automatically activate an environment, for instance. With Singularity this cannot be achieved without wrapping the `command` with `bash -c '<command>'` and [editing bash startup files in the container definition](https://stackoverflow.com/a/57441264).
-
-For these reasons `plantit` provides a `shell` option. If provided, this option will cause `plantit` to wrap the `command` with `... <shell> -c 'command'` when invoking Singularity. Supported values include:
-
-- `bash`
-- `sh`
-- `zsh`
-
-### Workflow input/output
+### Input/output
 
 `plantit` can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) or [Data Commons](https://cyverse.org/data-commons) onto the file system in your deployment environment, then push results back to the Data Store after your task completes. To configure inputs and outputs for a workflow, add `input` and `output` attributes to your configuration.
 
-#### Workflow inputs
+#### Inputs
 
 If your workflow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this workflow operates on a single `file`, multiple `files`, or an entire `directory`.
 
@@ -176,7 +183,7 @@ input:
 
 *Note that while the `input.path` and `input.filetypes` attributes are optional, you must provide a `kind` attribute if you provide an `input` section.*
 
-#### Workflow output
+#### Outputs
 
 If your workflow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your workflow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your workflow will deposit output files in a directory `output/directory` relative to the workflow's working directory:
 
@@ -204,7 +211,29 @@ output:
 
 If only an `include` section is provided, only the file patterns and names specified will be included. If only an `exclude` section is present, all files except the patterns and names specified will be included. If you provide both `include` and `exclude` sections, the `include` rules will first be applied to generate a subset of files, which will then be filtered by the `exclude` rules.
 
-### A super simple example
+### Jobqueue configuration
+
+To ensure your workflow takes optimal advantage of cluster resources, add a `jobqueue` section. To indicate that instances of your workflow should request 1 process and 1 core on 1 node with 1 GB of memory with 1 hour of walltime:
+
+```yaml
+jobqueue:
+  walltime: "01:00:00"
+  memory: "1GB"
+  processes: 1
+  cores: 1
+```
+
+If a `jobqueue` section is provided, all four attributes are required.  If you do not provide a `jobqueue` section`, tasks will request 1 hour of walltime, 10 GB of RAM, 1 process, and 1 core on all agents.
+
+#### Walltime
+
+When a `plantit` task is submitted, values provided for the `jobqueue.walltime` attribute will be passed through transparently to the selected deployment target's scheduler. The `plantit` web UI will timestamp each task submission,  If such a time limit is provided at submission time, `plantit` will attempt to cancel your task if it fails to complete before the time limit has elapsed.
+
+#### Virtual memory
+
+Note that some deployment targets (namely the default public agent, [TACC's Stampede2](https://www.tacc.utexas.edu/systems/stampede2)) are equipped with virtual memory. For tasks deployed to agents with virtual memory, `plantit` will ignore values provided for the `jobqueue.memory` attribute and defer to the cluster scheduler: on Stampede2, for instance, all tasks have access to 98GB of RAM.
+
+## A simple example
 
 The following workflow prints the content of an input file and then writes it to an output file located in the same working directory.
 
@@ -222,3 +251,7 @@ output:
     names:                              
       - cowsaid.txt
 ```
+
+## Repository refresh rate
+
+The `plantit` web application scrapes GitHub for repository information for all logged-in users every 5 minutes. (If you've just updated a repository, you may need to wait several minutes then reload the workflow page.)

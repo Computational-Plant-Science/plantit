@@ -84,6 +84,12 @@ async def refresh_user_workflow_cache(github_username: str):
     old_keys = [key.decode('utf-8') for key in redis.scan_iter(match=f"workflows/{github_username}/*")]
     new_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
     for old_key in old_keys:
+        # invalidate submission config cache
+        config_key = f"workflow_configs/{user.username}/{old_key.partition('/')[2]}"
+        if redis.exists(config_key):
+            logger.info(f"Removing cached workflow configuration {config_key}")
+            redis.delete(config_key)
+
         if old_key not in new_keys:
             logger.debug(f"Removing user workflow {old_key}")
             removed += 1

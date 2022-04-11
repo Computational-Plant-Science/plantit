@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'plantit'
-copyright = '2021, Computational Plant Science Lab'
+copyright = '2022, Computational Plant Science Lab'
 author = 'Computational Plant Science Lab'
 
 # The full version, including alpha/beta/rc tags
@@ -51,7 +51,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'furo'
 html_title = 'plantit'
 
 # Add any paths that contain custom static files (such as style sheets) here,

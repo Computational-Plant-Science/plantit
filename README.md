@@ -32,10 +32,9 @@ high-throughput phenotyping in the browser
     - [Browser submissions](#browser-submissions)
     - [Easy integration](#easy-integration)
     - [Portable workflows](#portable-workflows)
-    - [Share at your pace](#share-at-your-pace)
+    - [Share & collaborate](#share--collaborate)
     - [Metadata & annotation](#metadata--annotation)
 - [Development](#development)
-  - [Architecture](#architecture)
   - [Requirements](#requirements)
   - [Installation](#installation)
     - [Setting up a development environment](#setting-up-a-development-environment)
@@ -44,8 +43,9 @@ high-throughput phenotyping in the browser
       - [SSL Certificates](#ssl-certificates)
   - [Configuring environment variables](#configuring-environment-variables)
   - [Configuring deployment targets](#configuring-deployment-targets)
-    - [Python](#python)
-    - [Admin site](#admin-site)
+    - [Agent requirements](#agent-requirements)
+    - [Authenticating with Docker](#authenticating-with-docker)
+  - [Building the documentation](#building-the-documentation)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -73,7 +73,7 @@ In a sentence: `plantit` runs phenomics container workflows in high-throughput c
 
 #### Browser submissions
 
-Choose which workflow to apply to which data, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
+Choose a workflow and dataset, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
 
 #### Easy integration
 
@@ -94,15 +94,6 @@ Contextualize datasets according to the emerging [MIAPPE](https://www.miappe.org
 ## Development
 
 Read on if you're interested in contributing to `plantit` or hosting your own instance somewhere.
-
-### Architecture
-
-An instantiation of a `plantit` workflow is called a *task*. When a task is submitted from the browser client, the `plantit` web app hands it to an internal queue feeding a background worker. When the worker picks up the task, a job script is generated and submitted to the selected cluster/supercomputer scheduler. The task lifecycle is essentially just a chain of callbacks, some of which trigger state transitions.
-
-Architecture | Task Lifecycle    |            Task Detail             |
-|:---------:|:----------------------------:|:-------------------------------------:|
-![](docs/media/arch.jpg) |  ![](docs/media/cycle.jpg) | ![](docs/media/task.jpg) 
-
 
 ### Requirements
 
@@ -340,3 +331,11 @@ On many clusters it is customary to configure dependencies on a per-user basis w
 #### Authenticating with Docker
 
 Docker Hub applies rate limits to unauthenticated users. These are easy to meet or exceed, since Singularity queries the Docker API on each `singularity exec docker://<some container>`. It is recommended to use `singularity remote login --username <your Docker username> docker://docker.io` with a paid Docker account: this will cache your Docker credentials on the deployment target for Singularity to use thereafter.
+
+### Building the documentation
+
+To build the `sphinx` documentation locally, use:
+
+```shell
+docker run -v $(pwd):/opt/dev -w /opt/dev computationalplantscience/plantit sphinx-build -b html docs docs_output
+```
