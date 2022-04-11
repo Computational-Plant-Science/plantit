@@ -948,7 +948,7 @@ export default {
     },
     methods: {
         async loadProfile() {
-            this.$store.dispatch('user/setProfleLoading', true);
+            this.$store.dispatch('user/setProfileLoading', true);
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then((response) => {
