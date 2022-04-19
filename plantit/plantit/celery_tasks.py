@@ -15,6 +15,8 @@ import plantit.mapbox
 import plantit.queries as q
 import plantit.terrain as terrain
 import plantit.utils.agents
+from plantit.ssh import SSH
+from plantit.keypairs import get_user_private_key_path
 from plantit import settings
 from plantit.agents.models import Agent
 from plantit.celery import app
@@ -679,7 +681,7 @@ def tidy_up(guid: str):
         logger.error(f"Failed to clean up: {traceback.format_exc()}")
 
 
-# Miscellaneous Tasks #
+# Miscellaneous Tasks
 #
 # These should only run one at a time (i.e., should not overlap).
 # To prevent overlap we use the Django cache as a lock mechanism,
@@ -886,6 +888,41 @@ def agents_healthchecks():
             redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
     finally:
         __release_lock(task_name)
+
+
+# DIRT migration task
+
+@app.task(bind=True)
+def check_dirt_datasets(self, username: str):
+    try:
+        user = User.objects.get(username=username)
+    except:
+        logger.warning(f"Could not find user {username}")
+        self.request.callbacks = None
+        return
+
+    ssh = SSH(
+        host='tucco.cyverse.org',
+        port=1657,
+        username=settings.CYVERSE_USERNAME,
+        pkey=str(get_user_private_key_path(settings.CYVERSE_USERNAME)))
+
+    with ssh.client.open_sftp() as sftp:
+
+        # list the user's datasets on the DIRT server
+        user_dir = join(settings.DIRT_DATA_DIR, username, 'root-images')
+        datasets = [folder for folder in sftp.listdir(user_dir)]
+        new_line = '\n'
+        logger.info(f"User {username} has {len(datasets)} datasets:{new_line}{new_line.join(datasets)}")
+
+        # transfer all the user's datasets to the temporary staging directory on this server
+        for folder in datasets:
+            files = [f for f in sftp.listdir(join(user_dir, folder))]
+            logger.info(f"User {username} folder {folder} has {len(files)} datasets:{new_line}{new_line.join(files)}")
+
+            # TODO: download files
+            # for file in files:
+            #     sftp.get(file.filename, join(settings.DIRT_STAGING_DIR, file.filename))
 
 
 # see https://stackoverflow.com/a/41119054/6514033

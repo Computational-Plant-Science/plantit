@@ -63,6 +63,7 @@ services:
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
+      - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -165,6 +166,7 @@ services:
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
+      - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -236,6 +238,8 @@ services:
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
+      - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

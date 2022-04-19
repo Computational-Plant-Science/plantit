@@ -47,6 +47,8 @@ assert 'HTTP_TIMEOUT' in os.environ, f"{missing_variable} HTTP_TIMEOUT"
 assert 'STATS_WINDOW_WIDTH_DAYS' in os.environ, f"{missing_variable} STATS_WINDOW_WIDTH_DAYS"
 assert 'DOCKER_USERNAME' in os.environ, f"{missing_variable} DOCKER_USERNAME"
 assert 'DOCKER_PASSWORD' in os.environ, f"{missing_variable} DOCKER_PASSWORD"
+assert 'DIRT_DATA_DIR' in os.environ, f"{missing_variable} DIRT_DATA_DIR"
+assert 'DIRT_STAGING_DIR' in os.environ, f"{missing_variable} DIRT_STAGING_DIR"
 
 # global Celery task timeout
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
@@ -86,6 +88,8 @@ HTTP_TIMEOUT = os.environ.get("HTTP_TIMEOUT")
 STATS_WINDOW_WIDTH_DAYS = os.environ.get("STATS_WINDOW_WIDTH_DAYS")
 DOCKER_USERNAME = os.environ.get("DOCKER_USERNAME")
 DOCKER_PASSWORD = os.environ.get("DOCKER_PASSWORD")
+DIRT_STAGING_DIR = os.environ.get("DIRT_STAGING_DIR")
+DIRT_DATA_DIR = os.environ.get("DIRT_DATA_DIR")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
