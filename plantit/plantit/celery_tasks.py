@@ -18,6 +18,7 @@ import plantit.utils.agents
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
 from plantit import settings
+from plantit.users.models import Profile
 from plantit.agents.models import Agent
 from plantit.celery import app
 from plantit.healthchecks import is_healthy
@@ -896,6 +897,7 @@ def agents_healthchecks():
 def check_dirt_datasets(self, username: str):
     try:
         user = User.objects.get(username=username)
+        profile = Profile.objects.get(user=user)
     except:
         logger.warning(f"Could not find user {username}")
         self.request.callbacks = None
@@ -920,9 +922,24 @@ def check_dirt_datasets(self, username: str):
             files = [f for f in sftp.listdir(join(user_dir, folder))]
             logger.info(f"User {username} folder {folder} has {len(files)} datasets:{new_line}{new_line.join(files)}")
 
-            # TODO: download files
-            # for file in files:
-            #     sftp.get(file.filename, join(settings.DIRT_STAGING_DIR, file.filename))
+            # download files
+            for file in files:
+                sftp.get(file.filename, join(settings.DIRT_STAGING_DIR, folder, file.filename))
+
+            # create collection in user's home data store directory
+
+            # upload all files to collection
+
+            # get ID of newly created collection
+
+            # mark collection as originating from DIRT
+
+            # send notification to user via email
+
+            # mark user's profile that DIRT transfer has been completed
+            profile.dirt_migrated = True
+            profile.save()
+            user.save()
 
 
 # see https://stackoverflow.com/a/41119054/6514033
