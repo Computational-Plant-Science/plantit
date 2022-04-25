@@ -39,8 +39,7 @@ def suggested_experimental_factors(request):
 def list_or_create(request):
     if request.method == 'GET':
         team = request.GET.get('team', None)
-        projects = [q.project_to_dict(project) for project in
-                    (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
+        projects = q.get_projects(team)
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
         body = request.data
@@ -57,7 +56,7 @@ def list_or_create(request):
 def list_by_owner(request, owner):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-    projects = [q.project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+    projects = q.get_user_projects(request.user)
     return JsonResponse({'projects': projects})
 
 

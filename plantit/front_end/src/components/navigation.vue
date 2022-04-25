@@ -797,7 +797,7 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
-import store from '@/store/store';
+import jwtDecode from 'jwt-decode';
 import { guid } from '@/utils';
 
 export default {
@@ -895,32 +895,11 @@ export default {
             return;
         }
 
-        // otherwise need to fetch user profile first to get tokens/etc for other API requests
-        // TODO: is this still necessary?
         await Promise.all([
-            store.dispatch('user/loadProfile'),
-            this.getVersion(),
+            this.loadVersion(),
+            this.loadProfile(),
+            this.loadDatasets(),
             this.loadMaintenanceWindows(),
-        ]);
-
-        // load the rest of the model
-        await Promise.all([
-            this.$store.dispatch('users/loadAll'),
-            this.$store.dispatch('tasks/loadAll'),
-            this.$store.dispatch('tasks/loadDelayed'),
-            this.$store.dispatch('tasks/loadRepeating'),
-            this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch('workflows/loadUser'),
-            this.$store.dispatch('workflows/loadOrg'),
-            this.$store.dispatch('workflows/loadProject'),
-            this.$store.dispatch('agents/loadAll'),
-            this.$store.dispatch('datasets/loadPublic'),
-            this.$store.dispatch('datasets/loadUser'),
-            this.$store.dispatch('datasets/loadShared'),
-            this.$store.dispatch('datasets/loadSharing'),
-            this.$store.dispatch('projects/loadUser'),
-            this.$store.dispatch('projects/loadOthers'),
         ]);
 
         // TODO move websockets to vuex
@@ -940,6 +919,152 @@ export default {
         },
     },
     methods: {
+        async loadProfile() {
+            await this.$store.dispatch('user/setProfileLoading', true);
+            await axios
+                .get(`/apis/v1/users/get_current/`)
+                .then((response) => {
+                    // determine whether user is logged into CyVerse
+                    let decoded = jwtDecode(
+                        response.data.django_profile.cyverse_token
+                    );
+                    let now = Math.floor(Date.now() / 1000);
+                    if (now > decoded.exp)
+                        this.$store.dispatch('user/setLoggedIn', false);
+                    else this.$store.dispatch('user/setLoggedIn', true);
+
+                    // determine whether user is logged into GitHub
+                    this.$store.dispatch(
+                        'user/setLoggedIntoGithub',
+                        response.data.github_profile !== undefined &&
+                            response.data.github_profile !== null
+                    );
+
+                    // load user profile info into Vuex
+                    this.$store.dispatch(
+                        'user/setDjangoProfile',
+                        response.data.django_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setCyverseProfile',
+                        response.data.cyverse_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setGithubProfile',
+                        response.data.github_profile
+                    );
+                    this.$store.dispatch(
+                        'user/setOrganizations',
+                        response.data.organizations
+                    );
+                    this.$store.dispatch(
+                        'user/setFirst',
+                        response.data.django_profile.first
+                    );
+                    this.$store.dispatch(
+                        'user/setDarkMode',
+                        response.data.django_profile.dark_mode
+                    );
+                    this.$store.dispatch(
+                        'user/setHints',
+                        response.data.django_profile.hints
+                    );
+                    this.$store.dispatch(
+                        'user/setPushNotifications',
+                        response.data.django_profile.push_notifications
+                    );
+                    this.$store.dispatch('user/setStats', response.data.stats);
+                    this.$store.dispatch(
+                        'user/setMaintenanceWindows',
+                        response.data.maintenance_windows
+                    );
+                    this.$store.dispatch('user/setProfileLoading', false);
+
+                    // load notifications into Vuex
+                    this.$store.dispatch(
+                        'notifications/setAll',
+                        response.data.notifications
+                    );
+                    this.$store.dispatch('notifications/setLoading', false);
+
+                    // load other users into Vuex
+                    this.$store.dispatch('users/setAll', response.data.users);
+                    this.$store.dispatch('users/setLoading', false);
+
+                    // load tasks into Vuex
+                    this.$store.dispatch(
+                        'tasks/setAll',
+                        response.data.tasks.tasks
+                    );
+                    this.$store.dispatch(
+                        'tasks/setDelayed',
+                        response.data.delayed_tasks
+                    );
+                    this.$store.dispatch(
+                        'tasks/setRepeating',
+                        response.data.repeating_tasks
+                    );
+                    this.$store.dispatch('tasks/setLoading', false);
+
+                    // load workflows into Vuex
+                    this.$store.dispatch(
+                        'workflows/setPublic',
+                        response.data.workflows.public
+                    );
+                    this.$store.dispatch(
+                        'workflows/setUser',
+                        response.data.workflows.user
+                    );
+                    this.$store.dispatch(
+                        'workflows/setOrg',
+                        response.data.workflows.org
+                    );
+                    this.$store.dispatch(
+                        'workflows/loadProject',
+                        response.data.workflows.project
+                    );
+                    this.$store.dispatch('workflows/setPublicLoading', false);
+                    this.$store.dispatch('workflows/setUserLoading', false);
+                    this.$store.dispatch('workflows/setOrgLoading', false);
+                    this.$store.dispatch('workflows/setProjectLoading', false);
+
+                    // load agents into Vuex
+                    this.$store.dispatch('agents/setAll', response.data.agents);
+                    this.$store.dispatch('agents/setLoading', false);
+
+                    // load projects into Vuex
+                    this.$store.dispatch(
+                        'projects/setUser',
+                        response.data.projects
+                    );
+                    this.$store.dispatch(
+                        'projects/setOthers',
+                        response.data.projects
+                    );
+                    this.$store.dispatch('projects/setLoading', false);
+                })
+                .catch((error) => {
+                    this.$store.dispatch('user/setProfileLoading', false);
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                    else if (
+                        error.response.status === 401 ||
+                        error.response.status === 403
+                    ) {
+                        // if we get a 401 or 403, log the user out
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
+                });
+        },
+        async loadDatasets() {
+            await Promise.all([
+                this.$store.dispatch('datasets/loadPublic'),
+                this.$store.dispatch('datasets/loadUser'),
+                this.$store.dispatch('datasets/loadShared'),
+                this.$store.dispatch('datasets/loadSharing'),
+            ]);
+        },
         async loadMaintenanceWindows() {
             await axios
                 .get('/apis/v1/misc/maintenance/')
@@ -1017,7 +1142,7 @@ export default {
         brandLeave() {
             this.titleContent = 'brand';
         },
-        async getVersion() {
+        async loadVersion() {
             await axios({
                 method: 'get',
                 url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
@@ -1090,7 +1215,7 @@ export default {
         },
         getTaskStatus(task) {
             if (!task.is_complete) {
-                if (task().job_status === null)
+                if (task.job_status === null)
                     return task.status.toUpperCase();
                 else return task.job_status.toUpperCase();
             }
@@ -1153,19 +1278,17 @@ export default {
 @import '../scss/main.sass'
 @import '../scss/_colors.sass'
 
-
-
 .not-found
     color: $red
     border: 2px solid $red
     -webkit-transform: rotate(180deg)
-        transform: rotate(180deg)
+    transform: rotate(180deg)
 
 .not-found:hover
     color: $dark
     border: 2px solid $white
     -webkit-transform: rotate(90deg)
-        transform: rotate(90deg)
+    transform: rotate(90deg)
 
 .mirror
     -moz-transform: scale(-1, 1)
@@ -1200,7 +1323,7 @@ export default {
 
 .brand-img
     -webkit-transition: -webkit-transform .1s ease-in-out
-        transition: transform .1s ease-in-out
+    transition: transform .1s ease-in-out
 
 .brand-img-nl
     -webkit-transition: -webkit-transform .1s ease-in-out
@@ -1213,42 +1336,39 @@ export default {
     transform: rotate(90deg)
 
 .github-hover:hover
-  color: $color-highlight !important
-  background-color: $dark !important
-
+    color: $color-highlight !important
+    background-color: $dark !important
 
 .avatar
-  max-height: 15px
-  border: 1px solid $dark
+    max-height: 15px
+    border: 1px solid $dark
 
 .crumb-dark
-  font-size: 14px
-  font-weight: 400
-  color: white !important
-  // text-decoration: underline
-  // text-decoration-color: $color-button
+    font-size: 14px
+    font-weight: 400
+    color: white !important
 
 .dropdown-custom
-  border: none !important
+    border: none !important
 
 .dropdown-custom:hover
-  background-color: transparent !important
-  border: none !important
-  box-shadow: none !important
+    background-color: transparent !important
+    border: none !important
+    box-shadow: none !important
 
 .crumb-light
-  font-size: 14px
-  font-weight: 400
-  color: $dark !important
+    font-size: 14px
+    font-weight: 400
+    color: $dark !important
 
 a
-  text-decoration: none
-  text-decoration-color: $color-button
+    text-decoration: none
+    text-decoration-color: $color-button
 
 a:hover
-  text-decoration: underline
-  text-decoration-color: $color-button
+    text-decoration: underline
+    text-decoration-color: $color-button
 
 .darkk
-  background-color: #292b2c
+    background-color: #292b2c
 </style>

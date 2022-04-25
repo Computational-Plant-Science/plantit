@@ -116,6 +116,30 @@ export const workflows = {
         },
     },
     actions: {
+        setPublic({ commit }, workflows) {
+            commit('setPublic', workflows);
+        },
+        setUser({ commit }, workflows) {
+            commit('setUser', workflows);
+        },
+        setOrg({ commit }, workflows) {
+            commit('setOrg', workflows);
+        },
+        setProject({ commit }, workflows) {
+            commit('setProject', workflows);
+        },
+        setUserLoading({commit}, loading) {
+            commit('setUserLoading', loading)
+        },
+        setPublicLoading({commit}, loading) {
+            commit('setPublicLoading', loading)
+        },
+        setOrgLoading({commit}, loading) {
+            commit('setOrgLoading', loading)
+        },
+        setProjectLoading({commit}, loading) {
+            commit('setProjectLoading', loading)
+        },
         async loadPublic({ commit }) {
             commit('setPublicLoading', true);
             await axios
@@ -171,9 +195,6 @@ export const workflows = {
                     Sentry.captureException(error);
                     throw error;
                 });
-        },
-        async setUser({ commit }, workflows) {
-            commit('setUser', workflows);
         },
         async refreshPublic({ commit }) {
             commit('setPublicLoading', true);

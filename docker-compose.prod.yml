@@ -68,6 +68,7 @@ services:
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -145,6 +146,7 @@ services:
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -217,8 +219,8 @@ services:
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
-      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

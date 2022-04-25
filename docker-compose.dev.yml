@@ -64,6 +64,7 @@ services:
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -167,6 +168,7 @@ services:
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -238,30 +240,12 @@ services:
       - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
       - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT}
-      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
       - DIRT_STAGING_DIR=${DIRT_STAGING_DIR}
+      - DIRT_DATA_DIR=${DIRT_DATA_DIR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
       timeout: 60s
-      retries: 2
-      start_period: 20s
-  flower:
-    image: mher/flower
-    command: ["/bin/sh", "-c", "celery --broker=redis://redis flower --port=5555"]
-    environment:
-      - CELERY_AUTH=${CELERY_AUTH}
-    volumes:
-      - .:/code
-    depends_on:
-      - beat
-      - celery
-    ports:
-      - "5555:5555"
-    healthcheck:
-      test: curl -f http://localhost:5555/
-      interval: 20s
-      timeout: 20s
       retries: 2
       start_period: 20s
   # TODO: singularity-in-docker and docker-in-docker containers as test agents

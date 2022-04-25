@@ -56,6 +56,9 @@ export const datasets = {
         },
     },
     actions: {
+        setUserLoading({commit}, loading) {
+            commit('setUserLoading', loading);
+        },
         async loadUser({ commit, rootState }) {
             commit('setUserLoading', true);
             await axios
@@ -81,6 +84,9 @@ export const datasets = {
                     throw error;
                 });
         },
+        setPublicLoading({commit}, loading) {
+            commit('setPublicLoading', loading);
+        },
         async loadPublic({ commit, rootState }) {
             commit('setPublicLoading', true);
             await axios
@@ -101,6 +107,9 @@ export const datasets = {
                     commit('setPublicLoading', true);
                     throw error;
                 });
+        },
+        setSharedLoading({commit}, loading) {
+            commit('setSharedLoading', loading);
         },
         async loadShared({ commit, rootState }) {
             commit('setSharedLoading', true);
@@ -123,6 +132,12 @@ export const datasets = {
                     throw error;
                 });
         },
+        setSharingLoading({commit}, loading) {
+            commit('setSharedLoading', loading);
+        },
+        setSharing({ commit }, datasets) {
+            commit('setSharing', datasets);
+        },
         async loadSharing({ commit, rootState }) {
             commit('setSharingLoading', true);
             await axios
@@ -140,9 +155,6 @@ export const datasets = {
                     commit('setSharingLoading', true);
                     throw error;
                 });
-        },
-        setSharing({ commit }, datasets) {
-            commit('setSharing', datasets);
         },
     },
     getters: {
