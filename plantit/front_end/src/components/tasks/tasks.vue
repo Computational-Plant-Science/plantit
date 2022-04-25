@@ -114,272 +114,267 @@
                 <b-col>
                     <b-row class="pl-0 pr-0 mt-2"
                         ><b-col class="m-0 pl-0 pr-0">
-                            <p
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light p-3'
-                                        : 'text-dark p-3'
-                                "
-                                v-if="filtered.length === 0"
+                            <b-tabs
+                                v-model="activeTab"
+                                nav-class="bg-transparent"
+                                active-nav-item-class="bg-transparent text-dark"
+                                pills
                             >
-                                No tasks found.
-                            </p>
-                                <b-tabs
-                                    v-model="activeTab"
-                                            nav-class="bg-transparent"
-                                            active-nav-item-class="bg-transparent text-dark"
-                                            pills>
-                                  <b-tab
-                                  title="Running"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 pl-3 pr-3'
-                                                        : 'theme-light m-0 pl-3 pr-3'
-                                                ">
-                                    <template #title>
-                                                    <b-button
-                                                        id="running-tasks"
-                                                        :variant="
-                                                            activeTab === 0
-                                                                ? profile.darkMode
-                                                                    ? 'outline-warning'
-                                                                    : 'warning'
-                                                                : profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        title="Running tasks"
-                                                        ><i
-                                                            class="
-                                                                fas
-                                                                fa-terminal fa-fw
-                                                            "
-                                                        ></i>
-                                                        Running
-                                                    </b-button><b-popover
-                                                        v-if="profile.hints"
-                                                        triggers="hover"
-                                                        placement="bottomleft"
-                                                        target="running-tasks"
-                                                        title="Running Tasks"
-                                                        >Click here to view currently running tasks.</b-popover
-                                                    ></template
-                                                >
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksRunning.length === 0
+                                <b-tab
+                                    title="Running"
+                                    :title-link-class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
                                     "
-                                    class="m-0 pl-0 pr-0"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            No tasks are running.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <taskblurb
-                                        v-for="task in filteredRunning"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                        :project="true"
-                                    ></taskblurb>
-                                </b-list-group>
-                                  </b-tab>
-                                  <b-tab
-                                  title="Completed"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 pl-3 pr-3'
-                                                        : 'theme-light m-0 pl-3 pr-3'
-                                                ">
-                                    <template #title>
-                                                    <b-button
-                                                        id="completed-tasks"
-                                                        :variant="
-                                                            activeTab === 1
-                                                                ? profile.darkMode
-                                                                    ? 'outline-warning'
-                                                                    : 'warning'
-                                                                : profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        title="Completed tasks"
-                                                        ><i
-                                                            class="
-                                                                fas
-                                                                fa-check fa-fw
-                                                            "
-                                                        ></i>
-                                                        Completed
-                                                    </b-button><b-popover
-                                                        v-if="profile.hints"
-                                                        triggers="hover"
-                                                        placement="bottomleft"
-                                                        target="completed-tasks"
-                                                        title="Completed Tasks"
-                                                        >Click here to view completed tasks.</b-popover
-                                                    ></template
-                                                >
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksCompleted.length === 0
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-dark m-0 pl-3 pr-3'
+                                            : 'theme-light m-0 pl-3 pr-3'
                                     "
-                                    class="m-0 pl-0 pr-0"
                                 >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            No completed tasks.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <taskblurb
-                                        v-for="task in filteredCompleted"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                        :project="true"
-                                    ></taskblurb>
-                                </b-list-group>
-                                  </b-tab>
-                                  <b-tab
-                                  title="Scheduled"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 pl-3 pr-3'
-                                                        : 'theme-light m-0 pl-3 pr-3'
-                                                ">
                                     <template #title>
-                                                    <b-button
-                                                        id="scheduled-tasks"
-                                                        :variant="
-                                                            activeTab === 2
-                                                                ? profile.darkMode
-                                                                    ? 'outline-warning'
-                                                                    : 'warning'
-                                                                : profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        title="Scheduled tasks"
-                                                        ><i
-                                                            class="
-                                                                fas
-                                                                fa-clock fa-fw
-                                                            "
-                                                        ></i>
-                                                        Scheduled
-                                                    </b-button><b-popover
-                                                        v-if="profile.hints"
-                                                        triggers="hover"
-                                                        placement="bottomleft"
-                                                        target="scheduled-tasks"
-                                                        title="Scheduled Tasks"
-                                                        >Click here to view scheduled delayed and repeating tasks.</b-popover
-                                                    ></template
-                                                >
-                                      <b-row>
+                                        <b-button
+                                            id="running-tasks"
+                                            :variant="
+                                                activeTab === 0
+                                                    ? profile.darkMode
+                                                        ? 'outline-warning'
+                                                        : 'warning'
+                                                    : profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            title="Running tasks"
+                                            ><i
+                                                class="fas fa-terminal fa-fw"
+                                            ></i>
+                                            Running </b-button
+                                        ><b-popover
+                                            v-if="profile.hints"
+                                            triggers="hover"
+                                            placement="bottomleft"
+                                            target="running-tasks"
+                                            title="Running Tasks"
+                                            >Click here to view currently
+                                            running tasks.</b-popover
+                                        ></template
+                                    >
+                                    <b-row
+                                        v-if="
+                                            !tasksLoading &&
+                                            tasksRunning.length === 0
+                                        "
+                                        class="m-0 pl-0 pr-0"
+                                    >
                                         <b-col>
-                                          <b-row
-                                    class="m-3 mb-1 pl-0 pr-0"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Delayed</b></b-col>
-                                </b-row>
-                                      <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksDelayed.length === 0
-                                    "
-                                    class="m-0 pl-0 pr-0"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            No delayed tasks are scheduled.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <delayedtaskblurb
-                                        v-for="task in tasksDelayed"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                    ></delayedtaskblurb>
-                                </b-list-group>
-                                      </b-col>
-                                        <b-col>
-<b-row
-                                    class="m-3 mb-1 pl-0 pr-0"
-                                    align-v="center"
-                                >
-                                    <b-col><b>Repeating</b></b-col>
-                                </b-row>
-                                <b-row
-                                    v-if="
-                                        !tasksLoading &&
-                                        tasksRepeating.length === 0
-                                    "
-                                    class="m-0 pl-0 pr-0"
-                                >
-                                    <b-col>
-                                        <p
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            No repeating tasks are scheduled.
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                                <b-list-group class="text-left m-0 p-0 mt-1">
-                                    <repeatingtaskblurb
-                                        v-for="task in tasksRepeating"
-                                        v-bind:key="task.guid"
-                                        :task="task"
-                                    ></repeatingtaskblurb>
-                                </b-list-group>
+                                            <p
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                No tasks are running.
+                                            </p>
                                         </b-col>
-                                      </b-row>
-                                  </b-tab>
-                                </b-tabs>
+                                    </b-row>
+                                    <b-list-group
+                                        class="text-left m-0 p-0 mt-1"
+                                    >
+                                        <taskblurb
+                                            v-for="task in filteredRunning"
+                                            v-bind:key="task.guid"
+                                            :task="task"
+                                            :project="true"
+                                        ></taskblurb>
+                                    </b-list-group>
+                                </b-tab>
+                                <b-tab
+                                    title="Completed"
+                                    :title-link-class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-dark m-0 pl-3 pr-3'
+                                            : 'theme-light m-0 pl-3 pr-3'
+                                    "
+                                >
+                                    <template #title>
+                                        <b-button
+                                            id="completed-tasks"
+                                            :variant="
+                                                activeTab === 1
+                                                    ? profile.darkMode
+                                                        ? 'outline-warning'
+                                                        : 'warning'
+                                                    : profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            title="Completed tasks"
+                                            ><i class="fas fa-check fa-fw"></i>
+                                            Completed </b-button
+                                        ><b-popover
+                                            v-if="profile.hints"
+                                            triggers="hover"
+                                            placement="bottomleft"
+                                            target="completed-tasks"
+                                            title="Completed Tasks"
+                                            >Click here to view completed
+                                            tasks.</b-popover
+                                        ></template
+                                    >
+                                    <b-row
+                                        v-if="
+                                            !tasksLoading &&
+                                            tasksCompleted.length === 0
+                                        "
+                                        class="m-0 pl-0 pr-0"
+                                    >
+                                        <b-col>
+                                            <p
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                No completed tasks.
+                                            </p>
+                                        </b-col>
+                                    </b-row>
+                                    <b-list-group
+                                        class="text-left m-0 p-0 mt-1"
+                                    >
+                                        <taskblurb
+                                            v-for="task in filteredCompleted"
+                                            v-bind:key="task.guid"
+                                            :task="task"
+                                            :project="true"
+                                        ></taskblurb>
+                                    </b-list-group>
+                                </b-tab>
+                                <b-tab
+                                    title="Scheduled"
+                                    :title-link-class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-dark m-0 pl-3 pr-3'
+                                            : 'theme-light m-0 pl-3 pr-3'
+                                    "
+                                >
+                                    <template #title>
+                                        <b-button
+                                            id="scheduled-tasks"
+                                            :variant="
+                                                activeTab === 2
+                                                    ? profile.darkMode
+                                                        ? 'outline-warning'
+                                                        : 'warning'
+                                                    : profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            title="Scheduled tasks"
+                                            ><i class="fas fa-clock fa-fw"></i>
+                                            Scheduled </b-button
+                                        ><b-popover
+                                            v-if="profile.hints"
+                                            triggers="hover"
+                                            placement="bottomleft"
+                                            target="scheduled-tasks"
+                                            title="Scheduled Tasks"
+                                            >Click here to view scheduled
+                                            delayed and repeating
+                                            tasks.</b-popover
+                                        ></template
+                                    >
+                                    <b-row>
+                                        <b-col>
+                                            <b-row
+                                                class="m-3 mb-1 pl-0 pr-0"
+                                                align-v="center"
+                                            >
+                                                <b-col><b>Delayed</b></b-col>
+                                            </b-row>
+                                            <b-row
+                                                v-if="
+                                                    !tasksLoading &&
+                                                    tasksDelayed.length === 0
+                                                "
+                                                class="m-0 pl-0 pr-0"
+                                            >
+                                                <b-col>
+                                                    <p
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        No delayed tasks are
+                                                        scheduled.
+                                                    </p>
+                                                </b-col>
+                                            </b-row>
+                                            <b-list-group
+                                                class="text-left m-0 p-0 mt-1"
+                                            >
+                                                <delayedtaskblurb
+                                                    v-for="task in tasksDelayed"
+                                                    v-bind:key="task.guid"
+                                                    :task="task"
+                                                ></delayedtaskblurb>
+                                            </b-list-group>
+                                        </b-col>
+                                        <b-col>
+                                            <b-row
+                                                class="m-3 mb-1 pl-0 pr-0"
+                                                align-v="center"
+                                            >
+                                                <b-col><b>Repeating</b></b-col>
+                                            </b-row>
+                                            <b-row
+                                                v-if="
+                                                    !tasksLoading &&
+                                                    tasksRepeating.length === 0
+                                                "
+                                                class="m-0 pl-0 pr-0"
+                                            >
+                                                <b-col>
+                                                    <p
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        No repeating tasks are
+                                                        scheduled.
+                                                    </p>
+                                                </b-col>
+                                            </b-row>
+                                            <b-list-group
+                                                class="text-left m-0 p-0 mt-1"
+                                            >
+                                                <repeatingtaskblurb
+                                                    v-for="task in tasksRepeating"
+                                                    v-bind:key="task.guid"
+                                                    :task="task"
+                                                ></repeatingtaskblurb>
+                                            </b-list-group>
+                                        </b-col>
+                                    </b-row>
+                                </b-tab>
+                            </b-tabs>
                         </b-col>
                     </b-row>
                 </b-col>
@@ -413,16 +408,14 @@ export default {
     data: function () {
         return {
             searchText: '',
-            activeTab: 0
+            activeTab: 0,
         };
     },
     methods: {
         async deleteDelayed(guid) {
             this.unschedulingDelayed = true;
             await axios
-                .get(
-                    `/apis/v1/tasks/${guid}/unschedule_delayed/`
-                )
+                .get(`/apis/v1/tasks/${guid}/unschedule_delayed/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(
@@ -451,9 +444,7 @@ export default {
         async deleteRepeating(guid) {
             this.unschedulingRepeating = true;
             await axios
-                .get(
-                    `/apis/v1/tasks/${guid}/unschedule_repeating/`
-                )
+                .get(`/apis/v1/tasks/${guid}/unschedule_repeating/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(

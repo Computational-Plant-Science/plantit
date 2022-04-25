@@ -445,14 +445,7 @@
                                 <b-img
                                     id="avatar"
                                     v-if="profile.loggedIntoGitHub"
-                                    class="
-                                        avatar
-                                        m-0
-                                        mb-1
-                                        p-0
-                                        github-hover
-                                        logo
-                                    "
+                                    class="avatar m-0 mb-1 p-0 github-hover logo"
                                     style="
                                         min-width: 20px;
                                         min-height: 20px;
@@ -804,7 +797,7 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
-import store from '@/store/store';
+import jwtDecode from 'jwt-decode';
 import { guid } from '@/utils';
 
 export default {
@@ -902,33 +895,12 @@ export default {
             return;
         }
 
-        // otherwise need to fetch user profile first to get tokens/etc for other API requests
-        // TODO: is this still necessary?
         await Promise.all([
+            this.loadVersion(),
             this.loadProfile(),
-            this.getVersion(),
+            this.loadDatasets(),
             this.loadMaintenanceWindows(),
         ]);
-
-        // load the rest of the model
-        /* await Promise.all([
-            this.$store.dispatch('users/loadAll'),
-            this.$store.dispatch('tasks/setAll'),
-            this.$store.dispatch('tasks/setDelayed'),
-            this.$store.dispatch('tasks/loadRepeating'),
-            this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch('workflows/loadUser'),
-            this.$store.dispatch('workflows/loadOrg'),
-            this.$store.dispatch('workflows/loadProject'),
-            this.$store.dispatch('agents/loadAll'),
-            this.$store.dispatch('datasets/loadPublic'),
-            this.$store.dispatch('datasets/loadUser'),
-            this.$store.dispatch('datasets/loadShared'),
-            this.$store.dispatch('datasets/loadSharing'),
-            this.$store.dispatch('projects/loadUser'),
-            this.$store.dispatch('projects/loadOthers'),
-        ]); */
 
         // TODO move websockets to vuex
         // connect to this user's event stream, pushed from backend channel
@@ -948,11 +920,11 @@ export default {
     },
     methods: {
         async loadProfile() {
-            this.$store.dispatch('user/setProfileLoading', true);
+            await this.$store.dispatch('user/setProfileLoading', true);
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then((response) => {
-                    // determine whether user is logged in
+                    // determine whether user is logged into CyVerse
                     let decoded = jwtDecode(
                         response.data.django_profile.cyverse_token
                     );
@@ -968,7 +940,7 @@ export default {
                             response.data.github_profile !== null
                     );
 
-                    // set profile info
+                    // load user profile info into Vuex
                     this.$store.dispatch(
                         'user/setDjangoProfile',
                         response.data.django_profile
@@ -1001,18 +973,25 @@ export default {
                         'user/setPushNotifications',
                         response.data.django_profile.push_notifications
                     );
-                    this.$store.dispatch(
-                        'user/user/setStats',
-                        response.data.stats
-                    );
+                    this.$store.dispatch('user/setStats', response.data.stats);
                     this.$store.dispatch(
                         'user/setMaintenanceWindows',
                         response.data.maintenance_windows
                     );
                     this.$store.dispatch('user/setProfileLoading', false);
-                    this.$store.dispatch('user/setProfleLoading', true);
-                    //promise.all
+
+                    // load notifications into Vuex
+                    this.$store.dispatch(
+                        'notifications/setAll',
+                        response.data.notifications
+                    );
+                    this.$store.dispatch('notifications/setLoading', false);
+
+                    // load other users into Vuex
                     this.$store.dispatch('users/setAll', response.data.users);
+                    this.$store.dispatch('users/setLoading', false);
+
+                    // load tasks into Vuex
                     this.$store.dispatch(
                         'tasks/setAll',
                         response.data.tasks.tasks
@@ -1025,10 +1004,9 @@ export default {
                         'tasks/setRepeating',
                         response.data.repeating_tasks
                     );
-                    this.$store.dispatch(
-                        'notifications/setAll',
-                        response.data.notifications
-                    );
+                    this.$store.dispatch('tasks/setLoading', false);
+
+                    // load workflows into Vuex
                     this.$store.dispatch(
                         'workflows/setPublic',
                         response.data.workflows.public
@@ -1045,7 +1023,16 @@ export default {
                         'workflows/loadProject',
                         response.data.workflows.project
                     );
-                    this.$store.dispatch('agents/setAll', response.data.users);
+                    this.$store.dispatch('workflows/setPublicLoading', false);
+                    this.$store.dispatch('workflows/setUserLoading', false);
+                    this.$store.dispatch('workflows/setOrgLoading', false);
+                    this.$store.dispatch('workflows/setProjectLoading', false);
+
+                    // load agents into Vuex
+                    this.$store.dispatch('agents/setAll', response.data.agents);
+                    this.$store.dispatch('agents/setLoading', false);
+
+                    // load projects into Vuex
                     this.$store.dispatch(
                         'projects/setUser',
                         response.data.projects
@@ -1054,9 +1041,10 @@ export default {
                         'projects/setOthers',
                         response.data.projects
                     );
+                    this.$store.dispatch('projects/setLoading', false);
                 })
                 .catch((error) => {
-                    commit('setProfileLoading', false);
+                    this.$store.dispatch('user/setProfileLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                     else if (
@@ -1068,6 +1056,14 @@ export default {
                         window.location.replace('/apis/v1/idp/cyverse_logout/');
                     }
                 });
+        },
+        async loadDatasets() {
+            await Promise.all([
+                this.$store.dispatch('datasets/loadPublic'),
+                this.$store.dispatch('datasets/loadUser'),
+                this.$store.dispatch('datasets/loadShared'),
+                this.$store.dispatch('datasets/loadSharing'),
+            ]);
         },
         async loadMaintenanceWindows() {
             await axios
@@ -1146,7 +1142,7 @@ export default {
         brandLeave() {
             this.titleContent = 'brand';
         },
-        async getVersion() {
+        async loadVersion() {
             await axios({
                 method: 'get',
                 url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
@@ -1219,7 +1215,7 @@ export default {
         },
         getTaskStatus(task) {
             if (!task.is_complete) {
-                if (task().job_status === null)
+                if (task.job_status === null)
                     return task.status.toUpperCase();
                 else return task.job_status.toUpperCase();
             }

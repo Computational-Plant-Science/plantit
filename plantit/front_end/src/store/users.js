@@ -16,6 +16,12 @@ export const users = {
         },
     },
     actions: {
+        setLoading({commit}, loading) {
+            commit('setLoading', loading)
+        },
+        setAll({ commit }, users) {
+            commit('set', users);
+        },
         async loadAll({ commit }) {
             commit('setLoading', true);
             await axios
@@ -29,9 +35,6 @@ export const users = {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
-        },
-        setAll({ commit }, users) {
-            commit('set', users);
         },
     },
     getters: {
