@@ -22,6 +22,10 @@ export const agents = {
         },
     },
     actions: {
+        setAll({ commit }, agents) {
+            commit('setAgents', agents);
+        },
+        
         async loadAll({ commit }) {
             commit('setLoading', true);
             await axios
