@@ -14,19 +14,13 @@ def list_by_user(request, owner):
         params = request.query_params
     except:
         params = {}
-    page = params.get('page') if 'page' in params else 0
-    start = int(page) * 20
-    count = start + 20
 
     try: user = User.objects.get(username=owner)
     except: return HttpResponseNotFound()
 
-    notifications = list(chain(
-        # list(DirectoryPolicyNotification.objects.filter(user=user)),
-        list(Notification.objects.filter(user=user))))
-    notifications = notifications[start:(start + count)]
-
-    return JsonResponse({'notifications': [q.notification_to_dict(notification) for notification in notifications]})
+    page = params.get('page') if 'page' in params else 1
+    notifications = q.get_notifications(user, page=page)
+    return JsonResponse({'notifications': notifications})
 
 
 @login_required
@@ -36,7 +30,8 @@ def get_or_dismiss(request, owner, guid):
         notification = Notification.objects.get(user=user, guid=guid)
     except: return HttpResponseNotFound()
 
-    if request.method == 'GET': return JsonResponse(q.notification_to_dict(notification))
+    if request.method == 'GET':
+        return JsonResponse(q.notification_to_dict(notification))
     elif request.method == 'DELETE':
         notification.delete()
         notifications = Notification.objects.filter(user=user)

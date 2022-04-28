@@ -26,17 +26,13 @@ def list_user(request):
 @login_required
 @async_to_sync
 async def list_org(request):
-    orgs = await q.get_user_github_organizations(request.user)
-    workflows = dict()
-    for org in orgs: workflows[org['login']] = await sync_to_async(q.list_org_workflows)(org['login'])
+    workflows = await q.list_user_org_workflows(request.user)
     return JsonResponse({'workflows': workflows})
 
 
 @login_required
 def list_project(request):
-    projects = q.list_user_projects(request.user)
-    workflows = {project.guid: q.list_project_workflows(project) for project in projects}
-    return JsonResponse({'workflows': workflows})
+    return JsonResponse({'workflows': q.list_user_project_workflows(request.user)})
 
 
 @sync_to_async

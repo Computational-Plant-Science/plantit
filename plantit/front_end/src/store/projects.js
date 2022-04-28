@@ -30,6 +30,15 @@ export const projects = {
         },
     },
     actions: {
+        setUser({ commit }, user) {
+            commit('setUser', user);
+        },
+        setOthers({ commit }, user) {
+            commit('setOthers', user);
+        },
+        setLoading({commit}, loading) {
+            commit('setLoading', loading)
+        },
         async loadUser({ commit, rootState }) {
             commit('setLoading', true);
             await axios
@@ -61,9 +70,6 @@ export const projects = {
                     Sentry.captureException(error);
                     throw error;
                 });
-        },
-        setUser({ commit }, projects) {
-            commit('setUser', projects);
         },
         addOrUpdate({ commit }, projects) {
             commit('addOrUpdate', projects);

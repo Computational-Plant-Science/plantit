@@ -60,6 +60,9 @@ export const tasks = {
         setRepeating({ commit }, tasks) {
             commit('setRepeating', tasks);
         },
+        setLoading({commit}, loading) {
+            commit('setLoading', loading)
+        },
         async loadAll({ commit }) {
             commit('setLoading', true);
             await Promise.all([

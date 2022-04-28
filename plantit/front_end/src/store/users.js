@@ -16,6 +16,12 @@ export const users = {
         },
     },
     actions: {
+        setLoading({commit}, loading) {
+            commit('setLoading', loading)
+        },
+        setAll({ commit }, users) {
+            commit('set', users);
+        },
         async loadAll({ commit }) {
             commit('setLoading', true);
             await axios

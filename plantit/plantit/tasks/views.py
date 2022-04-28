@@ -33,16 +33,7 @@ logger = logging.getLogger(__name__)
 @api_view(['GET', 'POST'])
 def get_or_create(request):
     if request.method == 'GET':
-        # lazy paginated query for requesting user's task
-        tasks = Task.objects.filter(user=request.user)
-        paginator = Paginator(tasks, 20)
-        page = paginator.get_page(int(request.GET.get('page', 1)))
-
-        return JsonResponse({
-            'previous_page': page.has_previous() and page.previous_page_number() or None,
-            'next_page': page.has_next() and page.next_page_number() or None,
-            'tasks': [q.task_to_dict(task) for task in list(page)]
-        })
+        return JsonResponse(q.get_tasks(request.user, page=int(request.GET.get('page', 1))))
     elif request.method == 'POST':
         # get the task configuration from the request
         task_config = request.data
@@ -96,16 +87,14 @@ def get_or_create(request):
 @login_required
 @api_view(['GET'])
 def get_delayed(request):
-    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in
-                                   DelayedTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': q.get_delayed_tasks(request.user)})
 
 
 # @swagger_auto_schema(methods='get')
 @login_required
 @api_view(['GET'])
 def get_repeating(request):
-    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in
-                                   RepeatingTask.objects.filter(user=request.user, enabled=True)]})
+    return JsonResponse({'tasks': q.get_repeating_tasks(request.user)})
 
 
 # @swagger_auto_schema(methods='get')
