@@ -227,6 +227,12 @@ def share_data(self, guid: str):
                 })
 
         # share the user's source and target collections with the plantit CyVerse user
+        # client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        # client.share([
+        #     {
+        #         'user': settings.CYVERSE_USERNAME,
+        #         'paths': paths
+        #     }])
         terrain.share_dir({
             'sharing': [
                 {
@@ -484,7 +490,10 @@ def test_push(self, guid: str):
     try:
         # check the expected filenames against the contents of the CyVerse collection
         path = task.workflow['output']['to']
-        actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
+
+        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        actual = [file['path'].rpartition('/')[2] for file in client.list_files(path)]
+        # actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
         expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}")) if file['exists']]
         newline = '\n'
         logger.debug(f"Expected results for task {task.guid}: {newline.join(expected)}")
@@ -601,6 +610,13 @@ def unshare_data(self, guid: str):
             paths.append(options['input']['path'])
 
         # revoke the plantit CyVerse user's access to the source and target collections
+        # client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        # client.unshare([
+        #     {
+        #         # 'user': task.user.username,
+        #         'user': settings.CYVERSE_USERNAME,
+        #         'paths': paths
+        #     }])
         terrain.unshare_dir({
             'unshare': [
                 {
