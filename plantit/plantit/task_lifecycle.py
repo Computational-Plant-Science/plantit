@@ -16,7 +16,7 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
-import plantit.terrain as terrain
+from pycyapi.clients import TerrainClient
 from plantit import docker as docker
 from plantit.agents.models import Agent
 from plantit.miappe.models import Investigation, Study
@@ -195,7 +195,8 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         kind = options['input']['kind']
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
-        paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
+        client = TerrainClient(token)
+        paths = [client.stat(path)['path']] if kind == InputKind.FILE else client.list_files(path)
         inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
     else: inputs = []
 
@@ -287,7 +288,8 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
         kind = options['input']['kind']
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
-        paths = [terrain.get_file(path, token)['path']] if kind == InputKind.FILE else terrain.list_dir(path, token)
+        client = TerrainClient(token)
+        paths = [client.stat(path)['path']] if kind == InputKind.FILE else client.list_files(path)
         inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
 
     # setup command

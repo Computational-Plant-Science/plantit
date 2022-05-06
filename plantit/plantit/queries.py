@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from django.utils import timezone
 
+from pycyapi.clients import TerrainClient
 import plantit.terrain as terrain
 import plantit.mapbox as mapbox
 from plantit import github as github
@@ -496,7 +497,8 @@ def list_user_projects(user: User):
 
 
 def get_user_cyverse_profile(user: User) -> dict:
-    profile = terrain.get_profile(user.username, user.profile.cyverse_access_token)
+    client = TerrainClient(user.profile.cyverse_access_token)
+    profile = client.user_info(user.username)
     if profile is None: raise ValueError(f"User {user.username} has no CyVerse profile")
 
     altered = False
@@ -1038,9 +1040,6 @@ async def get_user_statistics(user: User, invalidate: bool = False) -> dict:
         used_agents_counter = Counter(used_agents)
         used_projects_counter = Counter([f"{project['guid']} ({project['title']})" for project in used_projects])
         unique_used_agents = list(np.unique(used_agents))
-
-        # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
-        # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
         tasks_running = await sync_to_async(get_tasks_usage_timeseries)(600, user)
 
         stats = {

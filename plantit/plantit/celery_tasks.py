@@ -14,7 +14,6 @@ from pycyapi.clients import TerrainClient
 import plantit.healthchecks
 import plantit.mapbox
 import plantit.queries as q
-import plantit.terrain as terrain
 import plantit.utils.agents
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
@@ -227,20 +226,8 @@ def share_data(self, guid: str):
                 })
 
         # share the user's source and target collections with the plantit CyVerse user
-        # client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
-        # client.share([
-        #     {
-        #         'user': settings.CYVERSE_USERNAME,
-        #         'paths': paths
-        #     }])
-        terrain.share_dir({
-            'sharing': [
-                {
-                    'user': settings.CYVERSE_USERNAME,
-                    'paths': paths
-                }
-            ]
-        }, task.user.profile.cyverse_access_token)
+        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        client.share_many(user=settings.CYVERSE_USERNAME, paths=paths)
 
         # log_task_status(task, [f"Granted temporary data access"])
         # async_to_sync(push_task_channel_event)(task)
@@ -493,7 +480,6 @@ def test_push(self, guid: str):
 
         client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
         actual = [file['path'].rpartition('/')[2] for file in client.list_files(path)]
-        # actual = [file.rpartition('/')[2] for file in terrain.list_dir(path, task.user.profile.cyverse_access_token)]
         expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}")) if file['exists']]
         newline = '\n'
         logger.debug(f"Expected results for task {task.guid}: {newline.join(expected)}")
@@ -610,22 +596,8 @@ def unshare_data(self, guid: str):
             paths.append(options['input']['path'])
 
         # revoke the plantit CyVerse user's access to the source and target collections
-        # client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
-        # client.unshare([
-        #     {
-        #         # 'user': task.user.username,
-        #         'user': settings.CYVERSE_USERNAME,
-        #         'paths': paths
-        #     }])
-        terrain.unshare_dir({
-            'unshare': [
-                {
-                    # 'user': task.user.username,
-                    'user': settings.CYVERSE_USERNAME,
-                    'paths': paths
-                }
-            ]
-        }, task.user.profile.cyverse_access_token)
+        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        client.unshare_many(user=task.user.username, paths=paths)
 
         # log_task_status(task, [f"Revoked temporary data access"])
         # async_to_sync(push_task_channel_event)(task)

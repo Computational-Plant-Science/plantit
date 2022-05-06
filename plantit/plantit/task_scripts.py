@@ -10,12 +10,9 @@ from typing import List
 
 from django.conf import settings
 
-from plantit import terrain as terrain
 from plantit.task_resources import push_task_channel_event, log_task_status
-
 from plantit.tasks.models import Task, InputKind, TaskOptions, Parameter, EnvironmentVariable
 from plantit.utils.agents import has_virtual_memory
-
 from plantit.singularity import compose_singularity_invocation
 
 logger = logging.getLogger(__name__)
