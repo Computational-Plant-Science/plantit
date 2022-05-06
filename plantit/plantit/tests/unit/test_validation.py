@@ -196,34 +196,6 @@ class ValidationTests(TestCase):
         })
         self.assertTrue(result[0])
 
-    def test_validate_config_when_is_invalid_with_wrong_input_path_type_and_empty_output(self):
-        result = validate_workflow_configuration({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'image': 'docker://alpine',
-            'commands': 'cat $INPUT',
-            'input': {
-                'path': False,
-                'kind': 'file'
-            },
-            'output': {}
-        })
-        self.assertFalse(result[0])
-
-    def test_validate_config_when_is_valid_and_input_kind_matches_path(self):
-        result = validate_workflow_configuration({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'image': 'docker://alpine',
-            'commands': 'cat $INPUT',
-            'input': {
-                'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
-                'kind': 'file'
-            },
-            'output': {}
-        })
-        self.assertTrue(result[0])
-
     def test_validate_config_when_is_valid_with_no_input_and_empty_output_path(self):
         result = validate_workflow_configuration({
             'name': 'Test Flow',
