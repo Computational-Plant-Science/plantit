@@ -34,4 +34,4 @@
 
 ## What can I use it for?
 
-PlantIT is flexible enough to run most container-friendly workloads, but if you want to do genomics, an established tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit. Feel free to [get in touch](https://github.com/Computational-Plant-Science/plantit/discussions) with questions about your use case.
+`plantit` is flexible enough to run most container-friendly workloads. If your software can be packaged with Docker and invoked on the command line, `plantit` can probably run it. That said, `plantit` is designed primarily for batch processing images in various phenotyping contexts. If you want to do genomics, an established tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit. Feel free to [get in touch](https://github.com/Computational-Plant-Science/plantit/discussions) with questions about your use case.
