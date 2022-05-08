@@ -16,7 +16,6 @@ from rest_framework.decorators import api_view
 from pycyapi.clients import TerrainClient, AsyncTerrainClient
 
 import plantit.queries as q
-import plantit.terrain as terrain
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
@@ -56,7 +55,8 @@ async def shared(request):
 
     policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
     paths = [policy.path for policy in policies]
-    dirs = await terrain.get_dirs_async(paths, request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    client = AsyncTerrainClient(request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    dirs = await client.get_dirs_async(paths)
     return JsonResponse({'datasets': [dir for dir in dirs]})
 
 

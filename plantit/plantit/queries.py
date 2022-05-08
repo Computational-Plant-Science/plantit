@@ -20,7 +20,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 from pycyapi.clients import TerrainClient
-import plantit.terrain as terrain
+from pycyapi.exceptions import Unauthorized
 import plantit.mapbox as mapbox
 from plantit import github as github
 from plantit import loess as loess
@@ -526,8 +526,14 @@ def refresh_user_cyverse_tokens(user: User):
         return
 
     try:
-        access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
-    except terrain.Unauthorized as e:
+        client = TerrainClient(user.profile.cyverse_access_token)
+        access_token, refresh_token = client.refresh_tokens(
+            username=user.username,
+            client_id=settings.CYVERSE_CLIENT_ID,
+            client_secret=settings.CYVERSE_CLIENT_SECRET,
+            refresh_token=user.profile.cyverse_refresh_token,
+            redirect_uri=settings.CYVERSE_REDIRECT_URL)
+    except Unauthorized as e:
         decoded = jwt.decode(user.profile.cyverse_refresh_token, options={
             'verify_signature': False,
             'verify_aud': False,

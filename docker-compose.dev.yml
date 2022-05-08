@@ -248,9 +248,3 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # TODO: singularity-in-docker and docker-in-docker containers as test agents
-  # sind:
-  #   image: computationalplantscience/sind
-  #   command: ["/usr/sbin/sshd", "-D"]
-  #   working_dir: /opt/work
-  #   privileged: true
