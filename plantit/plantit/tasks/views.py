@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 # @swagger_auto_schema(method='post', auto_schema=None)
 # @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(methods=['get', 'post'], auto_schema=None)
 @api_view(['GET', 'POST'])
 def get_or_create(request):
     if request.method == 'GET':
@@ -83,22 +84,22 @@ def get_or_create(request):
         })
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_delayed(request):
     return JsonResponse({'tasks': q.get_delayed_tasks(request.user)})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_repeating(request):
     return JsonResponse({'tasks': q.get_repeating_tasks(request.user)})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_task(request, guid):
     try:
@@ -141,6 +142,7 @@ def get_task(request, guid):
 
 
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def download_output_file(request, guid):
     try:
@@ -184,6 +186,7 @@ def download_output_file(request, guid):
 
 
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def download_task_logs(request, guid):
     try:
@@ -203,8 +206,8 @@ def download_task_logs(request, guid):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_task_logs(request, guid):
     try:
@@ -227,6 +230,7 @@ def get_task_logs(request, guid):
 
 
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def download_scheduler_logs(request, guid):
     try:
@@ -245,8 +249,8 @@ def download_scheduler_logs(request, guid):
         return JsonResponse({'lines': file.readlines()})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_scheduler_logs(request, guid):
     try:
@@ -266,6 +270,7 @@ def get_scheduler_logs(request, guid):
 
 
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def download_agent_logs(request, guid):
     try:
@@ -284,8 +289,8 @@ def download_agent_logs(request, guid):
         return JsonResponse({'lines': file.readlines()})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_agent_logs(request, guid):
     try:
@@ -310,8 +315,8 @@ def __cancel(task: Task):
     push_task_channel_event(task)
 
 
-# @swagger_auto_schema(methods='post')
 @login_required
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def cancel(request, guid):
     try:
@@ -332,8 +337,8 @@ def cancel(request, guid):
 
 
 # TODO switch to post
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def unschedule_delayed(request, guid):
     try:
@@ -348,8 +353,8 @@ def unschedule_delayed(request, guid):
 
 
 # TODO switch to post
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def unschedule_repeating(request, guid):
     try:
@@ -363,8 +368,8 @@ def unschedule_repeating(request, guid):
                                    RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def exists(request, guid):
     try:
@@ -382,8 +387,8 @@ def exists(request, guid):
         return JsonResponse({'exists': False})
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def search(request, owner, workflow_name, page):
     try:
@@ -398,8 +403,8 @@ def search(request, owner, workflow_name, page):
         return HttpResponseNotFound()
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
@@ -413,8 +418,8 @@ def search_delayed(request, owner, workflow_name):
     return JsonResponse([q.delayed_task_to_dict(t) for t in tasks], safe=False)
 
 
-# @swagger_auto_schema(methods='get')
 @login_required
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
