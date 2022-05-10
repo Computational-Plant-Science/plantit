@@ -96,6 +96,10 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
     if task.modified <= modified:
         logger.info(f"{task.user.username}'s triggered task {triggered_id} for path {task.path} skipped; data haven't changed")
         return
+    else:
+        # otherwise we need to update the last modified timestamp on the task
+        task.modified = modified
+        task.save()
 
     # create task
     itask = create_immediate_task(user, workflow)
