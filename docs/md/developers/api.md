@@ -11,16 +11,18 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-`plantit` exposes an API for programmatic queries about certain public resources. Endpoints are exposed at the root URL `https://plantit.cyverse.org/apis/v1/`, documented with Swagger at [`https://plantit.cyverse.org/apis/v1/swagger/`](https://plantit.cyverse.org/apis/v1/swagger/).
+`plantit` exposes an API for programmatic queries about usage statistics and public resources. Endpoints are exposed at the root URL `https://plantit.cyverse.org/apis/v1/`, documented with Swagger at [`https://plantit.cyverse.org/apis/v1/swagger/`](https://plantit.cyverse.org/apis/v1/swagger/).
 
-## Resources
+## Endpoints
 
-TODO
-
-### Agents
-
-TODO
+Currently only public usage statistics are reported by the `plantit` API. Support for BrAPI is under consideration and may be developed in the future. We may also support token-authenticated task orchestration at some point.
 
 ### Stats
 
-TODO
+The `/stats/` routes return usage data for `plantit` users, publicly available workflows and execution targets. Four endpoints are available:
+
+- `/stats/counts`: cumulative user and resource counts
+- `/stats/institutions`: user-represented institutions
+- `/stats/timeseries`: usage timeseries for public workflows and execution targets
+- `/stats/timeseries/<owner>/<name>/<branch>`: usage timeseries for a particular public workflow
+
