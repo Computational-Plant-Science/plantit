@@ -86,6 +86,7 @@ class Task(models.Model):
     cleanup_time = models.DateTimeField(null=True, blank=True)
     delayed_id = models.CharField(max_length=250, null=True, blank=True)
     repeating_id = models.CharField(max_length=250, null=True, blank=True)
+    triggered_id = models.CharField(max_length=250, null=True, blank=True)
 
     def __str__(self):
         opts = self._meta
@@ -171,7 +172,7 @@ class Task(models.Model):
         return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
 
 
-# Scheduled Tasks #
+# Scheduled Tasks
 
 class DelayedTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
@@ -193,8 +194,19 @@ class RepeatingTask(PeriodicTask):
     eta = models.DateTimeField(null=False, blank=False)
 
 
-# Task Options #
+class TriggeredTask(PeriodicTask):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
+    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
+    workflow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_branch = models.CharField(max_length=280, null=True, blank=True)
+    workflow_image_url = models.URLField(null=True, blank=True)
+    eta = models.DateTimeField(null=False, blank=False)
+    path = models.CharField(max_length=280, null=True, blank=True)
+    modified = models.DateTimeField(null=False, blank=False)
 
+
+# Task Options
 
 class BindMount(TypedDict):
     host_path: str

@@ -30,7 +30,7 @@ from plantit.ssh import execute_command
 from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
     get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
-from plantit.tasks.models import Task, TaskStatus
+from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 
 logger = get_task_logger(__name__)
 
@@ -77,6 +77,39 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
 
     log_task_status(task, [f"Created {task.user.username}'s (repeating) task {task.guid} on {task.agent.name}"])
     async_to_sync(push_task_channel_event)(task)
+
+
+@app.task(track_started=True)
+def create_and_submit_triggered(username, workflow, triggered_id: str = None):
+    try:
+        user = User.objects.get(username=username)
+        task = TriggeredTask.objects.get(name=triggered_id)
+    except:
+        logger.error(traceback.format_exc())
+        return
+
+    # check if the data have changed since last time we checked
+    client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+    modified = client.stat(path=task.path)['date-modified']
+
+    # if the data haven't changed, nothing to do
+    if task.modified <= modified:
+        logger.info(f"{task.user.username}'s triggered task {triggered_id} for path {task.path} skipped; data haven't changed")
+        return
+
+    # create task
+    itask = create_immediate_task(user, workflow)
+    if triggered_id is not None: itask.triggered_id = triggered_id
+    task.save()
+
+    # submit head of (task chain to) Celery
+    (prep_environment.s(itask.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+        countdown=5,  # TODO: make initial delay configurable
+        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+
+    log_task_status(itask, [f"Created {task.user.username}'s (triggered) task {itask.guid} on {itask.agent.name}"])
+    async_to_sync(push_task_channel_event)(itask)
+
 
 
 #  Task Lifecycle  #

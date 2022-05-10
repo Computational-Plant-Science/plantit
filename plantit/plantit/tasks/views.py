@@ -16,7 +16,7 @@ from rest_framework.decorators import api_view
 import plantit.queries as q
 from plantit import settings
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
-from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, cancel_task
+from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
@@ -38,13 +38,11 @@ def get_or_create(request):
     elif request.method == 'POST':
         # get the task configuration from the request
         task_config = request.data
-        task_type = task_config.get('type', None)
 
         # task type must be configured
-        if task_type is None:
-            return HttpResponseBadRequest()
-        else:
-            task_type = task_type.lower()
+        task_type = task_config.get('type', None)
+        if task_type is None: return HttpResponseBadRequest()
+        else: task_type = task_type.lower()
 
         # if this is an immediate task, submit it now
         if task_type == 'now':
@@ -73,10 +71,13 @@ def get_or_create(request):
         elif task_type == 'every':
             task, created = create_repeating_task(request.user, task_config)
             task_dict = q.repeating_task_to_dict(task)
+        elif task_type == 'watch':
+            task, created = create_triggered_task(request.user, task_config)
+            task_dict = q.triggered_task_to_dict(task)
 
         # currently we only support immediate, delayed, and periodic (repeating) tasks
         else:
-            raise ValueError(f"Unsupported task type (expected: Now, After, or Every)")
+            raise ValueError(f"Unsupported task type (expected: Now, After, Every, or Watch)")
 
         return JsonResponse({
             'created': created,
