@@ -18,7 +18,7 @@ from plantit.singularity import compose_singularity_invocation
 logger = logging.getLogger(__name__)
 
 
-# Values (command subcomponents) #
+# Values (command subcomponents)
 
 def calculate_node_count(task: Task, inputs: List[str]):
     node_count = min(len(inputs), task.agent.max_nodes)
@@ -65,7 +65,7 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
     return walltime
 
 
-# Commands (script subcomponents) #
+# Commands (script subcomponents)
 
 def compose_pull_headers(task: Task) -> List[str]:
     headers = []
@@ -197,7 +197,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
 
-    # if this agent uses TACC's launcher, invoke the parameter sweep script
+    # if this agent uses TACC's launcher, use a parameter sweep script
     if task.agent.launcher:
         commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}")
         commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}")
@@ -208,8 +208,8 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
         image = options['image']
         command = options['command']
         env = options['env']
-        gpus = options[
-            'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+        # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+        gpus = options['gpus'] if 'gpus' in options else 0
         parameters = (options['parameters'] if 'parameters' in options else []) + [
             Parameter(key='OUTPUT', value=options['output']['from']),
             Parameter(key='GPUS', value=str(gpus))]
@@ -345,7 +345,7 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     return commands
 
 
-# Job Scripts #
+# Job scripts
 
 def compose_pull_script(task: Task, options: TaskOptions) -> List[str]:
     with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
@@ -421,6 +421,21 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
             input_path = join(options['workdir'], 'input', inputs[0])
             parameters = parameters + [Parameter(key='INPUT', value=input_path)]
         else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
+    elif 'iterations' in options:
+        iterations = options['iterations']
+        for i in range(0, iterations):
+            lines = lines + compose_singularity_invocation(
+                work_dir=work_dir,
+                image=image,
+                commands=command,
+                env=env,
+                parameters=parameters,
+                bind_mounts=bind_mounts,
+                no_cache=no_cache,
+                gpus=gpus,
+                shell=shell,
+                index=i)
+        return lines
 
     return lines + compose_singularity_invocation(
         work_dir=work_dir,

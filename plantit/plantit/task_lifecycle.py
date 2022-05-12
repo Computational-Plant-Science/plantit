@@ -336,10 +336,15 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
     # setup command
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
 
-    # command
+    # submission command
     n_inputs = len(inputs)
+    n_iterations = int(options['iterations'])
     depend_clause = ' ' if pull_id is None else (' --depend=afterany:' + pull_id + ' ')
-    array_clause = ' ' if (n_inputs == 0 or kind == InputKind.DIRECTORY) else (' --array=1-' + str(n_inputs) + ' ')
+    if 'input' in options:
+        array_clause = ' ' if (n_inputs == 0 or kind == InputKind.DIRECTORY) else (' --array=1-' + str(n_inputs) + ' ')
+    elif n_iterations > 1:
+        array_clause = f" --array=1-{n_iterations}"
+    else: array_clause = ' '
     if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
     else:
         command = f"sbatch{depend_clause}{array_clause}{task.guid}.sh"
@@ -694,6 +699,12 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
         else:
             mount = [parse_bind_mount(work_dir, mount_point) for mount_point in config['mount']]
 
+    iterations = None
+    if 'iterations' in config:
+        iterations = config['iterations']
+        if not (isinstance(iterations, int) or isinstance(iterations, str)):
+            errors.append('Attribute \'iterations\' must be parsable as an int')
+
     input = None
     if 'input' in config:
         if 'kind' not in config['input']:
@@ -794,6 +805,7 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if parameters is not None: options['parameters'] = parameters
     if env is not None: options['env'] = env
     if mount is not None: options['mount'] = mount
+    if iterations is not None: options['iterations'] = iterations
     # if checksums is not None: options['checksums'] = checksums
     if log_file is not None: options['log_file'] = log_file
     if jobqueue is not None: options['jobqueue'] = jobqueue

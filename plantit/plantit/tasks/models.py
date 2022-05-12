@@ -246,6 +246,7 @@ class TaskOptions(TypedDict, total=False):
     command: str
     input: Input
     output: dict
+    iterations: int
     parameters: List[Parameter]
     env: List[EnvironmentVariable]
     bind_mounts: List[BindMount]

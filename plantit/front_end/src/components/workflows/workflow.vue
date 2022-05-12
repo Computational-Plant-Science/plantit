@@ -3630,6 +3630,8 @@
                                                                 align-self="end"
                                                             >
                                                                 <b-input-group>
+                                                                  <b-form-input v-if="submitType === 'Now'" v-show="submitType === 'Now' && getWorkflow.config.input === undefined" min="1" max="10" v-model="iterations" type="number"></b-form-input>
+                                                                    <!--<b-input-group-append is-text>{{ iterations }} Run{{ iterations === 1 ? '' : 's' }}</b-input-group-append>-->
                                                                     <template
                                                                         #append
                                                                     >
@@ -3703,26 +3705,6 @@
                                                                             >
                                                                         </b-dropdown>
                                                                     </template>
-                                                                    <!--<template
-                                                                        #append
-                                                                        ><b-form-spinbutton
-                                                                            min="1"
-                                                                            max="20"
-                                                                            value="1"
-                                                                            v-model="
-                                                                                iterations
-                                                                            "
-                                                                        ></b-form-spinbutton
-                                                                        >{{
-                                                                            iterations
-                                                                        }}
-                                                                        Time{{
-                                                                            iterations ===
-                                                                            1
-                                                                                ? ''
-                                                                                : 's'
-                                                                        }}</template
-                                                                    >-->
                                                                 </b-input-group>
                                                             </b-col>
                                                             <b-col
@@ -5077,6 +5059,7 @@ export default {
                 gpu: this.getWorkflow.config.gpu,
                 env: this.getWorkflow.config.env,
                 mount: this.getWorkflow.config.mount,
+                iterations: Number(this.iterations),
                 jobqueue:
                     this.getWorkflow.config.jobqueue !== undefined
                         ? this.getWorkflow.config.jobqueue
@@ -5167,6 +5150,7 @@ export default {
             // noop
         },
         selectedInput: function () {},
+        iterations: function() {},
     },
     computed: {
         ...mapGetters('user', ['profile']),
