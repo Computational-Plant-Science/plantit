@@ -19,7 +19,6 @@ export const user = {
             projects: [],
             hints: false,
             stats: null,
-            maintenanceWindows: []
         },
         profileLoading: true
     }),
@@ -57,14 +56,48 @@ export const user = {
         setStats(state, stats) {
             state.profile.stats = stats;
         },
-        setMaintenanceWindows(state, windows) {
-            state.profile.maintenanceWindows = windows;
-        },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
         }
     },
     actions: {
+             async loadProfile({ commit }) {
+                 commit('setProfileLoading', true);
+                 await axios
+                     .get(`/apis/v1/users/get_current/`)
+                     .then(response => {
+                         // determine whether user is logged in
+                         let decoded = jwtDecode(response.data.django_profile.cyverse_token);
+                         let now = Math.floor(Date.now() / 1000);
+                         if (now > decoded.exp) commit('setLoggedIn', false);
+                         else commit('setLoggedIn', true);
+
+                         // determine whether user is logged into GitHub
+                         commit('setLoggedIntoGithub', response.data.github_profile !== undefined && response.data.github_profile !== null);
+
+                         // set profile info
+                         commit('setDjangoProfile', response.data.django_profile);
+                         commit('setCyverseProfile', response.data.cyverse_profile);
+                         commit('setGithubProfile', response.data.github_profile);
+                         commit('setOrganizations', response.data.organizations);
+                         commit('setFirst', response.data.django_profile.first);
+                         commit('setDarkMode', response.data.django_profile.dark_mode);
+                         commit('setHints', response.data.django_profile.hints);
+                         commit('setPushNotifications', response.data.django_profile.push_notifications);
+                         commit('setStats', response.data.stats);
+                         commit('setProfileLoading', false);
+                     })
+                     .catch(error => {
+                         commit('setProfileLoading', false);
+                         Sentry.captureException(error);
+                         if (error.response.status === 500) throw error;
+                         else if (error.response.status === 401 || error.response.status === 403) {
+                             // if we get a 401 or 403, log the user out
+                             sessionStorage.clear();
+                             window.location.replace('/apis/v1/idp/cyverse_logout/');
+                         }
+                     });
+             },
         setProfileLoading({commit}, loading) {
             commit('setProfileLoading', loading)
         },
@@ -136,9 +169,6 @@ export const user = {
         },
         setStats({commit}, stats) {
             commit('setStats', stats);
-        },
-        setMaintenanceWindows({commit}, windows) {
-            commit('setMaintenanceWindows', windows);
         },
     },
     getters: {

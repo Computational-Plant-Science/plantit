@@ -920,7 +920,6 @@ export default {
         await Promise.all([
             this.loadVersion(),
             this.loadProfile(),
-            this.loadDatasets(),
             this.loadMaintenanceWindows(),
         ]);
 
@@ -945,7 +944,30 @@ export default {
           // TODO
         },
         async loadProfile() {
-            // TODO: feature flag to toggle the old/new implementations for performance testing
+            // feature flag to toggle between the old/new state loading method
+            if (process.env.VUE_APP_LOAD_STATE_SEPARATELY) {
+                await this.$store.dispatch('user/loadProfile');
+                await Promise.all([
+                    this.$store.dispatch('users/loadAll'),
+                    this.$store.dispatch('tasks/loadAll'),
+                    this.$store.dispatch('tasks/loadDelayed'),
+                    this.$store.dispatch('tasks/loadRepeating'),
+                    this.$store.dispatch('notifications/loadAll'),
+                    this.$store.dispatch('workflows/loadPublic'),
+                    this.$store.dispatch('workflows/loadUser'),
+                    this.$store.dispatch('workflows/loadOrg'),
+                    this.$store.dispatch('workflows/loadProject'),
+                    this.$store.dispatch('agents/loadAll'),
+                    this.$store.dispatch('datasets/loadPublic'),
+                    this.$store.dispatch('datasets/loadUser'),
+                    this.$store.dispatch('datasets/loadShared'),
+                    this.$store.dispatch('datasets/loadSharing'),
+                    this.$store.dispatch('projects/loadUser'),
+                    this.$store.dispatch('projects/loadOthers'),
+                ]);
+                return;
+            }
+
             await this.$store.dispatch('user/setProfileLoading', true);
             const begin = Date.now();
             console.log(begin);
@@ -1002,10 +1024,6 @@ export default {
                         response.data.django_profile.push_notifications
                     );
                     this.$store.dispatch('user/setStats', response.data.stats);
-                    this.$store.dispatch(
-                        'user/setMaintenanceWindows',
-                        response.data.maintenance_windows
-                    );
                     this.$store.dispatch('user/setProfileLoading', false);
 
                     // load notifications into Vuex
@@ -1091,6 +1109,7 @@ export default {
                         window.location.replace('/apis/v1/idp/cyverse_logout/');
                     }
                 });
+            await this.loadDatasets();
         },
         async loadDatasets() {
             await Promise.all([
