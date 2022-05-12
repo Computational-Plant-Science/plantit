@@ -30,7 +30,7 @@ from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
 from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskCounter, TaskStatus
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask, TaskCounter, TaskStatus
 from plantit.users.models import Profile
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
@@ -396,7 +396,8 @@ def task_to_dict(task: Task) -> dict:
         'job_status': task.job_status,
         # 'job_walltime': task.job_consumed_walltime,
         'delayed_id': task.delayed_id,
-        'repeating_id': task.repeating_id
+        'repeating_id': task.repeating_id,
+        'triggered_id': task.triggered_id
     }
 
 
@@ -424,6 +425,26 @@ def repeating_task_to_dict(task: RepeatingTask):
         # 'agent': agent_to_dict(task.agent),
         'name': task.name,
         'eta': task.eta,
+        'interval': {
+            'every': task.interval.every,
+            'period': task.interval.period
+        },
+        'enabled': task.enabled,
+        'last_run': task.last_run_at,
+        'workflow_owner': task.workflow_owner,
+        'workflow_name': task.workflow_name,
+        'workflow_branch': task.workflow_branch,
+        'workflow_image_url': task.workflow_image_url,
+    }
+
+
+def triggered_task_to_dict(task: RepeatingTask):
+    return {
+        # 'agent': agent_to_dict(task.agent),
+        'name': task.name,
+        'eta': task.eta,
+        'path': task.path,
+        'modified': task.modified.isoformat(),
         'interval': {
             'every': task.interval.every,
             'period': task.interval.period
@@ -612,6 +633,10 @@ def get_delayed_tasks(user: User):
 # TODO: paginate
 def get_repeating_tasks(user: User):
     return [repeating_task_to_dict(task) for task in RepeatingTask.objects.filter(user=user, enabled=True)]
+
+
+def get_triggered_tasks(user: User):
+    return [triggered_task_to_dict(task) for task in TriggeredTask.objects.filter(user=user, enabled=True)]
 
 
 @sync_to_async

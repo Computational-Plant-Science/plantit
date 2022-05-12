@@ -1004,6 +1004,10 @@ export default {
                         'tasks/setRepeating',
                         response.data.repeating_tasks
                     );
+                    this.$store.dispatch(
+                        'tasks/setTriggered',
+                        response.data.triggered_tasks
+                    );
                     this.$store.dispatch('tasks/setLoading', false);
 
                     // load workflows into Vuex

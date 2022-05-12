@@ -372,6 +372,43 @@
                                                 ></repeatingtaskblurb>
                                             </b-list-group>
                                         </b-col>
+                                        <b-col>
+                                            <b-row
+                                                class="m-3 mb-1 pl-0 pr-0"
+                                                align-v="center"
+                                            >
+                                                <b-col><b>Triggered</b></b-col>
+                                            </b-row>
+                                            <b-row
+                                                v-if="
+                                                    !tasksLoading &&
+                                                    tasksTriggered.length === 0
+                                                "
+                                                class="m-0 pl-0 pr-0"
+                                            >
+                                                <b-col>
+                                                    <p
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        No triggered tasks are
+                                                        scheduled.
+                                                    </p>
+                                                </b-col>
+                                            </b-row>
+                                            <b-list-group
+                                                class="text-left m-0 p-0 mt-1"
+                                            >
+                                                <triggeredtaskblurb
+                                                    v-for="task in tasksTriggered"
+                                                    v-bind:key="task.guid"
+                                                    :task="task"
+                                                ></triggeredtaskblurb>
+                                            </b-list-group>
+                                        </b-col>
                                     </b-row>
                                 </b-tab>
                             </b-tabs>
@@ -397,6 +434,7 @@ import { guid } from '@/utils';
 import taskblurb from '@/components/tasks/task-blurb';
 import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
 import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
+import triggeredtaskblurb from '@/components/tasks/triggered-task-blurb';
 
 export default {
     name: 'tasks',
@@ -404,6 +442,7 @@ export default {
         taskblurb,
         delayedtaskblurb,
         repeatingtaskblurb,
+        triggeredtaskblurb,
     },
     data: function () {
         return {
@@ -470,6 +509,35 @@ export default {
                     throw error;
                 });
         },
+        async deleteTriggered(guid) {
+            this.unschedulingTriggered = true;
+            await axios
+                .get(`/apis/v1/tasks/${guid}/unschedule_triggered/`)
+                .then(async (response) => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'tasks/setTriggered',
+                            response.data.tasks
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unscheduled triggered task`,
+                            guid: guid().toString(),
+                        }),
+                    ]);
+                    this.unschedulingTriggered = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unschedule triggered task`,
+                        guid: guid().toString(),
+                    });
+                    this.unschedulingTriggered = false;
+                    throw error;
+                });
+        },
         async loadMoreTasks() {
             await this.$store.dispatch('tasks/loadMore', {
                 page: this.tasksNextPage,
@@ -485,6 +553,7 @@ export default {
                 this.$store.dispatch('tasks/loadAll'),
                 this.$store.dispatch('tasks/loadDelayed'),
                 this.$store.dispatch('tasks/loadRepeating'),
+                this.$store.dispatch('tasks/loadTriggered'),
             ]);
         },
     },
@@ -494,6 +563,7 @@ export default {
             'tasks',
             'tasksDelayed',
             'tasksRepeating',
+            'tasksTriggered',
             'tasksLoading',
             'tasksRunning',
             'tasksCompleted',

@@ -3,7 +3,7 @@ import logging
 import os
 import traceback
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 from os.path import join, isdir
 from pathlib import Path
 from typing import List
@@ -24,7 +24,7 @@ from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_resources import get_task_ssh_client
 from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script
-from plantit.tasks.models import DelayedTask, RepeatingTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
+from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_job_id, get_output_included_names, get_output_included_patterns, \
@@ -146,7 +146,7 @@ def create_delayed_task(user: User, config: dict):
     return task, created
 
 
-def create_repeating_task(user: User, workflow):
+def create_repeating_task(user: User, workflow: dict):
     now = timezone.now().timestamp()
     id = f"{user.username}-repeating-{now}"
     eta, seconds = parse_task_eta(workflow['eta'])
@@ -173,6 +173,47 @@ def create_repeating_task(user: User, workflow):
         name=id,
         task='plantit.celery_tasks.create_and_submit_repeating',
         args=json.dumps([user.username, workflow, id]))
+
+    # manually refresh task schedule
+    PeriodicTasks.changed(task)
+
+    return task, created
+
+
+def create_triggered_task(user: User, config: dict):
+    now = timezone.now().timestamp()
+    id = f"{user.username}-triggered-{now}"
+    eta, seconds = parse_task_eta(config['eta'])
+    schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+
+    repo_owner = config['repo']['owner']
+    repo_name = config['repo']['name']
+    repo_branch = config['repo']['branch']
+
+    if 'logo' in config:
+        logo_path = config['logo']
+        workflow_image_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{repo_branch}/{logo_path}"
+    else:
+        workflow_image_url = None
+
+    # check when the path was last modified
+    watch_path = config['workflow']['input']['path']
+    client = TerrainClient(access_token=user.profile.cyverse_access_token)
+    modified = datetime.fromtimestamp(int(str(client.stat(path=watch_path)['date-modified']).strip("0")))
+
+    task, created = TriggeredTask.objects.get_or_create(
+        user=user,
+        interval=schedule,
+        eta=eta,
+        path=watch_path,
+        modified=modified,
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
+        workflow_branch=repo_branch,
+        workflow_image_url=workflow_image_url,
+        name=id,
+        task='plantit.celery_tasks.create_and_submit_triggered',
+        args=json.dumps([user.username, config, id]))
 
     # manually refresh task schedule
     PeriodicTasks.changed(task)

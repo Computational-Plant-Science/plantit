@@ -275,6 +275,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'tasks': q.get_tasks(user, page=1),
             'delayed_tasks': q.get_delayed_tasks(user),
             'repeating_tasks': q.get_repeating_tasks(user),
+            'triggered_tasks': q.get_triggered_tasks(user),
             'notifications': q.get_notifications(user, page=1),
             'agents': q.get_agents(user),
             'workflows': {

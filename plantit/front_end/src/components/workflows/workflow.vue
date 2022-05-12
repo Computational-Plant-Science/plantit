@@ -3685,6 +3685,22 @@
                                                                                 "
                                                                                 >Every</b-dropdown-item
                                                                             >
+                                                                            <b-dropdown-item
+                                                                                v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .input !==
+                                                                        undefined
+                                                                    "
+                                                                                class="
+                                                                                    darklinks
+                                                                                "
+                                                                                @click="
+                                                                                    submitType =
+                                                                                        'Watch'
+                                                                                "
+                                                                                >Watch</b-dropdown-item
+                                                                            >
                                                                         </b-dropdown>
                                                                     </template>
                                                                     <!--<template
@@ -3777,7 +3793,13 @@
                                                                     </template></b-input-group
                                                                 ></b-col
                                                             > </b-row
-                                                        ><b-row class="mt-4">
+                                                        >
+                                                  <!--<b-row class="mt-4" v-if="submitType === 'Watch'">
+                                                    <b-col>
+                                                      Watching {{ input.path }}
+                                                    </b-col>
+                                                  </b-row>-->
+                                                  <b-row class="mt-4">
                                                             <b-col
                                                                 ><b-row
                                                                     ><b-col
@@ -3937,6 +3959,77 @@
                                                                             task
                                                                         "
                                                                     ></repeatingtaskblurb>
+                                                                </b-list-group>
+
+                                                                <b-row
+                                                                    class="mt-3"
+                                                                >
+                                                                    <b-col
+                                                                        ><b
+                                                                            >Triggered</b
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        tasksLoading
+                                                                    "
+                                                                    ><b-col
+                                                                        ><b-spinner
+                                                                            small
+                                                                            label="Loading..."
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'light'
+                                                                                    : 'dark'
+                                                                            "
+                                                                            class="
+                                                                                mr-1
+                                                                            "
+                                                                        ></b-spinner></b-col
+                                                                ></b-row>
+                                                                <b-row
+                                                                    v-else-if="
+                                                                        !tasksLoading &&
+                                                                        triggeredTasks.length ===
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <p
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light pl-3 pr-3'
+                                                                                    : 'text-dark pl-3 pr-3'
+                                                                            "
+                                                                        >
+                                                                            No
+                                                                            triggered
+                                                                            tasks
+                                                                            are
+                                                                            scheduled.
+                                                                        </p>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-list-group
+                                                                    v-else
+                                                                    class="
+                                                                        text-left
+                                                                        m-0
+                                                                        p-0
+                                                                        mt-2
+                                                                        mb-2
+                                                                    "
+                                                                >
+                                                                    <triggeredtaskblurb
+                                                                        v-for="task in triggeredTasks"
+                                                                        v-bind:key="
+                                                                            task.name
+                                                                        "
+                                                                        :task="
+                                                                            task
+                                                                        "
+                                                                    ></triggeredtaskblurb>
                                                                 </b-list-group>
                                                             </b-col>
                                                         </b-row> </b-col
@@ -4300,6 +4393,7 @@ import cronstrue from 'cronstrue';
 import { guid } from '@/utils';
 import delayedtaskblurb from '@/components/tasks/delayed-task-blurb';
 import repeatingtaskblurb from '@/components/tasks/repeating-task-blurb';
+import triggeredtaskblurb from '@/components/tasks/triggered-task-blurb';
 
 String.prototype.capitalize = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -4312,6 +4406,7 @@ export default {
         datatree,
         delayedtaskblurb,
         repeatingtaskblurb,
+        triggeredtaskblurb,
     },
     props: {
         owner: {
@@ -4921,6 +5016,52 @@ export default {
                     throw error;
                 });
         },
+        async submitTriggered(data) {
+            data['eta'] = {
+                units: this.delayUnits,
+                delay: this.delayValue,
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/tasks/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(async (response) => {
+                    if (response.status === 200 && response.data.created) {
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'tasks/addTriggered',
+                                response.data.task
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Scheduled triggered task for ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                                guid: guid().toString(),
+                                time: moment().format(),
+                            }),
+                        ]);
+                    } else
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to schedule task for ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                            guid: guid().toString(),
+                            time: moment().format(),
+                        });
+                    this.submitting = false;
+                })
+                .catch(async (error) => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to schedule trigger task ${this.$router.currentRoute.params.name} on ${data.agent}`,
+                        guid: guid().toString(),
+                        time: moment().format(),
+                    });
+                    this.submitting = false;
+                    throw error;
+                });
+        },
         async onStart() {
             this.submitting = true;
 
@@ -5014,6 +5155,8 @@ export default {
                 await this.submitDelayed(postData);
             else if (this.submitType === 'Every')
                 await this.submitRepeating(postData);
+            else if (this.submitType === 'Watch')
+                await this.submitTriggered(postData);
         },
     },
     watch: {
@@ -5038,6 +5181,7 @@ export default {
             'tasksLoading',
             'tasksDelayed',
             'tasksRepeating',
+            'tasksTriggered'
         ]),
         ...mapGetters('agents', ['agentsLoading', 'agentsPermitted']),
         ...mapGetters('datasets', [
@@ -5075,6 +5219,14 @@ export default {
         },
         repeatingTasks() {
             return this.tasksRepeating.filter(
+                (t) =>
+                    t.workflow_owner === this.getWorkflow.repo.owner.login &&
+                    t.workflow_name === this.getWorkflow.repo.name &&
+                    t.workflow_branch === this.getWorkflow.branch.name
+            );
+        },
+        triggeredTasks() {
+            return this.tasksTriggered.filter(
                 (t) =>
                     t.workflow_owner === this.getWorkflow.repo.owner.login &&
                     t.workflow_name === this.getWorkflow.repo.name &&
