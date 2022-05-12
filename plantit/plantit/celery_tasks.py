@@ -951,8 +951,7 @@ def migrate_dirt_datasets(self, username: str):
         if client.dir_exists(root_collection_path):
             logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
             return
-        else:
-            client.create_directory(root_collection_path)
+        else: client.mkdir(root_collection_path)
 
         # transfer all the user's datasets to the temporary staging directory on this server
         for folder in datasets:
@@ -969,7 +968,7 @@ def migrate_dirt_datasets(self, username: str):
                 logger.warning(f"Collection {collection_path} already exists, aborting DIRT migration for {user.username}")
                 return
             else:
-                client.create_directory(collection_path)
+                client.mkdir(collection_path)
 
             # upload all files to collection
             client.upload_directory(
@@ -988,7 +987,7 @@ def migrate_dirt_datasets(self, username: str):
         # get ID of newly created collection
         root_collection_id = client.stat(root_collection_path)['id']
 
-        # mark root collection timestamp as metadata
+        # add collection timestamp as metadata
         end = timezone.now()
         client.set_metadata(root_collection_id, [
             f"dirt_migration_timestamp={end.isoformat()}",

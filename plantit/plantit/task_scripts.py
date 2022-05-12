@@ -173,7 +173,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
         headers.append(f"#SBATCH -N {nodes}")
         headers.append(f"#SBATCH --ntasks={tasks}")
     else:
-        headers.append(f"#SBATCH -N 1")
+        headers.append("#SBATCH -N 1")
         headers.append("#SBATCH --ntasks=1")
 
     # gpus

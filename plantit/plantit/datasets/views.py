@@ -112,7 +112,7 @@ async def share(request):
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
     client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
-    await client.share_dir_async(body)
+    await client.share_async(body)
 
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
@@ -177,7 +177,7 @@ async def unshare(request):
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
     client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
-    await client.unshare_dir_async(body)
+    await client.unshare_async(body)
 
     await sync_to_async(policy.delete)()
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
@@ -210,7 +210,7 @@ async def create(request):
     study = body.get('study', None)
     profile = await sync_to_async(Profile.objects.get)(user=owner)
     client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
-    await client.create_dir_async(path)
+    await client.mkdir_async(path)
 
     if project is not None and study is not None:
         try:

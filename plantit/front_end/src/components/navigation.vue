@@ -610,6 +610,21 @@
                             Log in to GitHub
                         </b-dropdown-item>
                         <b-dropdown-item
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            title="Start DIRT migration"
+                            @click="showDirtMigration"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-suitcase fa-fw"></i>
+                            DIRT Migration
+                        </b-dropdown-item>
+                        <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
                             class="text-danger"
@@ -621,7 +636,7 @@
                     </b-nav-item-dropdown>
                     <b-nav-item
                         href="/apis/v1/idp/cyverse_login/"
-                        v-else-if="maintenance === undefined"
+                        v-else-if="maintenance === undefined && !profileLoading"
                     >
                         <b-button
                             variant="white"
@@ -835,7 +850,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters('user', ['profile']),
+        ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('alerts', ['alerts']),
         ...mapGetters('tasks', [
             'tasks',
@@ -919,7 +934,11 @@ export default {
         },
     },
     methods: {
+        showDirtMigration() {
+          // TODO
+        },
         async loadProfile() {
+            // TODO: feature flag to toggle the old/new implementations for performance testing
             await this.$store.dispatch('user/setProfileLoading', true);
             await axios
                 .get(`/apis/v1/users/get_current/`)
