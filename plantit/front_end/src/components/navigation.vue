@@ -445,7 +445,14 @@
                                 <b-img
                                     id="avatar"
                                     v-if="profile.loggedIntoGitHub"
-                                    class="avatar m-0 mb-1 p-0 github-hover logo"
+                                    class="
+                                        avatar
+                                        m-0
+                                        mb-1
+                                        p-0
+                                        github-hover
+                                        logo
+                                    "
                                     style="
                                         min-width: 20px;
                                         min-height: 20px;
@@ -940,6 +947,8 @@ export default {
         async loadProfile() {
             // TODO: feature flag to toggle the old/new implementations for performance testing
             await this.$store.dispatch('user/setProfileLoading', true);
+            const begin = Date.now();
+            console.log(begin);
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then((response) => {
@@ -1065,7 +1074,10 @@ export default {
                         response.data.projects
                     );
                     this.$store.dispatch('projects/setLoading', false);
+                    const timing = Date.now() - begin;
+                    console.log('Load time: ' + timing + 'ms');
                 })
+
                 .catch((error) => {
                     this.$store.dispatch('user/setProfileLoading', false);
                     Sentry.captureException(error);
@@ -1238,8 +1250,7 @@ export default {
         },
         getTaskStatus(task) {
             if (!task.is_complete) {
-                if (task.job_status === null)
-                    return task.status.toUpperCase();
+                if (task.job_status === null) return task.status.toUpperCase();
                 else return task.job_status.toUpperCase();
             }
             return task.status.toUpperCase();
