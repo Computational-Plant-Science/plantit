@@ -8,6 +8,7 @@ export const tasks = {
         tasks: [],
         delayed: [],
         repeating: [],
+        triggered: [],
         loading: true,
         nextPage: 2,
     }),
@@ -20,6 +21,9 @@ export const tasks = {
         },
         setRepeating(state, tasks) {
             state.repeating = tasks;
+        },
+        setTriggered(state, tasks) {
+            state.triggered = tasks;
         },
         addAll(state, tasks) {
             state.tasks = state.tasks.concat(tasks);
@@ -38,16 +42,19 @@ export const tasks = {
             // check if task.delayed_id or task.repeating_id matches any delayed or repeating tasks and remove them
             let j = state.delayed.findIndex((t) => t.name === task.delayed_id);
             if (j !== -1) state.delayed.splice(j, 1);
-            let k = state.repeating.findIndex(
-                (t) => t.name === task.repeating_id
-            );
+            let k = state.repeating.findIndex((t) => t.name === task.repeating_id);
             if (k !== -1) state.repeating.splice(k, 1);
+            let l = state.triggered.findIndex((t) => t.name === task.triggered_id);
+            if (l !== -1) state.triggered.splice(l, 1);
         },
         addDelayed(state, task) {
             state.delayed.unshift(task);
         },
         addRepeating(state, task) {
             state.repeating.unshift(task);
+        },
+        addTriggered(state, task) {
+            state.triggered.unshift(task);
         },
     },
     actions: {
@@ -59,6 +66,9 @@ export const tasks = {
         },
         setRepeating({ commit }, tasks) {
             commit('setRepeating', tasks);
+        },
+        setTriggered({ commit }, tasks) {
+            commit('setTriggered', tasks);
         },
         setLoading({commit}, loading) {
             commit('setLoading', loading)
@@ -159,6 +169,21 @@ export const tasks = {
             ]);
             commit('setLoading', false);
         },
+        async loadTriggered({ commit }) {
+            commit('setLoading', true);
+            await Promise.all([
+                axios
+                    .get(`/apis/v1/tasks/triggered/`)
+                    .then((response) => {
+                        commit('setTriggered', response.data.tasks);
+                    })
+                    .catch((error) => {
+                        Sentry.captureException(error);
+                        throw error;
+                    }),
+            ]);
+            commit('setLoading', false);
+        },
         refresh({ commit }, payload) {
             commit('setLoading', true);
             axios
@@ -182,6 +207,9 @@ export const tasks = {
         addRepeating({ commit }, task) {
             commit('addRepeating', task);
         },
+        addTriggered({ commit }, task) {
+            commit('addTriggered', task);
+        },
     },
     getters: {
         task: (state) => (guid) => {
@@ -191,6 +219,7 @@ export const tasks = {
         tasks: (state) => (state.tasks === undefined ? [] : state.tasks),
         tasksDelayed: (state) => state.delayed,
         tasksRepeating: (state) => state.repeating,
+        tasksTriggered: (state) => state.triggered,
         tasksRunning: (state) => state.tasks.filter((t) => !t.is_complete),
         tasksCompleted: (state) => state.tasks.filter((t) => t.is_complete),
         tasksSucceeded: (state) => state.tasks.filter((t) => t.is_success),

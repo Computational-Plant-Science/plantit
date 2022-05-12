@@ -115,7 +115,6 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
     async_to_sync(push_task_channel_event)(itask)
 
 
-
 #  Task Lifecycle  #
 #
 # prep environment

@@ -18,7 +18,7 @@ from plantit import settings
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
     get_job_log_file_path, \
     get_task_agent_log_file_path
@@ -53,7 +53,7 @@ def get_or_create(request):
             # create task
             task = create_immediate_task(request.user, task_config)
 
-            # submit head of Celery (task chain ;)
+            # submit Celery task chain
             (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
@@ -97,6 +97,13 @@ def get_delayed(request):
 @api_view(['GET'])
 def get_repeating(request):
     return JsonResponse({'tasks': q.get_repeating_tasks(request.user)})
+
+
+@login_required
+@swagger_auto_schema(method='get', auto_schema=None)
+@api_view(['GET'])
+def get_triggered(request):
+    return JsonResponse({'tasks': q.get_triggered_tasks(request.user)})
 
 
 @login_required
@@ -369,6 +376,22 @@ def unschedule_repeating(request, guid):
                                    RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
+# TODO switch to post
+@login_required
+@swagger_auto_schema(method='get', auto_schema=None)
+@api_view(['GET'])
+def unschedule_triggered(request, guid):
+    try:
+        task = TriggeredTask.objects.get(user=request.user, name=guid)
+    except:
+        return HttpResponseNotFound()
+    task.delete()
+
+    # TODO paginate
+    return JsonResponse({'tasks': [q.triggered_task_to_dict(task) for task in
+                                   TriggeredTask.objects.filter(user=request.user, enabled=True)]})
+
+
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
@@ -432,3 +455,18 @@ def search_repeating(request, owner, workflow_name):
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
     return JsonResponse([q.repeating_task_to_dict(t) for t in tasks], safe=False)
+
+
+@login_required
+@swagger_auto_schema(method='get', auto_schema=None)
+@api_view(['GET'])
+def search_triggered(request, owner, workflow_name):
+    user = User.objects.get(username=owner)
+    try:
+        tasks = TriggeredTask.objects.filter(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    # TODO paginate
+    tasks = [t for t in tasks if t.workflow_name == workflow_name]
+    return JsonResponse([q.triggered_task_to_dict(t) for t in tasks], safe=False)

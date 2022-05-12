@@ -3,7 +3,7 @@ import logging
 import os
 import traceback
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 from os.path import join, isdir
 from pathlib import Path
 from typing import List
@@ -197,9 +197,9 @@ def create_triggered_task(user: User, config: dict):
         workflow_image_url = None
 
     # check when the path was last modified
-    watch_path = config['watch_path']
+    watch_path = config['workflow']['input']['path']
     client = TerrainClient(access_token=user.profile.cyverse_access_token)
-    modified = client.stat(path=watch_path)['date-modified']
+    modified = datetime.fromtimestamp(int(str(client.stat(path=watch_path)['date-modified']).strip("0")))
 
     task, created = TriggeredTask.objects.get_or_create(
         user=user,
