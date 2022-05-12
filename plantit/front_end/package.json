@@ -103,6 +103,14 @@
       "@vue/prettier"
     ],
     "rules": {},
+    "overrides": [
+      {
+        "files": ["*.vue"],
+        "rules": {
+          "no-console": "off"
+        }
+      }
+    ],
     "parserOptions": {
       "parser": "babel-eslint"
     }
