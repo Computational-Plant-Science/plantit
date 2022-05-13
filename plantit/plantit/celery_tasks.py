@@ -2,6 +2,7 @@ import json
 import traceback
 from os import environ
 from os.path import join
+from datetime import datetime
 
 from asgiref.sync import async_to_sync
 from celery import group
@@ -90,7 +91,7 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
 
     # check if the data have changed since last time we checked
     client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
-    modified = client.stat(path=task.path)['date-modified']
+    modified = datetime.fromtimestamp(int(str(client.stat(path=task.path)['date-modified']).strip("0")))
 
     # if the data haven't changed, nothing to do
     if task.modified <= modified:
@@ -270,6 +271,7 @@ def share_data(self, guid: str):
 
         return guid
     except Exception:
+        logger.warning(traceback.format_exc())
         self.request.callbacks = None
         __handle_job_failure(task, f"Failed to grant temporary data access")
 
