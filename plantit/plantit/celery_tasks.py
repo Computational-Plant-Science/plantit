@@ -635,7 +635,7 @@ def unshare_data(self, guid: str):
 
         # revoke the plantit CyVerse user's access to the source and target collections
         client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
-        client.unshare_many(user=task.user.username, paths=paths)
+        client.unshare_many(username=task.user.username, paths=paths)
 
         # log_task_status(task, [f"Revoked temporary data access"])
         # async_to_sync(push_task_channel_event)(task)
