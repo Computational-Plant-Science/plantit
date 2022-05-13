@@ -4,9 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [Resources](#resources)
-  - [Agents](#agents)
-  - [Tasks](#tasks)
+- [Endpoints](#endpoints)
   - [Stats](#stats)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
