@@ -264,7 +264,7 @@ def share_data(self, guid: str):
 
         # share the user's source and target collections with the plantit CyVerse user
         client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
-        client.share_many(user=settings.CYVERSE_USERNAME, paths=paths)
+        client.share_many(username=settings.CYVERSE_USERNAME, paths=paths)
 
         # log_task_status(task, [f"Granted temporary data access"])
         # async_to_sync(push_task_channel_event)(task)
