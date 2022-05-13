@@ -55,11 +55,11 @@ A <i class="fas fa-stream fa-1x fa-fw"></i> [**Workflow**](../concepts/workflows
 
 A <i class="fas fa-tasks fa-1x fa-fw"></i> [**Task**](../concepts/tasks.md) is an instance of a workflow, deployed to an agent. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding an orchestrator process. When the orchestrator picks up the task, it generates a job script and submits it to the selected cluster/supercomputer scheduler, then monitors its progress until completion.
 
-![Task Overview](../../media/cycle.png)
+![Task Overview](../../media/cycle.jpg)
 
 The task lifecycle is a state machine progressing from `CREATED` to `RUNNING` to one of several mutually exclusive final states (`COMPLETED`,  `FAILED`, `TIMEOUT`, or `CANCELLED`).
 
-![Task Lifecycle](../../media/lifecycle.png)
+![Task Lifecycle](../../media/lifecycle.jpg)
 
 ### Projects
 
