@@ -41,7 +41,7 @@ A <i class="fas fa-database fa-1x fa-fw"></i> **Dataset** is a set of data objec
 
 ### Datasets
 
-A <i class="fas fa-database fa-1x fa-fw"></i> [**Dataset**](../concepts/datasets.md) is a collection of data objects in the CyVerse data store. 
+A <i class="fas fa-database fa-1x fa-fw"></i> [**Dataset**](../concepts/datasets.md) is a collection of data objects in the [CyVerse data store](https://cyverse.org/data-store). 
 
 ### Agents
 
@@ -49,13 +49,17 @@ An <i class="fas fa-server fa-1x fa-fw"></i> [**Agent**](../concepts/agents.md) 
 
 ### Workflows
 
-A <i class="fas fa-stream fa-1x fa-fw"></i> [**Workflow**](../concepts/workflows.md) is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows execute in a [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](../concepts/workflows.md).
+A <i class="fas fa-stream fa-1x fa-fw"></i> [**Workflow**](../concepts/workflows.md) is an executable research application packaged into a [Docker](https://www.docker.com/) image. Workflows are deployed in the [Singularity](https://sylabs.io/singularity/) container runtime. To define a workflow, [add a `plantit.yaml` file to any public GitHub repository](../concepts/workflows.md).
 
 ### Tasks
 
-A <i class="fas fa-tasks fa-1x fa-fw"></i> [**Task**](../concepts/tasks.md) is an instance of a workflow, deployed to an agent. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding a background process. When the process picks up the task, it generates a job script and submits it to the selected cluster/supercomputer scheduler, then monitors its progress until completion.
+A <i class="fas fa-tasks fa-1x fa-fw"></i> [**Task**](../concepts/tasks.md) is an instance of a workflow, deployed to an agent. When a task is submitted from the browser, the `plantit` web app hands it to an internal queue feeding an orchestrator process. When the orchestrator picks up the task, it generates a job script and submits it to the selected cluster/supercomputer scheduler, then monitors its progress until completion.
+
+![Task Overview](../../media/cycle.png)
 
 The task lifecycle is a state machine progressing from `CREATED` to `RUNNING` to one of several mutually exclusive final states (`COMPLETED`,  `FAILED`, `TIMEOUT`, or `CANCELLED`).
+
+![Task Lifecycle](../../media/lifecycle.png)
 
 ### Projects
 
