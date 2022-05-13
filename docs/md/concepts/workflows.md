@@ -47,9 +47,9 @@ To host a <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** on `plantit`, a
 At minimum, the `plantit.yaml` file should look something like this:
 
 ```yaml
-name: Hello Groot             
-author: Groot                
-image: docker://alpine
+name: Hello World
+author: Groot            
+image: docker://ubuntu
 commands: echo "I am Groot!"
 ```
 
