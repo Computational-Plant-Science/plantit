@@ -12,7 +12,7 @@
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="
                     width: 90%;
-                    height: 80%;
+                    height: 40%;
                     padding: 0;
                     margin: 0 auto;
                     float: none;
@@ -229,7 +229,7 @@
                                         text-decoration: underline;
                                         text-decoration-color: #d6df5d;
                                     "
-                                    >computational plant phenomics
+                                    >reproducible plant phenomics
                                 </span>
                             </i></b-col
                         >
@@ -245,7 +245,7 @@
                     >
                 </b-row>
                 <b-row class="m-0 mt-2 mb-2"
-                    ><b-col class="text-left">
+                    ><!--<b-col class="text-left">
                         <h5
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -265,7 +265,7 @@
                             >.
                         </p>
                         <hr />
-                        <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Built For</h5>-->
+                        <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Built For</h5>
                         <p
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -279,9 +279,9 @@
                                 to the worldwide research community.
                             </small>
                         </p>
-                        <!--<hr />-->
-                        <!--<h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Disclaimer</h5>-->
-                        <!--<p
+                        <hr />
+                        <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Disclaimer</h5>
+                        <p
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
@@ -296,8 +296,8 @@
                                 descriptions to confirm suitability for your use
                                 case.</small
                             >
-                        </p>--></b-col
-                    ><b-col
+                        </p></b-col
+                    >--><b-col
                         class="text-left"
                         style="overflow-y: scroll; height: 30rem"
                     >
@@ -564,7 +564,7 @@ export default {
 
 #main
     text-align: center
-    padding-bottom: 50px
+    // padding-bottom: 50px
     white-space: normal
 
 #message

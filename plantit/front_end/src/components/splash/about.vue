@@ -100,25 +100,44 @@
                             img-width="50px"
                             img-height="40px"
                             :img-src="
-                                require('../../assets/frontpage/icons/algorithm.png')
+                                require('../../assets/frontpage/icons/UI.png')
                             "
                             img-left
                             style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Store roots in the cloud
+                                    Phenomics rooted in the cloud
                                 </h4>
-                                Automatic transfers to and from the
-                                <b-link
+                                Built on <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
-                                >
-                                Data Store
-                                <br />
-                                Organize project teams and attach MIAPPE
-                                metadata
+                                 > for data storage and <b-link
+                                    class="text-white"
+                                    href="https://www.github.com/"
+                                    >Github</b-link
+                                > for source control,
+                              <br />
+                              <small><b-img
+                                    style="
+                                        max-width: 0.7rem;
+                                        position: relative;
+                                        top: 1px;
+                                    "
+                                    :src="require('../../assets/logo.png')"
+                                    left
+                                    class="m-0 p-0"
+                                ></b-img
+                                >plant<small
+                                    class="mb-3 text-success"
+                                    style="
+                                        text-decoration: underline;
+                                        text-shadow: 1px 1px 2px black;
+                                        z-index: 100;
+                                    "
+                                    ><small>IT</small></small
+                                ></small> is both science gateway and continuous delivery platform
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -126,22 +145,16 @@
                         ><b-col md="auto"
                             ><b-img
                                 rounded
-                                style="max-height: 4rem"
+                                style="max-height: 2rem"
                                 center
+                                class="mb-1"
                                 :src="
                                     require('../../assets/logos/cyverse_bright.png')
                                 "
-                            ></b-img></b-col
-                    ></b-col>
-                </b-row>
-                <br />
-                <br />
-                <b-row>
-                    <b-col md="auto"
-                        ><b-img
+                            ></b-img><b-img
                             rounded
-                            class="mt-3"
-                            style="max-height: 3rem"
+                            class="mt-2"
+                            style="max-height: 2rem"
                             left
                             :src="
                                 require('../../assets/logos/github_mark_white.png')
@@ -149,7 +162,31 @@
                         ></b-img
                         ><b-img
                             rounded
-                            style="max-height: 5rem"
+                            style="max-height: 3rem"
+                            center
+                            :src="
+                                require('../../assets/logos/github_white.png')
+                            "
+                        ></b-img
+                    ></b-col
+                    ></b-col>
+                </b-row>
+                <!--<br />
+                <br />
+                <b-row>
+                    <b-col md="auto"
+                        ><b-img
+                            rounded
+                            class="mt-3"
+                            style="max-height: 2rem"
+                            left
+                            :src="
+                                require('../../assets/logos/github_mark_white.png')
+                            "
+                        ></b-img
+                        ><b-img
+                            rounded
+                            style="max-height: 3rem"
                             center
                             :src="
                                 require('../../assets/logos/github_white.png')
@@ -175,36 +212,34 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Grow open source phenomics
+                                    Browser-based phenomics automation
                                 </h4>
-                                Explore curated tools or bind your own
-                                <b-link
-                                    class="text-white"
-                                    href="https://www.github.com/"
-                                    >Github</b-link
-                                >
-                                repo
+
                                 <br />
-                                Deploy
-                                <b-link
-                                    class="text-white"
-                                    href="https://www.docker.com/"
-                                    >Docker</b-link
-                                >
-                                images as
-                                <b-link
-                                    class="text-white"
-                                    href="https://sylabs.io/docs/"
-                                    >Singularity</b-link
-                                >
-                                containers
+                              Organize experiments and export <b-link class="text-white" href="https://www.miappe.org/">MIAPPE</b-link>
+                                metadata
                             </b-card-text>
                         </b-card>
                     </b-col>
-                </b-row>
+                </b-row>-->
                 <br />
                 <br />
                 <b-row>
+                    <b-col md="auto" align-self="center"
+                        ><b-img
+                            rounded
+                            style="max-height: 4rem"
+                            center
+                            :src="require('../../assets/logos/docker.png')"
+                        ></b-img></b-col
+                    ><b-col md="auto" align-self="center"
+                        ><b-img
+                            rounded
+                            style="max-height: 4rem"
+                            center
+                            :src="require('../../assets/logos/singularity.png')"
+                        ></b-img
+                    ></b-col>
                     <b-col>
                         <b-card
                             sub-title-text-variant="success"
@@ -215,36 +250,34 @@
                             bg-variant="dark"
                             text-variant="white"
                             :img-src="
-                                require('../../assets/frontpage/icons/UI.png')
+                                require('../../assets/frontpage/icons/algorithm.png')
                             "
-                            img-left
+                            img-right
                             style="border: none; box-shadow: none"
                         >
-                            <b-card-text class="ml-4 mr-4">
+                            <b-card-text
+                                class="ml-4 mr-4 text-white text-right"
+                            >
                                 <h4 class="text-success">
-                                    Code visible but optional
+                                    Open-source for open science
                                 </h4>
-                                Portable, reproducible computational pipelines
-                                <br />
-                                Continuous delivery to researchers everywhere
+                               Deploy
+                                <b-link
+                                    class="text-white"
+                                    href="https://www.docker.com/"
+                                    >Docker</b-link
+                                >
+                                image definitions to clusters with
+                                <b-link
+                                    class="text-white"
+                                    href="https://sylabs.io/docs/"
+                                    >Singularity</b-link
+                                >
+                                <br/>
+                                for portable, versionable, reproducible phenotyping pipelines
                             </b-card-text>
                         </b-card>
                     </b-col>
-                    <b-col md="auto"
-                        ><b-img
-                            rounded
-                            style="max-height: 5rem"
-                            center
-                            :src="require('../../assets/logos/docker.png')"
-                        ></b-img></b-col
-                    ><b-col md="auto"
-                        ><b-img
-                            rounded
-                            style="max-height: 5rem"
-                            center
-                            :src="require('../../assets/logos/singularity.png')"
-                        ></b-img
-                    ></b-col>
                 </b-row>
                 <br />
                 <br />

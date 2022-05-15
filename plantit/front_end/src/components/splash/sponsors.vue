@@ -9,113 +9,63 @@
             header-border-variant="white"
             style="border: none; box-shadow: none"
         >
-            <!--<template slot="header" style="border: none">
-                <br />
-                <br />
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b-img
-                            style="max-width: 3rem;transform: translate(0px, 20px);"
-                            :src="require('../../assets/logo.png')"
-                            center
-                            class="m-0 p-0"
-                        ></b-img>
-                        <br />
-                        <h5>
-                            Supported by...
-                        </h5>
-                        <br />
-                    </b-col>
-                </b-row>
-            </template>-->
             <br />
-            <b-card-group columns>
-                <b-card
-                    class="mt-1"
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://arpa-e.energy.gov/">
-                        <b-img
-                            :src="require('@/assets/sponsors/arpa_e.png')"
-                            height="40px"
-                            alt="ARPA-E"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.cyverse.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/cyversebw.png')"
-                            height="42px"
-                            alt="Cyverse"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.xsede.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/xsede.png')"
-                            height="55px"
-                            alt="XSEDE"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none; top: -20px"
-                >
+          <b-row>
+              <b-col>
                     <b-link href="https://www.nsf.gov/">
                         <b-img
                             :src="require('@/assets/sponsors/nsf.png')"
-                            height="50px"
+                            height="35px"
                             alt="National Science Foundation"
                         ></b-img>
                     </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.uga.edu/">
+              </b-col>
+              <b-col>
+                    <b-link href="http://www.cyverse.org/">
                         <b-img
-                            :src="require('@/assets/sponsors/uga.png')"
-                            height="40px"
-                            alt="University Of Georgia"
+                            :src="require('@/assets/sponsors/cyversebw.png')"
+                            height="35px"
+                            alt="Cyverse"
                         ></b-img>
                     </b-link>
-                </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
+            </b-col>
+            <b-col>
+                    <b-link href="http://arpa-e.energy.gov/">
+                        <b-img
+                            :src="require('@/assets/sponsors/arpa_e.png')"
+                            height="35px"
+                            alt="ARPA-E"
+                        ></b-img>
+                    </b-link>
+
+            </b-col>
+            <b-col>
+                    <b-link href="http://www.xsede.org/">
+                        <b-img
+                            :src="require('@/assets/sponsors/xsede.png')"
+                            height="35px"
+                            alt="XSEDE"
+                        ></b-img>
+                    </b-link>
+            </b-col>
+            <b-col>
                     <b-link href="http://gacra.uga.edu/">
                         <b-img
                             :src="require('@/assets/sponsors/gacrc.png')"
-                            height="40px"
+                            height="35px"
                             alt="Georgia Advanced Computing Resource Center"
                         ></b-img>
                     </b-link>
-                </b-card>
-            </b-card-group>
+          </b-col>
+              <b-col>
+                    <b-link href="http://www.uga.edu/">
+                        <b-img
+                            :src="require('@/assets/sponsors/uga.png')"
+                            height="35px"
+                            alt="University Of Georgia"
+                        ></b-img>
+                    </b-link></b-col>
+            </b-row>
         </b-card>
     </div>
 </template>

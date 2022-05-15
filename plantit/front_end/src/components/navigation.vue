@@ -620,8 +620,8 @@
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
-                            title="Start DIRT migration"
-                            @click="showDirtMigration"
+                            title="DIRT migration"
+                            @click="showDirtMigrationModal"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -745,6 +745,24 @@
                 moments.</b-alert
             >
         </div>
+        <b-modal
+            id="migration"
+            title="DIRT Migration"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            size="lg"
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :ok-disabled="true"
+        >
+          <p>{{migrationData}}</p>
+        </b-modal>
         <b-modal
             id="feedback"
             title="Thanks for your feedback!"
@@ -948,7 +966,13 @@ export default {
         },
     },
     methods: {
-        showDirtMigration() {
+        showDirtMigrationModal() {
+            this.$bvModal.show('migration');
+        },
+        hideDirtMigrationModal() {
+          this.$bvModal.hide('migration');
+        },
+        startDirtMigration() {
           axios
                 .get(`/apis/v1/users/start_dirt_migration/`)
                 .then(async (response) => {
