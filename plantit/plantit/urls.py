@@ -49,4 +49,5 @@ urlpatterns = [
                   # why is favicon still not working ???
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
+# route all push events through a single websocket, distinguishing types in the client
 websocket_urlpatterns = [path(r'ws/<username>/', UserEventConsumer.as_asgi())]

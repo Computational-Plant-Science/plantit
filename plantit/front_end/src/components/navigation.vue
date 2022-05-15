@@ -854,6 +854,8 @@ export default {
             dismissSecs: 10,
             dismissCountDown: 0,
             maintenanceWindows: [],
+            // DIRT migration
+            migrationData: null
         };
     },
     computed: {
@@ -917,11 +919,17 @@ export default {
             return;
         }
 
+        let begin = Date.now();
+        console.log(begin);
+
         await Promise.all([
             this.loadVersion(),
-            this.loadProfile(),
+            this.loadDataModel(),
             this.loadMaintenanceWindows(),
         ]);
+
+        let timing = Date.now() - begin;
+        console.log('Load time: ' + timing + 'ms');
 
         // TODO move websockets to vuex
         // connect to this user's event stream, pushed from backend channel
@@ -941,9 +949,29 @@ export default {
     },
     methods: {
         showDirtMigration() {
-          // TODO
+          axios
+                .get(`/apis/v1/users/start_dirt_migration/`)
+                .then(async (response) => {
+                  await Promise.all([
+                      this.$store.dispatch('user/setDirtMigrationStarted', true),
+                    this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Started DIRT migration (target collection: ${response.data.target_path})`,
+                            guid: guid().toString(),
+                        })
+                  ]);
+                })
+          .catch((error) => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to start DIRT migration`,
+                            guid: guid().toString(),
+                        })
+                    if (error.response.status === 500) throw error;
+                });
         },
-        async loadProfile() {
+        async loadDataModel() {
             // feature flag to toggle between the old/new state loading method
             if (process.env.VUE_APP_LOAD_STATE_SEPARATELY) {
                 await this.$store.dispatch('user/loadProfile');
@@ -969,8 +997,6 @@ export default {
             }
 
             await this.$store.dispatch('user/setProfileLoading', true);
-            const begin = Date.now();
-            console.log(begin);
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then((response) => {
@@ -1092,8 +1118,6 @@ export default {
                         response.data.projects
                     );
                     this.$store.dispatch('projects/setLoading', false);
-                    const timing = Date.now() - begin;
-                    console.log('Load time: ' + timing + 'ms');
                 })
 
                 .catch((error) => {
@@ -1247,15 +1271,32 @@ export default {
             let data = JSON.parse(event.data);
             if (data.task !== undefined) {
                 // task event
-                await this.handleTask(data.task);
+                await this.handleTaskEvent(data.task);
             } else if (data.notification !== undefined) {
                 // notification event
-                await this.handleNotification(data.notification);
+                await this.handleNotificationEvent(data.notification);
+            } else if (data.migration !== undefined) {
+                // DIRT migration status event
+                await this.handleMigrationEvent(data.migration);
             } else {
                 // TODO: log unrecognized event type
             }
         },
-        async handleTask(task) {
+        async handleMigrationEvent(migration) {
+          let data = JSON.parse(migration.data);
+          this.migrationData = data;
+
+          // check if completed and update user profile & create an alert if so
+          let completed = data.completed;
+          if (completed !== null && completed !== undefined) {
+            await this.$store.dispatch('user/setDirtMigrationCompleted', true);
+          }
+
+        },
+        async handleNotificationEvent(notification) {
+            await this.$store.dispatch('notifications/update', notification);
+        },
+        async handleTaskEvent(task) {
             await this.$store.dispatch('tasks/addOrUpdate', task);
             await this.$store.dispatch('alerts/add', {
                 variant: 'success',
@@ -1273,9 +1314,6 @@ export default {
                 else return task.job_status.toUpperCase();
             }
             return task.status.toUpperCase();
-        },
-        async handleNotification(notification) {
-            await this.$store.dispatch('notifications/update', notification);
         },
         removeTask(task) {
             axios

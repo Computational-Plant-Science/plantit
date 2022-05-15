@@ -22,6 +22,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 import plantit.queries as q
+from plantit.celery_tasks import migrate_dirt_datasets, Migration
 from plantit.celery_tasks import refresh_user_stats
 from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
@@ -374,3 +375,30 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         overwrite = request.GET.get('overwrite', False)
         public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
+
+    @action(detail=False, methods=['get'])
+    def start_dirt_migration(self, request):
+        user = self.get_object()
+        profile = Profile.objects.get(user=user)
+
+        # don't allow duplicate starts
+        if profile.dirt_migration_started is not None:
+            return HttpResponseBadRequest(f"DIRT migration already started for user {user.username}")
+
+        # record starting time
+        start = timezone.now()
+        profile.dirt_migration_started = start
+        profile.save()
+        user.save()
+
+        # submit migration task
+        migrate_dirt_datasets.s(user.username).apply_async(countdown=5)
+
+        # return status to client
+        return JsonResponse({'migration': Migration(
+            started=start.isoformat(),
+            completed=None,
+            num_folders=None,
+            target_path=f"/iplant/home/{user.username}/dirt_migration",
+            downloads=[],
+            uploads=[])})

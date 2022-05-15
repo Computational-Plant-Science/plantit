@@ -1,10 +1,12 @@
 import json
 import traceback
+from typing import List, TypedDict, Optional
 from os import environ
 from os.path import join
 from datetime import datetime
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
+from channels.layers import get_channel_layer
 from celery import group
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
@@ -256,7 +258,7 @@ def share_data(self, guid: str):
         if 'input' in options:
             input_path = options['input']['path']
             if ('/iplant/home/shared' not in input_path and  # no need for temporary access if input is public shared dir
-                    input_path != output_path):              # skip input permissions if reading and writing from same dir
+                    input_path != output_path):  # skip input permissions if reading and writing from same dir
                 paths.append({
                     'path': input_path,
                     'permission': 'write'
@@ -309,7 +311,8 @@ def submit_jobs(self, guid: str):
                 pull_id = submit_pull_to_scheduler(task, ssh)
                 async_to_sync(push_task_channel_event)(task)
                 job_ids.append(pull_id + ' (inbound transfer)')
-            else: pull_id = None
+            else:
+                pull_id = None
 
             # schedule user workflow and outbound transfer jobs
             job_id = submit_job_to_scheduler(task, ssh, pull_id=pull_id)
@@ -766,13 +769,13 @@ def refresh_all_users_stats():
         redis = RedisClient.get()
 
         for user in User.objects.all():
-                                           logger.info(f"Computing statistics for {user.username}")
+            logger.info(f"Computing statistics for {user.username}")
 
-                                           # overall statistics (no need to save result, just trigger reevaluation)
-                                           async_to_sync(q.get_user_statistics)(user, True)
+            # overall statistics (no need to save result, just trigger reevaluation)
+            async_to_sync(q.get_user_statistics)(user, True)
 
-                                           # timeseries (no need to save result, just trigger reevaluation)
-                                           q.get_user_timeseries(user, invalidate=True)
+            # timeseries (no need to save result, just trigger reevaluation)
+            q.get_user_timeseries(user, invalidate=True)
 
         logger.info(f"Computing aggregate statistics")
         redis.set("stats_counts", json.dumps(q.get_total_counts(True)))
@@ -882,8 +885,8 @@ def refresh_all_user_cyverse_tokens():
         users = [task.user for task in list(tasks)]
 
         if len(users) == 0:
-                               logger.info(f"No users with running tasks, not refreshing CyVerse tokens")
-                               return
+            logger.info(f"No users with running tasks, not refreshing CyVerse tokens")
+            return
 
         group([refresh_cyverse_tokens.s(user.username) for user in users])()
         logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
@@ -909,16 +912,42 @@ def agents_healthchecks():
             checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
             if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
             check = {
-                         'timestamp': timezone.now().isoformat(),
-                         'healthy': healthy,
-                         'output': output
-                            }
+                'timestamp': timezone.now().isoformat(),
+                'healthy': healthy,
+                'output': output
+            }
             redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
     finally:
         __release_lock(task_name)
 
 
-# DIRT migration task
+# DIRT migration
+
+
+class DownloadedFile(TypedDict):
+    path: str
+
+
+class UploadedFolder(TypedDict):
+    path: str
+    id: str
+
+
+class Migration(TypedDict):
+    started: datetime
+    completed: Optional[datetime]
+    target_path: str
+    num_folders: Optional[int]
+    downloads: List[DownloadedFile]
+    uploads: List[UploadedFolder]
+
+
+async def push_migration_event(user: User, migration: Migration):
+    await get_channel_layer().group_send(f"{user.username}", {
+        'type': 'migration_event',
+        'migration': migration,
+    })
+
 
 @app.task(bind=True)
 def migrate_dirt_datasets(self, username: str):
@@ -930,10 +959,10 @@ def migrate_dirt_datasets(self, username: str):
         self.request.callbacks = None
         return
 
-    # record starting time
-    start = timezone.now()
+    # get started time
+    start = profile.dirt_migration_started
 
-    # create SSH/SFTP client
+    # create SSH/SFTP client and open SFTP connection
     ssh = SSH(
         host='tucco.cyverse.org',
         port=1657,
@@ -947,6 +976,8 @@ def migrate_dirt_datasets(self, username: str):
         new_line = '\n'
         logger.info(f"User {username} has {len(datasets)} datasets:{new_line}{new_line.join(datasets)}")
 
+        return
+
         # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
         client = TerrainClient(access_token=profile.cyverse_access_token)
         root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
@@ -955,14 +986,29 @@ def migrate_dirt_datasets(self, username: str):
             return
         else: client.mkdir(root_collection_path)
 
-        # transfer all the user's datasets to the temporary staging directory on this server
+        # keep track of progress so we can update the UI in real time
+        downloads = []
+        uploads = []
+
+        # transfer all the user's datasets to temporary staging directory
         for folder in datasets:
-            files = [f for f in sftp.listdir(join(user_dir, folder))]
+            folder_name = join(user_dir, folder)
+            files = [f for f in sftp.listdir(folder_name)]
             logger.info(f"User {username} folder {folder} has {len(files)} datasets:{new_line}{new_line.join(files)}")
 
             # download files
             for file in files:
                 sftp.get(file.filename, join(settings.DIRT_STAGING_DIR, folder, file.filename))
+
+                # push download status update to UI
+                downloads.append(DownloadedFile(path=file.filename))
+                async_to_sync(push_migration_event)(user, Migration(
+                    started=start.isoformat(),
+                    completed=None,
+                    num_folders=len(datasets),
+                    target_path=root_collection_path,
+                    downloads=downloads,
+                    uploads=[]))
 
             # create subcollection for this folder
             collection_path = join(root_collection_path, folder.rpartition('/')[2])
@@ -978,13 +1024,24 @@ def migrate_dirt_datasets(self, username: str):
                 to_prefix=collection_path)
 
             # get ID of newly created collection
-            id = client.stat(collection_path)['id']
+            stat = client.stat(collection_path)
+            id = stat['id']
 
             # mark collection as originating from DIRT
             client.set_metadata(id, [
                 f"dirt_migration_timestamp={timezone.now().isoformat()}",
                 # TODO: anything else we need to add here?
             ])
+
+            # push upload status update to UI
+            uploads.append(UploadedFolder(path=collection_path, id=id))
+            async_to_sync(push_migration_event)(user, Migration(
+                started=start.isoformat(),
+                completed=None,
+                num_folders=len(datasets),
+                target_path=root_collection_path,
+                downloads=downloads,
+                uploads=uploads))
 
         # get ID of newly created collection
         root_collection_id = client.stat(root_collection_path)['id']
@@ -1004,9 +1061,19 @@ def migrate_dirt_datasets(self, username: str):
             {})
 
         # mark user's profile that DIRT transfer has been completed
-        profile.dirt_migrated = True
+        end = timezone.now()
+        profile.dirt_migration_completed = end
         profile.save()
         user.save()
+
+        # push completion update to the UI
+        async_to_sync(push_migration_event)(user, Migration(
+            started=start.isoformat(),
+            completed=end.isoformat(),
+            num_folders=len(datasets),
+            target_path=root_collection_path,
+            downloads=downloads,
+            uploads=uploads))
 
 
 # see https://stackoverflow.com/a/41119054/6514033

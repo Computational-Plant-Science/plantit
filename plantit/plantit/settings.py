@@ -28,6 +28,7 @@ assert 'ICOMMANDS_IMAGE' in os.environ, f"{missing_variable}: ICOMMANDS_IMAGE"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
+assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_SECRET' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_SECRET"
 assert 'CYVERSE_TOKEN_REFRESH_MINUTES' in os.environ, f"{missing_variable}: CYVERSE_TOKEN_REFRESH_MINUTES"
 assert 'CYVERSE_USERNAME' in os.environ, f"{missing_variable}: CYVERSE_USERNAME"
@@ -56,6 +57,7 @@ CELERYD_TASK_SOFT_TIME_LIMIT = 60
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
 CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')
+CYVERSE_REDIRECT_URL = os.environ.get('CYVERSE_REDIRECT_URL')
 CYVERSE_USERNAME = os.environ.get('CYVERSE_USERNAME')
 CYVERSE_PASSWORD = os.environ.get('CYVERSE_PASSWORD')
 CYVERSE_CLIENT_ID = os.environ.get('CYVERSE_CLIENT_ID')

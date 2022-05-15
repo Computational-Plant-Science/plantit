@@ -19,6 +19,8 @@ export const user = {
             projects: [],
             hints: false,
             stats: null,
+            dirtMigrationStarted: null,
+            dirtMigrationCompleted: null
         },
         profileLoading: true
     }),
@@ -58,6 +60,12 @@ export const user = {
         },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
+        },
+        setDirtMigrationStarted(state, started) {
+            state.dirtMigrationStarted = started;
+        },
+        setDirtMigrationCompleted(state, completed) {
+            state.dirtMigrationCompleted = completed;
         }
     },
     actions: {
@@ -170,6 +178,12 @@ export const user = {
         setStats({commit}, stats) {
             commit('setStats', stats);
         },
+        setDirtMigrationStarted({ commit }, started) {
+         commit('setDirtMigrationStarted', started);
+        },
+        setDirtMigrationCompleted({ commit }, completed) {
+         commit('setDirtMigrationCompleted', completed);
+        }
     },
     getters: {
         profile: state => state.profile,
