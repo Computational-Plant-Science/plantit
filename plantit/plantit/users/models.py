@@ -19,5 +19,5 @@ class Profile(models.Model):
     hints = models.BooleanField(default=False)
     created = models.DateField(null=True, blank=True)
     first_login = models.BooleanField(default=True)
-    dirt_migration_started = models.DateField(null=True, blank=True)
-    dirt_migration_completed = models.DateField(null=True, blank=True)
+    dirt_migration_started = models.DateTimeField(null=True, blank=True)
+    dirt_migration_completed = models.DateTimeField(null=True, blank=True)

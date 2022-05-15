@@ -30,7 +30,7 @@ class UserEventConsumer(WebsocketConsumer):
         self.logger.info(f"Sending user {self.username} task {task['name']} event (status {task['status']}) to client")
         self.send(text_data=json.dumps({'task': task}))
 
-    def dirt_migration_event(self, event):
+    def migration_event(self, event):
         migration = event['migration']
         self.logger.info(f"DIRT migration status for user {self.username}: {migration}")
         self.send(text_data=json.dumps({

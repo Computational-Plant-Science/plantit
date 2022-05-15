@@ -62,10 +62,10 @@ export const user = {
             state.profileLoading = loading;
         },
         setDirtMigrationStarted(state, started) {
-            state.dirtMigrationStarted = started;
+            state.profile.dirtMigrationStarted = started;
         },
         setDirtMigrationCompleted(state, completed) {
-            state.dirtMigrationCompleted = completed;
+            state.profile.dirtMigrationCompleted = completed;
         }
     },
     actions: {
@@ -93,6 +93,8 @@ export const user = {
                          commit('setHints', response.data.django_profile.hints);
                          commit('setPushNotifications', response.data.django_profile.push_notifications);
                          commit('setStats', response.data.stats);
+                         commit('setDirtMigrationStarted', response.data.django_profile.dirt_migration_started);
+                         commit('setDirtMigrationCompleted', response.data.django_profile.dirt_migration_completed);
                          commit('setProfileLoading', false);
                      })
                      .catch(error => {

@@ -12,6 +12,7 @@ plantit/settings.py
 config/ssh/*
 config/certbot/*
 agent_keys
+annotate
 
 #Documentation
 !docs/build/

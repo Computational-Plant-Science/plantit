@@ -32,7 +32,8 @@ class SSH:
     def __enter__(self):
         client = paramiko.SSHClient()
         client.load_host_keys('../config/ssh/known_hosts')
-        client.set_missing_host_key_policy(paramiko.RejectPolicy())
+        # client.set_missing_host_key_policy(paramiko.RejectPolicy())
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if self.password is not None:
             client.connect(self.host, self.port, self.username, self.password, timeout=5)

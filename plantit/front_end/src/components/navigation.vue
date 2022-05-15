@@ -759,9 +759,77 @@
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             :body-text-variant="profile.darkMode ? 'white' : 'dark'"
-            :ok-disabled="true"
+            hide-footer
+            busy
         >
-          <p>{{migrationData}}</p>
+            <b-row v-if="profile.dirtMigrationCompleted === null">
+              <b-col
+                                                                >
+                <p>You haven't migrated your datasets from DIRT yet.</p>
+                <b-button
+                                                                    :disabled="
+                                                                        migrationData !== null && migrationData.started !== null
+                                                                    "
+                                                                    @click="
+                                                                        startDirtMigration
+                                                                    "
+                                                                    :variant="
+                                                                        profile.darkMode
+                                                                            ? 'outline-success'
+                                                                            : 'success'
+                                                                    "
+                                                                    block
+                                                                >
+                                                                    <b-spinner
+                                                                        small
+                                                                        v-if="
+                                                                            migrationData.started !== null
+                                                                        "
+                                                                        label="Running..."
+                                                                        variant="dark"
+                                                                        class="
+                                                                            mr-2
+                                                                        "
+                                                                    ></b-spinner
+                                                                    ><i
+                                                                        v-else
+                                                                        class="
+                                                                            fas
+                                                                            fa-chevron-right
+                                                                            fa-fw
+                                                                            mr-1
+                                                                        "
+                                                                    ></i>
+                                                                    Start Migration</b-button
+                                                                >
+                <p v-if="migrationData.started !== null">
+                    <br/>
+                <b>Started:</b> {{ prettify(migrationData.started) }}
+                <br/>
+                  <b>Downloaded files:</b> {{ migrationData.downloads.length }}
+                  <b-list-group>
+                    <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="file in migrationData.downloads" v-bind:key="`${file.folder} ${file.name}`">
+                      <i class="fas text-success fa-check-double fa-1x fa-fw"></i> {{ file.folder }}/{{file.name}}
+                    </b-list-group-item>
+                  </b-list-group>
+                    <b>Uploaded datasets:</b> {{ migrationData.uploads.length }}/{{ migrationData.num_folders }}
+                    <br/>
+                  <b-progress :value="migrationData.uploads.length" :max="migrationData.num_folders" show-progress animated variant="success"></b-progress>
+              </p>
+              </b-col
+                                                            >
+            </b-row>
+            <b-row v-else><b-col>
+              <p>
+              Your datasets have been successfully migrated from DIRT.
+                </p>
+              <p>
+                <b>Started:</b> {{ prettify(profile.dirtMigrationStarted) }}
+                <br/>
+                <b>Completed:</b> {{ prettify(profile.dirtMigrationCompleted) }}
+              </p>
+            </b-col>
+            </b-row>
         </b-modal>
         <b-modal
             id="feedback"
@@ -873,7 +941,14 @@ export default {
             dismissCountDown: 0,
             maintenanceWindows: [],
             // DIRT migration
-            migrationData: null
+            migrationData: {
+              started: null,
+              completed: null,
+              target_path: null,
+              num_folders: null,
+              downloads: [],
+              uploads: []
+            }
         };
     },
     computed: {
@@ -964,6 +1039,9 @@ export default {
         alerts() {
             this.dismissCountDown = this.dismissSecs;
         },
+        migrationData() {
+          // noop
+        }
     },
     methods: {
         showDirtMigrationModal() {
@@ -976,11 +1054,12 @@ export default {
           axios
                 .get(`/apis/v1/users/start_dirt_migration/`)
                 .then(async (response) => {
+                  this.migrationData = response.data.migration;
                   await Promise.all([
-                      this.$store.dispatch('user/setDirtMigrationStarted', true),
+                      this.$store.dispatch('user/setDirtMigrationStarted', this.migrationData.started),
                     this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Started DIRT migration (target collection: ${response.data.target_path})`,
+                            message: `Started DIRT migration (target collection: ${response.data.migration.target_path})`,
                             guid: guid().toString(),
                         })
                   ]);
@@ -1307,15 +1386,13 @@ export default {
             }
         },
         async handleMigrationEvent(migration) {
-          let data = JSON.parse(migration.data);
-          this.migrationData = data;
+          this.migrationData = migration;
 
           // check if completed and update user profile & create an alert if so
-          let completed = data.completed;
+          let completed = migration.completed;
           if (completed !== null && completed !== undefined) {
-            await this.$store.dispatch('user/setDirtMigrationCompleted', true);
+            await this.$store.dispatch('user/setDirtMigrationCompleted', completed);
           }
-
         },
         async handleNotificationEvent(notification) {
             await this.$store.dispatch('notifications/update', notification);

@@ -1,5 +1,7 @@
 import json
+import os
 import traceback
+from pathlib import Path
 from typing import List, TypedDict, Optional
 from os import environ
 from os.path import join
@@ -925,7 +927,8 @@ def agents_healthchecks():
 
 
 class DownloadedFile(TypedDict):
-    path: str
+    folder: str
+    name: str
 
 
 class UploadedFolder(TypedDict):
@@ -968,112 +971,115 @@ def migrate_dirt_datasets(self, username: str):
         port=1657,
         username=settings.CYVERSE_USERNAME,
         pkey=str(get_user_private_key_path(settings.CYVERSE_USERNAME)))
-    with ssh.client.open_sftp() as sftp:
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
 
-        # list the user's datasets on the DIRT server
-        user_dir = join(settings.DIRT_DATA_DIR, username, 'root-images')
-        datasets = [folder for folder in sftp.listdir(user_dir)]
-        new_line = '\n'
-        logger.info(f"User {username} has {len(datasets)} datasets:{new_line}{new_line.join(datasets)}")
+            # list the user's datasets on the DIRT server
+            user_dir = join(settings.DIRT_DATA_DIR, username, 'root-images')
+            datasets = [folder for folder in sftp.listdir(user_dir)]
+            logger.info(f"User {username} has {len(datasets)} DIRT folders: {', '.join(datasets)}")
 
-        return
+            # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
+            client = TerrainClient(access_token=profile.cyverse_access_token)
+            root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
+            if client.dir_exists(root_collection_path):
+                logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
+                return
+            else: client.mkdir(root_collection_path)
 
-        # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
-        client = TerrainClient(access_token=profile.cyverse_access_token)
-        root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
-        if client.dir_exists(root_collection_path):
-            logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
-            return
-        else: client.mkdir(root_collection_path)
+            # keep track of progress so we can update the UI in real time
+            downloads = []
+            uploads = []
 
-        # keep track of progress so we can update the UI in real time
-        downloads = []
-        uploads = []
+            # transfer all the user's datasets to temporary staging directory
+            for folder in datasets:
+                folder_name = join(user_dir, folder)
+                files = [f for f in sftp.listdir(folder_name)]
+                logger.info(f"User {username} folder {folder} has {len(files)} files: {', '.join(files)}")
 
-        # transfer all the user's datasets to temporary staging directory
-        for folder in datasets:
-            folder_name = join(user_dir, folder)
-            files = [f for f in sftp.listdir(folder_name)]
-            logger.info(f"User {username} folder {folder} has {len(files)} datasets:{new_line}{new_line.join(files)}")
+                # create temp local folder for this dataset
+                staging_dir = join(settings.DIRT_STAGING_DIR, folder)
+                Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
-            # download files
-            for file in files:
-                sftp.get(file.filename, join(settings.DIRT_STAGING_DIR, folder, file.filename))
+                # download files
+                for file in files:
+                    file_path = join(folder_name, file)
+                    sftp.get(file_path, join(settings.DIRT_STAGING_DIR, folder, file))
 
-                # push download status update to UI
-                downloads.append(DownloadedFile(path=file.filename))
+                    # push download status update to UI
+                    downloads.append(DownloadedFile(name=file, folder=folder))
+                    async_to_sync(push_migration_event)(user, Migration(
+                        started=start.isoformat(),
+                        completed=None,
+                        num_folders=len(datasets),
+                        target_path=root_collection_path,
+                        downloads=downloads,
+                        uploads=[]))
+
+                # create subcollection for this folder
+                collection_path = join(root_collection_path, folder.rpartition('/')[2])
+                if client.dir_exists(collection_path):
+                    logger.warning(f"Collection {collection_path} already exists, aborting DIRT migration for {user.username}")
+                    return
+                else:
+                    client.mkdir(collection_path)
+
+                # upload all files to collection
+                client.upload_directory(
+                    from_path=join(settings.DIRT_STAGING_DIR, folder),
+                    to_prefix=collection_path)
+
+                # get ID of newly created collection
+                stat = client.stat(collection_path)
+                id = stat['id']
+
+                # mark collection as originating from DIRT
+                client.set_metadata(id, [
+                    f"dirt_migration_timestamp={timezone.now().isoformat()}",
+                    # TODO: anything else we need to add here?
+                ], [])
+
+                # push upload status update to UI
+                uploads.append(UploadedFolder(path=collection_path, id=id))
                 async_to_sync(push_migration_event)(user, Migration(
                     started=start.isoformat(),
                     completed=None,
                     num_folders=len(datasets),
                     target_path=root_collection_path,
                     downloads=downloads,
-                    uploads=[]))
-
-            # create subcollection for this folder
-            collection_path = join(root_collection_path, folder.rpartition('/')[2])
-            if client.dir_exists(collection_path):
-                logger.warning(f"Collection {collection_path} already exists, aborting DIRT migration for {user.username}")
-                return
-            else:
-                client.mkdir(collection_path)
-
-            # upload all files to collection
-            client.upload_directory(
-                from_path=join(settings.DIRT_STAGING_DIR, folder),
-                to_prefix=collection_path)
+                    uploads=uploads))
 
             # get ID of newly created collection
-            stat = client.stat(collection_path)
-            id = stat['id']
+            root_collection_id = client.stat(root_collection_path)['id']
 
-            # mark collection as originating from DIRT
-            client.set_metadata(id, [
-                f"dirt_migration_timestamp={timezone.now().isoformat()}",
+            # add collection timestamp as metadata
+            end = timezone.now()
+            client.set_metadata(root_collection_id, [
+                f"dirt_migration_timestamp={end.isoformat()}",
                 # TODO: anything else we need to add here?
-            ])
+            ], [])
 
-            # push upload status update to UI
-            uploads.append(UploadedFolder(path=collection_path, id=id))
+            # send notification to user via email
+            # SnsClient.get().publish_message(
+            #     profile.push_notification_topic_arn,
+            #     f"DIRT => PlantIT migration completed",
+            #     f"Duration: {str(end - start)}",
+            #     {})
+
+            # mark user's profile that DIRT transfer has been completed
+            end = timezone.now()
+            profile.dirt_migration_completed = end
+            profile.save()
+            user.save()
+
+            # push completion update to the UI
             async_to_sync(push_migration_event)(user, Migration(
                 started=start.isoformat(),
-                completed=None,
+                completed=end.isoformat(),
                 num_folders=len(datasets),
                 target_path=root_collection_path,
                 downloads=downloads,
                 uploads=uploads))
-
-        # get ID of newly created collection
-        root_collection_id = client.stat(root_collection_path)['id']
-
-        # add collection timestamp as metadata
-        end = timezone.now()
-        client.set_metadata(root_collection_id, [
-            f"dirt_migration_timestamp={end.isoformat()}",
-            # TODO: anything else we need to add here?
-        ])
-
-        # send notification to user via email
-        SnsClient.get().publish_message(
-            profile.push_notification_topic_arn,
-            f"DIRT => PlantIT migration completed",
-            f"Duration: {str(end - start)}",
-            {})
-
-        # mark user's profile that DIRT transfer has been completed
-        end = timezone.now()
-        profile.dirt_migration_completed = end
-        profile.save()
-        user.save()
-
-        # push completion update to the UI
-        async_to_sync(push_migration_event)(user, Migration(
-            started=start.isoformat(),
-            completed=end.isoformat(),
-            num_folders=len(datasets),
-            target_path=root_collection_path,
-            downloads=downloads,
-            uploads=uploads))
 
 
 # see https://stackoverflow.com/a/41119054/6514033
