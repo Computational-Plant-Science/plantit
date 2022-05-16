@@ -12,6 +12,7 @@ high-throughput phenotyping in the browser
 
    md/introduction/about.md
    md/introduction/quickstart.md
+   md/introduction/dirt_migration.md
 
 .. toctree::
    :maxdepth: 3
