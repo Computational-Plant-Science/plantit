@@ -21,3 +21,4 @@ class Profile(models.Model):
     first_login = models.BooleanField(default=True)
     dirt_migration_started = models.DateTimeField(null=True, blank=True)
     dirt_migration_completed = models.DateTimeField(null=True, blank=True)
+    dirt_migration_path = models.CharField(max_length=255, null=True, blank=True)

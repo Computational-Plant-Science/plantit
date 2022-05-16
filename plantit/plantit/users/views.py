@@ -20,6 +20,7 @@ from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from pycyapi.clients import TerrainClient
 
 import plantit.queries as q
 from plantit.celery_tasks import migrate_dirt_datasets, Migration
@@ -387,9 +388,19 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if profile.dirt_migration_started is not None:
             return HttpResponseBadRequest(f"DIRT migration already started for user {user.username}")
 
+        # make sure a `dirt_migration` collection doesn't already exist
+        client = TerrainClient(access_token=profile.cyverse_access_token)
+        root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
+        if client.dir_exists(root_collection_path):
+            self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
+            return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
+        else:
+            client.mkdir(root_collection_path)
+
         # record starting time
         start = timezone.now()
         profile.dirt_migration_started = start
+        profile.dirt_migration_path = root_collection_path
         profile.save()
         user.save()
 

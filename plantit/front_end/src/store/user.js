@@ -20,9 +20,10 @@ export const user = {
             hints: false,
             stats: null,
             dirtMigrationStarted: null,
-            dirtMigrationCompleted: null
+            dirtMigrationCompleted: null,
+            dirtMigrationPath: null,
         },
-        profileLoading: true
+        profileLoading: true,
     }),
     mutations: {
         setFirst(state, first) {
@@ -66,50 +67,78 @@ export const user = {
         },
         setDirtMigrationCompleted(state, completed) {
             state.profile.dirtMigrationCompleted = completed;
-        }
+        },
+        setDirtMigrationPath(state, path) {
+            state.profile.dirtMigrationPath = path;
+        },
     },
     actions: {
-             async loadProfile({ commit }) {
-                 commit('setProfileLoading', true);
-                 await axios
-                     .get(`/apis/v1/users/get_current/`)
-                     .then(response => {
-                         // determine whether user is logged in
-                         let decoded = jwtDecode(response.data.django_profile.cyverse_token);
-                         let now = Math.floor(Date.now() / 1000);
-                         if (now > decoded.exp) commit('setLoggedIn', false);
-                         else commit('setLoggedIn', true);
+        async loadProfile({ commit }) {
+            commit('setProfileLoading', true);
+            await axios
+                .get(`/apis/v1/users/get_current/`)
+                .then((response) => {
+                    // determine whether user is logged in
+                    let decoded = jwtDecode(
+                        response.data.django_profile.cyverse_token
+                    );
+                    let now = Math.floor(Date.now() / 1000);
+                    if (now > decoded.exp) commit('setLoggedIn', false);
+                    else commit('setLoggedIn', true);
 
-                         // determine whether user is logged into GitHub
-                         commit('setLoggedIntoGithub', response.data.github_profile !== undefined && response.data.github_profile !== null);
+                    // determine whether user is logged into GitHub
+                    commit(
+                        'setLoggedIntoGithub',
+                        response.data.github_profile !== undefined &&
+                            response.data.github_profile !== null
+                    );
 
-                         // set profile info
-                         commit('setDjangoProfile', response.data.django_profile);
-                         commit('setCyverseProfile', response.data.cyverse_profile);
-                         commit('setGithubProfile', response.data.github_profile);
-                         commit('setOrganizations', response.data.organizations);
-                         commit('setFirst', response.data.django_profile.first);
-                         commit('setDarkMode', response.data.django_profile.dark_mode);
-                         commit('setHints', response.data.django_profile.hints);
-                         commit('setPushNotifications', response.data.django_profile.push_notifications);
-                         commit('setStats', response.data.stats);
-                         commit('setDirtMigrationStarted', response.data.django_profile.dirt_migration_started);
-                         commit('setDirtMigrationCompleted', response.data.django_profile.dirt_migration_completed);
-                         commit('setProfileLoading', false);
-                     })
-                     .catch(error => {
-                         commit('setProfileLoading', false);
-                         Sentry.captureException(error);
-                         if (error.response.status === 500) throw error;
-                         else if (error.response.status === 401 || error.response.status === 403) {
-                             // if we get a 401 or 403, log the user out
-                             sessionStorage.clear();
-                             window.location.replace('/apis/v1/idp/cyverse_logout/');
-                         }
-                     });
-             },
-        setProfileLoading({commit}, loading) {
-            commit('setProfileLoading', loading)
+                    // set profile info
+                    commit('setDjangoProfile', response.data.django_profile);
+                    commit('setCyverseProfile', response.data.cyverse_profile);
+                    commit('setGithubProfile', response.data.github_profile);
+                    commit('setOrganizations', response.data.organizations);
+                    commit('setFirst', response.data.django_profile.first);
+                    commit(
+                        'setDarkMode',
+                        response.data.django_profile.dark_mode
+                    );
+                    commit('setHints', response.data.django_profile.hints);
+                    commit(
+                        'setPushNotifications',
+                        response.data.django_profile.push_notifications
+                    );
+                    commit('setStats', response.data.stats);
+                    commit(
+                        'setDirtMigrationStarted',
+                        response.data.django_profile.dirt_migration_started
+                    );
+                    commit(
+                        'setDirtMigrationCompleted',
+                        response.data.django_profile.dirt_migration_completed
+                    );
+                    commit(
+                        'setDirtMigrationPath',
+                        response.data.django_profile.dirt_migration_path
+                    );
+                    commit('setProfileLoading', false);
+                })
+                .catch((error) => {
+                    commit('setProfileLoading', false);
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                    else if (
+                        error.response.status === 401 ||
+                        error.response.status === 403
+                    ) {
+                        // if we get a 401 or 403, log the user out
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
+                });
+        },
+        setProfileLoading({ commit }, loading) {
+            commit('setProfileLoading', loading);
         },
         setLoggedIn({ commit }, loggedIn) {
             commit('setLoggedIn', loggedIn);
@@ -138,57 +167,60 @@ export const user = {
         async toggleDarkMode({ commit }) {
             await axios
                 .get('/apis/v1/users/toggle_dark_mode/')
-                .then(response => {
+                .then((response) => {
                     commit('setDarkMode', response.data['dark_mode']);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        setPushNotifications({commit}, notif) {
+        setPushNotifications({ commit }, notif) {
             commit('setPushNotifications', notif);
         },
         async togglePushNotifications({ commit }) {
             await axios
                 .get('/apis/v1/users/toggle_push_notifications/')
-                .then(response => {
+                .then((response) => {
                     commit(
                         'setPushNotifications',
                         response.data['push_notifications']
                     );
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        setHints({commit}, hints) {
+        setHints({ commit }, hints) {
             commit('setHints', hints);
         },
         async toggleHints({ commit }) {
             await axios
                 .get('/apis/v1/users/toggle_hints/')
-                .then(response => {
+                .then((response) => {
                     commit('setHints', response.data['hints']);
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        setStats({commit}, stats) {
+        setStats({ commit }, stats) {
             commit('setStats', stats);
         },
         setDirtMigrationStarted({ commit }, started) {
-         commit('setDirtMigrationStarted', started);
+            commit('setDirtMigrationStarted', started);
         },
         setDirtMigrationCompleted({ commit }, completed) {
-         commit('setDirtMigrationCompleted', completed);
-        }
+            commit('setDirtMigrationCompleted', completed);
+        },
+        setDirtMigrationPath({ commit }, path) {
+            commit('setDirtMigrationPath', path);
+        },
     },
     getters: {
-        profile: state => state.profile,
-        profileLoading: state => state.profileLoading
-    }
+        profile: (state) => state.profile,
+        profileLoading: (state) => state.profileLoading,
+    },
 };

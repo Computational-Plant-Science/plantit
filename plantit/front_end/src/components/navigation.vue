@@ -445,14 +445,7 @@
                                 <b-img
                                     id="avatar"
                                     v-if="profile.loggedIntoGitHub"
-                                    class="
-                                        avatar
-                                        m-0
-                                        mb-1
-                                        p-0
-                                        github-hover
-                                        logo
-                                    "
+                                    class="avatar m-0 mb-1 p-0 github-hover logo"
                                     style="
                                         min-width: 20px;
                                         min-height: 20px;
@@ -630,6 +623,10 @@
                         >
                             <i class="fas fa-suitcase fa-fw"></i>
                             DIRT Migration
+                            <i
+                                v-if="profile.dirtMigrationCompleted !== null"
+                                class="fas fa-check text-success fa-fw"
+                            ></i>
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
@@ -763,72 +760,105 @@
             busy
         >
             <b-row v-if="profile.dirtMigrationCompleted === null">
-              <b-col
-                                                                >
-                <p>You haven't migrated your datasets from DIRT yet.</p>
-                <b-button
-                                                                    :disabled="
-                                                                        migrationData !== null && migrationData.started !== null
-                                                                    "
-                                                                    @click="
-                                                                        startDirtMigration
-                                                                    "
-                                                                    :variant="
-                                                                        profile.darkMode
-                                                                            ? 'outline-success'
-                                                                            : 'success'
-                                                                    "
-                                                                    block
-                                                                >
-                                                                    <b-spinner
-                                                                        small
-                                                                        v-if="
-                                                                            migrationData.started !== null
-                                                                        "
-                                                                        label="Running..."
-                                                                        variant="dark"
-                                                                        class="
-                                                                            mr-2
-                                                                        "
-                                                                    ></b-spinner
-                                                                    ><i
-                                                                        v-else
-                                                                        class="
-                                                                            fas
-                                                                            fa-chevron-right
-                                                                            fa-fw
-                                                                            mr-1
-                                                                        "
-                                                                    ></i>
-                                                                    Start Migration</b-button
-                                                                >
-                <p v-if="migrationData.started !== null">
-                    <br/>
-                <b>Started:</b> {{ prettify(migrationData.started) }}
-                <br/>
-                  <b>Downloaded files:</b> {{ migrationData.downloads.length }}
-                  <b-list-group>
-                    <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="file in migrationData.downloads" v-bind:key="`${file.folder} ${file.name}`">
-                      <i class="fas text-success fa-check-double fa-1x fa-fw"></i> {{ file.folder }}/{{file.name}}
-                    </b-list-group-item>
-                  </b-list-group>
-                    <b>Uploaded datasets:</b> {{ migrationData.uploads.length }}/{{ migrationData.num_folders }}
-                    <br/>
-                  <b-progress :value="migrationData.uploads.length" :max="migrationData.num_folders" show-progress animated variant="success"></b-progress>
-              </p>
-              </b-col
-                                                            >
+                <b-col>
+                    <p v-if="profile.dirtMigrationStarted === null">
+                        You haven't migrated your datasets from DIRT yet.
+                    </p>
+                    <b-alert
+                        :show="migrationData.duplicate"
+                        variant="danger"
+                    >
+                        You already have a collection with path
+                        <code
+                            >/iplant/home/{{
+                                profile.djangoProfile.username
+                            }}/dirt_migration</code
+                        >. Please rename this collection to allow the migration
+                        to proceed.
+                    </b-alert>
+                    <b-button
+                        :disabled="
+                            migrationSubmitting ||
+                            (migrationData !== null &&
+                                migrationData.started !== null)
+                        "
+                        @click="startDirtMigration"
+                        :variant="
+                            profile.darkMode ? 'outline-success' : 'success'
+                        "
+                        block
+                    >
+                        <b-spinner
+                            small
+                            v-if="
+                                migrationSubmitting ||
+                                migrationData.started !== null
+                            "
+                            label="Running..."
+                            variant="dark"
+                            class="mr-2"
+                        ></b-spinner
+                        ><i v-else class="fas fa-chevron-right fa-fw mr-1"></i>
+                        {{
+                        (migrationSubmitting || migrationData.started !== null)
+                                ? 'Running migration'
+                                : 'Start Migration'
+                        }}</b-button
+                    >
+                    <p v-if="migrationData.started !== null">
+                        <br />
+                        <b>Started:</b> {{ prettify(migrationData.started) }}
+                        <br />
+                        <b>Collection:</b>
+                        {{ migrationData.target_path }}
+                        <br />
+                        <b>Downloaded files:</b>
+                        {{ migrationData.downloads.length }}
+                        <b-list-group>
+                            <b-list-group-item
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="file in migrationData.downloads"
+                                v-bind:key="`${file.folder} ${file.name}`"
+                            >
+                                <i
+                                    class="fas text-success fa-check fa-1x fa-fw"
+                                ></i>
+                                {{ file.folder }}/{{ file.name }}
+                            </b-list-group-item>
+                        </b-list-group>
+                        <b>Uploaded datasets:</b>
+                        {{ migrationData.uploads.length }}/{{
+                            migrationData.num_folders === null
+                                ? '?'
+                                : migrationData.num_folders
+                        }}
+                        <br />
+                        <b-progress
+                            :value="migrationData.uploads.length"
+                            :max="migrationData.num_folders"
+                            show-progress
+                            animated
+                            variant="success"
+                        ></b-progress>
+                    </p>
+                </b-col>
             </b-row>
-            <b-row v-else><b-col>
-              <p>
-              Your datasets have been successfully migrated from DIRT.
-                </p>
-              <p>
-                <b>Started:</b> {{ prettify(profile.dirtMigrationStarted) }}
-                <br/>
-                <b>Completed:</b> {{ prettify(profile.dirtMigrationCompleted) }}
-              </p>
-            </b-col>
+            <b-row v-else
+                ><b-col>
+                    <p>
+                        Your datasets have been successfully migrated from DIRT.
+                    </p>
+                    <p>
+                        <b>Started:</b>
+                        {{ prettify(profile.dirtMigrationStarted) }}
+                        <br />
+                        <b>Completed:</b>
+                        {{ prettify(profile.dirtMigrationCompleted) }}
+                        <br />
+                        <b>Collection:</b>
+                        {{ profile.dirtMigrationPath }}
+                    </p>
+                </b-col>
             </b-row>
         </b-modal>
         <b-modal
@@ -942,13 +972,15 @@ export default {
             maintenanceWindows: [],
             // DIRT migration
             migrationData: {
-              started: null,
-              completed: null,
-              target_path: null,
-              num_folders: null,
-              downloads: [],
-              uploads: []
-            }
+                started: null,
+                completed: null,
+                target_path: null,
+                num_folders: null,
+                downloads: [],
+                uploads: [],
+                duplicate: false,
+            },
+            migrationSubmitting: false,
         };
     },
     computed: {
@@ -1040,37 +1072,55 @@ export default {
             this.dismissCountDown = this.dismissSecs;
         },
         migrationData() {
-          // noop
-        }
+            // noop
+        },
     },
     methods: {
         showDirtMigrationModal() {
             this.$bvModal.show('migration');
         },
         hideDirtMigrationModal() {
-          this.$bvModal.hide('migration');
+            this.$bvModal.hide('migration');
         },
         startDirtMigration() {
-          axios
+            this.migrationSubmitting = true;
+            axios
                 .get(`/apis/v1/users/start_dirt_migration/`)
                 .then(async (response) => {
-                  this.migrationData = response.data.migration;
-                  await Promise.all([
-                      this.$store.dispatch('user/setDirtMigrationStarted', this.migrationData.started),
-                    this.$store.dispatch('alerts/add', {
+                    this.migrationData = response.data.migration;
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'user/setDirtMigrationStarted',
+                            this.migrationData.started
+                        ),
+                        this.$store.dispatch(
+                            'user/setDirtMigrationPath',
+                            this.migrationData.target_path
+                        ),
+                        this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Started DIRT migration (target collection: ${response.data.migration.target_path})`,
                             guid: guid().toString(),
-                        })
-                  ]);
+                        }),
+                    ]);
+                    this.migrationSubmitting = false;
                 })
-          .catch((error) => {
+                .catch((error) => {
                     Sentry.captureException(error);
+                    if (
+                        error.response.status === 400 &&
+                        error.response.data.includes(
+                            'migration collection already exists'
+                        )
+                    ) {
+                        this.migrationData.duplicate = true;
+                    }
                     this.$store.dispatch('alerts/add', {
-                            variant: 'danger',
-                            message: `Failed to start DIRT migration`,
-                            guid: guid().toString(),
-                        })
+                        variant: 'danger',
+                        message: `Failed to start DIRT migration`,
+                        guid: guid().toString(),
+                    });
+                    this.migrationSubmitting = false;
                     if (error.response.status === 500) throw error;
                 });
         },
@@ -1386,13 +1436,16 @@ export default {
             }
         },
         async handleMigrationEvent(migration) {
-          this.migrationData = migration;
+            this.migrationData = migration;
 
-          // check if completed and update user profile & create an alert if so
-          let completed = migration.completed;
-          if (completed !== null && completed !== undefined) {
-            await this.$store.dispatch('user/setDirtMigrationCompleted', completed);
-          }
+            // check if completed and update user profile & create an alert if so
+            let completed = migration.completed;
+            if (completed !== null && completed !== undefined) {
+                await this.$store.dispatch(
+                    'user/setDirtMigrationCompleted',
+                    completed
+                );
+            }
         },
         async handleNotificationEvent(notification) {
             await this.$store.dispatch('notifications/update', notification);
