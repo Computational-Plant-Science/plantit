@@ -394,8 +394,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if client.dir_exists(root_collection_path):
             self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
             return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
-        else:
-            client.mkdir(root_collection_path)
 
         # record starting time
         start = timezone.now()
