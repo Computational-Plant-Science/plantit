@@ -764,10 +764,7 @@
                     <p v-if="profile.dirtMigrationStarted === null">
                         You haven't migrated your datasets from DIRT yet.
                     </p>
-                    <b-alert
-                        :show="migrationData.duplicate"
-                        variant="danger"
-                    >
+                    <b-alert :show="migrationData.duplicate" variant="danger">
                         You already have a collection with path
                         <code
                             >/iplant/home/{{
@@ -780,7 +777,9 @@
                         :disabled="
                             migrationSubmitting ||
                             (migrationData !== null &&
-                                migrationData.started !== null)
+                                migrationData.started !== null) ||
+                            (profile.dirtMigrationStarted !== null &&
+                                profile.dirtMigrationCompleted === null)
                         "
                         @click="startDirtMigration"
                         :variant="
@@ -792,7 +791,10 @@
                             small
                             v-if="
                                 migrationSubmitting ||
-                                migrationData.started !== null
+                                (migrationData !== null &&
+                                    migrationData.started !== null) ||
+                                (profile.dirtMigrationStarted !== null &&
+                                    profile.dirtMigrationCompleted === null)
                             "
                             label="Running..."
                             variant="dark"
@@ -800,7 +802,8 @@
                         ></b-spinner
                         ><i v-else class="fas fa-chevron-right fa-fw mr-1"></i>
                         {{
-                        (migrationSubmitting || migrationData.started !== null)
+                            migrationSubmitting ||
+                            migrationData.started !== null
                                 ? 'Running migration'
                                 : 'Start Migration'
                         }}</b-button

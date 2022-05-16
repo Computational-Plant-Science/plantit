@@ -272,7 +272,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
                 'dirt_migration_started': user.profile.dirt_migration_started,
-                'dirt_migration_completed': user.profile.dirt_migration_completed
+                'dirt_migration_completed': user.profile.dirt_migration_completed,
+                'dirt_migration_path': user.profile.dirt_migration_path
             },
             'stats': async_to_sync(q.get_user_statistics)(user),
             'users': q.list_users(),
