@@ -165,6 +165,7 @@ services:
     command: [ "celery", "-A", "plantit", "worker", "-n", "celery", "--loglevel", "INFO", "--concurrency=2" ]
     volumes:
       - .:/code
+      - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
     working_dir: /code/plantit
     depends_on:
       - redis
