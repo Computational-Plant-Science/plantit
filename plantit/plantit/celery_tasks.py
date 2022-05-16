@@ -967,15 +967,15 @@ def migrate_dirt_datasets(self, username: str):
 
     # create SSH/SFTP client and open SFTP connection
     ssh = SSH(
-        host='tucco.cyverse.org',
-        port=1657,
-        username=settings.CYVERSE_USERNAME,
-        pkey=str(get_user_private_key_path(settings.CYVERSE_USERNAME)))
+        host=settings.DIRT_MIGRATION_HOST,
+        port=settings.DIRT_MIGRATION_PORT,
+        username=settings.DIRT_MIGRATION_USERNAME,
+        pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
     with ssh:
         with ssh.client.open_sftp() as sftp:
 
             # list the user's datasets on the DIRT server
-            user_dir = join(settings.DIRT_DATA_DIR, username, 'root-images')
+            user_dir = join(settings.DIRT_MIGRATION_DATA_DIR, username, 'root-images')
             datasets = [folder for folder in sftp.listdir(user_dir)]
             logger.info(f"User {username} has {len(datasets)} DIRT folders: {', '.join(datasets)}")
 
@@ -998,13 +998,13 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"User {username} folder {folder} has {len(files)} files: {', '.join(files)}")
 
                 # create temp local folder for this dataset
-                staging_dir = join(settings.DIRT_STAGING_DIR, folder)
+                staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, folder)
                 Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
                 # download files
                 for file in files:
                     file_path = join(folder_name, file)
-                    sftp.get(file_path, join(settings.DIRT_STAGING_DIR, folder, file))
+                    sftp.get(file_path, join(settings.DIRT_MIGRATION_STAGING_DIR, folder, file))
 
                     # push download status update to UI
                     downloads.append(DownloadedFile(name=file, folder=folder))
@@ -1026,7 +1026,7 @@ def migrate_dirt_datasets(self, username: str):
 
                 # upload all files to collection
                 client.upload_directory(
-                    from_path=join(settings.DIRT_STAGING_DIR, folder),
+                    from_path=join(settings.DIRT_MIGRATION_STAGING_DIR, folder),
                     to_prefix=collection_path)
 
                 # get ID of newly created collection
