@@ -839,29 +839,6 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
-                        <b>Downloaded:</b>
-                        <br />
-                        <b-list-group
-                            style="
-                                max-height: 10rem;
-                                overflow: scroll;
-                                -webkit-overflow-scrolling: touch;
-                            "
-                        >
-                            <b-list-group-item
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="folder in downloadedFolders"
-                                v-bind:key="folder.name"
-                            >
-                                <i
-                                    class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>
-                                {{ folder.name }},
-                                {{ folder.files.length }} file(s)
-                            </b-list-group-item>
-                        </b-list-group>
-                        <b>Uploaded:</b>
-                        <br />
                         <b-list-group
                             style="
                                 max-height: 10rem;
