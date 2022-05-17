@@ -816,8 +816,22 @@
                         <span v-if="profile.migration.num_folders !== null"
                             >You have
                             {{ profile.migration.num_folders }} dataset(s) to
-                            migrate.</span
+                            migrate,
+                            {{
+                                profile.migration.num_folders === null
+                                    ? '?'
+                                    : profile.migration.num_folders -
+                                      uploadedFolders.length + 1
+                            }}
+                            remaining.</span
                         >
+                        <b-progress
+                            v-if="profile.migration.num_folders !== null"
+                            :value="uploadedFolders.length"
+                            :max="profile.migration.num_folders"
+                            animated
+                            variant="success"
+                        ></b-progress>
                         <br />
                         <b>Started:</b>
                         {{ prettify(profile.migration.started) }}
@@ -825,20 +839,8 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
-                        <b>Downloading:</b>
-                        {{ downloadedFolders.length }}/{{
-                            profile.migration.num_folders === null
-                                ? '?'
-                                : profile.migration.num_folders
-                        }}
+                        <b>Downloaded:</b>
                         <br />
-                        <b-progress
-                            v-if="profile.migration.num_folders !== null"
-                            :value="downloadedFolders.length"
-                            :max="profile.migration.num_folders"
-                            animated
-                            variant="success"
-                        ></b-progress>
                         <b-list-group
                             style="
                                 max-height: 10rem;
@@ -858,20 +860,8 @@
                                 {{ folder.files.length }} file(s)
                             </b-list-group-item>
                         </b-list-group>
-                        <b>Uploading:</b>
-                        {{ uploadedFolders.length }}/{{
-                            profile.migration.num_folders === null
-                                ? '?'
-                                : profile.migration.num_folders
-                        }}
+                        <b>Uploaded:</b>
                         <br />
-                        <b-progress
-                            v-if="profile.migration.num_folders !== null"
-                            :value="uploadedFolders.length"
-                            :max="profile.migration.num_folders"
-                            animated
-                            variant="success"
-                        ></b-progress>
                         <b-list-group
                             style="
                                 max-height: 10rem;
