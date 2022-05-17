@@ -1,10 +1,21 @@
 from django.contrib import admin
 
+from plantit.users.models import Profile, Migration
 from plantit.misc.models import NewsUpdate, MaintenanceWindow, FeaturedWorkflow
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 from plantit.feedback.models import Feedback
 from plantit.miappe.models import Investigation, Study
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Migration)
+class MigrationAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(NewsUpdate)

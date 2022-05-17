@@ -621,10 +621,10 @@
                                     : 'text-dark'
                             "
                         >
-                            <i class="fas fa-suitcase fa-fw"></i>
+                            <i class="fas fa-folder-open fa-fw"></i>
                             DIRT Migration
                             <i
-                                v-if="profile.dirtMigrationCompleted !== null"
+                                v-if="profile.migration.completed !== null"
                                 class="fas fa-check text-success fa-fw"
                             ></i>
                         </b-dropdown-item>
@@ -759,12 +759,17 @@
             hide-footer
             busy
         >
-            <b-row v-if="profile.dirtMigrationCompleted === null">
+            <template #modal-header
+                ><h4 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                    <i class="fas fa-folder-open fa-fw"></i> DIRT Migration
+                </h4></template
+            >
+            <b-row v-if="profile.migration.completed === null">
                 <b-col>
-                    <p v-if="profile.dirtMigrationStarted === null">
+                    <p v-if="profile.migration.started === null">
                         You haven't migrated your datasets from DIRT yet.
                     </p>
-                    <b-alert :show="migrationData.duplicate" variant="danger">
+                    <b-alert :show="migrationDataDuplicate" variant="danger">
                         You already have a collection with path
                         <code
                             >/iplant/home/{{
@@ -776,10 +781,9 @@
                     <b-button
                         :disabled="
                             migrationSubmitting ||
-                            (migrationData !== null &&
-                                migrationData.started !== null) ||
-                            (profile.dirtMigrationStarted !== null &&
-                                profile.dirtMigrationCompleted === null)
+                            profile.migration.started !== null ||
+                            (profile.migration.started !== null &&
+                                profile.migration.completed === null)
                         "
                         @click="startDirtMigration"
                         :variant="
@@ -791,10 +795,9 @@
                             small
                             v-if="
                                 migrationSubmitting ||
-                                (migrationData !== null &&
-                                    migrationData.started !== null) ||
-                                (profile.dirtMigrationStarted !== null &&
-                                    profile.dirtMigrationCompleted === null)
+                                profile.migration.started !== null ||
+                                (profile.migration.started !== null &&
+                                    profile.migration.completed === null)
                             "
                             label="Running..."
                             variant="dark"
@@ -803,46 +806,91 @@
                         ><i v-else class="fas fa-chevron-right fa-fw mr-1"></i>
                         {{
                             migrationSubmitting ||
-                            migrationData.started !== null
-                                ? 'Running migration'
-                                : 'Start Migration'
+                            profile.migration.started !== null
+                                ? 'Running'
+                                : 'Start'
                         }}</b-button
                     >
-                    <p v-if="migrationData.started !== null">
+                    <p v-if="profile.migration.started !== null">
                         <br />
-                        <b>Started:</b> {{ prettify(migrationData.started) }}
+                        <span v-if="profile.migration.num_folders !== null"
+                            >You have
+                            {{ profile.migration.num_folders }} dataset(s) to
+                            migrate.</span
+                        >
+                        <br />
+                        <b>Started:</b>
+                        {{ prettify(profile.migration.started) }}
                         <br />
                         <b>Collection:</b>
-                        {{ migrationData.target_path }}
+                        {{ profile.migration.target_path }}
                         <br />
-                        <b>Downloaded files:</b>
-                        {{ migrationData.downloads.length }}
-                        <b-list-group>
+                        <b>Downloading:</b>
+                        {{ downloadedFolders.length }}/{{
+                            profile.migration.num_folders === null
+                                ? '?'
+                                : profile.migration.num_folders
+                        }}
+                        <br />
+                        <b-progress
+                            v-if="profile.migration.num_folders !== null"
+                            :value="downloadedFolders.length"
+                            :max="profile.migration.num_folders"
+                            animated
+                            variant="success"
+                        ></b-progress>
+                        <b-list-group
+                            style="
+                                max-height: 10rem;
+                                overflow: scroll;
+                                -webkit-overflow-scrolling: touch;
+                            "
+                        >
                             <b-list-group-item
                                 :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="file in migrationData.downloads"
-                                v-bind:key="`${file.folder} ${file.name}`"
+                                v-for="folder in downloadedFolders"
+                                v-bind:key="folder.name"
                             >
                                 <i
                                     class="fas text-success fa-check fa-1x fa-fw"
                                 ></i>
-                                {{ file.folder }}/{{ file.name }}
+                                {{ folder.name }},
+                                {{ folder.files.length }} file(s)
                             </b-list-group-item>
                         </b-list-group>
-                        <b>Uploaded datasets:</b>
-                        {{ migrationData.uploads.length }}/{{
-                            migrationData.num_folders === null
+                        <b>Uploading:</b>
+                        {{ uploadedFolders.length }}/{{
+                            profile.migration.num_folders === null
                                 ? '?'
-                                : migrationData.num_folders
+                                : profile.migration.num_folders
                         }}
                         <br />
                         <b-progress
-                            :value="migrationData.uploads.length"
-                            :max="migrationData.num_folders"
-                            show-progress
+                            v-if="profile.migration.num_folders !== null"
+                            :value="uploadedFolders.length"
+                            :max="profile.migration.num_folders"
                             animated
                             variant="success"
                         ></b-progress>
+                        <b-list-group
+                            style="
+                                max-height: 10rem;
+                                overflow: scroll;
+                                -webkit-overflow-scrolling: touch;
+                            "
+                        >
+                            <b-list-group-item
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="folder in uploadedFolders"
+                                v-bind:key="folder.name"
+                            >
+                                <i
+                                    class="fas text-success fa-check fa-1x fa-fw"
+                                ></i>
+                                {{ folder.name }},
+                                {{ folder.files.length }} file(s)
+                            </b-list-group-item>
+                        </b-list-group>
                     </p>
                 </b-col>
             </b-row>
@@ -853,13 +901,13 @@
                     </p>
                     <p>
                         <b>Started:</b>
-                        {{ prettify(profile.dirtMigrationStarted) }}
+                        {{ prettify(profile.migration.started) }}
                         <br />
                         <b>Completed:</b>
-                        {{ prettify(profile.dirtMigrationCompleted) }}
+                        {{ prettify(profile.migration.completed) }}
                         <br />
                         <b>Collection:</b>
-                        {{ profile.dirtMigrationPath }}
+                        {{ profile.migration.target_path }}
                     </p>
                 </b-col>
             </b-row>
@@ -974,15 +1022,7 @@ export default {
             dismissCountDown: 0,
             maintenanceWindows: [],
             // DIRT migration
-            migrationData: {
-                started: null,
-                completed: null,
-                target_path: null,
-                num_folders: null,
-                downloads: [],
-                uploads: [],
-                duplicate: false,
-            },
+            migrationDataDuplicate: false,
             migrationSubmitting: false,
         };
     },
@@ -1001,6 +1041,26 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
+        downloadedFolders() {
+            if (this.profile.migration.downloads.length === 0) return [];
+            let grouped = this.groupBy(
+                this.profile.migration.downloads,
+                'folder'
+            );
+            return Object.entries(grouped).map((pair) => {
+                return { name: pair[0], files: pair[1] };
+            });
+        },
+        uploadedFolders() {
+            if (this.profile.migration.uploads.length === 0) return [];
+            let grouped = this.groupBy(
+                this.profile.migration.uploads,
+                'folder'
+            );
+            return Object.entries(grouped).map((pair) => {
+                return { name: pair[0], files: pair[1] };
+            });
+        },
         maintenance() {
             let now = moment();
             return this.maintenanceWindows.find((w) => {
@@ -1074,11 +1134,15 @@ export default {
         alerts() {
             this.dismissCountDown = this.dismissSecs;
         },
-        migrationData() {
-            // noop
-        },
     },
     methods: {
+        // https://stackoverflow.com/a/34890276
+        groupBy(xs, key) {
+            return xs.reduce(function (rv, x) {
+                (rv[x[key]] = rv[x[key]] || []).push(x);
+                return rv;
+            }, {});
+        },
         showDirtMigrationModal() {
             this.$bvModal.show('migration');
         },
@@ -1086,19 +1150,15 @@ export default {
             this.$bvModal.hide('migration');
         },
         startDirtMigration() {
+            this.migrationDataDuplicate = false;
             this.migrationSubmitting = true;
             axios
                 .get(`/apis/v1/users/start_dirt_migration/`)
                 .then(async (response) => {
-                    this.migrationData = response.data.migration;
                     await Promise.all([
                         this.$store.dispatch(
-                            'user/setDirtMigrationStarted',
-                            this.migrationData.started
-                        ),
-                        this.$store.dispatch(
-                            'user/setDirtMigrationPath',
-                            this.migrationData.target_path
+                            'user/setDirtMigration',
+                            response.data.migration
                         ),
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
@@ -1116,7 +1176,7 @@ export default {
                             'migration collection already exists'
                         )
                     ) {
-                        this.migrationData.duplicate = true;
+                        this.migrationDataDuplicate = true;
                     }
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
@@ -1206,6 +1266,10 @@ export default {
                         response.data.django_profile.push_notifications
                     );
                     this.$store.dispatch('user/setStats', response.data.stats);
+                    this.$store.dispatch(
+                        'user/setDirtMigration',
+                        response.data.migration
+                    );
                     this.$store.dispatch('user/setProfileLoading', false);
 
                     // load notifications into Vuex
@@ -1439,16 +1503,16 @@ export default {
             }
         },
         async handleMigrationEvent(migration) {
-            this.migrationData = migration;
+            await this.$store.dispatch('user/setDirtMigration', migration);
 
             // check if completed and update user profile & create an alert if so
             let completed = migration.completed;
-            if (completed !== null && completed !== undefined) {
-                await this.$store.dispatch(
-                    'user/setDirtMigrationCompleted',
-                    completed
-                );
-            }
+            if (completed !== null && completed !== undefined)
+                await this.$store.dispatch('alerts/add', {
+                    variant: 'success',
+                    message: `DIRT migration completed (target collection: ${migration.target_path})`,
+                    guid: guid().toString(),
+                });
         },
         async handleNotificationEvent(notification) {
             await this.$store.dispatch('notifications/update', notification);

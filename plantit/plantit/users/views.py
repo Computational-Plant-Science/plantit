@@ -259,6 +259,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             user.profile.save()
             user.save()
 
+        migration, created = Migration.objects.get_or_create(profile=user.profile)
+        if created:
+            migration.downloads = json.dumps([])
+            migration.uploads = json.dumps([])
+            migration.save()
+
         response = {
             'django_profile': {
                 'username': user.username,
@@ -271,9 +277,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
-                'dirt_migration_started': user.profile.dirt_migration_started,
-                'dirt_migration_completed': user.profile.dirt_migration_completed,
-                'dirt_migration_path': user.profile.dirt_migration_path
+                'migration': q.migration_to_dict(migration)
             },
             'stats': async_to_sync(q.get_user_statistics)(user),
             'users': q.list_users(),
@@ -384,10 +388,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def start_dirt_migration(self, request):
         user = self.get_object()
         profile = Profile.objects.get(user=user)
-
-        # don't allow duplicate starts
-        if profile.dirt_migration_started is not None:
-            return HttpResponseBadRequest(f"DIRT migration already started for user {user.username}")
+        migration, created = Migration.objects.get_or_create(profile=profile)
 
         # make sure a `dirt_migration` collection doesn't already exist
         client = TerrainClient(access_token=profile.cyverse_access_token)
@@ -396,10 +397,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
             return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
+        # if already started, just return it
+        if not created and migration.started is not None:
+            return JsonResponse({'migration': q.migration_to_dict(migration)})
+
         # record starting time
         start = timezone.now()
-        profile.dirt_migration_started = start
-        profile.dirt_migration_path = root_collection_path
+        migration.started = start
+        migration.target_path = root_collection_path
+        migration.downloads = json.dumps([])
+        migration.uploads = json.dumps([])
+        migration.save()
         profile.save()
         user.save()
 
@@ -407,10 +415,4 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         migrate_dirt_datasets.s(user.username).apply_async(countdown=5)
 
         # return status to client
-        return JsonResponse({'migration': Migration(
-            started=start.isoformat(),
-            completed=None,
-            num_folders=None,
-            target_path=f"/iplant/home/{user.username}/dirt_migration",
-            downloads=[],
-            uploads=[])})
+        return JsonResponse({'migration': q.migration_to_dict(migration)})

@@ -19,6 +19,13 @@ class Profile(models.Model):
     hints = models.BooleanField(default=False)
     created = models.DateField(null=True, blank=True)
     first_login = models.BooleanField(default=True)
-    dirt_migration_started = models.DateTimeField(null=True, blank=True)
-    dirt_migration_completed = models.DateTimeField(null=True, blank=True)
-    dirt_migration_path = models.CharField(max_length=255, null=True, blank=True)
+
+
+class Migration(models.Model):
+    profile: Profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
+    started = models.DateTimeField(null=True, blank=True)
+    completed = models.DateTimeField(null=True, blank=True)
+    target_path = models.CharField(max_length=255, null=True, blank=True)
+    num_folders = models.IntegerField(null=True, blank=True)
+    downloads = models.JSONField(null=True, blank=True)
+    uploads = models.JSONField(null=True, blank=True)

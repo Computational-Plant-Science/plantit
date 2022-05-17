@@ -19,9 +19,7 @@ export const user = {
             projects: [],
             hints: false,
             stats: null,
-            dirtMigrationStarted: null,
-            dirtMigrationCompleted: null,
-            dirtMigrationPath: null,
+            migration: null,
         },
         profileLoading: true,
     }),
@@ -62,14 +60,8 @@ export const user = {
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
         },
-        setDirtMigrationStarted(state, started) {
-            state.profile.dirtMigrationStarted = started;
-        },
-        setDirtMigrationCompleted(state, completed) {
-            state.profile.dirtMigrationCompleted = completed;
-        },
-        setDirtMigrationPath(state, path) {
-            state.profile.dirtMigrationPath = path;
+        setDirtMigration(state, migration) {
+            state.profile.migration = migration;
         },
     },
     actions: {
@@ -110,16 +102,8 @@ export const user = {
                     );
                     commit('setStats', response.data.stats);
                     commit(
-                        'setDirtMigrationStarted',
-                        response.data.django_profile.dirt_migration_started
-                    );
-                    commit(
-                        'setDirtMigrationCompleted',
-                        response.data.django_profile.dirt_migration_completed
-                    );
-                    commit(
-                        'setDirtMigrationPath',
-                        response.data.django_profile.dirt_migration_path
+                        'setDirtMigration',
+                        response.data.django_profile.migration
                     );
                     commit('setProfileLoading', false);
                 })
@@ -209,14 +193,8 @@ export const user = {
         setStats({ commit }, stats) {
             commit('setStats', stats);
         },
-        setDirtMigrationStarted({ commit }, started) {
-            commit('setDirtMigrationStarted', started);
-        },
-        setDirtMigrationCompleted({ commit }, completed) {
-            commit('setDirtMigrationCompleted', completed);
-        },
-        setDirtMigrationPath({ commit }, path) {
-            commit('setDirtMigrationPath', path);
+        setDirtMigration({ commit }, migration) {
+            commit('setDirtMigration', migration);
         },
     },
     getters: {

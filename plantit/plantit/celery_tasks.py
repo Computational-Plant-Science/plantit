@@ -23,7 +23,7 @@ import plantit.utils.agents
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
 from plantit import settings
-from plantit.users.models import Profile
+from plantit.users.models import Profile, Migration
 from plantit.agents.models import Agent
 from plantit.celery import app
 from plantit.healthchecks import is_healthy
@@ -931,24 +931,15 @@ class DownloadedFile(TypedDict):
     name: str
 
 
-class UploadedFolder(TypedDict):
-    path: str
-    id: str
-
-
-class Migration(TypedDict):
-    started: datetime
-    completed: Optional[datetime]
-    target_path: str
-    num_folders: Optional[int]
-    downloads: List[DownloadedFile]
-    uploads: List[UploadedFolder]
+class UploadedFile(TypedDict):
+    folder: str
+    name: str
 
 
 async def push_migration_event(user: User, migration: Migration):
     await get_channel_layer().group_send(f"{user.username}", {
         'type': 'migration_event',
-        'migration': migration,
+        'migration': q.migration_to_dict(migration),
     })
 
 
@@ -957,15 +948,12 @@ def migrate_dirt_datasets(self, username: str):
     try:
         user = User.objects.get(username=username)
         profile = Profile.objects.get(user=user)
+        migration = Migration.objects.get(profile=profile)
     except:
         logger.warning(f"Could not find user {username}")
         self.request.callbacks = None
         return
 
-    # get started time
-    start = profile.dirt_migration_started
-
-    # create SSH/SFTP client and open SFTP connection
     ssh = SSH(
         host=settings.DIRT_MIGRATION_HOST,
         port=settings.DIRT_MIGRATION_PORT,
@@ -974,13 +962,17 @@ def migrate_dirt_datasets(self, username: str):
     with ssh:
         with ssh.client.open_sftp() as sftp:
 
-            # list the user's datasets on the DIRT server
+            # check how many datasets the user has on the DIRT server
             user_dir = join(settings.DIRT_MIGRATION_DATA_DIR, username, 'root-images')
             datasets = [folder for folder in sftp.listdir(user_dir)]
             logger.info(f"User {username} has {len(datasets)} DIRT folders: {', '.join(datasets)}")
 
+            # persist number of datasets
+            migration.num_folders = len(datasets)
+            migration.save()
+
             # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
-            client = TerrainClient(access_token=profile.cyverse_access_token)
+            client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=60)
             root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
             if client.dir_exists(root_collection_path):
                 logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
@@ -998,23 +990,20 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"User {username} folder {folder} has {len(files)} files: {', '.join(files)}")
 
                 # create temp local folder for this dataset
-                staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, folder)
+                staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username, folder)
                 Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
                 # download files
                 for file in files:
-                    file_path = join(folder_name, file)
-                    sftp.get(file_path, join(settings.DIRT_MIGRATION_STAGING_DIR, folder, file))
+                    sftp.get(join(folder_name, file), join(staging_dir, file))
 
-                    # push download status update to UI
+                    # push download update to UI
                     downloads.append(DownloadedFile(name=file, folder=folder))
-                    async_to_sync(push_migration_event)(user, Migration(
-                        started=start.isoformat(),
-                        completed=None,
-                        num_folders=len(datasets),
-                        target_path=root_collection_path,
-                        downloads=downloads,
-                        uploads=[]))
+                    migration.downloads = json.dumps(downloads)
+                    async_to_sync(push_migration_event)(user, migration)
+
+                # persist downloaded dataset
+                migration.save()
 
                 # create subcollection for this folder
                 collection_path = join(root_collection_path, folder.rpartition('/')[2])
@@ -1025,9 +1014,16 @@ def migrate_dirt_datasets(self, username: str):
                     client.mkdir(collection_path)
 
                 # upload all files to collection
-                client.upload_directory(
-                    from_path=join(settings.DIRT_MIGRATION_STAGING_DIR, folder),
-                    to_prefix=collection_path)
+                for file in os.listdir(staging_dir):
+                    client.upload(from_path=join(staging_dir, str(file)), to_prefix=collection_path)
+
+                    # push upload update to UI
+                    uploads.append(UploadedFile(folder=folder, name=str(file)))
+                    migration.uploads = json.dumps(uploads)
+                    async_to_sync(push_migration_event)(user, migration)
+
+                # persist uploaded dataset
+                migration.save()
 
                 # get ID of newly created collection
                 stat = client.stat(collection_path)
@@ -1038,16 +1034,6 @@ def migrate_dirt_datasets(self, username: str):
                     f"dirt_migration_timestamp={timezone.now().isoformat()}",
                     # TODO: anything else we need to add here?
                 ], [])
-
-                # push upload status update to UI
-                uploads.append(UploadedFolder(path=collection_path, id=id))
-                async_to_sync(push_migration_event)(user, Migration(
-                    started=start.isoformat(),
-                    completed=None,
-                    num_folders=len(datasets),
-                    target_path=root_collection_path,
-                    downloads=downloads,
-                    uploads=uploads))
 
             # get ID of newly created collection
             root_collection_id = client.stat(root_collection_path)['id']
@@ -1066,20 +1052,13 @@ def migrate_dirt_datasets(self, username: str):
             #     f"Duration: {str(end - start)}",
             #     {})
 
-            # mark user's profile that DIRT transfer has been completed
+            # persist completion
             end = timezone.now()
-            profile.dirt_migration_completed = end
-            profile.save()
-            user.save()
+            migration.completed = end
+            migration.save()
 
             # push completion update to the UI
-            async_to_sync(push_migration_event)(user, Migration(
-                started=start.isoformat(),
-                completed=end.isoformat(),
-                num_folders=len(datasets),
-                target_path=root_collection_path,
-                downloads=downloads,
-                uploads=uploads))
+            async_to_sync(push_migration_event)(user, migration)
 
 
 # see https://stackoverflow.com/a/41119054/6514033

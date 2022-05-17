@@ -31,7 +31,7 @@ from plantit.notifications.models import Notification
 from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask, TaskCounter, TaskStatus
-from plantit.users.models import Profile
+from plantit.users.models import Profile, Migration
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
 
@@ -746,6 +746,17 @@ def person_to_dict(user: User, role: str) -> dict:
         'username': user.username,
         'affiliation': user.profile.institution,
         'role': role,
+    }
+
+
+def migration_to_dict(migration: Migration) -> dict:
+    return {
+        'started': None if migration.started is None else migration.started.isoformat(),
+        'completed': None if migration.completed is None else migration.completed.isoformat(),
+        'target_path': migration.target_path,
+        'num_folders': migration.num_folders,
+        'downloads': json.loads(migration.downloads),
+        'uploads': json.loads(migration.uploads)
     }
 
 
