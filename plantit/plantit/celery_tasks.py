@@ -993,18 +993,6 @@ def migrate_dirt_datasets(self, username: str):
                 staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username, folder)
                 Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
-                # download files
-                for file in files:
-                    sftp.get(join(folder_name, file), join(staging_dir, file))
-
-                    # push download update to UI
-                    downloads.append(DownloadedFile(name=file, folder=folder))
-                    migration.downloads = json.dumps(downloads)
-                    async_to_sync(push_migration_event)(user, migration)
-
-                # persist downloaded dataset
-                migration.save()
-
                 # create subcollection for this folder
                 collection_path = join(root_collection_path, folder.rpartition('/')[2])
                 if client.dir_exists(collection_path):
@@ -1013,16 +1001,22 @@ def migrate_dirt_datasets(self, username: str):
                 else:
                     client.mkdir(collection_path)
 
-                # upload all files to collection
-                for file in os.listdir(staging_dir):
-                    client.upload(from_path=join(staging_dir, str(file)), to_prefix=collection_path)
+                # download files
+                for file in files:
+                    sftp.get(join(folder_name, file), join(staging_dir, file))
+                    client.upload(from_path=join(staging_dir, file), to_prefix=collection_path)
 
-                    # push upload update to UI
-                    uploads.append(UploadedFile(folder=folder, name=str(file)))
+                    # push download update to UI
+                    downloads.append(DownloadedFile(name=file, folder=folder))
+                    uploads.append(UploadedFile(name=file, folder=folder))
+                    migration.downloads = json.dumps(downloads)
                     migration.uploads = json.dumps(uploads)
                     async_to_sync(push_migration_event)(user, migration)
 
-                # persist uploaded dataset
+                    # remove file from staging dir
+                    os.remove(join(staging_dir, file))
+
+                # persist migration status
                 migration.save()
 
                 # get ID of newly created collection
