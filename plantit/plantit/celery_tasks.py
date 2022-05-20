@@ -14,6 +14,7 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
+from databases import Database
 from pycyapi.clients import TerrainClient
 
 import plantit.healthchecks
@@ -979,11 +980,15 @@ def migrate_dirt_datasets(self, username: str):
                 return
             else: client.mkdir(root_collection_path)
 
+            # create a database client for the DIRT DB and open a connection
+            db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
+            async_to_sync(db.connect)()
+
             # keep track of progress so we can update the UI in real time
             downloads = []
             uploads = []
 
-            # transfer all the user's datasets to temporary staging directory
+            # transfer all the user's datasets to temporary staging directory, 1 file at a time (to preserve local disk space)
             for folder in datasets:
                 folder_name = join(user_dir, folder)
                 files = [f for f in sftp.listdir(folder_name)]
@@ -993,28 +998,66 @@ def migrate_dirt_datasets(self, username: str):
                 staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username, folder)
                 Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
-                # create subcollection for this folder
-                collection_path = join(root_collection_path, folder.rpartition('/')[2])
-                if client.dir_exists(collection_path):
-                    logger.warning(f"Collection {collection_path} already exists, aborting DIRT migration for {user.username}")
-                    return
-                else:
-                    client.mkdir(collection_path)
-
                 # download files
                 for file in files:
+                    # download the file
                     sftp.get(join(folder_name, file), join(staging_dir, file))
+
+                    # push a progress update to client
+                    downloads.append(DownloadedFile(name=file, folder=folder))
+                    migration.downloads = json.dumps(downloads)
+                    async_to_sync(push_migration_event)(user, migration)
+
+                # query DB for file IDs for each file in this folder
+                # files are stored under the user's CAS username if they used CAS to create their DIRT account, otherwise under their full name
+                dirt_folder_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"
+                query = f"SELECT * FROM file_managed WHERE uri LIKE '{dirt_folder_path}';"
+                rows = async_to_sync(db.fetch_all)(query=query)
+                fids = [row['fid'] for row in rows]
+
+                # query DB for entity ID given file ID
+                query = """SELECT * FROM field_data_field_root_image WHERE field_root_image_fid = :fid"""
+                values = [{'fid': fid} for fid in fids]
+                rows = async_to_sync(db.fetch_all)(query=query)
+                file_entity_ids = [row['entity_id'] for row in rows]
+
+                # associate each file with the collection it's a member of
+                collections = dict()
+                for fid in file_entity_ids:
+                    # query DB for each file's collection membership
+                    query = """SELECT * FROM field_data_field_marked_coll_root_img_ref WHERE field_marked_coll_root_img_ref_target_id = :entity_id"""
+                    values = [{'entity_id': eid} for eid in file_entity_ids]
+                    row = async_to_sync(db.fetch_one)(query=query)
+                    coll_entity_id = row['entity_id']
+
+                    # create the association
+                    if coll_entity_id not in collections: collections[coll_entity_id] = []
+                    collections[coll_entity_id].append(fid)
+
+                # TODO create collection for each DIRT marked collection
+                # collection_path = join(root_collection_path, folder.rpartition('/')[2])
+                # if client.dir_exists(collection_path):
+                #     logger.warning(f"Collection {collection_path} already exists, aborting DIRT migration for {user.username}")
+                #     return
+                # else:
+                #     client.mkdir(collection_path)
+
+                # TODO attach metadata to collections
+
+                # upload files to each subcollection
+                for file in files:
+                    # upload the file
                     client.upload(from_path=join(staging_dir, file), to_prefix=collection_path)
 
-                    # push download update to UI
-                    downloads.append(DownloadedFile(name=file, folder=folder))
+                    # push a progress update to client
                     uploads.append(UploadedFile(name=file, folder=folder))
-                    migration.downloads = json.dumps(downloads)
                     migration.uploads = json.dumps(uploads)
                     async_to_sync(push_migration_event)(user, migration)
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file))
+
+                    # TODO attach metadata to each file
 
                 # persist migration status
                 migration.save()
@@ -1028,6 +1071,9 @@ def migrate_dirt_datasets(self, username: str):
                     f"dirt_migration_timestamp={timezone.now().isoformat()}",
                     # TODO: anything else we need to add here?
                 ], [])
+
+            # close the DB connection
+            async_to_sync(db.disconnect)()
 
             # get ID of newly created collection
             root_collection_id = client.stat(root_collection_path)['id']

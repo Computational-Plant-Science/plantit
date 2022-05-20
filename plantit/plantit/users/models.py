@@ -19,6 +19,8 @@ class Profile(models.Model):
     hints = models.BooleanField(default=False)
     created = models.DateField(null=True, blank=True)
     first_login = models.BooleanField(default=True)
+    dirt_email = models.CharField(max_length=255, null=True, blank=True)
+    dirt_name = models.CharField(max_length=255, null=True, blank=True)
 
 
 class Migration(models.Model):

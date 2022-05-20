@@ -72,6 +72,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -153,6 +154,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -231,6 +233,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

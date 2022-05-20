@@ -49,3 +49,5 @@ pandas==1.4.0
 statsmodels==0.13.1
 furo
 pycyapi
+aiomysql
+databases[aiomysql]

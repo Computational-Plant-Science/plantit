@@ -20,6 +20,7 @@ from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from databases import Database
 from pycyapi.clients import TerrainClient
 
 import plantit.queries as q
@@ -390,6 +391,34 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         profile = Profile.objects.get(user=user)
         migration, created = Migration.objects.get_or_create(profile=profile)
 
+        # connect to the DIRT DB
+        db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
+        async_to_sync(db.connect)()
+
+        # make sure the user has a DIRT account
+        email = request.query_params.get('email', None)
+
+        # check for a DIRT CAS user with this user's username
+        query = """SELECT * FROM cas_user WHERE cas_name = :cas_name"""
+        row = async_to_sync(db.fetch_one)(query=query, values={"cas_name": user.username})
+
+        # if we didn't find a CAS user and they provided an email, check that instead
+        if row is None and email is not None:
+            query = """SELECT * FROM users WHERE mail = :email"""
+            row = async_to_sync(db.fetch_one)(query=query, values={"email": email})
+
+            # if we can't find a DIRT user with the provided email address, abort the migration
+            if row is None:
+                async_to_sync(db.disconnect)()
+                return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
+
+            # if we found a DIRT user matching the provided email address, save it and the associated name
+            profile.dirt_email = email
+            profile.dirt_name = row['name']
+            profile.save()
+
+        async_to_sync(db.disconnect)()
+
         # make sure a `dirt_migration` collection doesn't already exist
         client = TerrainClient(access_token=profile.cyverse_access_token)
         root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
@@ -397,7 +426,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
             return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
-        # if already started, just return it
+        # if already started, just return the migration status
         if not created and migration.started is not None:
             return JsonResponse({'migration': q.migration_to_dict(migration)})
 

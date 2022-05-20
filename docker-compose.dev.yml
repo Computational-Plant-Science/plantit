@@ -68,6 +68,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -175,6 +176,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -251,6 +253,7 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
