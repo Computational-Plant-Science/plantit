@@ -237,8 +237,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
         client = TerrainClient(token)
-        paths = [client.stat(path)['path']] if kind == InputKind.FILE else client.list_files(path)
-        inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
+        inputs = [client.stat(path)['path'].rpartition('/')[2]] if kind == InputKind.FILE else [f['label'] for f in client.list_files(path)]
     else: inputs = []
 
     # save the expected number of input files to the task
