@@ -329,8 +329,7 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
         client = TerrainClient(token)
-        paths = [client.stat(path)['path']] if kind == InputKind.FILE else client.list_files(path)
-        inputs = [p.rpartition('/')[2] for p in paths]  # convert paths to filenames
+        inputs = [client.stat(path)['path'].rpartition('/')[2]] if kind == InputKind.FILE else [f['label'] for f in client.list_files(path)]
 
     # setup command
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
