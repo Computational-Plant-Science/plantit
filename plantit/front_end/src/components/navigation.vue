@@ -624,7 +624,7 @@
                             <i class="fas fa-folder-open fa-fw"></i>
                             DIRT Migration
                             <i
-                                v-if="profile.migration.completed !== null"
+                                v-if="!profileLoading && profile.migration.completed !== null"
                                 class="fas fa-check text-success fa-fw"
                             ></i>
                         </b-dropdown-item>
@@ -743,6 +743,7 @@
             >
         </div>
         <b-modal
+            v-if="!profileLoading && this.profile.migration !== null"
             id="migration"
             title="DIRT Migration"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -1009,7 +1010,7 @@ export default {
             'notificationsUnread',
         ]),
         downloadedFolders() {
-            if (this.profile.migration.downloads.length === 0) return [];
+            if (this.profileLoading || this.profile === null || this.profile.migration.downloads.length === 0) return [];
             let grouped = this.groupBy(
                 this.profile.migration.downloads,
                 'folder'
@@ -1019,7 +1020,7 @@ export default {
             });
         },
         uploadedFolders() {
-            if (this.profile.migration.uploads.length === 0) return [];
+            if (this.profileLoading || this.profile === null || this.profile.migration.uploads.length === 0) return [];
             let grouped = this.groupBy(
                 this.profile.migration.uploads,
                 'folder'

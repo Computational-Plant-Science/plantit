@@ -4,6 +4,7 @@ import logging
 from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound
+from drf_yasg.utils import swagger_auto_schema
 
 import plantit.queries as q
 from plantit.github import get_repo, list_repo_branches
@@ -12,6 +13,7 @@ from plantit.users.models import Profile
 logger = logging.getLogger(__name__)
 
 
+@swagger_auto_schema(methods='get')
 def list_public(request):
     return JsonResponse({'workflows': q.list_public_workflows()})
 
