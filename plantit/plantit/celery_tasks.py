@@ -927,8 +927,7 @@ def agents_healthchecks():
 # DIRT migration
 
 
-class DownloadedFile(TypedDict):
-    folder: str
+class StorageDirectory(TypedDict):
     name: str
 
 
@@ -959,6 +958,7 @@ SELECT_ROOT_COLLECTION_SOIL_N = """SELECT * FROM field_data_field_collection_soi
 SELECT_ROOT_COLLECTION_SOIL_P = """SELECT * FROM field_data_field_collection_soil_phosphorus WHERE entity_id = :entity_id"""
 SELECT_ROOT_COLLECTION_SOIL_K = """SELECT * FROM field_data_field_collection_soil_potassium WHERE entity_id = :entity_id"""
 SELECT_ROOT_COLLECTION_PESTICIDES = """SELECT * FROM field_data_field_collection_pesticides WHERE entity_id = :entity_id"""
+
 
 @app.task(bind=True)
 def migrate_dirt_datasets(self, username: str):
@@ -1005,7 +1005,7 @@ def migrate_dirt_datasets(self, username: str):
             Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
             # keep track of progress so we can update the UI in real time
-            downloads = []
+            storage = []
             uploads = []
 
             # transfer all the user's datasets to temporary staging directory, 1 file at a time (to preserve local disk space)
@@ -1016,7 +1016,7 @@ def migrate_dirt_datasets(self, username: str):
 
                 # get Drupal managed file IDs for each root image file in the current folder
                 # (files are stored under CAS username if CAS was used for the user's DIRT account, otherwise under their full name)
-                values = [{'path': f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"}]
+                values = {'path': f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"}
                 rows = async_to_sync(db.fetch_all)(query=SELECT_MANAGED_FILE_BY_PATH, values=values)
                 managed_files = [{
                     'fid': row['fid'],
@@ -1123,6 +1123,10 @@ def migrate_dirt_datasets(self, username: str):
                     os.remove(join(staging_dir, file_name))
 
                     # TODO attach metadata to each file
+
+                storage.append(StorageDirectory(name=folder_name))
+                migration.storage = json.dumps(storage)
+                async_to_sync(push_migration_event)(user, migration)
 
                 # persist migration status
                 migration.save()

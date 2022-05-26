@@ -755,7 +755,7 @@ def migration_to_dict(migration: Migration) -> dict:
         'completed': None if migration.completed is None else migration.completed.isoformat(),
         'target_path': migration.target_path,
         'num_folders': migration.num_folders,
-        'downloads': json.loads(migration.downloads),
+        'storage': json.loads(migration.storage),
         'uploads': json.loads(migration.uploads)
     }
 

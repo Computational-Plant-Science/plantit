@@ -262,7 +262,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         migration, created = Migration.objects.get_or_create(profile=user.profile)
         if created:
-            migration.downloads = json.dumps([])
+            migration.storage = json.dumps([])
             migration.uploads = json.dumps([])
             migration.save()
 
@@ -434,7 +434,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         start = timezone.now()
         migration.started = start
         migration.target_path = root_collection_path
-        migration.downloads = json.dumps([])
+        migration.storage = json.dumps([])
         migration.uploads = json.dumps([])
         migration.save()
         profile.save()

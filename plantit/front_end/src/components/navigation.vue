@@ -1011,10 +1011,10 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
-        downloadedFolders() {
-            if (this.profileLoading || this.profile === null || this.profile.migration.downloads.length === 0) return [];
+        storageFolders() {
+            if (this.profileLoading || this.profile === null || this.profile.migration.storage.length === 0) return [];
             let grouped = this.groupBy(
-                this.profile.migration.downloads,
+                this.profile.migration.storage,
                 'folder'
             );
             return Object.entries(grouped).map((pair) => {

@@ -29,5 +29,5 @@ class Migration(models.Model):
     completed = models.DateTimeField(null=True, blank=True)
     target_path = models.CharField(max_length=255, null=True, blank=True)
     num_folders = models.IntegerField(null=True, blank=True)
-    downloads = models.JSONField(null=True, blank=True)
+    storage = models.JSONField(null=True, blank=True)
     uploads = models.JSONField(null=True, blank=True)
