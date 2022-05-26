@@ -1,22 +1,17 @@
 <template>
     <div id="background" class="vertical-center m-0 p-0">
-        <b-container id="main">
             <b-card
                 align="center"
                 class="p-1 text-white"
                 header-bg-variant="transparent"
                 footer-bg-variant="transparent"
-                footer-border-variant="white"
                 border-variant="default"
                 text-variant="white"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="
                     width: 90%;
-                    height: 40%;
-                    padding: 0;
-                    margin: 0 auto;
+                    margin: 30px auto;
                     float: none;
-                    margin-bottom: 10px;
                     opacity: 0.95;
                 "
             >
@@ -75,28 +70,45 @@
                                 ><i
                                     class="fas fa-question-circle fa-1x fa-fw"
                                 ></i
-                                >About</b-link
+                                > About</b-link
                             ></b-col
                         >
-                        <!--<b-nav-item
-                            to="/beta"
-                            class="mt-2"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="Beta Test"
-                            ><span
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="/apis/v1/swagger/"
                                 :class="
                                     profile.darkMode
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
-                                Testing</span
-                            ></b-nav-item
-                        >-->
+                                ><i class="fas fa-laptop-code fa-1x fa-fw"></i
+                                > API</b-link
+                            >
+                        </b-col>
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="https://plantit.readthedocs.io/en/latest"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                > Docs</b-link
+                            >
+                        </b-col>
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="https://github.com/Computational-Plant-Science/plantit"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-github fa-1x fa-fw"></i
+                                > GitHub</b-link
+                            >
+                        </b-col>
                         <b-col md="auto" align-self="center"
                             ><b-link
                                 to="/stats"
@@ -106,7 +118,7 @@
                                         : 'text-dark'
                                 "
                                 ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                >Stats</b-link
+                                > Stats</b-link
                             ></b-col
                         >
                         <b-col md="auto" align-self="center"
@@ -120,74 +132,10 @@
                                 ><i
                                     class="fas fa-satellite-dish fa-1x fa-fw"
                                 ></i
-                                >Status</b-link
+                                > Status</b-link
                             ></b-col
                         >
-                        <b-col md="auto" align-self="center">
-                            <b-link
-                                href="https://plantit.readthedocs.io/en/latest"
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-book fa-1x fa-fw"></i
-                                >Docs</b-link
-                            >
-                        </b-col>
-                        <b-col md="auto" align-self="center">
-                            <b-link
-                                href="https://github.com/Computational-Plant-Science/plantit"
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fab fa-github fa-1x fa-fw"></i
-                                >Github</b-link
-                            >
-                        </b-col>
                         <b-col></b-col>
-                        <b-col align-self="center" md="auto">
-                            <b-button
-                                v-if="
-                                    !profile.loggedIn &&
-                                    maintenance === undefined
-                                "
-                                variant="white"
-                                class="text-center"
-                                href="/apis/v1/idp/cyverse_login/"
-                            >
-                                Log in with
-                                <b-img
-                                    :src="
-                                        require('@/assets/sponsors/cyversebw-notext.png')
-                                    "
-                                    height="18px"
-                                    alt="Cyverse"
-                                ></b-img>
-                                <b>CyVerse</b>
-                            </b-button>
-                            <b-button
-                                v-else-if="maintenance === undefined"
-                                variant="white"
-                                class="text-right"
-                                href="/apis/v1/idp/cyverse_login/"
-                            >
-                                <span
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-success'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    <i
-                                        class="fas fa-arrow-circle-right fa-fw"
-                                    ></i>
-                                    Log In</span
-                                >
-                            </b-button>
-                        </b-col>
                         <!--<b-nav-item
                             href="#"
                             class="mt-2"
@@ -236,7 +184,9 @@
                         <b-col></b-col>
                     </b-row>
                 </template>
-                <b-row align-v="center" v-if="maintenance !== undefined"
+              <template #default>
+                <b-container id="main">
+              <b-row align-v="center" v-if="maintenance !== undefined"
                     ><b-col class="text-center" align-self="center"
                         ><b-alert variant="warning" :show="true"
                             >CyVerse is undergoing maintenance scheduled to
@@ -244,62 +194,10 @@
                         ></b-col
                     >
                 </b-row>
-                <b-row class="m-0 mt-2 mb-2"
-                    ><!--<b-col class="text-left">
-                        <h5
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                        >
-                            Overview
-                        </h5>
-                        <p
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                        >
-                            Submit phenomics pipelines from the browser, with
-                            automatic transfers to/from the
-                            <b-link href="https://www.cyverse.org/data-store"
-                                >CyVerse Data Store</b-link
-                            >.
-                        </p>
-                        <hr />
-                        <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Built For</h5>
-                        <p
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                        >
-                            <small>
-                                <b>Researchers:</b> Deploy simulations or
-                                analyses to a supercomputer from the browser.
-                                <br />
-                                <b>Developers:</b> Publish container workflows
-                                to the worldwide research community.
-                            </small>
-                        </p>
-                        <hr />
-                        <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">Disclaimer</h5>
-                        <p
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
-                        >
-                            <small
-                                >Platform developers make no guarantees
-                                regarding the products of analyses performed on
-                                the platform. Researchers must ensure the
-                                validity of their own results. We encourage
-                                contacting workflow developers via GitHub or the
-                                other mechanisms provided in workflow
-                                descriptions to confirm suitability for your use
-                                case.</small
-                            >
-                        </p></b-col
-                    >--><b-col
+                <b-row
+                    ><b-col
                         class="text-left"
-                        style="overflow-y: scroll; height: 30rem"
+                        style="overflow-y: scroll; max-height: 50%"
                     >
                         <h5
                             :class="
@@ -339,8 +237,53 @@
                         >
                     </b-col></b-row
                 >
+                    </b-container>
+                </template>
+              <template #footer>
+             <b-row><b-col></b-col><b-col align-self="center" md="auto">
+                            <b-button
+                                v-if="
+                                    !profile.loggedIn &&
+                                    maintenance === undefined
+                                "
+                                variant="white"
+                                block
+                                class="text-center"
+                                href="/apis/v1/idp/cyverse_login/"
+                            >
+                                Log in with
+                                <b-img
+                                    :src="
+                                        require('@/assets/sponsors/cyversebw-notext.png')
+                                    "
+                                    height="18px"
+                                    alt="Cyverse"
+                                ></b-img>
+                                <b>CyVerse</b>
+                            </b-button>
+                            <b-button
+                                v-else-if="maintenance === undefined"
+                                variant="white"
+                                class="text-right"
+                                block
+                                href="/apis/v1/idp/cyverse_login/"
+                            >
+                                <span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-success'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    <i
+                                        class="fas fa-arrow-circle-right fa-fw"
+                                    ></i>
+                                    Log In</span
+                                >
+                            </b-button>
+                        </b-col></b-row>
+              </template>
             </b-card>
-        </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
             <i
                 class="fas fa-chevron-down fa-5x fa-fw"

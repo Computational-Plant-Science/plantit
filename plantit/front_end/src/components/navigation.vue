@@ -190,30 +190,68 @@
                                 ><i
                                     class="fas fa-question-circle fa-1x fa-fw"
                                 ></i
-                                >About</span
+                                > About</span
                             ></b-nav-item
                         >
-                        <!--<b-nav-item
-                            to="/beta"
-                            class="mt-2"
+                        <b-nav-item
+                            title="docs"
+                            class="mr-1"
+                            href="/apis/v1/swagger/"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            title="Beta Test"
                             ><span
                                 :class="
                                     profile.darkMode
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-vial fa-1x fa-fw"></i>Beta
-                                Testing</span
+                                ><i class="fas fa-laptop-code fa-1x fa-fw"></i
+                                > API</span
                             ></b-nav-item
-                        >-->
+                        >
                         <b-nav-item
-                            title="stats"
+                            class="mr-1"
+                            href="https://plantit.readthedocs.io/en/latest"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                > Docs</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            class="mr-1"
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="github"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-github fa-1x fa-fw"></i
+                                > GitHub</span
+                            >
+                        </b-nav-item>
+                        <b-nav-item
+                            class="mr-1"
                             to="/stats"
                             :link-class="
                                 profile.darkMode
@@ -227,10 +265,11 @@
                                         : 'text-dark'
                                 "
                                 ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                >Stats</span
+                                > Stats</span
                             ></b-nav-item
                         >
                         <b-nav-item
+                            class="mr-1"
                             title="status"
                             href="https://stats.uptimerobot.com/yAgPxH7KNJ"
                             :link-class="
@@ -247,46 +286,9 @@
                                 ><i
                                     class="fas fa-satellite-dish fa-1x fa-fw"
                                 ></i
-                                >Status</span
+                                > Status</span
                             ></b-nav-item
                         >
-                        <b-nav-item
-                            title="docs"
-                            href="https://plantit.readthedocs.io/en/latest"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-book fa-1x fa-fw"></i
-                                >Docs</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
-                            href="https://github.com/Computational-Plant-Science/plantit"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="github"
-                        >
-                            <span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fab fa-github fa-1x fa-fw"></i
-                                >Github</span
-                            >
-                        </b-nav-item>
                     </b-row>
                     <!--<b-nav-item
                             href="#"
