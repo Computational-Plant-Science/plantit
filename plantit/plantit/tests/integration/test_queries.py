@@ -15,7 +15,8 @@ from plantit.tokens import TerrainToken
 
 class QueriesTests(TestCase):
     def setUp(self):
-        user = User.objects.create(username='wbonelli', first_name="Wes", last_name="Bonelli")
+        user = User.objects.create(
+            username='wbonelli', first_name="Wes", last_name="Bonelli")
         profile = Profile.objects.create(
             user=user,
             github_username='w-bonelli',
@@ -25,6 +26,18 @@ class QueriesTests(TestCase):
             first_login=True
         )
         guid = str(uuid4())
+
+        # created second user
+        user2 = User.objects.create(
+            username='okn69169', first_name="Obi", last_name="Nnaduruaku")
+        profile2 = Profile.objects.create(
+            user=user2,
+            github_username='obi9999n',
+            github_token=settings.GITHUB_TOKEN,
+            cyverse_access_token=TerrainToken.get(),
+            institution='Georgia Tech',
+            first_login=True
+        )
         # task = Task.objects.create(
         #     guid=guid,
         #     name=guid,
@@ -45,11 +58,26 @@ class QueriesTests(TestCase):
         series = q.get_workflows_usage_timeseries(user)
         pprint(series)
 
+    # same test with different user
+    def test_get_workflows_usage_timeseries2(self):
+        user = User.objects.get(username='okn69169')
+        series = q.get_workflows_usage_timeseries(user)
+        pprint(series)
+
     def test_get_institutions_cache_miss(self):
         institutions = q.get_institutions(invalidate=True)
         self.assertTrue('university of georgia' in institutions)
         self.assertTrue(institutions['university of georgia']['count'] == 1)
-        self.assertTrue(institutions['university of georgia']['geocode']['text'] == 'University of Georgia')
+        self.assertTrue(institutions['university of georgia']
+                        ['geocode']['text'] == 'University of Georgia')
+
+    # same test with different institution
+    def test_get_institutions_cache_miss2(self):
+        institutions = q.get_institutions(invalidate=True)
+        self.assertTrue('georgia tech' in institutions)
+        self.assertTrue(institutions['georgia tech']['count'] == 1)
+        self.assertTrue(institutions['georgia tech']
+                        ['geocode']['text'] == 'Georgia Tech')
 
     def test_get_institutions_cache_hit(self):
         institutions = q.get_institutions()
