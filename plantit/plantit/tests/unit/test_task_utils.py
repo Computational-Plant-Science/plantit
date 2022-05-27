@@ -8,9 +8,15 @@ from plantit.utils.tasks import parse_task_walltime, has_output_target, get_outp
     parse_task_time_limit, parse_task_miappe_info
 
 
+class MyTest(TestCase):
+    def basicTests(self):
+        self.assertTrue(True, True)
+
+
 class TaskUtilsTests(TestCase):
     def setUp(self):
-        user = User.objects.create(username='wbonelli', first_name="Wes", last_name="Bonelli")
+        user = User.objects.create(
+            username='wbonelli', first_name="Wes", last_name="Bonelli")
 
     def test_parse_task_walltime_throws_value_error_when_malformed(self):
         with self.assertRaises(ValueError):
@@ -129,7 +135,8 @@ class TaskUtilsTests(TestCase):
         )
 
         patterns = sorted(get_output_included_patterns(task))
-        for pattern in expected: self.assertIn(pattern, patterns)
+        for pattern in expected:
+            self.assertIn(pattern, patterns)
         self.assertIn('txt', patterns)
         self.assertIn('png', patterns)
 
@@ -221,22 +228,26 @@ class TaskUtilsTests(TestCase):
     def test_parse_task_eta_when_complete(self):
         delay = {'delay': 10, 'units': 'seconds'}
         eta, seconds = parse_task_eta(delay)
-        self.assertTrue(eta > timezone.now())  # TODO: how to precisely test this?
+        # TODO: how to precisely test this?
+        self.assertTrue(eta > timezone.now())
         self.assertEqual(seconds, 10)
 
         delay = {'delay': 10, 'units': 'minutes'}
         eta, seconds = parse_task_eta(delay)
-        self.assertTrue(eta > timezone.now())  # TODO: how to precisely test this?
+        # TODO: how to precisely test this?
+        self.assertTrue(eta > timezone.now())
         self.assertEqual(seconds, 10 * 60)
 
         delay = {'delay': 10, 'units': 'hours'}
         eta, seconds = parse_task_eta(delay)
-        self.assertTrue(eta > timezone.now())  # TODO: how to precisely test this?
+        # TODO: how to precisely test this?
+        self.assertTrue(eta > timezone.now())
         self.assertEqual(seconds, 10 * 60 * 60)
 
         delay = {'delay': 10, 'units': 'days'}
         eta, seconds = parse_task_eta(delay)
-        self.assertTrue(eta > timezone.now())  # TODO: how to precisely test this?
+        # TODO: how to precisely test this?
+        self.assertTrue(eta > timezone.now())
         self.assertEqual(seconds, 10 * 60 * 60 * 24)
 
     def test_parse_task_eta_when_missing_units(self):
