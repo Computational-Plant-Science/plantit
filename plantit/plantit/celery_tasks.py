@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
 from databases import Database
+import pymysql
 from pycyapi.clients import TerrainClient
 
 import plantit.healthchecks
@@ -943,21 +944,40 @@ async def push_migration_event(user: User, migration: Migration):
     })
 
 
-SELECT_MANAGED_FILE_BY_PATH = """SELECT * FROM file_managed WHERE uri LIKE :path"""
-SELECT_MANAGED_FILE_BY_FID = """SELECT * FROM file_managed WHERE fid = :fid"""
-SELECT_ROOT_IMAGE = """SELECT * FROM field_data_field_root_image WHERE field_root_image_fid = :fid"""
-SELECT_ROOT_COLLECTION = """SELECT * FROM field_data_field_marked_coll_root_img_ref WHERE field_marked_coll_root_img_ref_target_id = :entity_id"""
-SELECT_ROOT_COLLECTION_TITLE = """SELECT * FROM node WHERE nid = :entity_id"""
-SELECT_ROOT_COLLECTION_METADATA = """SELECT * FROM field_data_field_collection_metadata WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_LOCATION = """SELECT * FROM field_data_field_collection_location WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_PLANTING = """SELECT * FROM field_data_field_collection_plantation WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_HARVEST = """SELECT * FROM field_data_field_collection_harvest WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_SOIL_GROUP = """SELECT * FROM field_data_field_collection_soil_group WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_SOIL_MOISTURE = """SELECT * FROM field_data_field_collection_soil_moisture WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_SOIL_N = """SELECT * FROM field_data_field_collection_soil_nitrogen WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_SOIL_P = """SELECT * FROM field_data_field_collection_soil_phosphorus WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_SOIL_K = """SELECT * FROM field_data_field_collection_soil_potassium WHERE entity_id = :entity_id"""
-SELECT_ROOT_COLLECTION_PESTICIDES = """SELECT * FROM field_data_field_collection_pesticides WHERE entity_id = :entity_id"""
+# queries for use with encode.io/databases
+# SELECT_MANAGED_FILE_BY_PATH = """SELECT * FROM file_managed WHERE uri LIKE :path"""
+# SELECT_MANAGED_FILE_BY_FID = """SELECT * FROM file_managed WHERE fid = :fid"""
+# SELECT_ROOT_IMAGE = """SELECT * FROM field_data_field_root_image WHERE field_root_image_fid = :fid"""
+# SELECT_ROOT_COLLECTION = """SELECT * FROM field_data_field_marked_coll_root_img_ref WHERE field_marked_coll_root_img_ref_target_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_TITLE = """SELECT * FROM node WHERE nid = :entity_id"""
+# SELECT_ROOT_COLLECTION_METADATA = """SELECT * FROM field_data_field_collection_metadata WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_LOCATION = """SELECT * FROM field_data_field_collection_location WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_PLANTING = """SELECT * FROM field_data_field_collection_plantation WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_HARVEST = """SELECT * FROM field_data_field_collection_harvest WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_SOIL_GROUP = """SELECT * FROM field_data_field_collection_soil_group WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_SOIL_MOISTURE = """SELECT * FROM field_data_field_collection_soil_moisture WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_SOIL_N = """SELECT * FROM field_data_field_collection_soil_nitrogen WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_SOIL_P = """SELECT * FROM field_data_field_collection_soil_phosphorus WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_SOIL_K = """SELECT * FROM field_data_field_collection_soil_potassium WHERE entity_id = :entity_id"""
+# SELECT_ROOT_COLLECTION_PESTICIDES = """SELECT * FROM field_data_field_collection_pesticides WHERE entity_id = :entity_id"""
+
+
+# queries for use with PyMySQL
+SELECT_MANAGED_FILE_BY_PATH = """SELECT fid, filename, uri FROM file_managed WHERE uri LIKE %s"""
+SELECT_MANAGED_FILE_BY_FID = """SELECT fid, filename, uri FROM file_managed WHERE fid = %s"""
+SELECT_ROOT_IMAGE = """SELECT entity_id FROM field_data_field_root_image WHERE field_root_image_fid = %s"""
+SELECT_ROOT_COLLECTION = """SELECT entity_id FROM field_data_field_marked_coll_root_img_ref WHERE field_marked_coll_root_img_ref_target_id = %s"""
+SELECT_ROOT_COLLECTION_TITLE = """SELECT title, created, changed FROM node WHERE nid = %s"""
+SELECT_ROOT_COLLECTION_METADATA = """SELECT field_collection_metadata_first, field_collection_metadata_second FROM field_data_field_collection_metadata WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_LOCATION = """SELECT field_collection_location_lat, field_collection_location_lng FROM field_data_field_collection_location WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_PLANTING = """SELECT field_collection_plantation_value FROM field_data_field_collection_plantation WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_HARVEST = """SELECT field_collection_harvest_value FROM field_data_field_collection_harvest WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_SOIL_GROUP = """SELECT field_collection_soil_group_tid FROM field_data_field_collection_soil_group WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_SOIL_MOISTURE = """SELECT field_collection_soil_moisture_value FROM field_data_field_collection_soil_moisture WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_SOIL_N = """SELECT field_collection_soil_nitrogen_value FROM field_data_field_collection_soil_nitrogen WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_SOIL_P = """SELECT field_collection_soil_phosphorus_value FROM field_data_field_collection_soil_phosphorus WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_SOIL_K = """SELECT field_collection_soil_potassium_value FROM field_data_field_collection_soil_potassium WHERE entity_id = %s"""
+SELECT_ROOT_COLLECTION_PESTICIDES = """SELECT field_collection_pesticides_value FROM field_data_field_collection_pesticides WHERE entity_id = %s"""
 
 
 @app.task(bind=True)
@@ -997,8 +1017,14 @@ def migrate_dirt_datasets(self, username: str):
             client.mkdir(root_collection_path)
 
             # create a database client for the DIRT DB and open a connection
-            db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
-            async_to_sync(db.connect)()
+            # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
+            # async_to_sync(db.connect)()
+            db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                                 port=settings.DIRT_MIGRATION_DB_PORT,
+                                 user=settings.DIRT_MIGRATION_DB_USER,
+                                 db=settings.DIRT_MIGRATION_DB_DATABASE,
+                                 password=settings.DIRT_MIGRATION_DB_PASSWORD)
+            cursor = db.cursor()
 
             # create local staging folder for this user
             staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)
@@ -1014,15 +1040,28 @@ def migrate_dirt_datasets(self, username: str):
                 file_names = [f for f in sftp.listdir(folder_name)]
                 logger.info(f"User {username} folder {folder} has {len(file_names)} files: {', '.join(file_names)}")
 
+                # some images may not be associated with any marked collection.
+                # these should be transferred to a folder in CyVerse named by
+                # date, as the images are stored on the DIRT server's NFS.
+                created_orphan_folder = False
+
                 # get Drupal managed file IDs for each root image file in the current folder
                 # (files are stored under CAS username if CAS was used for the user's DIRT account, otherwise under their full name)
-                values = {'path': f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"}
-                rows = async_to_sync(db.fetch_all)(query=SELECT_MANAGED_FILE_BY_PATH, values=values)
+                storage_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"
+                cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
+                rows = cursor.fetchall()
                 managed_files = [{
-                    'fid': row['fid'],
-                    'name': row['filename'],
-                    'path': row['uri'].replace('public://', '')
+                    'fid': row[0],
+                    'name': row[1],
+                    'path': row[2].replace('public://', '')
                 } for row in rows]
+                # values = {'path': storage_path}
+                # rows = async_to_sync(db.fetch_all)(query=SELECT_MANAGED_FILE_BY_PATH, values=values)
+                # managed_files = [{
+                #     'fid': row['fid'],
+                #     'name': row['filename'],
+                #     'path': row['uri'].replace('public://', '')
+                # } for row in rows]
 
                 # associate each root image with the collection it's a member of
                 collections = dict()
@@ -1032,48 +1071,115 @@ def migrate_dirt_datasets(self, username: str):
                     file_name = file['name']
 
                     # get Drupal entity ID given root image file ID
-                    values = {'fid': file_id}
-                    rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_IMAGE, values=values)
-                    if not rows:
+                    cursor.execute(SELECT_ROOT_IMAGE, (file_id,))
+                    row = cursor.fetchone()
+                    if row is None:
                         logger.warning(f"DIRT root image with file ID {file_id} not found")
                         continue
-                    file_entity_id = rows[0]['entity_id']
+                    file_entity_id = row[0]
+                    # values = {'fid': file_id}
+                    # rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_IMAGE, values=values)
+                    # if not rows:
+                    #     logger.warning(f"DIRT root image with file ID {file_id} not found")
+                    #     continue
+                    # file_entity_id = rows[0]['entity_id']
 
                     # get Drupal entity ID for the collection this root image file is in
-                    values = {'entity_id': file_entity_id}
-                    row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION, values=values)
-                    coll_entity_id = row['entity_id']
+                    cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
+                    row = cursor.fetchone()
+
+                    # if we didn't find a corresponding marked collection for this root image file,
+                    # use an orphan folder named by date (as stored on the DIRT server NFS)
+                    if row is None:
+                        logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
+                        if not created_orphan_folder:
+                            collection_path = f"/iplant/home/{user.username}/dirt_migration/{folder}"
+                            if not client.dir_exists(collection_path):
+                                client.mkdir(root_collection_path)
+
+                            # download the file
+                            sftp.get(join(folder_name, file_name), join(staging_dir, file_name))
+
+                            # upload the file to the corresponding collection
+                            client.upload(from_path=join(staging_dir, file_name), to_prefix=collections[coll_entity_id])
+
+                            # push a progress update to client
+                            uploads.append(UploadedFile(name=file_name, folder=folder))
+                            migration.uploads = json.dumps(uploads)
+                            async_to_sync(push_migration_event)(user, migration)
+
+                            # remove file from staging dir
+                            os.remove(join(staging_dir, file_name))
+
+                            continue
+
+                    coll_entity_id = row[0]
+                    # values = {'entity_id': file_entity_id}
+                    # row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION, values=values)
+                    # coll_entity_id = row['entity_id']
 
                     # if we haven't encountered this collection yet..
                     if coll_entity_id not in collections:
                         # get its title, creation/modification timestamps, metadata and environmental data
-                        values = {'entity_id': coll_entity_id}
-                        title_row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_TITLE, values=values)
-                        metadata_rows = async_to_sync(db.fetch_all)(query=SELECT_ROOT_COLLECTION_METADATA, values=values)
-                        location_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_LOCATION, values=values)
-                        planting_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PLANTING, values=values)
-                        harvest_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_HARVEST, values=values)
-                        soil_group_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_GROUP, values=values)
-                        soil_moist_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_MOISTURE, values=values)
-                        soil_n_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_N, values=values)
-                        soil_p_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_P, values=values)
-                        soil_k_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_K, values=values)
-                        pesticides_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PESTICIDES, values=values)
+                        cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
+                        title_row = cursor.fetchone()
 
-                        title = title_row['title']
-                        created = datetime.fromtimestamp(int(title_row['created']))
-                        changed = datetime.fromtimestamp(int(title_row['changed']))
-                        metadata = {row['field_collection_metadata_first']: row['field_collection_metadata_second'] for row in metadata_rows}
-                        latitude = None if not location_rows else location_rows[0]['field_collection_location_lat']
-                        longitude = None if not location_rows else location_rows[0]['field_collection_location_lng']
-                        planting = None if not planting_rows else planting_rows[0]['field_collection_plantation_value']
-                        harvest = None if not harvest_rows else harvest_rows[0]['field_collection_harvest_value']
-                        soil_group = None if not soil_group_rows else soil_group_rows[0]['field_collection_soil_group_tid']
-                        soil_moist = None if not soil_moist_rows else soil_moist_rows[0]['field_collection_soil_moisture_value']
-                        soil_n = None if not soil_n_rows else soil_n_rows[0]['field_collection_soil_nitrogen_value']
-                        soil_p = None if not soil_p_rows else soil_p_rows[0]['field_collection_soil_phosphorus_value']
-                        soil_k = None if not soil_k_rows else soil_k_rows[0]['field_collection_soil_potassium_value']
-                        pesticides = None if not pesticides_rows else pesticides_rows[0]['field_collection_pesticides_value']
+                        cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
+                        metadata_rows = cursor.fetchall()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
+                        location_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
+                        planting_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
+                        harvest_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
+                        soil_group_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
+                        soil_moist_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
+                        soil_n_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
+                        soil_p_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
+                        soil_k_row = cursor.fetchone()
+
+                        cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
+                        pesticides_row = cursor.fetchone()
+                        # values = {'entity_id': coll_entity_id}
+                        # title_row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_TITLE, values=values)
+                        # metadata_rows = async_to_sync(db.fetch_all)(query=SELECT_ROOT_COLLECTION_METADATA, values=values)
+                        # location_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_LOCATION, values=values)
+                        # planting_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PLANTING, values=values)
+                        # harvest_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_HARVEST, values=values)
+                        # soil_group_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_GROUP, values=values)
+                        # soil_moist_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_MOISTURE, values=values)
+                        # soil_n_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_N, values=values)
+                        # soil_p_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_P, values=values)
+                        # soil_k_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_K, values=values)
+                        # pesticides_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PESTICIDES, values=values)
+
+                        title = title_row[0]
+                        created = datetime.fromtimestamp(int(title_row[1]))
+                        changed = datetime.fromtimestamp(int(title_row[2]))
+                        metadata = {row[0]: row[1] for row in metadata_rows}
+                        latitude = None if location_row is None else location_row[0]
+                        longitude = None if location_row is None else location_row[0]
+                        planting = None if planting_row is None else planting_row[0]
+                        harvest = None if harvest_row is None else harvest_row[0]
+                        soil_group = None if soil_group_row is None else soil_group_row[0]
+                        soil_moist = None if soil_moist_row is None else soil_moist_row[0]
+                        soil_n = None if soil_n_row is None else soil_n_row[0]
+                        soil_p = None if soil_p_row is None else soil_p_row[0]
+                        soil_k = None if soil_k_row is None else soil_k_row[0]
+                        pesticides = None if pesticides_row is None else pesticides_row[0]
 
                         # mark the collection as seen
                         collections[coll_entity_id] = join(root_collection_path, title)
@@ -1132,7 +1238,8 @@ def migrate_dirt_datasets(self, username: str):
                 migration.save()
 
             # close the DB connection
-            async_to_sync(db.disconnect)()
+            db.close()
+            # async_to_sync(db.disconnect)()
 
             # get ID of newly created collection
             root_collection_id = client.stat(root_collection_path)['id']

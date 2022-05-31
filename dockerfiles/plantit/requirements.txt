@@ -51,3 +51,4 @@ furo
 pycyapi
 aiomysql
 databases[aiomysql]
+PyMySQL
