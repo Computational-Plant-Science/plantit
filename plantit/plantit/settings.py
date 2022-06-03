@@ -53,7 +53,12 @@ assert 'DIRT_MIGRATION_STAGING_DIR' in os.environ, f"{missing_variable} DIRT_MIG
 assert 'DIRT_MIGRATION_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_HOST"
 assert 'DIRT_MIGRATION_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_PORT"
 assert 'DIRT_MIGRATION_USERNAME' in os.environ, f"{missing_variable} DIRT_MIGRATION_USERNAME"
-assert 'DIRT_MIGRATION_DB_CONN_STR' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_CONN_STR"
+# assert 'DIRT_MIGRATION_DB_CONN_STR' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_CONN_STR"
+assert 'DIRT_MIGRATION_DB_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_HOST"
+assert 'DIRT_MIGRATION_DB_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PORT"
+assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_USER"
+assert 'DIRT_MIGRATION_DB_PASSWORD' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PASSWORD"
+assert 'DIRT_MIGRATION_DB_DATABASE' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_DATABASE"
 
 # global Celery task timeout
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
@@ -101,7 +106,12 @@ DIRT_MIGRATION_DATA_DIR = os.environ.get("DIRT_MIGRATION_DATA_DIR")
 DIRT_MIGRATION_HOST = os.environ.get("DIRT_MIGRATION_HOST")
 DIRT_MIGRATION_PORT = os.environ.get("DIRT_MIGRATION_PORT")
 DIRT_MIGRATION_USERNAME = os.environ.get("DIRT_MIGRATION_USERNAME")
-DIRT_MIGRATION_DB_CONN_STR = os.environ.get("DIRT_MIGRATION_DB_CONN_STR")
+# DIRT_MIGRATION_DB_CONN_STR = os.environ.get("DIRT_MIGRATION_DB_CONN_STR")
+DIRT_MIGRATION_DB_HOST = os.environ.get("DIRT_MIGRATION_DB_HOST")
+DIRT_MIGRATION_DB_PORT = os.environ.get("DIRT_MIGRATION_DB_PORT")
+DIRT_MIGRATION_DB_USER = os.environ.get("DIRT_MIGRATION_DB_USER")
+DIRT_MIGRATION_DB_PASSWORD = os.environ.get("DIRT_MIGRATION_DB_PASSWORD")
+DIRT_MIGRATION_DB_DATABASE = os.environ.get("DIRT_MIGRATION_DB_DATABASE")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

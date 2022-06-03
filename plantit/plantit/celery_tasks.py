@@ -1020,7 +1020,7 @@ def migrate_dirt_datasets(self, username: str):
             # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
             # async_to_sync(db.connect)()
             db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                 port=settings.DIRT_MIGRATION_DB_PORT,
+                                 port=int(settings.DIRT_MIGRATION_DB_PORT),
                                  user=settings.DIRT_MIGRATION_DB_USER,
                                  db=settings.DIRT_MIGRATION_DB_DATABASE,
                                  password=settings.DIRT_MIGRATION_DB_PASSWORD)
