@@ -81,7 +81,7 @@
                     {{ matchingSharingDatasets.length }} user(s)</small
                 >
             </b-col>
-            <b-col
+            <!--<b-col
                 :id="`associated-studies-${
                     internalLoaded ? internalNode.label : node.label
                 }`"
@@ -165,10 +165,10 @@
                     ></b-img
                     >Bind project/study</b-button
                 ></b-col
-            >
+            >-->
             <b-col md="auto">
                 <b-input-group size="sm">
-                    <!--<b-form-file
+                    <b-form-file
                         v-if="upload && !isShared"
                         style="min-width: 15rem"
                         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
@@ -190,23 +190,6 @@
                                 '\''
                         "
                     ></b-form-file>
-                    <b-button
-                        v-if="upload && !isShared"
-                        class="ml-1 mr-1"
-                        size="sm"
-                        :disabled="filesToUpload.length === 0"
-                        @click="
-                            uploadFiles(
-                                filesToUpload,
-                                internalLoaded ? internalNode.path : node.path,
-                                profile.djangoProfile.cyverse_token
-                            )
-                        "
-                        :variant="
-                            profile.darkMode ? 'outline-light' : 'outline-dark'
-                        "
-                        ><i class="fas fa-upload fa-fw"></i
-                    ></b-button>-->
                     <span v-if="create">
                         <b-button
                             v-if="!isShared"
@@ -228,7 +211,7 @@
                             :disabled="deletingDirectory"
                             title="Delete Folder"
                             @click="
-                                deletePath(
+                                deleteFolder(
                                     internalLoaded
                                         ? internalNode.path
                                         : node.path,
@@ -1027,7 +1010,7 @@
                         size="sm"
                         title="Delete Directory"
                         @click="
-                            deletePath(
+                            deleteFolder(
                                 internalLoaded ? internalNode.path : node.path,
                                 profile.djangoProfile.cyverse_token
                             )
@@ -1061,14 +1044,50 @@
                     </b-button> </b-input-group
             ></b-col>
         </b-row>
-        <b-row
-            align-h="center"
-            align-v="center"
-            class="text-center text-secondary"
-        >
-            <b-col v-if="uploading">
-                <small>Uploading...</small>
-                <b-spinner class="ml-1" variant="secondary" small></b-spinner>
+        <b-row class="p-3" v-if="upload && !isShared && (filesToUpload.length > 0 || uploadingFiles.length > 0)">
+          <b-col>
+            <b-row v-if="filesToUpload.length > 0">
+              <b-col>
+                <span v-if="!uploading">Files to upload:</span><span v-else>Uploading...</span>
+                <br/>
+                <b-list-group>
+                  <b-list-group-item v-for="file in filesToUpload" v-bind:key="file.name">
+                    {{ file.name }} <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
+                  </b-list-group-item>
+                </b-list-group>
+              </b-col>
+            </b-row>
+            <!--<b-row class="p-2" v-if="uploadingFiles.length > 0">
+              <b-col>
+                Uploading...
+                <br/>
+                <b-list-group>
+                  <b-list-group-item v-for="file in uploadingFiles" v-bind:key="file.name">
+                    {{ file.name }}
+                  </b-list-group-item>
+                </b-list-group>
+              </b-col>
+            </b-row>-->
+            <b-row v-if="!uploading" class="mt-2">
+              <b-col>
+          <b-button
+                        block
+                        size="sm"
+                        :disabled="filesToUpload.length === 0"
+                        @click="
+                            uploadFiles(
+                                filesToUpload,
+                                internalLoaded ? internalNode.path : node.path,
+                                profile.djangoProfile.cyverse_token
+                            )
+                        "
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
+                        ><i class="fas fa-upload fa-fw"></i
+                    > Upload</b-button>
+                </b-col>
+            </b-row>
             </b-col>
         </b-row>
         <b-row
@@ -1136,7 +1155,7 @@
                     :disabled="deletingDirectory"
                     title="Delete Directory"
                     @click="
-                        deletePath(
+                        deleteFolder(
                             internalLoaded ? internalNode.path : node.path,
                             profile.djangoProfile.cyverse_token
                         )
@@ -1253,7 +1272,7 @@
                             size="sm"
                             title="Delete File"
                             @click="
-                                deletePath(
+                                deleteFile(
                                     child.path,
                                     profile.djangoProfile.cyverse_token
                                 )
@@ -1403,6 +1422,8 @@ export default {
             filesToUpload: [],
             filesToDownload: [],
             uploading: false,
+            uploadingFiles: [],
+            uploadedFiles: [],
             deleting: false,
             creatingDirectory: false,
             deletingDirectory: false,
@@ -2008,7 +2029,7 @@ export default {
                         this.deletingDirectory = false;
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Deleted directory ${path}`,
+                            message: `Deleted ${path}`,
                             guid: guid().toString(),
                         });
                     }
@@ -2067,12 +2088,12 @@ export default {
                 });
         },
         refreshAfterDeletion() {
-            this.$parent.$emit('deleted', this.internalNode);
-            this.$emit('deleted', this.internalNode);
+          this.$emit('deleted');
+          this.$parent.$emit('deleted');
         },
-        async deletePath(path, token) {
-            await this.$bvModal
-                .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
+        async deleteFolder(path, token) {
+          await this.$bvModal
+                .msgBoxConfirm(`Are you sure you want to delete folder '${path}'?`, {
                     size: 'sm',
                     bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
                     footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
@@ -2103,6 +2124,56 @@ export default {
                             )
                             .then(() =>
                                 setTimeout(this.refreshAfterDeletion, 5000)
+                            )
+                            .catch((error) => {
+                                Sentry.captureException(error);
+                                this.deleting = false;
+                                this.$store.dispatch('alerts/add', {
+                                    variant: 'success',
+                                    message: `Failed to delete ${path}`,
+                                    guid: guid().toString(),
+                                });
+                                throw error;
+                            });
+                    }
+                })
+                .catch((err) => {
+                    throw err;
+                });
+        },
+        async deleteFile(path, token) {
+            await this.$bvModal
+                .msgBoxConfirm(`Are you sure you want to delete file '${path}'?`, {
+                    size: 'sm',
+                    bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                    footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                    footerBorderVariant: this.profile.darkMode
+                        ? 'dark'
+                        : 'white',
+                    footerTextVariant: this.profile.darkMode ? 'white' : 'dark',
+                    bodyTextVariant: this.profile.darkMode ? 'white' : 'dark',
+                    bodyBorderVariant: this.profile.darkMode ? 'dark' : 'white',
+                    okVariant: 'outline-danger',
+                    cancelVariant: 'secondary',
+                    okTitle: 'Yes',
+                    cancelTitle: 'No',
+                    centered: true,
+                })
+                .then(async (value) => {
+                    if (value) {
+                        this.deleting = true;
+                        await axios
+                            .post(
+                                `https://de.cyverse.org/terrain/secured/filesystem/delete`,
+                                { paths: [path] },
+                                {
+                                    headers: {
+                                        Authorization: 'Bearer ' + token,
+                                    },
+                                }
+                            )
+                            .then(() =>
+                                setTimeout(this.waitForDeletion, 5000, path)
                             )
                             .catch((error) => {
                                 Sentry.captureException(error);
@@ -2205,10 +2276,11 @@ export default {
         },
         async uploadFiles(files, to_path, token) {
             this.uploading = true;
-            for (let file of files) {
+            this.uploadingFiles = files;
+            let uploads = files.map(file => {
                 let data = new FormData();
                 data.append('file', file, file.name);
-                await axios
+                return axios
                     .post(
                         `https://de.cyverse.org/terrain/secured/fileio/upload?dest=${to_path}`,
                         data,
@@ -2217,15 +2289,14 @@ export default {
                                 Authorization: 'Bearer ' + token,
                                 'Content-Type': 'multipart/form-data',
                             },
-                        }
-                    )
+                        })
                     .then((response) => {
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`,
                             guid: guid().toString(),
                         });
-                        this.uploading = false;
+                        this.uploadedFiles.push(file);
                     })
                     .catch((error) => {
                         Sentry.captureException(error);
@@ -2237,13 +2308,16 @@ export default {
                         });
                         throw error;
                     });
-            }
+                });
+            await Promise.all(uploads);
+            this.filesToUpload = [];
+            this.uploadingFiles = [];
+            this.uploadedFiles = [];
+            this.uploading = false;
             await this.loadDirectory(
                 to_path,
                 this.profile.djangoProfile.cyverse_token
             );
-            this.filesToUpload = [];
-            this.uploading = false;
         },
         async loadDirectory(path, token) {
             this.internalLoading = true;
