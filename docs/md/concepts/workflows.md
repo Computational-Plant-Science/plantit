@@ -32,7 +32,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is a unit of work wrapped into a container for execution in a SLURM cluster environment.
+A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is `plantit`'s unit of work. Workflows can be research applications of nearly any kind: image processing, growth simulations, even genome analysis, although we encourage you to first consider whether other free and open source bioinformatics tools ([CoGe](https://genomevolution.org/CoGe/), [easyGWAS](https://easygwas.ethz.ch/)) or commercial services ([Benchling](https://www.benchling.com/), [Latch](https://latch.bio/)) meet your needs.
 
 ## Using workflows
 
