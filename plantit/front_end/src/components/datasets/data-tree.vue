@@ -2129,7 +2129,7 @@ export default {
                                 Sentry.captureException(error);
                                 this.deleting = false;
                                 this.$store.dispatch('alerts/add', {
-                                    variant: 'success',
+                                    variant: 'danger',
                                     message: `Failed to delete ${path}`,
                                     guid: guid().toString(),
                                 });
