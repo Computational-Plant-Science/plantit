@@ -1044,31 +1044,23 @@
                     </b-button> </b-input-group
             ></b-col>
         </b-row>
-        <b-row class="p-3" v-if="upload && !isShared && (filesToUpload.length > 0 || uploadingFiles.length > 0)">
+        <b-row class="p-0">
           <b-col>
-            <b-row v-if="filesToUpload.length > 0">
+            <b-card
+                v-if="upload && !isShared && (filesToUpload.length > 0 || uploadingFiles.length > 0)"
+                no-body
+                  :bg-variant="profile.darkMode ? 'dark' : 'light'">
+                <template #header><h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Uploads</h5></template>
+            <b-row>
               <b-col>
-                <span v-if="!uploading">Files to upload:</span><span v-else>Uploading...</span>
-                <br/>
                 <b-list-group>
-                  <b-list-group-item v-for="file in filesToUpload" v-bind:key="file.name">
-                    {{ file.name }} <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
+                  <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="file in filesToUpload" v-bind:key="file.name">
+                    <span>{{ file.name }}</span> <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
                   </b-list-group-item>
                 </b-list-group>
               </b-col>
             </b-row>
-            <!--<b-row class="p-2" v-if="uploadingFiles.length > 0">
-              <b-col>
-                Uploading...
-                <br/>
-                <b-list-group>
-                  <b-list-group-item v-for="file in uploadingFiles" v-bind:key="file.name">
-                    {{ file.name }}
-                  </b-list-group-item>
-                </b-list-group>
-              </b-col>
-            </b-row>-->
-            <b-row v-if="!uploading" class="mt-2">
+              <b-row v-if="!uploading" class="mt-2">
               <b-col>
           <b-button
                         block
@@ -1088,6 +1080,32 @@
                     > Upload</b-button>
                 </b-col>
             </b-row>
+              </b-card>
+              <b-card
+                  v-if="!isShared && deletingPaths.length > 0"
+                  no-body
+                  :bg-variant="profile.darkMode ? 'dark' : 'light'">
+                <template #header><h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Deletions</h5></template>
+                <b-row>
+              <b-col>
+                <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="path in deletingPaths" v-bind:key="path">
+                    <span>{{ path }}</span>
+                    <span><b-spinner label="Uploading..." class="ml-1" variant="danger" small></b-spinner></span>
+                  </b-list-group-item>
+              </b-col>
+                </b-row>
+              </b-card>
+            <!--<b-row class="p-2" v-if="uploadingFiles.length > 0">
+              <b-col>
+                Uploading...
+                <br/>
+                <b-list-group>
+                  <b-list-group-item v-for="file in uploadingFiles" v-bind:key="file.name">
+                    {{ file.name }}
+                  </b-list-group-item>
+                </b-list-group>
+              </b-col>
+            </b-row>-->
             </b-col>
         </b-row>
         <b-row
@@ -1097,16 +1115,6 @@
         >
             <b-col v-if="creatingDirectory">
                 <small>Creating folder...</small>
-                <b-spinner class="ml-1" variant="secondary" small></b-spinner>
-            </b-col>
-        </b-row>
-        <b-row
-            align-h="center"
-            align-v="center"
-            class="text-center text-secondary"
-        >
-            <b-col v-if="deleting">
-                <small>Deleting...</small>
                 <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
         </b-row>
@@ -1230,7 +1238,7 @@
                         <b-img-lazy
                             v-if="previewsLoaded && fileIsImage(child.label)"
                             :src="getFileURL(child)"
-                            style="width: 3rem; height: 3rem"
+                            style="width: 2rem; height: 2rem"
                         ></b-img-lazy>
                         <b-button
                             class="mt-1 mb-1 ml-4"
@@ -1425,6 +1433,7 @@ export default {
             uploadingFiles: [],
             uploadedFiles: [],
             deleting: false,
+            deletingPaths: [],
             creatingDirectory: false,
             deletingDirectory: false,
             newDirectoryName: '',
@@ -2018,6 +2027,17 @@ export default {
                 return created;
             });
         },
+        removeItemAll(arr, value) {
+          var i = 0;
+          while (i < arr.length) {
+            if (arr[i] === value) {
+              arr.splice(i, 1);
+            } else {
+              ++i;
+            }
+          }
+          return arr;
+        },
         waitForDeletion(path) {
             this.waitFor(
                 () => {
@@ -2032,6 +2052,7 @@ export default {
                             message: `Deleted ${path}`,
                             guid: guid().toString(),
                         });
+                        this.removeItemAll(this.deletingPaths, path);
                     }
                     return deleted;
                 },
@@ -2112,6 +2133,7 @@ export default {
                 .then(async (value) => {
                     if (value) {
                         this.deleting = true;
+                        this.deletingPaths.push(path);
                         await axios
                             .post(
                                 `https://de.cyverse.org/terrain/secured/filesystem/delete`,
@@ -2162,6 +2184,7 @@ export default {
                 .then(async (value) => {
                     if (value) {
                         this.deleting = true;
+                        this.deletingPaths.push(path);
                         await axios
                             .post(
                                 `https://de.cyverse.org/terrain/secured/filesystem/delete`,
