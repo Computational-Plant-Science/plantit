@@ -1071,10 +1071,10 @@ def migrate_dirt_datasets(self, username: str):
             userdir = join(settings.DIRT_MIGRATION_DATA_DIR, username)
 
             # persist number of each kind of managed file
-            migration.image_files = len(image_files)
-            migration.metadata_files = len(metadata_files)
-            migration.output_files = len(output_files)
-            migration.output_logs = len(output_logs)
+            migration.num_files = len(image_files)
+            migration.num_metadata = len(metadata_files)
+            migration.num_outputs = len(output_files)
+            migration.num_logs = len(output_logs)
             migration.save()
 
             for file in image_files:

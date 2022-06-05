@@ -822,14 +822,10 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
-                        <b>Orphans:</b> {{ uploadedFiles.filter(f => f.orphan).length }}
-                        <br/>
-                        <b>Missing:</b> {{ uploadedFiles.filter(f => f.missing).length }}
-                        <br/>
-                        <b>Subcollections:</b>
+                        <b>Images:</b>
                         <br/>
                         <b-list-group
-                            v-if="uploadedCollections.length > 0"
+                            v-if="uploadedFiles.length > 0"
                             style="
                                 max-height: 10rem;
                                 overflow: scroll;
@@ -838,28 +834,114 @@
                         >
                             <b-list-group-item
                                 :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="collection in uploadedCollections"
-                                v-bind:key="collection.name"
+                                v-for="file in uploadedFiles"
+                                v-bind:key="file.name"
                             >
                                 <!--<i
                                     class="fas text-success fa-check fa-1x fa-fw"
                                 ></i>-->
-                                {{ collection.name }},
-                                {{ collection.files }} file(s)
+                                {{ file.name }},
                             </b-list-group-item>
                         </b-list-group>
-                        <b-spinner class="text-center" v-else variant="secondary"></b-spinner>
+                        <br />
+                        <b>Metadata:</b>
                         <br/>
-                        <span v-if="profile.migration.num_files !== null"
-                            >{{ uploadedFiles.length }}/{{ profile.migration.num_files }} files migrated.</span
+                        <span v-if="profile.migration.num_metadata !== null"
+                            >{{ uploadedMetadata.length }}/{{ profile.migration.num_metadata }} metadata files migrated.</span
                         >
                         <b-progress
-                            v-if="profile.migration.num_files !== null"
-                            :value="uploadedFiles.length"
-                            :max="profile.migration.num_files"
+                            v-if="profile.migration.num_metadata !== null"
+                            :value="uploadedMetadata.length"
+                            :max="profile.migration.num_metadata"
                             animated
                             variant="success"
                         ></b-progress>
+                        <br/>
+                        <b-list-group
+                            v-if="uploadedMetadata.length > 0"
+                            style="
+                                max-height: 10rem;
+                                overflow: scroll;
+                                -webkit-overflow-scrolling: touch;
+                            "
+                        >
+                            <b-list-group-item
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="file in uploadedMetadata"
+                                v-bind:key="file.name"
+                            >
+                                <!--<i
+                                    class="fas text-success fa-check fa-1x fa-fw"
+                                ></i>-->
+                                {{ file.name }},
+                            </b-list-group-item>
+                        </b-list-group>
+                        <br />
+                        <b>Outputs:</b>
+                        <br/>
+                        <span v-if="profile.migration.num_outputs !== null"
+                            >{{ uploadedOutputs.length }}/{{ profile.migration.num_outputs }} image files migrated.</span
+                        >
+                        <b-progress
+                            v-if="profile.migration.num_outputs !== null"
+                            :value="uploadedOutputs.length"
+                            :max="profile.migration.num_outputs"
+                            animated
+                            variant="success"
+                        ></b-progress>
+                        <br/>
+                        <b-list-group
+                            v-if="uploadedOutputs.length > 0"
+                            style="
+                                max-height: 10rem;
+                                overflow: scroll;
+                                -webkit-overflow-scrolling: touch;
+                            "
+                        >
+                            <b-list-group-item
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="file in uploadedOutputs"
+                                v-bind:key="file.name"
+                            >
+                                <!--<i
+                                    class="fas text-success fa-check fa-1x fa-fw"
+                                ></i>-->
+                                {{ file.name }},
+                            </b-list-group-item>
+                        </b-list-group>
+                        <br />
+                        <b>Logs:</b>
+                        <br/>
+                        <span v-if="profile.migration.num_logs !== null"
+                            >{{ uploadedLogs.length }}/{{ profile.migration.num_logs }} log files migrated.</span
+                        >
+                        <b-progress
+                            v-if="profile.migration.num_logs !== null"
+                            :value="uploadedLogs.length"
+                            :max="profile.migration.num_logs"
+                            animated
+                            variant="success"
+                        ></b-progress>
+                        <br/>
+                        <b-list-group
+                            v-if="uploadedLogs.length > 0"
+                            style="
+                                max-height: 10rem;
+                                overflow: scroll;
+                                -webkit-overflow-scrolling: touch;
+                            "
+                        >
+                            <b-list-group-item
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="file in uploadedLogs"
+                                v-bind:key="file.name"
+                            >
+                                <!--<i
+                                    class="fas text-success fa-check fa-1x fa-fw"
+                                ></i>-->
+                                {{ file.name }},
+                            </b-list-group-item>
+                        </b-list-group>
                     </p>
                 </b-col>
             </b-row>
@@ -1010,36 +1092,45 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
-        // uploadedFiles() {
-        //     if (this.profileLoading || this.profile === null || this.profile.migration.uploads.length === 0) return [];
-        //     let grouped = this.groupBy(
-        //         this.profile.migration.uploads,
-        //         'folder'
-        //     );
-        //     return Object.entries(grouped).map((pair) => {
-        //         return { name: pair[0], files: pair[1] };
-        //     });
-        // },
         uploadedFiles() {
           if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
           var files = [];
-          for (let [coll_name, coll] of Object.entries(this.profile.migration.uploads)) {
-            for (let [file_name, file] of Object.entries(coll)) {
+          for (let coll of Object.values(this.profile.migration.uploads)) {
+            for (let file of Object.values(coll)) {
               files.push(file);
             }
           }
           return files;
         },
-        uploadedCollections() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          var colls = [];
-          for (let [coll_name, coll] of Object.entries(this.profile.migration.uploads)) {
-            colls.push({
-              name: coll_name,
-              files: Object.keys(this.profile.migration.uploads[coll_name]).length
-            })
+        uploadedMetadata() {
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.metadata).length === 0) return [];
+          var files = [];
+          for (let coll of Object.values(this.profile.migration.metadata)) {
+            for (let file of Object.values(coll)) {
+              files.push(file);
+            }
           }
-          return colls;
+          return files;
+        },
+        uploadedOutputs() {
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.output).length === 0) return [];
+          var files = [];
+          for (let coll of Object.values(this.profile.migration.output)) {
+            for (let file of Object.values(coll)) {
+              files.push(file);
+            }
+          }
+          return files;
+        },
+        uploadedLogs() {
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.logs).length === 0) return [];
+          var files = [];
+          for (let coll of Object.values(this.profile.migration.logs)) {
+            for (let file of Object.values(coll)) {
+              files.push(file);
+            }
+          }
+          return files;
         },
         maintenance() {
             let now = moment();
