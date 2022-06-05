@@ -844,14 +844,14 @@
                         >
                             <b-list-group-item
                                 :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="folder in uploadedFolders"
-                                v-bind:key="folder.name"
+                                v-for="collection in uploadedCollections"
+                                v-bind:key="collection.name"
                             >
                                 <i
                                     class="fas text-success fa-check fa-1x fa-fw"
                                 ></i>
-                                {{ folder.name }},
-                                {{ folder.files.length }} file(s)
+                                {{ collection.name }},
+                                {{ collection.files }} file(s)
                             </b-list-group-item>
                         </b-list-group>
                     </p>
@@ -1004,15 +1004,36 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
+        // uploadedFiles() {
+        //     if (this.profileLoading || this.profile === null || this.profile.migration.uploads.length === 0) return [];
+        //     let grouped = this.groupBy(
+        //         this.profile.migration.uploads,
+        //         'folder'
+        //     );
+        //     return Object.entries(grouped).map((pair) => {
+        //         return { name: pair[0], files: pair[1] };
+        //     });
+        // },
         uploadedFiles() {
-            if (this.profileLoading || this.profile === null || this.profile.migration.uploads.length === 0) return [];
-            let grouped = this.groupBy(
-                this.profile.migration.uploads,
-                'folder'
-            );
-            return Object.entries(grouped).map((pair) => {
-                return { name: pair[0], files: pair[1] };
-            });
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          var files = [];
+          for (let [coll_name, coll] of Object.entries(this.profile.migration.uploads)) {
+            for (let [file_name, file] of Object.entries(coll)) {
+              files.push(file);
+            }
+          }
+          return files;
+        },
+        uploadedCollections() {
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          var colls = [];
+          for (let [coll_name, coll] of Object.entries(this.profile.migration.uploads)) {
+            colls.push({
+              name: coll_name,
+              files: Object.keys(this.profile.migration.uploads[coll_name]).length
+            })
+          }
+          return colls;
         },
         maintenance() {
             let now = moment();
