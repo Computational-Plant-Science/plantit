@@ -190,7 +190,7 @@
                                 '\''
                         "
                     ></b-form-file>
-                    <span v-if="create">
+                    <span v-if="create" class="ml-2">
                         <b-button
                             v-if="!isShared"
                             class="ml-1 mr-1"
@@ -202,28 +202,7 @@
                                     ? 'outline-light'
                                     : 'outline-dark'
                             "
-                            ><i class="fas fa-plus fa-fw"></i
-                        ></b-button>
-                        <b-button
-                            v-if="isOwned && !isRoot"
-                            class="ml-1 mr-1"
-                            size="sm"
-                            :disabled="deletingDirectory"
-                            title="Delete Folder"
-                            @click="
-                                deleteFolder(
-                                    internalLoaded
-                                        ? internalNode.path
-                                        : node.path,
-                                    profile.djangoProfile.cyverse_token
-                                )
-                            "
-                            :variant="
-                                profile.darkMode
-                                    ? 'outline-light'
-                                    : 'outline-dark'
-                            "
-                            ><i class="fas fa-trash text-danger fa-fw"></i
+                            ><i class="fas fa-folder-plus fa-fw"></i
                         ></b-button>
                         <b-modal
                             :title-class="
@@ -418,7 +397,7 @@
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        >The folder name</span
+                                        >Enter a name for this directory.</span
                                     ></template
                                 >
                                 <b-form-input
@@ -429,7 +408,7 @@
                                     "
                                     size="sm"
                                     v-model="newDirectoryName"
-                                    :placeholder="'Enter a folder name'"
+                                    :placeholder="'Enter a name'"
                                 ></b-form-input>
                             </b-form-group>
                             <div v-if="showingProjectSelection">
@@ -557,7 +536,7 @@
                                                     ></i></b-button></b-col></b-row></b-col
                                 ></b-row>
                             </div>
-                            <b-row v-else
+                            <!--<b-row v-else
                                 ><b-col
                                     ><b-button
                                         @click="showProjectSelection"
@@ -579,7 +558,7 @@
                                         Show Project Selection</b-button
                                     ></b-col
                                 ></b-row
-                            >
+                            >-->
                         </b-modal>
                         <b-modal
                             :title-class="
@@ -672,6 +651,27 @@
                         class="ml-1 mr-1"
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
+                    <b-button
+                            v-if="isOwned && !isRoot"
+                            class="ml-1 mr-1"
+                            size="sm"
+                            :disabled="deletingDirectory"
+                            title="Delete Folder"
+                            @click="
+                                deleteFolder(
+                                    internalLoaded
+                                        ? internalNode.path
+                                        : node.path,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                            :variant="
+                                profile.darkMode
+                                    ? 'outline-light'
+                                    : 'outline-dark'
+                            "
+                            ><i class="fas fa-trash text-danger fa-fw"></i
+                        ></b-button>
                     <!--<b-dropdown
                         class="mr-1 ml-1"
                         v-if="
@@ -1050,22 +1050,21 @@
                 v-if="upload && !isShared && (filesToUpload.length > 0 || uploadingFiles.length > 0)"
                 no-body
                   :bg-variant="profile.darkMode ? 'dark' : 'light'">
-                <template #header><h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Uploads</h5></template>
             <b-row>
               <b-col>
                 <b-list-group>
-                  <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="file in filesToUpload" v-bind:key="file.name">
-                    <span>{{ file.name }}</span> <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
+                  <b-list-group-item :class="profile.darkMode ? 'darkitems' : ''" v-for="file in filesToUpload" v-bind:key="file.name">
+                    <span><i class="fas fa-upload fa-fw"></i> {{ file.name }}</span> <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
                   </b-list-group-item>
                 </b-list-group>
               </b-col>
             </b-row>
-              <b-row v-if="!uploading" class="mt-2">
+              <b-row class="mt-2">
               <b-col>
           <b-button
                         block
                         size="sm"
-                        :disabled="filesToUpload.length === 0"
+                        :disabled="filesToUpload.length === 0 || uploading"
                         @click="
                             uploadFiles(
                                 filesToUpload,
@@ -1076,7 +1075,7 @@
                         :variant="
                             profile.darkMode ? 'outline-light' : 'outline-dark'
                         "
-                        ><i class="fas fa-upload fa-fw"></i
+                        ><b-spinner v-if="uploading" label="Uploading..." class="ml-1" variant="secondary" small></b-spinner> <i v-else class="fas fa-angle-right fa-fw"></i
                     > Upload</b-button>
                 </b-col>
             </b-row>
@@ -1085,11 +1084,10 @@
                   v-if="!isShared && deletingPaths.length > 0"
                   no-body
                   :bg-variant="profile.darkMode ? 'dark' : 'light'">
-                <template #header><h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Deletions</h5></template>
                 <b-row>
               <b-col>
-                <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'" v-for="path in deletingPaths" v-bind:key="path">
-                    <span>{{ path }}</span>
+                <b-list-group-item :class="profile.darkMode ? 'darkitems' : ''" :variant="profile.darkMode ? 'dark' : 'light'" v-for="path in deletingPaths" v-bind:key="path">
+                    <span class="text-danger"><i class="fas fa-trash fa-fw"></i> Deleting {{ path }}</span>
                     <span><b-spinner label="Uploading..." class="ml-1" variant="danger" small></b-spinner></span>
                   </b-list-group-item>
               </b-col>
@@ -1224,11 +1222,6 @@
                     :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                 >
                     <b-col>
-                        <b-img-lazy
-                            v-if="previewsLoaded && fileIsImage(child.label)"
-                            :src="getFileURL(child)"
-                            style="width: 2rem; height: 2rem"
-                        ></b-img-lazy>
                         <b-button
                             class="mt-1 mb-1 ml-4"
                             :disabled="!select || select !== 'file'"
@@ -1243,11 +1236,16 @@
                             {{ child.label }}</b-button
                         >
                     </b-col>
-                    <b-col md="auto" align-self="center"
+                    <b-col align-self="center"
                         ><small>{{
                             formatBytes(child['file-size'])
                         }}</small></b-col
                     >
+                    <b-col md="auto" align-self="center"><b-img-lazy
+                            v-if="previewsLoaded && fileIsImage(child.label)"
+                            :src="getFileURL(child)"
+                            style="width: 2rem; height: 2rem"
+                        ></b-img-lazy></b-col>
                     <b-col md="auto" align-self="center">
                         <b-button
                             id="popover-reactive-1"
@@ -1264,19 +1262,6 @@
                             <i class="fas fa-eye fa-fw"></i>
                         </b-button>
                         <b-button
-                            v-if="isOwned"
-                            class="m-1"
-                            size="sm"
-                            title="Delete File"
-                            @click="
-                                deleteFile(
-                                    child.path,
-                                    profile.djangoProfile.cyverse_token
-                                )
-                            "
-                            variant="outline-danger"
-                            ><i class="fas fa-trash fa-fw"></i></b-button
-                        ><b-button
                             class="m-1"
                             size="sm"
                             title="Download File"
@@ -1293,7 +1278,21 @@
                                     : 'outline-dark'
                             "
                             ><i class="fas fa-download fa-fw"></i></b-button
-                    ></b-col>
+                    >
+                        <b-button
+                            v-if="isOwned"
+                            class="m-1"
+                            size="sm"
+                            title="Delete File"
+                            @click="
+                                deleteFile(
+                                    child.path,
+                                    profile.djangoProfile.cyverse_token
+                                )
+                            "
+                            variant="outline-danger"
+                            ><i class="fas fa-trash fa-fw"></i></b-button
+                        ></b-col>
                 </b-row>
             </b-overlay>
         </b-list-group-item>
@@ -2042,6 +2041,7 @@ export default {
                             guid: guid().toString(),
                         });
                         this.removeItemAll(this.deletingPaths, path);
+                        setTimeout(this.refresh, 2000)
                     }
                     return deleted;
                 },

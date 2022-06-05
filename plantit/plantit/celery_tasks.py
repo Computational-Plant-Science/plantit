@@ -3,7 +3,7 @@ import os
 import traceback
 from copy import deepcopy
 from pathlib import Path
-from typing import List, TypedDict, Optional
+from typing import List, NamedTuple, Optional
 from os import environ
 from os.path import join
 from datetime import datetime
@@ -928,12 +928,13 @@ def agents_healthchecks():
 
 # DIRT migration
 
-class ManagedFile(TypedDict):
+class ManagedFile(NamedTuple):
     id: str
     name: str
     path: str
     folder: str
     orphan: bool
+    missing: bool
     uploaded: bool
 
 
@@ -967,7 +968,7 @@ SELECT_MANAGED_FILE_BY_PATH = """SELECT fid, filename, uri FROM file_managed WHE
 SELECT_MANAGED_FILE_BY_FID = """SELECT fid, filename, uri FROM file_managed WHERE fid = %s"""
 SELECT_ROOT_IMAGE = """SELECT entity_id FROM field_data_field_root_image WHERE field_root_image_fid = %s"""
 SELECT_ROOT_COLLECTION = """SELECT entity_id FROM field_data_field_marked_coll_root_img_ref WHERE field_marked_coll_root_img_ref_target_id = %s"""
-SELECT_ROOT_COLLECTION_TITLE = """SELECT title, created, changed FROM node WHERE nid = %s AND"""
+SELECT_ROOT_COLLECTION_TITLE = """SELECT title, created, changed FROM node WHERE nid = %s"""
 SELECT_ROOT_COLLECTION_METADATA = """SELECT field_collection_metadata_first, field_collection_metadata_second FROM field_data_field_collection_metadata WHERE entity_id = %s"""
 SELECT_ROOT_COLLECTION_LOCATION = """SELECT field_collection_location_lat, field_collection_location_lng FROM field_data_field_collection_location WHERE entity_id = %s"""
 SELECT_ROOT_COLLECTION_PLANTING = """SELECT field_collection_plantation_value FROM field_data_field_collection_plantation WHERE entity_id = %s"""
@@ -997,40 +998,40 @@ def migrate_dirt_datasets(self, username: str):
     Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
     # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
-    client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=60)
+    client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
     root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
     if client.dir_exists(root_collection_path):
         logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
         return
     client.mkdir(root_collection_path)
 
-    # create a database client for the DIRT DB and open a connection
-    # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
-    # async_to_sync(db.connect)()
+    # check how many files the user has in managed collections in the DIRT database
+    # we want to keep track of progress and update the UI in real time,
+    # so we'll maintain a dictionary of managed files and update their
+    # status when an upload completes, a file is not found, etc
     db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
                          port=int(settings.DIRT_MIGRATION_DB_PORT),
                          user=settings.DIRT_MIGRATION_DB_USER,
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
     cursor = db.cursor()
-
-    # check how many files the user has in managed collections in the DIRT database
-    # we want to keep track of progress and update the UI in real time,
-    # so we'll maintain a dictionary of managed files and update their
-    # status when an upload completes, a file is not found, etc
     storage_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/%"
     cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
     rows = cursor.fetchall()
-    managed_files: List[ManagedFile] = [ManagedFile(
+    db.close()
+    image_files: List[ManagedFile] = [ManagedFile(
         id=row[0],
         name=row[1],
         path=row[2].replace('public://', ''),
-        folder=row[2].rpartition('root-images')[2].replace(row[1], ''),
+        folder=row[2].rpartition('root-images')[2].replace(row[1], '').replace('/', ''),
         orphan=False,
-        uploaded=False) for row in rows]
+        missing=False,
+        uploaded=False) for row in rows if 'root-images' in row[2]]
+
+    # TODO extract other kinds of managed files
 
     # associate each root image with the collection it's a member of too
-    uploads = {'orphans': dict()}
+    uploads = dict()
 
     ssh = SSH(
         host=settings.DIRT_MIGRATION_HOST,
@@ -1046,13 +1047,20 @@ def migrate_dirt_datasets(self, username: str):
 
             # persist number of folders and files
             migration.num_folders = len(folders)
-            migration.num_files = len(managed_files)
+            migration.num_files = len(image_files)
             migration.save()
 
-            for file in managed_files:
+            for file in image_files:
                 # get file entity ID given root image file ID
+                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
+                                     user=settings.DIRT_MIGRATION_DB_USER,
+                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
+                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
+                cursor = db.cursor()
                 cursor.execute(SELECT_ROOT_IMAGE, (file.id,))
                 row = cursor.fetchone()
+                db.close()
 
                 # if we didn't find a corresponding file node for this managed file, skip it
                 if row is None:
@@ -1062,8 +1070,15 @@ def migrate_dirt_datasets(self, username: str):
                 file_entity_id = row[0]
 
                 # get collection entity ID for the collection this image is in
+                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
+                                     user=settings.DIRT_MIGRATION_DB_USER,
+                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
+                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
+                cursor = db.cursor()
                 cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
                 row = cursor.fetchone()
+                db.close()
 
                 # if we didn't find a corresponding marked collection for this root image file,
                 # use an orphan folder named by date (as stored on the DIRT server NFS)
@@ -1071,15 +1086,39 @@ def migrate_dirt_datasets(self, username: str):
                     logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
 
                     # create the folder if we need to
+                    subcoll_path = join(root_collection_path, file.folder)
                     if file.folder not in uploads.keys():
                         uploads[file.folder] = dict()
-                        client.mkdir(join(root_collection_path, file.folder))
+                        logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
+                        client.mkdir(subcoll_path)
 
                     # download the file
-                    sftp.get(join(file.folder, file.name), join(staging_dir, file.name))
+                    dirt_nfs_path = join(userdir, file.folder, file.name)
+                    staging_path = join(staging_dir, file.name)
+                    logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+                    try:
+                        sftp.get(dirt_nfs_path, staging_path)
+                    except FileNotFoundError:
+                        logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+
+                        # push a progress update to client
+                        uploads[file.folder][file.name] = ManagedFile(
+                            id=file.id,
+                            name=file.name,
+                            path=file.path,
+                            folder=file.folder,
+                            orphan=False,
+                            missing=True,
+                            uploaded=False)
+                        migration.uploads = json.dumps(uploads)
+                        migration.save()
+                        async_to_sync(push_migration_event)(user, migration)
+
+                        continue
 
                     # upload the file to the corresponding collection
-                    client.upload(from_path=join(staging_dir, file.name), to_prefix=join(root_collection_path, file.folder))
+                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
                     # push a progress update to client
                     uploads[file.folder][file.name] = ManagedFile(
@@ -1088,6 +1127,7 @@ def migrate_dirt_datasets(self, username: str):
                         path=file.path,
                         folder=file.folder,
                         orphan=True,
+                        missing=False,
                         uploaded=True)
                     migration.uploads = json.dumps(uploads)
                     migration.save()
@@ -1101,9 +1141,17 @@ def migrate_dirt_datasets(self, username: str):
 
                 # otherwise we have a corresponding marked collection, get its title
                 coll_entity_id = row[0]
+                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
+                                     user=settings.DIRT_MIGRATION_DB_USER,
+                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
+                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
+                cursor = db.cursor()
                 cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
                 coll_title_row = cursor.fetchone()
+                db.close()
                 coll_title = coll_title_row[0]
+                coll_path = join(root_collection_path, coll_title)
                 coll_created = datetime.fromtimestamp(int(coll_title_row[1]))
                 coll_changed = datetime.fromtimestamp(int(coll_title_row[2]))
 
@@ -1111,7 +1159,7 @@ def migrate_dirt_datasets(self, username: str):
                     uploads[coll_title] = dict()
 
                     # create the collection in the data store
-                    coll_path = join(root_collection_path, coll_title)
+                    logger.info(f"Creating DIRT migration subcollection {coll_path}")
                     client.mkdir(coll_path)
 
                     # get ID of newly created collection
@@ -1119,6 +1167,12 @@ def migrate_dirt_datasets(self, username: str):
                     id = stat['id']
 
                     # get its creation/modification timestamps, metadata and environmental data
+                    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                                         port=int(settings.DIRT_MIGRATION_DB_PORT),
+                                         user=settings.DIRT_MIGRATION_DB_USER,
+                                         db=settings.DIRT_MIGRATION_DB_DATABASE,
+                                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
+                    cursor = db.cursor()
                     cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
                     metadata_rows = cursor.fetchall()
                     cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
@@ -1139,6 +1193,7 @@ def migrate_dirt_datasets(self, username: str):
                     soil_k_row = cursor.fetchone()
                     cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
                     pesticides_row = cursor.fetchone()
+                    db.close()
 
                     metadata = {row[0]: row[1] for row in metadata_rows}
                     latitude = None if location_row is None else location_row[0]
@@ -1172,18 +1227,41 @@ def migrate_dirt_datasets(self, username: str):
                     client.set_metadata(id, props, [])
 
                 # download the file
-                sftp.get(join(file.folder, file.name), join(staging_dir, file.name))
+                dirt_nfs_path = join(userdir, file.folder, file.name)
+                staging_path = join(staging_dir, file.name)
+                logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+                try:
+                    sftp.get(dirt_nfs_path, staging_path)
+                except FileNotFoundError:
+                    logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+
+                    # push a progress update to client
+                    uploads[file.folder][file.name] = ManagedFile(
+                        id=file.id,
+                        name=file.name,
+                        path=file.path,
+                        folder=coll_title,
+                        orphan=False,
+                        missing=True,
+                        uploaded=False)
+                    migration.uploads = json.dumps(uploads)
+                    migration.save()
+                    async_to_sync(push_migration_event)(user, migration)
+
+                    continue
 
                 # upload the file to the corresponding collection
-                client.upload(from_path=join(staging_dir, file.name), to_prefix=coll_title)
+                logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+                client.upload(from_path=staging_path, to_prefix=coll_path)
 
                 # push a progress update to client
                 uploads[file.folder][file.name] = ManagedFile(
                     id=file.id,
                     name=file.name,
                     path=file.path,
-                    folder=file.folder,
+                    folder=coll_title,
                     orphan=False,
+                    missing=False,
                     uploaded=True)
                 migration.uploads = json.dumps(uploads)
                 migration.save()
@@ -1193,6 +1271,8 @@ def migrate_dirt_datasets(self, username: str):
                 os.remove(join(staging_dir, file.name))
 
                 # TODO attach metadata to the file
+
+            # TODO: output files, output logs, output images, metadata files
 
     # close the DB connection
     db.close()

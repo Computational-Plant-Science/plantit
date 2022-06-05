@@ -816,26 +816,20 @@
                     >
                     <p v-if="profile.migration.started !== null">
                         <br />
-                        <span v-if="profile.migration.num_files !== null"
-                            >You have
-                            {{ profile.migration.num_files - uploadedFiles.length }} remaining files to
-                            migrate.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_files !== null"
-                            :value="uploadedFiles.length"
-                            :max="profile.migration.num_files"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <br />
                         <b>Started:</b>
                         {{ prettify(profile.migration.started) }}
                         <br />
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
+                        <b>Orphans:</b> {{ uploadedFiles.filter(f => f.orphan).length }}
+                        <br/>
+                        <b>Missing:</b> {{ uploadedFiles.filter(f => f.missing).length }}
+                        <br/>
+                        <b>Subcollections:</b>
+                        <br/>
                         <b-list-group
+                            v-if="uploadedCollections.length > 0"
                             style="
                                 max-height: 10rem;
                                 overflow: scroll;
@@ -847,13 +841,25 @@
                                 v-for="collection in uploadedCollections"
                                 v-bind:key="collection.name"
                             >
-                                <i
+                                <!--<i
                                     class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>
+                                ></i>-->
                                 {{ collection.name }},
                                 {{ collection.files }} file(s)
                             </b-list-group-item>
                         </b-list-group>
+                        <b-spinner class="text-center" v-else variant="secondary"></b-spinner>
+                        <br/>
+                        <span v-if="profile.migration.num_files !== null"
+                            >{{ uploadedFiles.length }}/{{ profile.migration.num_files }} files migrated.</span
+                        >
+                        <b-progress
+                            v-if="profile.migration.num_files !== null"
+                            :value="uploadedFiles.length"
+                            :max="profile.migration.num_files"
+                            animated
+                            variant="success"
+                        ></b-progress>
                     </p>
                 </b-col>
             </b-row>

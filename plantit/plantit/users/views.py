@@ -385,11 +385,21 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
 
+    SELECT_DIRT_CAS_USER = """SELECT * FROM cas_user WHERE cas_name = %s"""
+    SELECT_DIRT_USER = """SELECT * FROM users WHERE mail = %s"""
+
     @action(detail=False, methods=['get'])
     def start_dirt_migration(self, request):
         user = self.get_object()
         profile = Profile.objects.get(user=user)
         migration, created = Migration.objects.get_or_create(profile=profile)
+
+        # make sure a `dirt_migration` collection doesn't already exist
+        client = TerrainClient(access_token=profile.cyverse_access_token)
+        root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
+        if client.dir_exists(root_collection_path):
+            self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
+            return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
         # connect to the DIRT DB
         db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
@@ -398,31 +408,22 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                              db=settings.DIRT_MIGRATION_DB_DATABASE,
                              password=settings.DIRT_MIGRATION_DB_PASSWORD)
         cursor = db.cursor()
-        # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
-        # async_to_sync(db.connect)()
 
         # make sure the user has a DIRT account
         email = request.query_params.get('email', None)
 
         # check for a DIRT CAS user with this user's username
-        query = """SELECT * FROM cas_user WHERE cas_name = %s"""
-        cursor.execute(query, (user.username,))
+        cursor.execute(self.SELECT_DIRT_CAS_USER, (user.username,))
         row = cursor.fetchone()
-        # query = """SELECT * FROM cas_user WHERE cas_name = :cas_name"""
-        # row = async_to_sync(db.fetch_one)(query=query, values={"cas_name": user.username})
 
         # if we didn't find a CAS user and they provided an email, check that instead
         if row is None and email is not None:
-            query = """SELECT * FROM users WHERE mail = %s"""
-            cursor.execute(query, (email,))
+            cursor.execute(self.SELECT_DIRT_USER, (email,))
             row = cursor.fetchone()
-            # query = """SELECT * FROM users WHERE mail = :email"""
-            # row = async_to_sync(db.fetch_one)(query=query, values={"email": email})
 
             # if we can't find a DIRT user with the provided email address, abort the migration
             if row is None:
                 db.close()
-                # async_to_sync(db.disconnect)()
                 return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
 
             # if we found a DIRT user matching the provided email address, save it and the associated name
@@ -431,14 +432,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             profile.save()
 
         db.close()
-        # async_to_sync(db.disconnect)()
-
-        # make sure a `dirt_migration` collection doesn't already exist
-        client = TerrainClient(access_token=profile.cyverse_access_token)
-        root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
-        if client.dir_exists(root_collection_path):
-            self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
-            return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
         # if already started, just return the migration status
         if not created and migration.started is not None:
