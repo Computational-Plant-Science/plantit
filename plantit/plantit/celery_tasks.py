@@ -927,14 +927,13 @@ def agents_healthchecks():
 
 # DIRT migration
 
-
-class StorageDirectory(TypedDict):
+class ManagedFile(TypedDict):
+    id: str
     name: str
-
-
-class UploadedFile(TypedDict):
+    path: str
     folder: str
-    name: str
+    orphan: bool
+    uploaded: bool
 
 
 async def push_migration_event(user: User, migration: Migration):
@@ -991,6 +990,53 @@ def migrate_dirt_datasets(self, username: str):
         self.request.callbacks = None
         return
 
+    # create local staging folder for this user
+    staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)
+    Path(staging_dir).mkdir(parents=True, exist_ok=True)
+
+    # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
+    client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=60)
+    root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
+    if client.dir_exists(root_collection_path):
+        logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
+        return
+    client.mkdir(root_collection_path)
+
+    # folder for orphans (files not associated with any collection)
+    orphan_subcollection_path = f"/iplant/home/{user.username}/dirt_migration/orphans"
+    orphan_subcollection_created = False
+
+    # create a database client for the DIRT DB and open a connection
+    # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
+    # async_to_sync(db.connect)()
+    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                         port=int(settings.DIRT_MIGRATION_DB_PORT),
+                         user=settings.DIRT_MIGRATION_DB_USER,
+                         db=settings.DIRT_MIGRATION_DB_DATABASE,
+                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
+    cursor = db.cursor()
+
+    # check how many files the user has in managed collections in the DIRT database
+    # we want to keep track of progress and update the UI in real time,
+    # so we'll maintain a dictionary of managed files and update their
+    # status when an upload completes, a file is not found, etc
+    storage_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/%"
+    cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
+    rows = cursor.fetchall()
+    managed_files: List[ManagedFile] = [ManagedFile(
+        id=row[0],
+        name=row[1],
+        path=row[2].replace('public://', ''),
+        folder=row[2].rpartition('root-images')[2].replace(row[1], ''),
+        orphan=False,
+        uploaded=False) for row in rows]
+
+    # associate each root image with the collection it's a member of too
+    collections = dict()
+
+    # for UI updating
+    uploads = []
+
     ssh = SSH(
         host=settings.DIRT_MIGRATION_HOST,
         port=settings.DIRT_MIGRATION_PORT,
@@ -998,273 +1044,173 @@ def migrate_dirt_datasets(self, username: str):
         pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
     with ssh:
         with ssh.client.open_sftp() as sftp:
-
             # check how many folders the user has on the DIRT server NFS
             userdir = join(settings.DIRT_MIGRATION_DATA_DIR, username, 'root-images')
             folders = [folder for folder in sftp.listdir(userdir)]
             logger.info(f"User {username} has {len(folders)} DIRT folders: {', '.join(folders)}")
 
-            # persist number of folders
+            # persist number of folders and fifles
             migration.num_folders = len(folders)
+            migration.num_files = len(managed_files)
             migration.save()
 
-            # create a client for the CyVerse APIs and create a collection for the migrated DIRT data
-            client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=60)
-            root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
-            if client.dir_exists(root_collection_path):
-                logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
-                return
-            client.mkdir(root_collection_path)
+            for file in managed_files:
+                # get Drupal entity ID given root image file ID
+                cursor.execute(SELECT_ROOT_IMAGE, (file.id,))
+                row = cursor.fetchone()
+                if row is None:
+                    logger.warning(f"DIRT root image with file ID {file.id} not found")
+                    continue
+                file_entity_id = row[0]
 
-            # create a database client for the DIRT DB and open a connection
-            # db = Database(settings.DIRT_MIGRATION_DB_CONN_STR)
-            # async_to_sync(db.connect)()
-            db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                 port=int(settings.DIRT_MIGRATION_DB_PORT),
-                                 user=settings.DIRT_MIGRATION_DB_USER,
-                                 db=settings.DIRT_MIGRATION_DB_DATABASE,
-                                 password=settings.DIRT_MIGRATION_DB_PASSWORD)
-            cursor = db.cursor()
-
-            # create local staging folder for this user
-            staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)
-            Path(staging_dir).mkdir(parents=True, exist_ok=True)
-
-            # keep track of progress so we can update the UI in real time
-            storage = []
-            uploads = []
-
-            # transfer all the user's datasets to temporary staging directory, 1 file at a time (to preserve local disk space)
-            for folder in folders:
-                folder_name = join(userdir, folder)
-                file_names = [f for f in sftp.listdir(folder_name)]
-                logger.info(f"User {username} folder {folder} has {len(file_names)} files: {', '.join(file_names)}")
-
-                # some images may not be associated with any marked collection.
-                # these should be transferred to a folder in CyVerse named by
-                # date, as the images are stored on the DIRT server's NFS.
-                created_orphan_folder = False
-
-                # get Drupal managed file IDs for each root image file in the current folder
-                # (files are stored under CAS username if CAS was used for the user's DIRT account, otherwise under their full name)
-                storage_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/root-images/{folder}/%"
-                cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
-                rows = cursor.fetchall()
-                managed_files = [{
-                    'fid': row[0],
-                    'name': row[1],
-                    'path': row[2].replace('public://', '')
-                } for row in rows]
-                # values = {'path': storage_path}
-                # rows = async_to_sync(db.fetch_all)(query=SELECT_MANAGED_FILE_BY_PATH, values=values)
-                # managed_files = [{
-                #     'fid': row['fid'],
-                #     'name': row['filename'],
-                #     'path': row['uri'].replace('public://', '')
-                # } for row in rows]
-
-                # associate each root image with the collection it's a member of
-                collections = dict()
-                for file in managed_files:
-                    file_id = file['fid']
-                    file_path = file['path']
-                    file_name = file['name']
-
-                    # get Drupal entity ID given root image file ID
-                    cursor.execute(SELECT_ROOT_IMAGE, (file_id,))
-                    row = cursor.fetchone()
-                    if row is None:
-                        logger.warning(f"DIRT root image with file ID {file_id} not found")
-                        continue
-                    file_entity_id = row[0]
-                    # values = {'fid': file_id}
-                    # rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_IMAGE, values=values)
-                    # if not rows:
-                    #     logger.warning(f"DIRT root image with file ID {file_id} not found")
-                    #     continue
-                    # file_entity_id = rows[0]['entity_id']
-
-                    # get Drupal entity ID for the collection this root image file is in
-                    cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
-                    row = cursor.fetchone()
-
-                    # if we didn't find a corresponding marked collection for this root image file,
-                    # use an orphan folder named by date (as stored on the DIRT server NFS)
-                    if row is None:
-                        logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
-                        if not created_orphan_folder:
-                            collection_path = f"/iplant/home/{user.username}/dirt_migration/{folder}"
-                            if not client.dir_exists(collection_path):
-                                client.mkdir(root_collection_path)
-
-                            # download the file
-                            sftp.get(join(folder_name, file_name), join(staging_dir, file_name))
-
-                            # upload the file to the corresponding collection
-                            client.upload(from_path=join(staging_dir, file_name), to_prefix=collections[coll_entity_id])
-
-                            # push a progress update to client
-                            uploads.append(UploadedFile(name=file_name, folder=folder))
-                            migration.uploads = json.dumps(uploads)
-                            async_to_sync(push_migration_event)(user, migration)
-
-                            # remove file from staging dir
-                            os.remove(join(staging_dir, file_name))
-
-                            continue
-
-                    coll_entity_id = row[0]
-                    # values = {'entity_id': file_entity_id}
-                    # row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION, values=values)
-                    # coll_entity_id = row['entity_id']
-
-                    # if we haven't encountered this collection yet..
-                    if coll_entity_id not in collections:
-                        # get its title, creation/modification timestamps, metadata and environmental data
-                        cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
-                        title_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
-                        metadata_rows = cursor.fetchall()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
-                        location_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
-                        planting_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
-                        harvest_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
-                        soil_group_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
-                        soil_moist_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
-                        soil_n_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
-                        soil_p_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
-                        soil_k_row = cursor.fetchone()
-
-                        cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
-                        pesticides_row = cursor.fetchone()
-                        # values = {'entity_id': coll_entity_id}
-                        # title_row = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_TITLE, values=values)
-                        # metadata_rows = async_to_sync(db.fetch_all)(query=SELECT_ROOT_COLLECTION_METADATA, values=values)
-                        # location_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_LOCATION, values=values)
-                        # planting_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PLANTING, values=values)
-                        # harvest_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_HARVEST, values=values)
-                        # soil_group_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_GROUP, values=values)
-                        # soil_moist_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_MOISTURE, values=values)
-                        # soil_n_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_N, values=values)
-                        # soil_p_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_P, values=values)
-                        # soil_k_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_SOIL_K, values=values)
-                        # pesticides_rows = async_to_sync(db.fetch_one)(query=SELECT_ROOT_COLLECTION_PESTICIDES, values=values)
-
-                        title = title_row[0]
-                        created = datetime.fromtimestamp(int(title_row[1]))
-                        changed = datetime.fromtimestamp(int(title_row[2]))
-                        metadata = {row[0]: row[1] for row in metadata_rows}
-                        latitude = None if location_row is None else location_row[0]
-                        longitude = None if location_row is None else location_row[0]
-                        planting = None if planting_row is None else planting_row[0]
-                        harvest = None if harvest_row is None else harvest_row[0]
-                        soil_group = None if soil_group_row is None else soil_group_row[0]
-                        soil_moist = None if soil_moist_row is None else soil_moist_row[0]
-                        soil_n = None if soil_n_row is None else soil_n_row[0]
-                        soil_p = None if soil_p_row is None else soil_p_row[0]
-                        soil_k = None if soil_k_row is None else soil_k_row[0]
-                        pesticides = None if pesticides_row is None else pesticides_row[0]
-
-                        # mark the collection as seen
-                        collections[coll_entity_id] = join(root_collection_path, title)
-
-                        # create collection in CyVerse data store for this marked collection
-                        collection_path = join(root_collection_path, title)
-                        if client.dir_exists(collection_path):
-                            logger.warning(f"Collection {collection_path} already exists, skipping")
-                            continue
-                        client.mkdir(collection_path)
-
-                        # get ID of newly created collection
-                        stat = client.stat(collection_path)
-                        id = stat['id']
-
-                        # attach metadata to collection
-                        props = [
-                            f"migrated={timezone.now().isoformat()}",
-                            f"created={created.isoformat()}",
-                            f"changed={changed.isoformat()}",
-                        ]
-                        if latitude is not None: props.append(f"latitude={latitude}")
-                        if longitude is not None: props.append(f"longitude={longitude}")
-                        if planting is not None: props.append(f"planting={planting}")
-                        if harvest is not None: props.append(f"harvest={harvest}")
-                        if soil_group is not None: props.append(f"soil_group={soil_group}")
-                        if soil_moist is not None: props.append(f"soil_moisture={soil_moist}")
-                        if soil_n is not None: props.append(f"soil_nitrogen={soil_n}")
-                        if soil_p is not None: props.append(f"soil_phosphorus={soil_p}")
-                        if soil_k is not None: props.append(f"soil_potassium={soil_k}")
-                        if pesticides is not None: props.append(f"pesticides={pesticides}")
-                        for k, v in metadata.items(): props.append(f"{k}={v}")
-                        client.set_metadata(id, props, [])
+                # get Drupal entity ID for the collection this root image file is in
+                cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
+                row = cursor.fetchone()
+                # if we didn't find a corresponding marked collection for this root image file,
+                # use an orphan folder named by date (as stored on the DIRT server NFS)
+                if row is None:
+                    logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
+                    if not orphan_subcollection_created:
+                        client.mkdir(orphan_subcollection_path)
+                        orphan_subcollection_created = True
 
                     # download the file
-                    sftp.get(join(folder_name, file_name), join(staging_dir, file_name))
+                    sftp.get(join(file.folder, file.name), join(staging_dir, file.name))
 
                     # upload the file to the corresponding collection
-                    client.upload(from_path=join(staging_dir, file_name), to_prefix=collections[coll_entity_id])
+                    client.upload(from_path=join(staging_dir, file.name), to_prefix=collections[coll_entity_id])
 
                     # push a progress update to client
-                    uploads.append(UploadedFile(name=file_name, folder=folder))
+                    uploads.append(ManagedFile(fid=file.id, name=file.name, path=file.path, folder=file.folder, orphan=True, uploaded=True))
                     migration.uploads = json.dumps(uploads)
                     async_to_sync(push_migration_event)(user, migration)
 
                     # remove file from staging dir
-                    os.remove(join(staging_dir, file_name))
+                    os.remove(join(staging_dir, file.name))
 
-                    # TODO attach metadata to each file
+                    continue
 
-                storage.append(StorageDirectory(name=folder_name))
-                migration.storage = json.dumps(storage)
+                coll_entity_id = row[0]
+
+                # if we haven't encountered this collection yet..
+                if coll_entity_id not in collections:
+                    # get its title, creation/modification timestamps, metadata and environmental data
+                    cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
+                    title_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
+                    metadata_rows = cursor.fetchall()
+                    cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
+                    location_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
+                    planting_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
+                    harvest_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
+                    soil_group_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
+                    soil_moist_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
+                    soil_n_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
+                    soil_p_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
+                    soil_k_row = cursor.fetchone()
+                    cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
+                    pesticides_row = cursor.fetchone()
+
+                    title = title_row[0]
+                    created = datetime.fromtimestamp(int(title_row[1]))
+                    changed = datetime.fromtimestamp(int(title_row[2]))
+                    metadata = {row[0]: row[1] for row in metadata_rows}
+                    latitude = None if location_row is None else location_row[0]
+                    longitude = None if location_row is None else location_row[0]
+                    planting = None if planting_row is None else planting_row[0]
+                    harvest = None if harvest_row is None else harvest_row[0]
+                    soil_group = None if soil_group_row is None else soil_group_row[0]
+                    soil_moist = None if soil_moist_row is None else soil_moist_row[0]
+                    soil_n = None if soil_n_row is None else soil_n_row[0]
+                    soil_p = None if soil_p_row is None else soil_p_row[0]
+                    soil_k = None if soil_k_row is None else soil_k_row[0]
+                    pesticides = None if pesticides_row is None else pesticides_row[0]
+
+                    # mark the collection as seen
+                    collections[coll_entity_id] = join(root_collection_path, title)
+
+                    # create collection in CyVerse data store for this marked collection
+                    collection_path = join(root_collection_path, title)
+                    if client.dir_exists(collection_path):
+                        logger.warning(f"Collection {collection_path} already exists, skipping")
+                        continue
+                    client.mkdir(collection_path)
+
+                    # get ID of newly created collection
+                    stat = client.stat(collection_path)
+                    id = stat['id']
+
+                    # attach metadata to collection
+                    props = [
+                        f"migrated={timezone.now().isoformat()}",
+                        f"created={created.isoformat()}",
+                        f"changed={changed.isoformat()}",
+                    ]
+                    if latitude is not None: props.append(f"latitude={latitude}")
+                    if longitude is not None: props.append(f"longitude={longitude}")
+                    if planting is not None: props.append(f"planting={planting}")
+                    if harvest is not None: props.append(f"harvest={harvest}")
+                    if soil_group is not None: props.append(f"soil_group={soil_group}")
+                    if soil_moist is not None: props.append(f"soil_moisture={soil_moist}")
+                    if soil_n is not None: props.append(f"soil_nitrogen={soil_n}")
+                    if soil_p is not None: props.append(f"soil_phosphorus={soil_p}")
+                    if soil_k is not None: props.append(f"soil_potassium={soil_k}")
+                    if pesticides is not None: props.append(f"pesticides={pesticides}")
+                    for k, v in metadata.items(): props.append(f"{k}={v}")
+                    client.set_metadata(id, props, [])
+
+                # download the file
+                sftp.get(join(file.folder, file.name), join(staging_dir, file.name))
+
+                # upload the file to the corresponding collection
+                client.upload(from_path=join(staging_dir, file.name), to_prefix=collections[coll_entity_id])
+
+                # push a progress update to client
+                uploads.append(ManagedFile(fid=file.id, name=file.name, path=file.path, folder=file.folder, orphan=False, uploaded=True))
+                migration.uploads = json.dumps(uploads)
                 async_to_sync(push_migration_event)(user, migration)
-
-                # persist migration status
                 migration.save()
 
-            # close the DB connection
-            db.close()
-            # async_to_sync(db.disconnect)()
+                # remove file from staging dir
+                os.remove(join(staging_dir, file.name))
 
-            # get ID of newly created collection
-            root_collection_id = client.stat(root_collection_path)['id']
+                # TODO attach metadata to the file
 
-            # add collection timestamp as metadata
-            end = timezone.now()
-            client.set_metadata(root_collection_id, [
-                f"dirt_migration_timestamp={end.isoformat()}",
-                # TODO: anything else we need to add here?
-            ], [])
+    # close the DB connection
+    db.close()
+    # async_to_sync(db.disconnect)()
 
-            # send notification to user via email
-            # SnsClient.get().publish_message(
-            #     profile.push_notification_topic_arn,
-            #     f"DIRT => PlantIT migration completed",
-            #     f"Duration: {str(end - start)}",
-            #     {})
+    # get ID of newly created collection
+    root_collection_id = client.stat(root_collection_path)['id']
 
-            # persist completion
-            end = timezone.now()
-            migration.completed = end
-            migration.save()
+    # add collection timestamp as metadata
+    end = timezone.now()
+    client.set_metadata(root_collection_id, [
+        f"dirt_migration_timestamp={end.isoformat()}",
+        # TODO: anything else we need to add here?
+    ], [])
 
-            # push completion update to the UI
-            async_to_sync(push_migration_event)(user, migration)
+    # send notification to user via email
+    # SnsClient.get().publish_message(
+    #     profile.push_notification_topic_arn,
+    #     f"DIRT => PlantIT migration completed",
+    #     f"Duration: {str(end - start)}",
+    #     {})
+
+    # persist completion
+    end = timezone.now()
+    migration.completed = end
+    migration.save()
+
+    # push completion update to the UI
+    async_to_sync(push_migration_event)(user, migration)
 
 
 # see https://stackoverflow.com/a/41119054/6514033

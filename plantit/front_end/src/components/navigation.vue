@@ -816,22 +816,15 @@
                     >
                     <p v-if="profile.migration.started !== null">
                         <br />
-                        <span v-if="profile.migration.num_folders !== null"
+                        <span v-if="profile.migration.num_files !== null"
                             >You have
-                            {{ profile.migration.num_folders }} dataset(s) to
-                            migrate,
-                            {{
-                                profile.migration.num_folders === null
-                                    ? '?'
-                                    : profile.migration.num_folders -
-                                      uploadedFolders.length + 1
-                            }}
-                            remaining.</span
+                            {{ profile.migration.num_files - uploadedFiles.length }} remaining files to
+                            migrate.</span
                         >
                         <b-progress
-                            v-if="profile.migration.num_folders !== null"
-                            :value="uploadedFolders.length"
-                            :max="profile.migration.num_folders"
+                            v-if="profile.migration.num_files !== null"
+                            :value="uploadedFiles.length"
+                            :max="profile.migration.num_files"
                             animated
                             variant="success"
                         ></b-progress>
@@ -1011,17 +1004,7 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
-        storageFolders() {
-            if (this.profileLoading || this.profile === null || this.profile.migration.storage.length === 0) return [];
-            let grouped = this.groupBy(
-                this.profile.migration.storage,
-                'folder'
-            );
-            return Object.entries(grouped).map((pair) => {
-                return { name: pair[0], files: pair[1] };
-            });
-        },
-        uploadedFolders() {
+        uploadedFiles() {
             if (this.profileLoading || this.profile === null || this.profile.migration.uploads.length === 0) return [];
             let grouped = this.groupBy(
                 this.profile.migration.uploads,

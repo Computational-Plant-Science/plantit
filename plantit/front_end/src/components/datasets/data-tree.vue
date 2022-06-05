@@ -1095,17 +1095,6 @@
               </b-col>
                 </b-row>
               </b-card>
-            <!--<b-row class="p-2" v-if="uploadingFiles.length > 0">
-              <b-col>
-                Uploading...
-                <br/>
-                <b-list-group>
-                  <b-list-group-item v-for="file in uploadingFiles" v-bind:key="file.name">
-                    {{ file.name }}
-                  </b-list-group-item>
-                </b-list-group>
-              </b-col>
-            </b-row>-->
             </b-col>
         </b-row>
         <b-row
