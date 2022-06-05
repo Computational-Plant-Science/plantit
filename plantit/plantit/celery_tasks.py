@@ -1274,9 +1274,6 @@ def migrate_dirt_datasets(self, username: str):
 
             # TODO: output files, output logs, output images, metadata files
 
-    # close the DB connection
-    db.close()
-
     # get ID of newly created migration collection add collection timestamp as metadata
     root_collection_id = client.stat(root_collection_path)['id']
     end = timezone.now()
