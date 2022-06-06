@@ -1403,7 +1403,7 @@ def migrate_dirt_datasets(self, username: str):
             for file in output_logs:
                 # create the folder if we need to
                 subcoll_path = join(root_collection_path, 'logs', file.folder)
-                if file.folder not in outputs.keys():
+                if file.folder not in logs.keys():
                     logs[file.folder] = dict()
                     logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
                     client.mkdir(subcoll_path)
