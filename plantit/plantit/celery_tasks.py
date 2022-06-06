@@ -1316,10 +1316,26 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
                 try:
                     sftp.get(dirt_nfs_path, staging_path)
+
+                    # upload the file to the corresponding collection
+                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+
+                    metadata[file.folder][file.name] = ManagedFile(
+                        id=file.id,
+                        name=file.name,
+                        path=file.path,
+                        type='metadata',
+                        folder=file.folder,
+                        orphan=False,
+                        missing=False,
+                        uploaded=False)
+
+                    # remove file from staging dir
+                    os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
-                    # push a progress update to client
                     metadata[file.folder][file.name] = ManagedFile(
                         id=file.id,
                         name=file.name,
@@ -1329,9 +1345,11 @@ def migrate_dirt_datasets(self, username: str):
                         orphan=False,
                         missing=True,
                         uploaded=False)
-                    migration.metadata = json.dumps(metadata)
-                    migration.save()
-                    async_to_sync(push_migration_event)(user, migration)
+
+                # push a progress update to client
+                migration.metadata = json.dumps(metadata)
+                migration.save()
+                async_to_sync(push_migration_event)(user, migration)
 
             for file in output_files:
                 # create the folder if we need to
@@ -1347,6 +1365,23 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
                 try:
                     sftp.get(dirt_nfs_path, staging_path)
+
+                    # upload the file to the corresponding collection
+                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+
+                    outputs[file.folder][file.name] = ManagedFile(
+                        id=file.id,
+                        name=file.name,
+                        path=file.path,
+                        type='output',
+                        folder=file.folder,
+                        orphan=False,
+                        missing=False,
+                        uploaded=False)
+
+                    # remove file from staging dir
+                    os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
@@ -1360,9 +1395,10 @@ def migrate_dirt_datasets(self, username: str):
                         orphan=False,
                         missing=True,
                         uploaded=False)
-                    migration.outputs = json.dumps(outputs)
-                    migration.save()
-                    async_to_sync(push_migration_event)(user, migration)
+
+                migration.outputs = json.dumps(outputs)
+                migration.save()
+                async_to_sync(push_migration_event)(user, migration)
 
             for file in output_logs:
                 # create the folder if we need to
@@ -1378,6 +1414,23 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
                 try:
                     sftp.get(dirt_nfs_path, staging_path)
+
+                    # upload the file to the corresponding collection
+                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+
+                    logs[file.folder][file.name] = ManagedFile(
+                        id=file.id,
+                        name=file.name,
+                        path=file.path,
+                        type='log',
+                        folder=file.folder,
+                        orphan=False,
+                        missing=False,
+                        uploaded=False)
+
+                    # remove file from staging dir
+                    os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
