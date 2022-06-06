@@ -822,30 +822,17 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
-                        <b>Images:</b>
                         <br/>
-                        <b-list-group
-                            v-if="uploadedFiles.length > 0"
-                            style="
-                                max-height: 10rem;
-                                overflow: scroll;
-                                -webkit-overflow-scrolling: touch;
-                            "
+                        <span v-if="profile.migration.num_files !== null"
+                            >{{ uploadedFiles.length }}/{{ profile.migration.num_files }} image files migrated.</span
                         >
-                            <b-list-group-item
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="file in uploadedFiles"
-                                v-bind:key="file.name"
-                            >
-                                <!--<i
-                                    class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>-->
-                                {{ file.name }},
-                            </b-list-group-item>
-                        </b-list-group>
-                        <br />
-                        <b>Metadata:</b>
-                        <br/>
+                        <b-progress
+                            v-if="profile.migration.num_files !== null"
+                            :value="uploadedFiles.length"
+                            :max="profile.migration.num_files"
+                            animated
+                            variant="success"
+                        ></b-progress>
                         <span v-if="profile.migration.num_metadata !== null"
                             >{{ uploadedMetadata.length }}/{{ profile.migration.num_metadata }} metadata files migrated.</span
                         >
@@ -856,31 +843,8 @@
                             animated
                             variant="success"
                         ></b-progress>
-                        <br/>
-                        <b-list-group
-                            v-if="uploadedMetadata.length > 0"
-                            style="
-                                max-height: 10rem;
-                                overflow: scroll;
-                                -webkit-overflow-scrolling: touch;
-                            "
-                        >
-                            <b-list-group-item
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="file in uploadedMetadata"
-                                v-bind:key="file.name"
-                            >
-                                <!--<i
-                                    class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>-->
-                                {{ file.name }},
-                            </b-list-group-item>
-                        </b-list-group>
-                        <br />
-                        <b>Outputs:</b>
-                        <br/>
                         <span v-if="profile.migration.num_outputs !== null"
-                            >{{ uploadedOutputs.length }}/{{ profile.migration.num_outputs }} image files migrated.</span
+                            >{{ uploadedOutputs.length }}/{{ profile.migration.num_outputs }} output files migrated.</span
                         >
                         <b-progress
                             v-if="profile.migration.num_outputs !== null"
@@ -889,29 +853,6 @@
                             animated
                             variant="success"
                         ></b-progress>
-                        <br/>
-                        <b-list-group
-                            v-if="uploadedOutputs.length > 0"
-                            style="
-                                max-height: 10rem;
-                                overflow: scroll;
-                                -webkit-overflow-scrolling: touch;
-                            "
-                        >
-                            <b-list-group-item
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="file in uploadedOutputs"
-                                v-bind:key="file.name"
-                            >
-                                <!--<i
-                                    class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>-->
-                                {{ file.name }},
-                            </b-list-group-item>
-                        </b-list-group>
-                        <br />
-                        <b>Logs:</b>
-                        <br/>
                         <span v-if="profile.migration.num_logs !== null"
                             >{{ uploadedLogs.length }}/{{ profile.migration.num_logs }} log files migrated.</span
                         >
@@ -922,26 +863,6 @@
                             animated
                             variant="success"
                         ></b-progress>
-                        <br/>
-                        <b-list-group
-                            v-if="uploadedLogs.length > 0"
-                            style="
-                                max-height: 10rem;
-                                overflow: scroll;
-                                -webkit-overflow-scrolling: touch;
-                            "
-                        >
-                            <b-list-group-item
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                v-for="file in uploadedLogs"
-                                v-bind:key="file.name"
-                            >
-                                <!--<i
-                                    class="fas text-success fa-check fa-1x fa-fw"
-                                ></i>-->
-                                {{ file.name }},
-                            </b-list-group-item>
-                        </b-list-group>
                     </p>
                 </b-col>
             </b-row>
@@ -1113,7 +1034,7 @@ export default {
           return files;
         },
         uploadedOutputs() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.output).length === 0) return [];
+          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.outputs).length === 0) return [];
           var files = [];
           for (let coll of Object.values(this.profile.migration.output)) {
             for (let file of Object.values(coll)) {
