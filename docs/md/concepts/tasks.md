@@ -17,6 +17,8 @@ For a tutorial on monitoring a task and retrieving results, see the [quickstart]
 
 ## Task lifecycle
 
+The task lifecycle is a state machine progressing from `CREATED` to `RUNNING` to one of several mutually exclusive final states (`COMPLETED`,  `FAILED`, `TIMEOUT`, or `CANCELLED`).
+
 ![Task Lifecycle](../../media/lifecycle.jpg)
 
 When a task successfully completes, results are automatically transferred to the selected location in the CyVerse data store. The user is then shown results produced and may download them from the browser individually or bundled into a single archive.
