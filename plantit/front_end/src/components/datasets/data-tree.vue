@@ -193,6 +193,7 @@
                     <span v-if="create" class="ml-2">
                         <b-button
                             v-if="!isShared"
+                            :disabled="creatingDirectory"
                             class="ml-1 mr-1"
                             size="sm"
                             title="Create Folder"
@@ -618,24 +619,24 @@
                         </b-modal>
                     </span>
                     <b-button
-                        v-if="internalLoaded && !internalLoading"
+                        v-if="internalLoaded"
                         class="ml-1 mr-1"
                         title="Refresh Directory"
                         size="sm"
                         :variant="
                             profile.darkMode ? 'outline-light' : 'outline-dark'
                         "
+                        :disabled="internalLoading"
                         @click="refresh"
                     >
-                        <i class="fas fa-sync-alt fa-fw"></i>
-                    </b-button>
-                    <br />
-                    <b-spinner
-                        v-if="internalLoaded && internalLoading"
+                        <i v-if="!internalLoading" class="fas fa-sync-alt fa-fw"></i>
+                      <b-spinner
+                        v-else
                         variant="secondary"
-                        type="grow"
+                        small
                         label="Loading"
                     ></b-spinner>
+                    </b-button>
                     <b-button
                         v-if="
                             !internalLoading &&
