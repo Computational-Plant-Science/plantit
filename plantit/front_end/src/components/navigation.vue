@@ -1511,7 +1511,8 @@ export default {
         },
         async handleTaskEvent(task) {
             await this.$store.dispatch('tasks/addOrUpdate', task);
-            await this.$store.dispatch('alerts/add', {
+            if (task.is_failure || task.is_cancelled || task.is_timeout || task.is_complete) {
+              await this.$store.dispatch('alerts/add', {
                 variant: 'success',
                 message: `Task ${task.name} ${this.getTaskStatus(task)} on ${
                     task.agent.name
@@ -1519,7 +1520,8 @@ export default {
                     task.orchestrator_logs[task.orchestrator_logs.length - 1]
                 }`,
                 guid: guid().toString(),
-            });
+              });
+            }
         },
         getTaskStatus(task) {
             if (!task.is_complete) {

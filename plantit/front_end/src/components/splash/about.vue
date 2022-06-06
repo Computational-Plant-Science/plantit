@@ -215,7 +215,7 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Open source containers for open science
+                                    Open source workflows for open science
                                 </h4>
                                 Deploy
                                 <b-link

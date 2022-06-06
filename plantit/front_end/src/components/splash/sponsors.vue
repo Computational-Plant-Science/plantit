@@ -1,5 +1,4 @@
 <template>
-    <div>
         <b-card
             align="center"
             class="rounded-0 text-center m-0"
@@ -9,8 +8,37 @@
             header-border-variant="white"
             style="border: none; box-shadow: none"
         >
-            <br />
           <b-row>
+              <b-col>
+                    <b-link href="https://www.computational-plant-science.org/joomla30/">
+                      <b-img
+                        :src="
+                                require('@/assets/cps_black.png')
+                        "
+                        height="35px"
+                        alt="Computational Plant Science Lab"
+                    ></b-img
+                >
+
+                    </b-link>
+              </b-col>
+              <b-col>
+                    <b-link href="http://gacra.uga.edu/">
+                        <b-img
+                            :src="require('@/assets/sponsors/gacrc.png')"
+                            height="35px"
+                            alt="Georgia Advanced Computing Resource Center"
+                        ></b-img>
+                    </b-link>
+          </b-col>
+              <b-col>
+                    <b-link href="http://www.uga.edu/">
+                        <b-img
+                            :src="require('@/assets/sponsors/uga.png')"
+                            height="35px"
+                            alt="University Of Georgia"
+                        ></b-img>
+                    </b-link></b-col>
               <b-col>
                     <b-link href="https://www.nsf.gov/">
                         <b-img
@@ -29,7 +57,7 @@
                         ></b-img>
                     </b-link>
             </b-col>
-            <b-col>
+              <b-col>
                     <b-link href="http://arpa-e.energy.gov/">
                         <b-img
                             :src="require('@/assets/sponsors/arpa_e.png')"
@@ -48,26 +76,8 @@
                         ></b-img>
                     </b-link>
             </b-col>
-            <b-col>
-                    <b-link href="http://gacra.uga.edu/">
-                        <b-img
-                            :src="require('@/assets/sponsors/gacrc.png')"
-                            height="35px"
-                            alt="Georgia Advanced Computing Resource Center"
-                        ></b-img>
-                    </b-link>
-          </b-col>
-              <b-col>
-                    <b-link href="http://www.uga.edu/">
-                        <b-img
-                            :src="require('@/assets/sponsors/uga.png')"
-                            height="35px"
-                            alt="University Of Georgia"
-                        ></b-img>
-                    </b-link></b-col>
             </b-row>
         </b-card>
-    </div>
 </template>
 
 <script>

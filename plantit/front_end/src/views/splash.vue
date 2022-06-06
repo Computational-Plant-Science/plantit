@@ -1,7 +1,7 @@
 <template>
     <b-container fluid class="m-0 p-0">
-        <b-row no-gutters>
-            <b-col>
+        <b-row no-gutters class="m-0 p-0">
+            <b-col class="m-0 p-0">
                 <brand></brand>
                 <about></about>
                 <sponsors></sponsors>

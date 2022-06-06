@@ -173,11 +173,7 @@
                                             ? 'text-light'
                                             : 'text-theme'
                                     "
-                                    style="
-                                        text-decoration: underline;
-                                        text-decoration-color: #d6df5d;
-                                    "
-                                    >reproducible plant phenomics
+                                    >computational plant phenomics
                                 </span>
                             </i></b-col
                         >
