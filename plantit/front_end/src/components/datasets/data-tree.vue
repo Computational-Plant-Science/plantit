@@ -797,9 +797,9 @@
                             <b-row v-if="usersLoading"
                                 ><b-col align-self="end" class="text-center">
                                     <b-spinner
-                                        type="grow"
                                         label="Loading..."
                                         variant="secondary"
+                                        small
                                     ></b-spinner> </b-col
                             ></b-row>
                             <b-row
