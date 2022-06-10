@@ -8,6 +8,34 @@
                         Agents
                     </h4></b-col
                 >
+                <!--<b-col md="auto" class="ml-0 mb-1" align-self="center"
+                    ><b-button
+                        id="bind-agent"
+                        :disabled="bindingAgent"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        title="Bind agent"
+                        @click="bindAgent"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="bindingAgent"
+                            label="Binding..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-plug mr-1"></i
+                        >Bind</b-button
+                    ><b-popover
+                        v-if="profile.hints"
+                        triggers="hover"
+                        placement="topright"
+                        target="bind-agent"
+                        title="Bind Agent"
+                        >Click here to bind your own agent.</b-popover
+                    ></b-col
+                >-->
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
                         id="refresh-agents"
@@ -157,7 +185,13 @@ import moment from 'moment';
 
 export default {
     name: 'agents',
-    data: function () { return {}; },
+    data: function () {
+      return {
+        bindingAgent: false,
+        agentHost: '',
+        agentUser: '',
+      };
+    },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('agents', ['agentsPermitted', 'agentsLoading']),
@@ -176,6 +210,9 @@ export default {
         },
         refreshAgents() {
             this.$store.dispatch('agents/loadAll');
+        },
+        bindAgent() {
+
         },
         isJobQueue(executor) {
             return executor !== 'Local';
