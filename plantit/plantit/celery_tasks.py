@@ -1286,7 +1286,7 @@ def migrate_dirt_datasets(self, username: str):
                 client.upload(from_path=staging_path, to_prefix=coll_path)
 
                 # push a progress update to client
-                uploads[file.folder][file.name] = ManagedFile(
+                uploads[coll_title][file.name] = ManagedFile(
                     id=file.id,
                     name=file.name,
                     path=file.path,
