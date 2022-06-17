@@ -629,6 +629,15 @@
                                 v-if="!profileLoading && profile.migration.completed !== null"
                                 class="fas fa-check text-success fa-fw"
                             ></i>
+                          <b-spinner
+                            small
+                            v-else-if="profile.migration.started !== null &&
+                                    profile.migration.completed === null"
+                            label="Running..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-2"
+                        ></b-spinner
+                        >
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
@@ -788,6 +797,7 @@
                             (profile.migration.started !== null &&
                                 profile.migration.completed === null)
                         "
+                        v-if="profile.migration.started === null"
                         @click="startDirtMigration"
                         :variant="
                             profile.darkMode ? 'outline-success' : 'success'
@@ -808,9 +818,8 @@
                         ></b-spinner
                         ><i v-else class="fas fa-chevron-right fa-fw mr-1"></i>
                         {{
-                            migrationSubmitting ||
-                            profile.migration.started !== null
-                                ? 'Running'
+                            migrationSubmitting
+                                ? 'Submitting'
                                 : 'Start'
                         }}</b-button
                     >

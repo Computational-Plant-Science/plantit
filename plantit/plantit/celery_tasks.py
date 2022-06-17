@@ -1004,12 +1004,14 @@ def migrate_dirt_datasets(self, username: str):
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
     cursor = db.cursor()
-    storage_path = f"public://{user.username if profile.dirt_name is None else profile.dirt_name}/%"
+    dirt_username = user.username if profile.dirt_name is None else profile.dirt_name
+    if dirt_username == 'wbonelli': dirt_username = 'abucksch'  # debugging
+    storage_path = f"public://{dirt_username}/%"
     cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
     rows = cursor.fetchall()
     db.close()
 
-    # filter root image files
+    # root image files
     image_files: List[ManagedFile] = [ManagedFile(
         id=row[0],
         name=row[1],
@@ -1020,8 +1022,8 @@ def migrate_dirt_datasets(self, username: str):
         missing=False,
         uploaded=False) for row in rows if 'root-images' in row[2]]
 
-    # filter metadata files
-    metadata_files: list[ManagedFile] = [ManagedFile(
+    # metadata files
+    metadata_files: List[ManagedFile] = [ManagedFile(
         id=row[0],
         name=row[1],
         path=row[2].replace('public://', ''),
@@ -1031,8 +1033,8 @@ def migrate_dirt_datasets(self, username: str):
         missing=False,
         uploaded=False) for row in rows if 'metadata-files' in row[2]]
 
-    # filter output files
-    output_files: list[ManagedFile] = [ManagedFile(
+    # output files
+    output_files: List[ManagedFile] = [ManagedFile(
         id=row[0],
         name=row[1],
         path=row[2].replace('public://', ''),
@@ -1042,8 +1044,8 @@ def migrate_dirt_datasets(self, username: str):
         missing=False,
         uploaded=False) for row in rows if 'output-files' in row[2]]
 
-    # filter output logs
-    output_logs: list[ManagedFile] = [ManagedFile(
+    # output logs
+    output_logs: List[ManagedFile] = [ManagedFile(
         id=row[0],
         name=row[1],
         path=row[2].replace('public://', ''),
@@ -1068,7 +1070,7 @@ def migrate_dirt_datasets(self, username: str):
         pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
     with ssh:
         with ssh.client.open_sftp() as sftp:
-            userdir = join(settings.DIRT_MIGRATION_DATA_DIR, username)
+            userdir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)
 
             # persist number of each kind of managed file
             migration.num_files = len(image_files)

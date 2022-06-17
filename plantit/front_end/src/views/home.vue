@@ -163,27 +163,75 @@
                         "
                     ></router-view>
                     <div v-if="isRootPath" class="p-2">
-                        <b-row v-if="profile.stats !== null">
+                        <b-row class="mb-2"><b-col>Welcome, {{ profile.djangoProfile.first_name }}.</b-col></b-row>
+                      <b-row><b-col>
+                                                    <b-badge
+                                                        :variant="
+                                                                profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        title="Running"
+                                                        ><i
+                                                            class="
+                                                                fas
+                                                                fa-th-large fa-fw
+                                                            "
+                                                        ></i>
+                                                        Running
+                                                    </b-badge>
+                        <b-row><b-col>
+                          <b-row
+                                        v-if="
+                                            !tasksLoading &&
+                                            tasksRunning.length === 0
+                                        "
+                                    >
+                                        <b-col>
+                                            <p
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                No tasks are running.
+                                            </p>
+                                        </b-col>
+                                    </b-row>
+                                    <b-list-group
+                                        class="text-left m-0 p-0 mt-1"
+                                    >
+                                        <taskblurb
+                                            v-for="task in filteredRunning"
+                                            v-bind:key="task.guid"
+                                            :task="task"
+                                            :project="true"
+                                        ></taskblurb>
+                                    </b-list-group>
+                        </b-col></b-row>
+                        </b-col></b-row>
+                      <b-row v-if="profile.stats !== null">
                             <b-col>
-                                <b-row align-v="start">
-                                    <b-col>
-                                        <b-row align-v="start">
+                                                    <b-badge
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        title="Usage"
+                                                        ><i
+                                                            class="
+                                                                fas
+                                                                fa-chart-pie
+                                                                fa-fw
+                                                            "
+                                                        ></i>
+                                                        Usage
+                                                    </b-badge>
+                                <b-row>
                                             <b-col md="auto">
-                                                <h4
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Usage Summary
-                                                </h4>
-                                            </b-col>
-                                        </b-row>
-                                        <hr/>
-                                        <b-row>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
+                                                <b
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -191,7 +239,8 @@
                                                     "
                                                 >
                                                     Workflows
-                                                </h5>
+                                                </b>
+                                                <br/>
                                                 <b>{{
                                                     profile.stats
                                                         .owned_workflows.length
@@ -204,8 +253,8 @@
                                                 }}</b>
                                                 used
                                             </b-col>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
+                                            <b-col md="auto">
+                                                <b
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -213,7 +262,8 @@
                                                     "
                                                 >
                                                     Datasets
-                                                </h5>
+                                                </b>
+                                                <br/>
                                                 <i
                                                     class="fas fa-spinner"
                                                     v-if="
@@ -249,8 +299,8 @@
                                                 }}</b>
                                                 you've shared
                                             </b-col>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
+                                            <b-col md="auto">
+                                                <b
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -258,7 +308,8 @@
                                                     "
                                                 >
                                                     Projects
-                                                </h5>
+                                                </b>
+                                                <br/>
                                                 <b>{{ userProjects.length }}</b>
                                                 owned
                                                 <br />
@@ -269,10 +320,9 @@
                                             </b-col>
                                             <b-col
                                                 md="auto"
-                                                class="mt-3"
                                                 v-if="profile.stats !== null"
                                             >
-                                                <h5
+                                                <b
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -280,7 +330,8 @@
                                                     "
                                                 >
                                                     Agents
-                                                </h5>
+                                                </b>
+                                                <br/>
                                                 <b>{{
                                                     profile.stats.owned_agents
                                                         .length
@@ -299,8 +350,8 @@
                                                 }}</b>
                                                 used
                                             </b-col>
-                                            <b-col md="auto" class="mt-3">
-                                                <h5
+                                            <b-col md="auto">
+                                                <b
                                                     :class="
                                                         profile.darkMode
                                                             ? 'text-light'
@@ -308,7 +359,8 @@
                                                     "
                                                 >
                                                     Tasks
-                                                </h5>
+                                                </b>
+                                                <br/>
                                                 <b>{{ tasksRunning.length }}</b>
                                                 running
                                                 <br />
@@ -331,13 +383,10 @@
                                                 }}</b>
                                                 total runtime
                                             </b-col>
-                                        </b-row>
-                                    </b-col>
                                 </b-row>
-                                <br/>
-                                <b-row align-v="start">
+                                <b-row>
                                     <b-col md="auto">
-                                        <h4
+                                        <b
                                             :class="
                                                 profile.darkMode
                                                     ? 'text-white'
@@ -345,10 +394,9 @@
                                             "
                                         >
                                             Recent Usage
-                                        </h4>
+                                        </b>
                                     </b-col>
                                 </b-row>
-                                <hr />
                                 <div v-if="anyRecentUsageStats">
                                     <b-row>
                                         <b-col
@@ -364,7 +412,6 @@
                                                 :layout="tasksUsagePlotLayout"
                                             ></Plotly> </b-col
                                     ></b-row>
-                                    <br />
                                     <b-row
                                         ><b-col
                                             ><Plotly
@@ -388,10 +435,9 @@
                                         recently.</b-col
                                     ></b-row
                                 >
-                                <br />
                                 <b-row align-v="start">
                                     <b-col md="auto">
-                                        <h4
+                                        <b
                                             :class="
                                                 profile.darkMode
                                                     ? 'text-white'
@@ -399,10 +445,9 @@
                                             "
                                         >
                                             Cumulative Usage
-                                        </h4>
+                                        </b>
                                     </b-col>
                                 </b-row>
-                                <hr/>
                                 <b-row v-if="anyCumulativeUsageStats">
                                     <b-col>
                                         <Plotly
@@ -457,16 +502,19 @@ import { mapGetters } from 'vuex';
 import moment from 'moment';
 import { Plotly } from 'vue-plotly';
 import axios from 'axios';
+import taskblurb from '@/components/tasks/task-blurb';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home',
     components: {
         Plotly,
+        taskblurb
     },
     data: function () {
         return {
             crumbs: [],
+            activeTab: 0,
             timeseriesTasksUsage: null,
             timeseriesWorkflowsUsage: null,
             timeseriesAgentsUsage: null,
@@ -577,6 +625,34 @@ export default {
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', ['userWorkflows', 'userWorkflowsLoading']),
         ...mapGetters('projects', ['userProjects', 'othersProjects']),
+        filtered() {
+            return this.tasks.filter(
+                (task) =>
+                    (task.workflow_name !== null &&
+                        task.workflow_name.includes(this.searchText)) ||
+                    (task.name !== null &&
+                        task.name.includes(this.searchText)) ||
+                    task.tags.some((tag) => tag.includes(this.searchText)) ||
+                    (task.project !== null &&
+                        task.project.title.includes(this.searchText)) ||
+                    (task.study !== null &&
+                        task.study.title.includes(this.searchText))
+            );
+        },
+        filteredRunning() {
+            return this.tasksRunning.filter(
+                (task) =>
+                    (task.workflow_name !== null &&
+                        task.workflow_name.includes(this.searchText)) ||
+                    (task.name !== null &&
+                        task.name.includes(this.searchText)) ||
+                    task.tags.some((tag) => tag.includes(this.searchText)) ||
+                    (task.project !== null &&
+                        task.project.title.includes(this.searchText)) ||
+                    (task.study !== null &&
+                        task.study.title.includes(this.searchText))
+            );
+        },
         isRootPath() {
             return this.$route.name === 'home';
         },
