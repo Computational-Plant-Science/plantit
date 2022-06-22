@@ -33,6 +33,3 @@ class Migration(models.Model):
     num_outputs = models.IntegerField(null=True, blank=True)
     num_logs = models.IntegerField(null=True, blank=True)
     uploads = models.JSONField(null=True, blank=True)
-    metadata = models.JSONField(null=True, blank=True)
-    outputs = models.JSONField(null=True, blank=True)
-    logs = models.JSONField(null=True, blank=True)

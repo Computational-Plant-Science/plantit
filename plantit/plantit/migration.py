@@ -1,8 +1,16 @@
+from datetime import datetime
+from typing import List, Tuple, NamedTuple, Optional
+
 import pymysql
 from pymysql import MySQLError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
 
+import plantit.queries as q
+from plantit.ssh import SSH
 from plantit import settings
+from plantit.users.models import Profile, Migration
 
 
 SELECT_MANAGED_FILE_BY_PATH =               """SELECT fid, filename, uri FROM file_managed WHERE uri LIKE %s"""
@@ -25,23 +33,71 @@ SELECT_OUTPUT_LOG_FILE =                    """SELECT entity_id FROM field_revis
 SELECT_METADATA_FILE =                      """SELECT entity_id FROM field_data_field_metadata_file WHERE field_exec_result_file_fid = %s"""
 
 
-@retry(
-    reraise=True,
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(MySQLError)))
-def get_managed_file_rows(username: str):
-    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                         port=int(settings.DIRT_MIGRATION_DB_PORT),
-                         user=settings.DIRT_MIGRATION_DB_USER,
-                         db=settings.DIRT_MIGRATION_DB_DATABASE,
-                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    storage_path = f"public://{username}/%"
-    cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
-    rows = cursor.fetchall()
-    db.close()
-    return rows
+class ManagedFile(NamedTuple):
+    id: str
+    name: str
+    path: str
+    type: str
+    folder: str
+    orphan: bool
+    missing: bool
+    uploaded: Optional[datetime]
+
+
+async def push_migration_event(user: User, migration: Migration):
+    await get_channel_layer().group_send(f"{user.username}", {
+        'type': 'migration_event',
+        'migration': q.migration_to_dict(migration),
+    })
+
+
+def row_to_managed_file(row):
+    fid = row[0]
+    name = row[1]
+    path = row[2]
+
+    if 'root-images' in path:
+        return ManagedFile(
+            id=fid,
+            name=name,
+            path=path.replace('public://', ''),
+            type='image',
+            folder=path.rpartition('root-images')[2].replace(name, '').replace('/', ''),
+            orphan=False,
+            missing=False,
+            uploaded=None)
+    elif 'metadata-files' in path:
+        return ManagedFile(
+            id=fid,
+            name=name,
+            path=path.replace('public://', ''),
+            type='metadata',
+            folder=path.rpartition('metadata-files')[2].replace(name, '').replace('/', ''),
+            orphan=False,
+            missing=False,
+            uploaded=None)
+    elif 'output-files' in path:
+        return ManagedFile(
+            id=fid,
+            name=name,
+            path=path.replace('public://', ''),
+            type='output',
+            folder=path.rpartition('output-files')[2].replace(name, '').replace('/', ''),
+            orphan=False,
+            missing=False,
+            uploaded=None)
+    elif 'output-logs' in path:
+        return ManagedFile(
+            id=fid,
+            name=name,
+            path=path.replace('public://', ''),
+            type='logs',
+            folder=path.rpartition('output-logs')[2].replace(name, '').replace('/', ''),
+            orphan=False,
+            missing=False,
+            uploaded=None)
+    else:
+        raise ValueError(f"Unrecognized managed file type (path: {path})")
 
 
 @retry(
@@ -49,17 +105,21 @@ def get_managed_file_rows(username: str):
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(MySQLError)))
-def get_file_entity_row(file_id):
+def get_managed_files(username: str) -> List[ManagedFile]:
     db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
                          port=int(settings.DIRT_MIGRATION_DB_PORT),
                          user=settings.DIRT_MIGRATION_DB_USER,
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    cursor.execute(SELECT_ROOT_IMAGE, (file_id,))
-    row = cursor.fetchone()
-    db.close()
-    return row
+
+    try:
+        cursor = db.cursor()
+        storage_path = f"public://{username}/%"
+        cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
+        rows = cursor.fetchall()
+        return [row_to_managed_file(row) for row in rows]
+    finally:
+        db.close()
 
 
 @retry(
@@ -67,17 +127,20 @@ def get_file_entity_row(file_id):
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(MySQLError)))
-def get_collection_entity_id_row(file_entity_id):
+def get_file_entity_id(file_id) -> str:
     db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
                          port=int(settings.DIRT_MIGRATION_DB_PORT),
                          user=settings.DIRT_MIGRATION_DB_USER,
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
-    row = cursor.fetchone()
-    db.close()
-    return row
+
+    try:
+        cursor = db.cursor()
+        cursor.execute(SELECT_ROOT_IMAGE, (file_id,))
+        row = cursor.fetchone()
+        return row[0]
+    finally:
+        db.close()
 
 
 @retry(
@@ -85,17 +148,20 @@ def get_collection_entity_id_row(file_entity_id):
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(MySQLError)))
-def get_marked_collection_row(coll_entity_id):
+def get_collection_entity_id_row(file_entity_id) -> str:
     db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
                          port=int(settings.DIRT_MIGRATION_DB_PORT),
                          user=settings.DIRT_MIGRATION_DB_USER,
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
-    row = cursor.fetchone()
-    db.close()
-    return row
+
+    try:
+        cursor = db.cursor()
+        cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
+        row = cursor.fetchone()
+        return row[0]
+    finally:
+        db.close()
 
 
 @retry(
@@ -103,33 +169,69 @@ def get_marked_collection_row(coll_entity_id):
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(MySQLError)))
-def get_marked_collection_data_rows(coll_entity_id):
+def get_marked_collection(coll_entity_id) -> Tuple[str, datetime, datetime]:
     db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
                          port=int(settings.DIRT_MIGRATION_DB_PORT),
                          user=settings.DIRT_MIGRATION_DB_USER,
                          db=settings.DIRT_MIGRATION_DB_DATABASE,
                          password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
-    metadata_rows = cursor.fetchall()
-    cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
-    location_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
-    planting_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
-    harvest_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
-    soil_group_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
-    soil_moist_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
-    soil_n_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
-    soil_p_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
-    soil_k_row = cursor.fetchone()
-    cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
-    pesticides_row = cursor.fetchone()
-    db.close()
 
-    return metadata_rows, location_row, planting_row, harvest_row, soil_group_row, soil_moist_row, soil_n_row, soil_p_row, soil_k_row, pesticides_row
+    try:
+        cursor = db.cursor()
+        cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
+        row = cursor.fetchone()
+        return row[0], datetime.fromtimestamp(int(row[1])), datetime.fromtimestamp(int(row[2]))
+    finally:
+        db.close()
+
+
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(MySQLError)))
+def get_marked_collection_info(coll_entity_id) -> Tuple[dict, float, float, str, str, str, float, float, float, float, str]:
+    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
+                         port=int(settings.DIRT_MIGRATION_DB_PORT),
+                         user=settings.DIRT_MIGRATION_DB_USER,
+                         db=settings.DIRT_MIGRATION_DB_DATABASE,
+                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
+
+    try:
+        cursor = db.cursor()
+        cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
+        metadata_rows = cursor.fetchall()
+        cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
+        location_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
+        planting_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
+        harvest_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
+        soil_group_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
+        soil_moist_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
+        soil_n_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
+        soil_p_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
+        soil_k_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
+        pesticides_row = cursor.fetchone()
+
+        metadata = {row[0]: row[1] for row in metadata_rows}
+        latitude = None if location_row is None else float(location_row[0])
+        longitude = None if location_row is None else float(location_row[1])
+        planting = None if planting_row is None else planting_row[0]
+        harvest = None if harvest_row is None else harvest_row[0]
+        soil_group = None if soil_group_row is None else soil_group_row[0]
+        soil_moist = None if soil_moist_row is None else float(soil_moist_row[0])
+        soil_n = None if soil_n_row is None else float(soil_n_row[0])
+        soil_p = None if soil_p_row is None else float(soil_p_row[0])
+        soil_k = None if soil_k_row is None else float(soil_k_row[0])
+        pesticides = None if pesticides_row is None else pesticides_row[0]
+
+        return metadata, latitude, longitude, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides
+    finally:
+        db.close()

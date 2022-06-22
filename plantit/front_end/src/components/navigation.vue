@@ -1026,9 +1026,10 @@ export default {
           if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
           var files = [];
           for (let coll of Object.values(this.profile.migration.uploads)) {
-            for (let file of Object.values(coll)) {
-              files.push(file);
-            }
+            return Object.values(coll);
+            // for (let file of Object.values(coll)) {
+            //   files.push(file);
+            // }
           }
           return files;
         },
