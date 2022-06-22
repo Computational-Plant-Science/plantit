@@ -824,7 +824,6 @@
                         }}</b-button
                     >
                     <p v-if="profile.migration.started !== null">
-                        <br />
                         <b>Started:</b>
                         {{ prettify(profile.migration.started) }}
                         <br />
@@ -1023,45 +1022,20 @@ export default {
             'notificationsUnread',
         ]),
         uploadedFiles() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          var files = [];
-          for (let coll of Object.values(this.profile.migration.uploads)) {
-            return Object.values(coll);
-            // for (let file of Object.values(coll)) {
-            //   files.push(file);
-            // }
-          }
-          return files;
+          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'image');
         },
         uploadedMetadata() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.metadata).length === 0) return [];
-          var files = [];
-          for (let coll of Object.values(this.profile.migration.metadata)) {
-            for (let file of Object.values(coll)) {
-              files.push(file);
-            }
-          }
-          return files;
+          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'metadata');
         },
         uploadedOutputs() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.outputs).length === 0) return [];
-          var files = [];
-          for (let coll of Object.values(this.profile.migration.output)) {
-            for (let file of Object.values(coll)) {
-              files.push(file);
-            }
-          }
-          return files;
+          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'output');
         },
         uploadedLogs() {
-          if (this.profileLoading || this.profile === null || Object.keys(this.profile.migration.logs).length === 0) return [];
-          var files = [];
-          for (let coll of Object.values(this.profile.migration.logs)) {
-            for (let file of Object.values(coll)) {
-              files.push(file);
-            }
-          }
-          return files;
+          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
+          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'logs');
         },
         maintenance() {
             let now = moment();

@@ -21,7 +21,7 @@ import plantit.healthchecks
 import plantit.mapbox
 import plantit.queries as q
 import plantit.utils.agents
-import plantit.migration as migration
+import plantit.migration as mig
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
 from plantit import settings
@@ -961,7 +961,7 @@ def migrate_dirt_datasets(self, username: str):
     if dirt_username == 'wbonelli': dirt_username = 'abucksch'  # debugging
 
     # get managed files the user has in named collections in the DIRT database
-    managed_files = migration.get_managed_files(dirt_username)
+    managed_files = mig.get_managed_files(dirt_username)
 
     # so we can track progress and update the UI in real time
     uploads = []
@@ -992,7 +992,7 @@ def migrate_dirt_datasets(self, username: str):
 
             for file in image_files:
                 # get file entity ID given root image file ID
-                file_entity_id = migration.get_file_entity_id(file.id)
+                file_entity_id = mig.get_file_entity_id(file.id)
 
                 # if no corresponding file entity for this managed file, skip it
                 if file_entity_id is None:
@@ -1000,7 +1000,7 @@ def migrate_dirt_datasets(self, username: str):
                     continue
 
                 # get collection entity ID for the collection this image is in
-                coll_entity_id = migration.get_collection_entity_id(file_entity_id)
+                coll_entity_id = mig.get_collection_entity_id(file_entity_id)
 
                 # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
                 if coll_entity_id is None:
@@ -1025,14 +1025,11 @@ def migrate_dirt_datasets(self, username: str):
                     except FileNotFoundError:
                         logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
-                        # update the file status
-                        file.missing = True
-
                         # push a progress update to client
-                        uploads.append(file)
+                        uploads.append(file._replace(missing=True)._asdict())
                         migration.uploads = json.dumps(uploads)
                         migration.save()
-                        async_to_sync(migration.push_migration_event)(user, migration)
+                        async_to_sync(mig.push_migration_event)(user, migration)
 
                         continue
 
@@ -1040,14 +1037,11 @@ def migrate_dirt_datasets(self, username: str):
                     logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
                     client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    file.orphan = True
-                    file.uploaded = timezone.now()
-
                     # push a progress update to client
-                    uploads.append(file)
+                    uploads.append(file._replace(orphan=True, uploaded=timezone.now().isoformat())._asdict())
                     migration.uploads = json.dumps(uploads)
                     migration.save()
-                    async_to_sync(migration.push_migration_event)(user, migration)
+                    async_to_sync(mig.push_migration_event)(user, migration)
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
@@ -1056,7 +1050,7 @@ def migrate_dirt_datasets(self, username: str):
                     continue
 
                 # otherwise we have a corresponding marked collection, get its title
-                coll_title, coll_created, coll_changed = migration.get_marked_collection(coll_entity_id)
+                coll_title, coll_created, coll_changed = mig.get_marked_collection(coll_entity_id)
                 coll_path = join(root_collection_path, 'collections', coll_title)
 
                 if coll_title not in image_collections:
@@ -1072,7 +1066,7 @@ def migrate_dirt_datasets(self, username: str):
                     id = stat['id']
 
                     # get its creation/modification timestamps, metadata and environmental data
-                    metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = migration.get_marked_collection_info(coll_entity_id)
+                    metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(coll_entity_id)
 
                     # attach metadata to collection
                     props = [
@@ -1102,14 +1096,11 @@ def migrate_dirt_datasets(self, username: str):
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
-                    file.missing = True
-                    file.folder = coll_title
-
                     # push a progress update to client
-                    uploads.append(file)
+                    uploads.append(file._replace(missing=True, folder=coll_title)._asdict())
                     migration.uploads = json.dumps(uploads)
                     migration.save()
-                    async_to_sync(migration.push_migration_event)(user, migration)
+                    async_to_sync(mig.push_migration_event)(user, migration)
 
                     continue
 
@@ -1117,13 +1108,12 @@ def migrate_dirt_datasets(self, username: str):
                 logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
                 client.upload(from_path=staging_path, to_prefix=coll_path)
 
-                file.uploaded = timezone.now()
-                uploads.append(file)
+                uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
                 # push a progress update to client
                 migration.uploads = json.dumps(uploads)
                 migration.save()
-                async_to_sync(migration.push_migration_event)(user, migration)
+                async_to_sync(mig.push_migration_event)(user, migration)
 
                 # remove file from staging dir
                 os.remove(join(staging_dir, file.name))
@@ -1149,21 +1139,18 @@ def migrate_dirt_datasets(self, username: str):
                     logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
                     client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    file.uploaded = timezone.now()
-                    uploads.append(file)
+                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-
-                    file.missing = True
-                    uploads.append(file)
+                    uploads.append(file._replace(missing=True)._asdict())
 
                 # push a progress update to client
                 migration.uploads = json.dumps(metadata)
                 migration.save()
-                async_to_sync(migration.push_migration_event)(user, migration)
+                async_to_sync(mig.push_migration_event)(user, migration)
 
             for file in output_files:
                 # create the folder if we need to
@@ -1184,20 +1171,17 @@ def migrate_dirt_datasets(self, username: str):
                     logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
                     client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    file.uploaded = timezone.now()
-                    uploads.append(file)
+                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-
-                    file.missing = True
-                    uploads.append(file)
+                    uploads.append(file._replace(missing=True)._asdict())
 
                 migration.uploads = json.dumps(uploads)
                 migration.save()
-                async_to_sync(migration.push_migration_event)(user, migration)
+                async_to_sync(mig.push_migration_event)(user, migration)
 
             for file in log_files:
                 # create the folder if we need to
@@ -1218,21 +1202,19 @@ def migrate_dirt_datasets(self, username: str):
                     logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
                     client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    file.uploaded = timezone.now()
-                    uploads.append(file)
+                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
                 except FileNotFoundError:
                     logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
-                    file.missing = True
-                    uploads.append(file)
+                    uploads.append(file._replace(missing=True)._asdict())
 
                     # push a progress update to client
                     migration.uploads = json.dumps(uploads)
                     migration.save()
-                    async_to_sync(migration.push_migration_event)(user, migration)
+                    async_to_sync(mig.push_migration_event)(user, migration)
 
     # get ID of newly created migration collection add collection timestamp as metadata
     root_collection_id = client.stat(root_collection_path)['id']
@@ -1248,7 +1230,7 @@ def migrate_dirt_datasets(self, username: str):
     migration.save()
 
     # push completion update to the UI
-    async_to_sync(migration.push_migration_event)(user, migration)
+    async_to_sync(mig.push_migration_event)(user, migration)
 
     # send notification to user via email
     SnsClient.get().publish_message(

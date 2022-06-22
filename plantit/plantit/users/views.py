@@ -25,6 +25,7 @@ from databases import Database
 from pycyapi.clients import TerrainClient
 
 import plantit.queries as q
+import plantit.migration as mig
 from plantit.celery_tasks import migrate_dirt_datasets, Migration
 from plantit.celery_tasks import refresh_user_stats
 from plantit.keypairs import get_or_create_user_keypair
@@ -385,9 +386,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
 
-    SELECT_DIRT_CAS_USER = """SELECT * FROM cas_user WHERE cas_name = %s"""
-    SELECT_DIRT_USER = """SELECT * FROM users WHERE mail = %s"""
-
     @action(detail=False, methods=['get'])
     def start_dirt_migration(self, request):
         user = self.get_object()
@@ -401,37 +399,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
             return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
-        # connect to the DIRT DB
-        db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                             port=int(settings.DIRT_MIGRATION_DB_PORT),
-                             user=settings.DIRT_MIGRATION_DB_USER,
-                             db=settings.DIRT_MIGRATION_DB_DATABASE,
-                             password=settings.DIRT_MIGRATION_DB_PASSWORD)
-        cursor = db.cursor()
-
-        # make sure the user has a DIRT account
+        # check for a DIRT CAS user with this user's username (or email address)
         email = request.query_params.get('email', None)
+        dirt_username = mig.get_dirt_username(user.username, email)
 
-        # check for a DIRT CAS user with this user's username
-        cursor.execute(self.SELECT_DIRT_CAS_USER, (user.username,))
-        row = cursor.fetchone()
+        # if we didn't find a DIRT user matching the provided email address, abort the migration
+        if dirt_username is None:
+            return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
 
-        # if we didn't find a CAS user and they provided an email, check that instead
-        if row is None and email is not None:
-            cursor.execute(self.SELECT_DIRT_USER, (email,))
-            row = cursor.fetchone()
-
-            # if we can't find a DIRT user with the provided email address, abort the migration
-            if row is None:
-                db.close()
-                return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
-
-            # if we found a DIRT user matching the provided email address, save it and the associated name
-            profile.dirt_email = email
-            profile.dirt_name = row['name']
-            profile.save()
-
-        db.close()
+        profile.dirt_email = email
+        profile.dirt_name = dirt_username
+        profile.save()
 
         # if already started, just return the migration status
         if not created and migration.started is not None:

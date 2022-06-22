@@ -20,6 +20,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 from pycyapi.clients import TerrainClient
+import plantit.migration as migration
 from pycyapi.exceptions import Unauthorized
 import plantit.mapbox as mapbox
 from plantit import github as github
@@ -759,9 +760,6 @@ def migration_to_dict(migration: Migration) -> dict:
         'num_outputs': migration.num_outputs,
         'num_logs': migration.num_logs,
         'uploads': json.loads(migration.uploads if migration.uploads is not None else '{}'),
-        'metadata': json.loads(migration.metadata if migration.metadata is not None else '{}'),
-        'outputs': json.loads(migration.outputs if migration.outputs is not None else '{}'),
-        'logs': json.loads(migration.logs if migration.logs is not None else '{}')
     }
 
 
