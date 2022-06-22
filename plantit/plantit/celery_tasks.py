@@ -15,14 +15,13 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
-from databases import Database
-import pymysql
 from pycyapi.clients import TerrainClient
 
 import plantit.healthchecks
 import plantit.mapbox
 import plantit.queries as q
 import plantit.utils.agents
+import plantit.migration as migration
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
 from plantit import settings
@@ -994,22 +993,15 @@ def migrate_dirt_datasets(self, username: str):
     client.mkdir(join(root_collection_path, 'outputs'))
     client.mkdir(join(root_collection_path, 'logs'))
 
+    # get the user's DIRT username
+    dirt_username = user.username if profile.dirt_name is None else profile.dirt_name
+    if dirt_username == 'wbonelli': dirt_username = 'abucksch'  # debugging
+
     # check how many files the user has in managed collections in the DIRT database
     # we want to keep track of progress and update the UI in real time,
     # so we'll maintain a dictionary of managed files and update their
     # status when an upload completes, a file is not found, etc
-    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                         port=int(settings.DIRT_MIGRATION_DB_PORT),
-                         user=settings.DIRT_MIGRATION_DB_USER,
-                         db=settings.DIRT_MIGRATION_DB_DATABASE,
-                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
-    cursor = db.cursor()
-    dirt_username = user.username if profile.dirt_name is None else profile.dirt_name
-    if dirt_username == 'wbonelli': dirt_username = 'abucksch'  # debugging
-    storage_path = f"public://{dirt_username}/%"
-    cursor.execute(SELECT_MANAGED_FILE_BY_PATH, (storage_path,))
-    rows = cursor.fetchall()
-    db.close()
+    rows = migration.get_managed_file_rows(dirt_username)
 
     # root image files
     image_files: List[ManagedFile] = [ManagedFile(
@@ -1081,33 +1073,16 @@ def migrate_dirt_datasets(self, username: str):
 
             for file in image_files:
                 # get file entity ID given root image file ID
-                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
-                                     user=settings.DIRT_MIGRATION_DB_USER,
-                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
-                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
-                cursor = db.cursor()
-                cursor.execute(SELECT_ROOT_IMAGE, (file.id,))
-                row = cursor.fetchone()
-                db.close()
+                migration.get_file_entity_row(file.id)
 
                 # if we didn't find a corresponding file node for this managed file, skip it
                 if row is None:
                     logger.warning(f"DIRT root image with file ID {file.id} not found")
                     continue
 
-                file_entity_id = row[0]
-
                 # get collection entity ID for the collection this image is in
-                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
-                                     user=settings.DIRT_MIGRATION_DB_USER,
-                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
-                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
-                cursor = db.cursor()
-                cursor.execute(SELECT_ROOT_COLLECTION, (file_entity_id,))
-                row = cursor.fetchone()
-                db.close()
+                file_entity_id = row[0]
+                row = migration.get_collection_entity_id_row(file_entity_id)
 
                 # if we didn't find a corresponding marked collection for this root image file,
                 # use an orphan folder named by date (as stored on the DIRT server NFS)
@@ -1172,15 +1147,7 @@ def migrate_dirt_datasets(self, username: str):
 
                 # otherwise we have a corresponding marked collection, get its title
                 coll_entity_id = row[0]
-                db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                     port=int(settings.DIRT_MIGRATION_DB_PORT),
-                                     user=settings.DIRT_MIGRATION_DB_USER,
-                                     db=settings.DIRT_MIGRATION_DB_DATABASE,
-                                     password=settings.DIRT_MIGRATION_DB_PASSWORD)
-                cursor = db.cursor()
-                cursor.execute(SELECT_ROOT_COLLECTION_TITLE, (coll_entity_id,))
-                coll_title_row = cursor.fetchone()
-                db.close()
+                coll_title_row = migration.get_marked_collection_row(coll_entity_id)
                 coll_title = coll_title_row[0]
                 coll_path = join(root_collection_path, 'collections', coll_title)
                 coll_created = datetime.fromtimestamp(int(coll_title_row[1]))
@@ -1198,33 +1165,7 @@ def migrate_dirt_datasets(self, username: str):
                     id = stat['id']
 
                     # get its creation/modification timestamps, metadata and environmental data
-                    db = pymysql.connect(host=settings.DIRT_MIGRATION_DB_HOST,
-                                         port=int(settings.DIRT_MIGRATION_DB_PORT),
-                                         user=settings.DIRT_MIGRATION_DB_USER,
-                                         db=settings.DIRT_MIGRATION_DB_DATABASE,
-                                         password=settings.DIRT_MIGRATION_DB_PASSWORD)
-                    cursor = db.cursor()
-                    cursor.execute(SELECT_ROOT_COLLECTION_METADATA, (coll_entity_id,))
-                    metadata_rows = cursor.fetchall()
-                    cursor.execute(SELECT_ROOT_COLLECTION_LOCATION, (coll_entity_id,))
-                    location_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_PLANTING, (coll_entity_id,))
-                    planting_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_HARVEST, (coll_entity_id,))
-                    harvest_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_GROUP, (coll_entity_id,))
-                    soil_group_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_MOISTURE, (coll_entity_id,))
-                    soil_moist_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_N, (coll_entity_id,))
-                    soil_n_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_P, (coll_entity_id,))
-                    soil_p_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_SOIL_K, (coll_entity_id,))
-                    soil_k_row = cursor.fetchone()
-                    cursor.execute(SELECT_ROOT_COLLECTION_PESTICIDES, (coll_entity_id,))
-                    pesticides_row = cursor.fetchone()
-                    db.close()
+                    metadata_rows, location_row, planting_row, harvest_row, soil_group_row, soil_moist_row, soil_n_row, soil_p_row, soil_k_row, pesticides_row = migration.get_marked_collection_data_rows(coll_entity_id)
 
                     metadata = {row[0]: row[1] for row in metadata_rows}
                     latitude = None if location_row is None else location_row[0]
