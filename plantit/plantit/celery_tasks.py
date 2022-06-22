@@ -936,7 +936,7 @@ class ManagedFile(NamedTuple):
     folder: str
     orphan: bool
     missing: bool
-    uploaded: bool
+    uploaded: Optional[datetime]
 
 
 async def push_migration_event(user: User, migration: Migration):
@@ -1020,7 +1020,7 @@ def migrate_dirt_datasets(self, username: str):
         folder=row[2].rpartition('root-images')[2].replace(row[1], '').replace('/', ''),
         orphan=False,
         missing=False,
-        uploaded=False) for row in rows if 'root-images' in row[2]]
+        uploaded=None) for row in rows if 'root-images' in row[2]]
 
     # metadata files
     metadata_files: List[ManagedFile] = [ManagedFile(
@@ -1031,7 +1031,7 @@ def migrate_dirt_datasets(self, username: str):
         folder=row[2].rpartition('metadata-files')[2].replace(row[1], '').replace('/', ''),
         orphan=False,
         missing=False,
-        uploaded=False) for row in rows if 'metadata-files' in row[2]]
+        uploaded=None) for row in rows if 'metadata-files' in row[2]]
 
     # output files
     output_files: List[ManagedFile] = [ManagedFile(
@@ -1042,7 +1042,7 @@ def migrate_dirt_datasets(self, username: str):
         folder=row[2].rpartition('output-files')[2].replace(row[1], '').replace('/', ''),
         orphan=False,
         missing=False,
-        uploaded=False) for row in rows if 'output-files' in row[2]]
+        uploaded=None) for row in rows if 'output-files' in row[2]]
 
     # output logs
     output_logs: List[ManagedFile] = [ManagedFile(
@@ -1053,7 +1053,7 @@ def migrate_dirt_datasets(self, username: str):
         folder=row[2].rpartition('output-logs')[2].replace(row[1], '').replace('/', ''),
         orphan=False,
         missing=False,
-        uploaded=False) for row in rows if 'output-logs' in row[2]]
+        uploaded=None) for row in rows if 'output-logs' in row[2]]
 
     # TODO extract other kinds of managed files
 
@@ -1139,7 +1139,7 @@ def migrate_dirt_datasets(self, username: str):
                             folder=file.folder,
                             orphan=False,
                             missing=True,
-                            uploaded=False)
+                            uploaded=None)
                         migration.uploads = json.dumps(uploads)
                         migration.save()
                         async_to_sync(push_migration_event)(user, migration)
@@ -1159,7 +1159,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=True,
                         missing=False,
-                        uploaded=True)
+                        uploaded=timezone.now())
                     migration.uploads = json.dumps(uploads)
                     migration.save()
                     async_to_sync(push_migration_event)(user, migration)
@@ -1274,7 +1274,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=coll_title,
                         orphan=False,
                         missing=True,
-                        uploaded=False)
+                        uploaded=None)
                     migration.uploads = json.dumps(uploads)
                     migration.save()
                     async_to_sync(push_migration_event)(user, migration)
@@ -1294,7 +1294,7 @@ def migrate_dirt_datasets(self, username: str):
                     folder=coll_title,
                     orphan=False,
                     missing=False,
-                    uploaded=True)
+                    uploaded=timezone.now())
                 migration.uploads = json.dumps(uploads)
                 migration.save()
                 async_to_sync(push_migration_event)(user, migration)
@@ -1331,7 +1331,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=False,
-                        uploaded=False)
+                        uploaded=None)
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
@@ -1346,7 +1346,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=True,
-                        uploaded=False)
+                        uploaded=None)
 
                 # push a progress update to client
                 migration.metadata = json.dumps(metadata)
@@ -1380,7 +1380,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=False,
-                        uploaded=False)
+                        uploaded=timezone.now())
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
@@ -1396,7 +1396,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=True,
-                        uploaded=False)
+                        uploaded=None)
 
                 migration.outputs = json.dumps(outputs)
                 migration.save()
@@ -1429,7 +1429,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=False,
-                        uploaded=False)
+                        uploaded=None)
 
                     # remove file from staging dir
                     os.remove(join(staging_dir, file.name))
@@ -1445,7 +1445,7 @@ def migrate_dirt_datasets(self, username: str):
                         folder=file.folder,
                         orphan=False,
                         missing=True,
-                        uploaded=False)
+                        uploaded=None)
                     migration.logs = json.dumps(logs)
                     migration.save()
                     async_to_sync(push_migration_event)(user, migration)
