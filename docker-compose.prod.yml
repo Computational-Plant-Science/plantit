@@ -6,6 +6,7 @@ services:
     depends_on:
       - beat
       - celery
+      - postgres
     volumes:
       - .:/code
     environment:
@@ -72,7 +73,6 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
-      # - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
       - DIRT_MIGRATION_DB_HOST=${DIRT_MIGRATION_DB_HOST}
       - DIRT_MIGRATION_DB_PORT=${DIRT_MIGRATION_DB_PORT}
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
@@ -96,6 +96,7 @@ services:
       - .:/code
     working_dir: /code/plantit
     depends_on:
+      - postgres
       - redis
     environment:
       - MAPBOX_TOKEN=${MAPBOX_TOKEN}
@@ -159,7 +160,6 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
-      # - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
       - DIRT_MIGRATION_DB_HOST=${DIRT_MIGRATION_DB_HOST}
       - DIRT_MIGRATION_DB_PORT=${DIRT_MIGRATION_DB_PORT}
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
@@ -180,6 +180,7 @@ services:
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
     working_dir: /code/plantit
     depends_on:
+      - postgres
       - redis
     environment:
       - MAPBOX_TOKEN=${MAPBOX_TOKEN}
@@ -243,7 +244,6 @@ services:
       - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
       - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
       - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
-      # - DIRT_MIGRATION_DB_CONN_STR=${DIRT_MIGRATION_DB_CONN_STR}
       - DIRT_MIGRATION_DB_HOST=${DIRT_MIGRATION_DB_HOST}
       - DIRT_MIGRATION_DB_PORT=${DIRT_MIGRATION_DB_PORT}
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
@@ -285,8 +285,40 @@ services:
       - ./config/certbot/conf:/etc/letsencrypt/
       - ./config/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=${SQL_PORT}
+      - POSTGRES_NAME=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DB}
+    healthcheck:
+      test: /usr/bin/pg_isready -U "postgres"
+      interval: 60s
+      timeout: 60s
+      retries: 2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  pgloader:
+    image: dimitri/pgloader
+    command: [ "pgloader", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}", "postgresql://postgres/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
+    depends_on:
+      - postgres
+    environment:
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 networks:
   ngnix_network:
     driver: bridge
 volumes:
+  pgdata:
   redisdata:
