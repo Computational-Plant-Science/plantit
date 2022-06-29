@@ -5,7 +5,7 @@ set -e
 
 host="$1"
 user="$2"
-shift
+shift 2
 cmd="$@"
 
 until PGPASSWORD=$SQL_PASSWORD psql -h "$host" -U "$user" -c '\q'; do
