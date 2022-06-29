@@ -78,7 +78,15 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
-    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
+    command: ["/code/scripts/wait-for-postgres.sh",
+              "postgres",
+              "plantit",
+              "daphne",
+              "-b",
+              "0.0.0.0",
+              "-p",
+              "8000",
+              "plantit.asgi:application"]
     networks:
       - ngnix_network
       - default
@@ -91,7 +99,16 @@ services:
       start_period: 20s
   beat:
     image: computationalplantscience/plantit
-    command: ["celery", "-A", "plantit", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info"]
+    command: ["/code/scripts/wait-for-postgres.sh",
+              "postgres",
+              "plantit",
+              "celery",
+              "-A",
+              "plantit",
+              "beat",
+              "--scheduler",
+              "django_celery_beat.schedulers:DatabaseScheduler",
+              "--loglevel=info"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -174,7 +191,18 @@ services:
     restart: always
   celery:
     image: computationalplantscience/plantit
-    command: [ "celery", "-A", "plantit", "worker", "-n", "celery", "--loglevel", "INFO", "--concurrency=2" ]
+    command: ["/code/scripts/wait-for-postgres.sh",
+              "postgres",
+              "plantit",
+              "celery",
+              "-A",
+              "plantit",
+              "worker",
+              "-n",
+              "celery",
+              "--loglevel",
+              "INFO",
+              "--concurrency=2" ]
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
@@ -265,8 +293,8 @@ services:
   nginx:
     image: nginx
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     volumes:
       - ./config/ssl/:/opt/plantit/config/ssl/
       - ./config/nginx/conf.d:/etc/nginx/conf.d
@@ -287,8 +315,6 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
   postgres:
     image: postgres
-    ports:
-      - 5432:5432
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=${SQL_PORT}
@@ -305,7 +331,12 @@ services:
       - pgdata:/var/lib/postgresql/data
   pgloader:
     image: dimitri/pgloader
-    command: [ "pgloader", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}", "postgresql://postgres/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
+    command: ["/code/scripts/wait-for-postgres.sh",
+              "postgres",
+              "plantit",
+              "pgloader",
+              "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}",
+              "postgresql://postgres/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
     depends_on:
       - postgres
     environment:
@@ -315,6 +346,7 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
     volumes:
+      - .:/code
       - pgdata:/var/lib/postgresql/data
 networks:
   ngnix_network:
