@@ -314,7 +314,7 @@ services:
       - ./config/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
   postgres:
-    image: postgres
+    image: postgres:12
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=${SQL_PORT}
@@ -328,24 +328,6 @@ services:
       timeout: 60s
       retries: 2
     volumes:
-      - pgdata:/var/lib/postgresql/data
-  pgloader:
-    image: dimitri/pgloader
-    command: ["sleep",
-              "10",
-              "pgloader",
-              "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}",
-              "postgresql://postgres/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
-    depends_on:
-      - plantit
-    environment:
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
-    volumes:
-      - .:/code
       - pgdata:/var/lib/postgresql/data
 networks:
   ngnix_network:

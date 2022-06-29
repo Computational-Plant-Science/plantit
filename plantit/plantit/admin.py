@@ -3,7 +3,7 @@ from django.contrib import admin
 from plantit.users.models import Profile, Migration
 from plantit.misc.models import NewsUpdate, MaintenanceWindow, FeaturedWorkflow
 from plantit.agents.models import Agent, AgentAccessPolicy
-from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
+from plantit.datasets.models import DatasetAccessPolicy
 from plantit.feedback.models import Feedback
 from plantit.miappe.models import Investigation, Study
 
@@ -45,11 +45,6 @@ class AgentAccessPolicyAdmin(admin.ModelAdmin):
 
 @admin.register(DatasetAccessPolicy)
 class DatasetAccessPolicyAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(DatasetSession)
-class DatasetSessionAdmin(admin.ModelAdmin):
     pass
 
 
