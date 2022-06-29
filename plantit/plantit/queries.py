@@ -1066,7 +1066,6 @@ async def get_user_statistics(user: User, invalidate: bool = False) -> dict:
         completed_tasks = await filter_tasks(user=user, completed=True)
         total_tasks = len(all_tasks)
         total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
-        total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
         owned_workflows = [
             f"{workflow['repo']['owner']['login']}/{workflow['name'] if 'name' in workflow else '[unnamed]'}"
             for
@@ -1090,7 +1089,6 @@ async def get_user_statistics(user: User, invalidate: bool = False) -> dict:
         stats = {
             'total_tasks': total_tasks,
             'total_task_seconds': total_time,
-            'total_task_results': total_results,
             'owned_workflows': owned_workflows,
             'workflow_usage': {
                 'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],

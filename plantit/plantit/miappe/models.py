@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
@@ -49,7 +48,6 @@ class Study(models.Model):
     growth_facility_description = models.TextField(blank=True, null=True)
     growth_facility_type = models.CharField(max_length=255, blank=True, null=True)
     cultural_practices = models.TextField(blank=True, null=True)
-    dataset_paths = ArrayField(models.CharField(max_length=250), blank=True, null=True)
 
 
 class DataFile(models.Model):

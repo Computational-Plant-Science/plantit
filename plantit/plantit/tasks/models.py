@@ -4,7 +4,6 @@ from itertools import chain
 from typing import TypedDict, List
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
@@ -70,7 +69,6 @@ class Task(models.Model):
     workflow_branch = models.CharField(max_length=280, null=False, blank=False)
     workflow_image_url = models.URLField(null=True, blank=True)
     status = models.CharField(max_length=9, choices=TaskStatus.choices, default=TaskStatus.CREATED)
-    results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
     results_retrieved = models.BooleanField(default=False)
     results_transferred = models.IntegerField(null=True, blank=True, default=0)
     previews_loaded = models.BooleanField(default=False)
