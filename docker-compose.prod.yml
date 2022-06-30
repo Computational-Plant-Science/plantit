@@ -79,8 +79,8 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     command: ["/code/scripts/wait-for-postgres.sh",
-              "postgres",
-              "plantit",
+              "${SQL_HOST}",
+              "${SQL_USER}",
               "daphne",
               "-b",
               "0.0.0.0",
@@ -100,8 +100,8 @@ services:
   beat:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh",
-              "postgres",
-              "plantit",
+              "${SQL_HOST}",
+              "${SQL_USER}",
               "celery",
               "-A",
               "plantit",
@@ -192,8 +192,8 @@ services:
   celery:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh",
-              "postgres",
-              "plantit",
+              "${SQL_HOST}",
+              "${SQL_USER}",
               "celery",
               "-A",
               "plantit",
