@@ -59,7 +59,9 @@ echo "Creating run log directory..."
 mkdir -p logs
 
 echo "Running migrations..."
-$compose exec -T plantit /code/scripts/wait-for-postgres.sh postgres python manage.py makemigrations
+sql_host=$(grep SQL_HOST .env | sed 's/SQL_HOST=//g')
+sql_user=$(grep SQL_USER .env | sed 's/SQL_USER=//g')
+$compose exec -T plantit /code/scripts/wait-for-postgres.sh "$sql_host" "$sql_user" python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
 
 echo "Configuring SSH"
