@@ -9,31 +9,36 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 logger = logging.getLogger(__name__)
 
 
-def clean_html(raw_html: str) -> str:
-    expr = re.compile('<.*?>')
-    text = re.sub(expr, '', raw_html)
-    return text
-
-
 class SSH:
     """
-    Wraps a paramiko client with either password or key authentication. Preserves `with` statement usability.
+    Wraps a paramiko client with either password or key authentication.
+    Preserves context manager usability.
     """
 
-    def __init__(self, host: str, port: int, username: str, password: str = None, pkey: str = None):
+    def __init__(self,
+                 host: str,
+                 port: int,
+                 username: str,
+                 password: str = None,
+                 pkey: str = None,
+                 reject_if_missing_host_key: bool = False):
         self.client = None
         self.host = host
         self.port = port
         self.username = username
         self.password = password
         self.pkey = pkey
+        self.reject_if_missing_host_key = reject_if_missing_host_key
         self.logger = logging.getLogger(__name__)
 
     def __enter__(self):
         client = paramiko.SSHClient()
         client.load_host_keys('../config/ssh/known_hosts')
-        # client.set_missing_host_key_policy(paramiko.RejectPolicy())
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        if self.reject_if_missing_host_key:
+            client.set_missing_host_key_policy(paramiko.RejectPolicy())
+        else:
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if self.password is not None:
             client.connect(self.host, self.port, self.username, self.password, timeout=5)
@@ -47,6 +52,12 @@ class SSH:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.client.close()
+
+
+def clean_html(raw_html: str) -> str:
+    expr = re.compile('<.*?>')
+    text = re.sub(expr, '', raw_html)
+    return text
 
 
 @retry(

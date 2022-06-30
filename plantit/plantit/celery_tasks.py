@@ -960,261 +960,289 @@ def migrate_dirt_datasets(self, username: str):
     dirt_username = user.username if profile.dirt_name is None else profile.dirt_name
     if dirt_username == 'wbonelli': dirt_username = 'abucksch'  # debugging
 
-    # get managed files the user has in named collections in the DIRT database
-    managed_files = mig.get_managed_files(dirt_username)
-
     # so we can track progress and update the UI in real time
     uploads = []
 
-    ssh = SSH(
-        host=settings.DIRT_MIGRATION_HOST,
-        port=settings.DIRT_MIGRATION_PORT,
-        username=settings.DIRT_MIGRATION_USERNAME,
-        pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
-    with ssh:
-        with ssh.client.open_sftp() as sftp:
-            userdir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)
+    # local folder to use as a staging area for file transfers
+    userdir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)
 
-            image_files = [f for f in managed_files if f.type == 'image']
-            metadata_files = [f for f in managed_files if f.type == 'metadata']
-            output_files = [f for f in managed_files if f.type == 'output']
-            log_files = [f for f in managed_files if f.type == 'logs']
+    # get managed files the user has in named collections in the DIRT database
+    managed_files = mig.get_managed_files(dirt_username)
+    image_files = [f for f in managed_files if f.type == 'image']
+    metadata_files = [f for f in managed_files if f.type == 'metadata']
+    output_files = [f for f in managed_files if f.type == 'output']
+    log_files = [f for f in managed_files if f.type == 'logs']
 
-            # persist number of each kind of managed file
-            migration.num_files = len(image_files)
-            migration.num_metadata = len(metadata_files)
-            migration.num_outputs = len(output_files)
-            migration.num_logs = len(log_files)
-            migration.save()
+    # persist number of each kind of managed file
+    migration.num_files = len(image_files)
+    migration.num_metadata = len(metadata_files)
+    migration.num_outputs = len(output_files)
+    migration.num_logs = len(log_files)
+    migration.save()
 
-            # keep track of collections we've created
-            image_collections = set()
+    # keep track of collections we've created
+    image_collections = set()
 
-            for file in image_files:
-                # get file entity ID given root image file ID
-                file_entity_id = mig.get_file_entity_id(file.id)
+    for file in image_files:
+        # get file entity ID given root image file ID
+        file_entity_id = mig.get_file_entity_id(file.id)
 
-                # if no corresponding file entity for this managed file, skip it
-                if file_entity_id is None:
-                    logger.warning(f"DIRT root image with file ID {file.id} not found")
-                    continue
+        # if no corresponding file entity for this managed file, skip it
+        if file_entity_id is None:
+            logger.warning(f"DIRT root image with file ID {file.id} not found")
+            continue
 
-                # get collection entity ID for the collection this image is in
-                coll_entity_id = mig.get_collection_entity_id(file_entity_id)
+        # get collection entity ID for the collection this image is in
+        coll_entity_id = mig.get_collection_entity_id(file_entity_id)
 
-                # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
-                if coll_entity_id is None:
-                    logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
+        # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
+        if coll_entity_id is None:
+            logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
 
-                    # create the collection if we need to
-                    subcoll_path = join(root_collection_path, 'collections', file.folder)
-                    if file.folder not in image_collections:
-                        # mark this collection as seen
-                        image_collections.add(file.folder)
+            # create the collection if we need to
+            subcoll_path = join(root_collection_path, 'collections', file.folder)
+            if file.folder not in image_collections:
+                # mark this collection as seen
+                image_collections.add(file.folder)
 
-                        # create the collection in the data store
-                        logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
-                        client.mkdir(subcoll_path)
+                # create the collection in the data store
+                logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
+                client.mkdir(subcoll_path)
 
-                    # download the file
-                    dirt_nfs_path = join(userdir, 'root-images', file.folder, file.name)
-                    staging_path = join(staging_dir, file.name)
-                    logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
-                    try:
+            # download the file
+            dirt_nfs_path = join(userdir, 'root-images', file.folder, file.name)
+            staging_path = join(staging_dir, file.name)
+            logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+            try:
+                ssh = SSH(
+                    host=settings.DIRT_MIGRATION_HOST,
+                    port=settings.DIRT_MIGRATION_PORT,
+                    username=settings.DIRT_MIGRATION_USERNAME,
+                    pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
                         sftp.get(dirt_nfs_path, staging_path)
-                    except FileNotFoundError:
-                        logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-
-                        # push a progress update to client
-                        uploads.append(file._replace(missing=True)._asdict())
-                        migration.uploads = json.dumps(uploads)
-                        migration.save()
-                        async_to_sync(mig.push_migration_event)(user, migration)
-
-                        continue
-
-                    # upload the file to the corresponding collection
-                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
-                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
-
-                    # push a progress update to client
-                    uploads.append(file._replace(orphan=True, uploaded=timezone.now().isoformat())._asdict())
-                    migration.uploads = json.dumps(uploads)
-                    migration.save()
-                    async_to_sync(mig.push_migration_event)(user, migration)
-
-                    # remove file from staging dir
-                    os.remove(join(staging_dir, file.name))
-
-                    # go on to the next file
-                    continue
-
-                # otherwise we have a corresponding marked collection, get its title
-                coll_title, coll_created, coll_changed = mig.get_marked_collection(coll_entity_id)
-                coll_path = join(root_collection_path, 'collections', coll_title)
-
-                if coll_title not in image_collections:
-                    # mark this collection as seen
-                    image_collections.add(coll_title)
-
-                    # create the collection in the data store
-                    logger.info(f"Creating DIRT migration subcollection {coll_path}")
-                    client.mkdir(coll_path)
-
-                    # get ID of newly created collection
-                    stat = client.stat(coll_path)
-                    id = stat['id']
-
-                    # get its creation/modification timestamps, metadata and environmental data
-                    metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(coll_entity_id)
-
-                    # attach metadata to collection
-                    props = [
-                        f"migrated={timezone.now().isoformat()}",
-                        f"created={coll_created.isoformat()}",
-                        f"changed={coll_changed.isoformat()}",
-                    ]
-                    if lat is not None: props.append(f"latitude={lat}")
-                    if lon is not None: props.append(f"longitude={lon}")
-                    if planting is not None: props.append(f"planting={planting}")
-                    if harvest is not None: props.append(f"harvest={harvest}")
-                    if soil_group is not None: props.append(f"soil_group={soil_group}")
-                    if soil_moist is not None: props.append(f"soil_moisture={soil_moist}")
-                    if soil_n is not None: props.append(f"soil_nitrogen={soil_n}")
-                    if soil_p is not None: props.append(f"soil_phosphorus={soil_p}")
-                    if soil_k is not None: props.append(f"soil_potassium={soil_k}")
-                    if pesticides is not None: props.append(f"pesticides={pesticides}")
-                    for k, v in metadata.items(): props.append(f"{k}={v}")
-                    client.set_metadata(id, props, [])
-
-                # download the file
-                dirt_nfs_path = join(userdir, 'root-images', file.folder, file.name)
-                staging_path = join(staging_dir, file.name)
-                logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
-                try:
-                    sftp.get(dirt_nfs_path, staging_path)
-                except FileNotFoundError:
-                    logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-
-                    # push a progress update to client
-                    uploads.append(file._replace(missing=True, folder=coll_title)._asdict())
-                    migration.uploads = json.dumps(uploads)
-                    migration.save()
-                    async_to_sync(mig.push_migration_event)(user, migration)
-
-                    continue
-
-                # upload the file to the corresponding collection
-                logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
-                client.upload(from_path=staging_path, to_prefix=coll_path)
-
-                uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
+            except FileNotFoundError:
+                logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
                 # push a progress update to client
+                uploads.append(file._replace(missing=True)._asdict())
                 migration.uploads = json.dumps(uploads)
                 migration.save()
                 async_to_sync(mig.push_migration_event)(user, migration)
 
-                # remove file from staging dir
-                os.remove(join(staging_dir, file.name))
+                continue
 
-                # TODO attach metadata to the file
+            # upload the file to the corresponding collection
+            logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+            client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-            for file in metadata_files:
-                # create the folder if we need to
-                subcoll_path = join(root_collection_path, 'metadata', file.folder)
-                if file.folder not in image_collections:
-                    image_collections.add(file.folder)
-                    logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
-                    client.mkdir(subcoll_path)
+            # push a progress update to client
+            uploads.append(file._replace(orphan=True, uploaded=timezone.now().isoformat())._asdict())
+            migration.uploads = json.dumps(uploads)
+            migration.save()
+            async_to_sync(mig.push_migration_event)(user, migration)
 
-                # download the file
-                dirt_nfs_path = join(userdir, 'metadata-files', file.folder, file.name)
-                staging_path = join(staging_dir, file.name)
-                logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
-                try:
+            # remove file from staging dir
+            os.remove(join(staging_dir, file.name))
+
+            # go on to the next file
+            continue
+
+        # otherwise we have a corresponding marked collection, get its title
+        coll_title, coll_created, coll_changed = mig.get_marked_collection(coll_entity_id)
+        coll_path = join(root_collection_path, 'collections', coll_title)
+
+        if coll_title not in image_collections:
+            # mark this collection as seen
+            image_collections.add(coll_title)
+
+            # create the collection in the data store
+            logger.info(f"Creating DIRT migration subcollection {coll_path}")
+            client.mkdir(coll_path)
+
+            # get ID of newly created collection
+            stat = client.stat(coll_path)
+            id = stat['id']
+
+            # get its creation/modification timestamps, metadata and environmental data
+            metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(coll_entity_id)
+
+            # attach metadata to collection
+            props = [
+                f"migrated={timezone.now().isoformat()}",
+                f"created={coll_created.isoformat()}",
+                f"changed={coll_changed.isoformat()}",
+            ]
+            if lat is not None: props.append(f"latitude={lat}")
+            if lon is not None: props.append(f"longitude={lon}")
+            if planting is not None: props.append(f"planting={planting}")
+            if harvest is not None: props.append(f"harvest={harvest}")
+            if soil_group is not None: props.append(f"soil_group={soil_group}")
+            if soil_moist is not None: props.append(f"soil_moisture={soil_moist}")
+            if soil_n is not None: props.append(f"soil_nitrogen={soil_n}")
+            if soil_p is not None: props.append(f"soil_phosphorus={soil_p}")
+            if soil_k is not None: props.append(f"soil_potassium={soil_k}")
+            if pesticides is not None: props.append(f"pesticides={pesticides}")
+            for k, v in metadata.items(): props.append(f"{k}={v}")
+            client.set_metadata(id, props, [])
+
+        # download the file
+        dirt_nfs_path = join(userdir, 'root-images', file.folder, file.name)
+        staging_path = join(staging_dir, file.name)
+        logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+        try:
+            ssh = SSH(
+                host=settings.DIRT_MIGRATION_HOST,
+                port=settings.DIRT_MIGRATION_PORT,
+                username=settings.DIRT_MIGRATION_USERNAME,
+                pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
+            with ssh:
+                with ssh.client.open_sftp() as sftp:
+                    sftp.get(dirt_nfs_path, staging_path)
+        except FileNotFoundError:
+            logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+
+            # push a progress update to client
+            uploads.append(file._replace(missing=True, folder=coll_title)._asdict())
+            migration.uploads = json.dumps(uploads)
+            migration.save()
+            async_to_sync(mig.push_migration_event)(user, migration)
+
+            continue
+
+        # upload the file to the corresponding collection
+        logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+        client.upload(from_path=staging_path, to_prefix=coll_path)
+
+        uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
+
+        # push a progress update to client
+        migration.uploads = json.dumps(uploads)
+        migration.save()
+        async_to_sync(mig.push_migration_event)(user, migration)
+
+        # remove file from staging dir
+        os.remove(join(staging_dir, file.name))
+
+        # TODO attach metadata to the file
+
+    for file in metadata_files:
+        # create the folder if we need to
+        subcoll_path = join(root_collection_path, 'metadata', file.folder)
+        if file.folder not in image_collections:
+            image_collections.add(file.folder)
+            logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
+            client.mkdir(subcoll_path)
+
+        # download the file
+        dirt_nfs_path = join(userdir, 'metadata-files', file.folder, file.name)
+        staging_path = join(staging_dir, file.name)
+        logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+        try:
+            ssh = SSH(
+                host=settings.DIRT_MIGRATION_HOST,
+                port=settings.DIRT_MIGRATION_PORT,
+                username=settings.DIRT_MIGRATION_USERNAME,
+                pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
+            with ssh:
+                with ssh.client.open_sftp() as sftp:
                     sftp.get(dirt_nfs_path, staging_path)
 
-                    # upload the file to the corresponding collection
-                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
-                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+            # upload the file to the corresponding collection
+            logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+            client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
+            uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
-                    # remove file from staging dir
-                    os.remove(join(staging_dir, file.name))
-                except FileNotFoundError:
-                    logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-                    uploads.append(file._replace(missing=True)._asdict())
+            # remove file from staging dir
+            os.remove(join(staging_dir, file.name))
+        except FileNotFoundError:
+            logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+            uploads.append(file._replace(missing=True)._asdict())
 
-                # push a progress update to client
-                migration.uploads = json.dumps(metadata)
-                migration.save()
-                async_to_sync(mig.push_migration_event)(user, migration)
+        # push a progress update to client
+        migration.uploads = json.dumps(metadata)
+        migration.save()
+        async_to_sync(mig.push_migration_event)(user, migration)
 
-            for file in output_files:
-                # create the folder if we need to
-                subcoll_path = join(root_collection_path, 'outputs', file.folder)
-                if file.folder not in image_collections:
-                    image_collections.add(file.folder)
-                    logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
-                    client.mkdir(subcoll_path)
+    for file in output_files:
+        # create the folder if we need to
+        subcoll_path = join(root_collection_path, 'outputs', file.folder)
+        if file.folder not in image_collections:
+            image_collections.add(file.folder)
+            logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
+            client.mkdir(subcoll_path)
 
-                # download the file
-                dirt_nfs_path = join(userdir, 'output-files', file.folder, file.name)
-                staging_path = join(staging_dir, file.name)
-                logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
-                try:
+        # download the file
+        dirt_nfs_path = join(userdir, 'output-files', file.folder, file.name)
+        staging_path = join(staging_dir, file.name)
+        logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+        try:
+            ssh = SSH(
+                host=settings.DIRT_MIGRATION_HOST,
+                port=settings.DIRT_MIGRATION_PORT,
+                username=settings.DIRT_MIGRATION_USERNAME,
+                pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
+            with ssh:
+                with ssh.client.open_sftp() as sftp:
                     sftp.get(dirt_nfs_path, staging_path)
 
-                    # upload the file to the corresponding collection
-                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
-                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+            # upload the file to the corresponding collection
+            logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+            client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
+            uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
-                    # remove file from staging dir
-                    os.remove(join(staging_dir, file.name))
-                except FileNotFoundError:
-                    logger.warning(f"File {dirt_nfs_path} not found! Skipping")
-                    uploads.append(file._replace(missing=True)._asdict())
+            # remove file from staging dir
+            os.remove(join(staging_dir, file.name))
+        except FileNotFoundError:
+            logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+            uploads.append(file._replace(missing=True)._asdict())
 
-                migration.uploads = json.dumps(uploads)
-                migration.save()
-                async_to_sync(mig.push_migration_event)(user, migration)
+        migration.uploads = json.dumps(uploads)
+        migration.save()
+        async_to_sync(mig.push_migration_event)(user, migration)
 
-            for file in log_files:
-                # create the folder if we need to
-                subcoll_path = join(root_collection_path, 'logs', file.folder)
-                if file.folder not in image_collections:
-                    image_collections.add(file.folder)
-                    logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
-                    client.mkdir(subcoll_path)
+    for file in log_files:
+        # create the folder if we need to
+        subcoll_path = join(root_collection_path, 'logs', file.folder)
+        if file.folder not in image_collections:
+            image_collections.add(file.folder)
+            logger.info(f"Creating DIRT migration subcollection {subcoll_path}")
+            client.mkdir(subcoll_path)
 
-                # download the file
-                dirt_nfs_path = join(userdir, 'output-logs', file.folder, file.name)
-                staging_path = join(staging_dir, file.name)
-                logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
-                try:
+        # download the file
+        dirt_nfs_path = join(userdir, 'output-logs', file.folder, file.name)
+        staging_path = join(staging_dir, file.name)
+        logger.info(f"Downloading file from {dirt_nfs_path} to {staging_path}")
+        try:
+            ssh = SSH(
+                host=settings.DIRT_MIGRATION_HOST,
+                port=settings.DIRT_MIGRATION_PORT,
+                username=settings.DIRT_MIGRATION_USERNAME,
+                pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
+            with ssh:
+                with ssh.client.open_sftp() as sftp:
                     sftp.get(dirt_nfs_path, staging_path)
 
-                    # upload the file to the corresponding collection
-                    logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
-                    client.upload(from_path=staging_path, to_prefix=subcoll_path)
+            # upload the file to the corresponding collection
+            logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
+            client.upload(from_path=staging_path, to_prefix=subcoll_path)
 
-                    uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
+            uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
-                    # remove file from staging dir
-                    os.remove(join(staging_dir, file.name))
-                except FileNotFoundError:
-                    logger.warning(f"File {dirt_nfs_path} not found! Skipping")
+            # remove file from staging dir
+            os.remove(join(staging_dir, file.name))
+        except FileNotFoundError:
+            logger.warning(f"File {dirt_nfs_path} not found! Skipping")
 
-                    uploads.append(file._replace(missing=True)._asdict())
+            uploads.append(file._replace(missing=True)._asdict())
 
-                    # push a progress update to client
-                    migration.uploads = json.dumps(uploads)
-                    migration.save()
-                    async_to_sync(mig.push_migration_event)(user, migration)
+            # push a progress update to client
+            migration.uploads = json.dumps(uploads)
+            migration.save()
+            async_to_sync(mig.push_migration_event)(user, migration)
 
     # get ID of newly created migration collection add collection timestamp as metadata
     root_collection_id = client.stat(root_collection_path)['id']
