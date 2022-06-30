@@ -206,26 +206,7 @@ async def create(request):
     owner = request.user
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
-    project = body.get('project', None)
-    study = body.get('study', None)
     profile = await sync_to_async(Profile.objects.get)(user=owner)
     client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
     await client.mkdir_async(path)
-
-    if project is not None and study is not None:
-        try:
-            investigation = await sync_to_async(Investigation.objects.get)(owner=owner, title=project['title'])
-            study = await sync_to_async(Study.objects.get)(Investigation=investigation, title=study['title'])
-        except:
-            logger.warning(traceback.format_exc())
-            return HttpResponseNotFound()
-
-        if study.dataset_paths:
-            study.dataset_paths.append(path)
-        else:
-            study.dataset_paths = [path]
-        await sync_to_async(study.save)()
-        logger.info(f"Bound {path} to project {project}, study {study}")
-        return JsonResponse({'path': path, 'project': await sync_to_async(q.project_to_dict)(investigation)})
-    else:
-        return JsonResponse({'path': path})
+    return JsonResponse({'path': path})

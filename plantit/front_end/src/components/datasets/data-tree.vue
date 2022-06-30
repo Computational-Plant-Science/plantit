@@ -81,91 +81,6 @@
                     {{ matchingSharingDatasets.length }} user(s)</small
                 >
             </b-col>
-            <!--<b-col
-                :id="`associated-studies-${
-                    internalLoaded ? internalNode.label : node.label
-                }`"
-                class="mt-1 ml-1"
-                :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                md="auto"
-                v-if="isPersonalDirectory && !isRoot"
-                ><span v-if="associatedStudies.length > 0"
-                    ><b-img
-                        class="mb-1 mr-1"
-                        style="max-width: 18px"
-                        :src="
-                            profile.darkMode
-                                ? require('../../assets/miappe_icon.png')
-                                : require('../../assets/miappe_icon_black.png')
-                        "
-                    ></b-img
-                    ><small
-                        >{{ associatedStudies.length }} associated
-                        {{
-                            associatedStudies.length === 1
-                                ? 'project/study'
-                                : 'projects/studies'
-                        }}</small
-                    ><b-popover
-                        :target="`associated-studies-${
-                            internalLoaded ? internalNode.label : node.label
-                        }`"
-                        placement="bottom"
-                        triggers="hover"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                    >
-                        <b-row
-                            v-for="study in associatedStudies"
-                            v-bind:key="study.title"
-                            ><b-col align-self="center"
-                                ><b-link
-                                    class="text-dark"
-                                    :to="{
-                                        name: 'project',
-                                        params: {
-                                            owner: study.project_owner,
-                                            title: study.project_title,
-                                        },
-                                    }"
-                                    ><b class="text-dark"
-                                        >{{ study.project_title }},
-                                        {{ study.title }}</b
-                                    ></b-link
-                                ></b-col
-                            ><b-col md="auto" align-self="center"
-                                ><b-button
-                                    title="Unbind project/study"
-                                    size="sm"
-                                    v-b-tooltip.hover
-                                    variant="outline-danger"
-                                    @click="
-                                        preUnbindProject(
-                                            projectFor(study),
-                                            study
-                                        )
-                                    "
-                                    ><i
-                                        class="fas fa-minus fa-fw"
-                                    ></i></b-button></b-col
-                        ></b-row> </b-popover></span
-                ><b-button
-                    title="Bind project/study"
-                    size="sm"
-                    :variant="profile.darkMode ? 'outline-light' : 'white'"
-                    v-else
-                    @click="preBindProject"
-                    ><b-img
-                        class="mb-1 mr-1"
-                        style="max-width: 18px"
-                        :src="
-                            profile.darkMode
-                                ? require('../../assets/miappe_icon.png')
-                                : require('../../assets/miappe_icon_black.png')
-                        "
-                    ></b-img
-                    >Bind project/study</b-button
-                ></b-col
-            >-->
             <b-col md="auto">
                 <b-input-group size="sm">
                     <b-form-file
@@ -1491,27 +1406,6 @@ export default {
                 ? this.internalNode.path
                 : this.node.path;
             return this.sharingDatasets.filter((d) => d.path === path);
-        },
-        associatedStudies() {
-            let path = this.internalLoaded
-                ? this.internalNode.path
-                : this.node.path;
-            if (this.projectsLoading) return [];
-            let projects = this.userProjects
-                .concat(this.othersProjects)
-                .filter((p) =>
-                    p.studies.some((s) => s.dataset_paths.includes(path))
-                );
-            return projects
-                .flatMap((p) => p.studies)
-                .filter((s) => s.dataset_paths.includes(path))
-                .map((s) => {
-                    return {
-                        title: s.title,
-                        project_title: s.project_title,
-                        project_owner: s.project_owner,
-                    };
-                });
         },
         internalLoadedFolders() {
             return this.internalNode !== null ? this.internalNode.folders : [];

@@ -485,7 +485,6 @@ def study_to_dict(study: Study, project: Investigation) -> dict:
         'growth_facility_type': study.growth_facility_type if study.growth_facility_type != '' else None,
         'cultural_practices': study.cultural_practices if study.cultural_practices != '' else None,
         'team': team,
-        'dataset_paths': study.dataset_paths if study.dataset_paths is not None else []
     }
 
 
