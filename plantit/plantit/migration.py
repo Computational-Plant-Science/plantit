@@ -29,6 +29,15 @@ SELECT_ROOT_COLLECTION_SOIL_N = """SELECT field_collection_soil_nitrogen_value F
 SELECT_ROOT_COLLECTION_SOIL_P = """SELECT field_collection_soil_phosphorus_value FROM field_data_field_collection_soil_phosphorus WHERE entity_id = %s"""
 SELECT_ROOT_COLLECTION_SOIL_K = """SELECT field_collection_soil_potassium_value FROM field_data_field_collection_soil_potassium WHERE entity_id = %s"""
 SELECT_ROOT_COLLECTION_PESTICIDES = """SELECT field_collection_pesticides_value FROM field_data_field_collection_pesticides WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_METADATA = """SELECT field_root_image_metadata_first, field_root_image_metadata_second FROM field_data_field_root_image_metadata WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_RESOLUTION = """SELECT field_root_image_resolution_value FROM field_data_field_root_image_resolution WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_AGE = """SELECT field_root_img_age_value FROM field_data_field_root_img_age WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_DRY_BIOMASS = """SELECT field_root_img_dry_biomass_value FROM field_data_field_root_img_dry_biomass WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_FRESH_BIOMASS = """SELECT field_root_img_fresh_biomass_value FROM field_data_field_root_img_fresh_biomass WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_FAMILY = """SELECT field_root_img_family_value FROM field_data_field_root_img_family WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_GENUS = """SELECT field_root_img_genus_value FROM field_data_field_root_img_genus WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_SPAD = """SELECT field_root_img_spad_value FROM field_data_field_root_img_spad WHERE entity_id = %s"""
+SELECT_ROOT_IMAGE_SPECIES = """SELECT field_root_img_species_value FROM field_data_field_root_img_species WHERE entity_id = %s"""
 SELECT_OUTPUT_FILE = """SELECT entity_id FROM field_data_field_exec_result_file WHERE field_exec_result_file_fid = %s"""
 SELECT_OUTPUT_LOG_FILE = """SELECT entity_id FROM field_revision_field_output_log_file WHERE field_exec_result_file_fid = %s"""
 SELECT_METADATA_FILE = """SELECT entity_id FROM field_data_field_metadata_file WHERE field_exec_result_file_fid = %s"""
@@ -247,5 +256,49 @@ def get_marked_collection_info(coll_entity_id) -> Tuple[dict, float, float, str,
         pesticides = None if pesticides_row is None else pesticides_row[0]
 
         return metadata, latitude, longitude, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides
+    finally:
+        db.close()
+
+
+@retry(
+    reraise=True,
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(MySQLError)))
+def get_root_image_info(image_entity_id) -> Tuple[dict, int, int, float, float, str, str, str, str]:
+    db = get_db_connection()
+
+    try:
+        cursor = db.cursor()
+        cursor.execute(SELECT_ROOT_IMAGE_METADATA, (image_entity_id,))
+        metadata_rows = cursor.fetchall()
+        cursor.execute(SELECT_ROOT_IMAGE_RESOLUTION, (image_entity_id,))
+        resolution_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_AGE, (image_entity_id,))
+        age_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_DRY_BIOMASS, (image_entity_id,))
+        dry_biomass_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_FRESH_BIOMASS, (image_entity_id,))
+        fresh_biomass_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_FAMILY, (image_entity_id,))
+        family_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_GENUS, (image_entity_id,))
+        genus_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_SPAD, (image_entity_id,))
+        spad_row = cursor.fetchone()
+        cursor.execute(SELECT_ROOT_IMAGE_SPECIES, (image_entity_id,))
+        species_row = cursor.fetchone()
+
+        metadata = {row[0]: row[1] for row in metadata_rows}
+        resolution = None if resolution_row is None else int(resolution_row[0])
+        age = None if age_row is None else int(age_row[0])
+        dry_biomass = None if dry_biomass_row is None else float(dry_biomass_row[0])
+        fresh_biomass = None if fresh_biomass_row is None else float(fresh_biomass_row[0])
+        family = None if family_row is None else family_row[0]
+        genus = None if genus_row is None else genus_row[0]
+        spad = None if spad_row is None else spad_row[0]
+        species = None if species_row is None else species_row[0]
+
+        return metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species
     finally:
         db.close()

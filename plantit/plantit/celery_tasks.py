@@ -1061,7 +1061,7 @@ def migrate_dirt_datasets(self, username: str):
             logger.info(f"Creating DIRT migration subcollection {coll_path}")
             client.mkdir(coll_path)
 
-            # get ID of newly created collection
+            # get CyVerse ID of newly created collection
             stat = client.stat(coll_path)
             id = stat['id']
 
@@ -1114,7 +1114,6 @@ def migrate_dirt_datasets(self, username: str):
         # upload the file to the corresponding collection
         logger.info(f"Uploading file {staging_path} to collection {subcoll_path}")
         client.upload(from_path=staging_path, to_prefix=coll_path)
-
         uploads.append(file._replace(uploaded=timezone.now().isoformat())._asdict())
 
         # push a progress update to client
@@ -1125,7 +1124,25 @@ def migrate_dirt_datasets(self, username: str):
         # remove file from staging dir
         os.remove(join(staging_dir, file.name))
 
-        # TODO attach metadata to the file
+        # get CyVerse ID of newly uploaded file
+        stat = client.stat(join(coll_path, file.name))
+        id = stat['id']
+
+        # get its metadata and environmental data
+        metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species = mig.get_root_image_info(file_entity_id)
+
+        # attach metadata to file
+        props = [f"migrated={timezone.now().isoformat()}"]
+        if resolution is not None: props.append(f"resolution={resolution}")
+        if age is not None: props.append(f"age={age}")
+        if dry_biomass is not None: props.append(f"dry_biomass={dry_biomass}")
+        if fresh_biomass is not None: props.append(f"fresh_biomass={fresh_biomass}")
+        if family is not None: props.append(f"family={family}")
+        if genus is not None: props.append(f"genus={genus}")
+        if spad is not None: props.append(f"spad={spad}")
+        if species is not None: props.append(f"species={species}")
+        for k, v in metadata.items(): props.append(f"{k}={v}")
+        client.set_metadata(id, props, [])
 
     for file in metadata_files:
         # create the folder if we need to
