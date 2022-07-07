@@ -37,7 +37,7 @@
     "lodash": "^4.17.21",
     "mapbox-gl": "^2.3.1",
     "mocha": "^8.4.0",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "moment-timezone": "^0.5.34",
     "path-parse": "^1.0.7",
     "plotly": "^1.0.6",
