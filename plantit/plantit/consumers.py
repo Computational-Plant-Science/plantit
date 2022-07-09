@@ -21,9 +21,7 @@ class UserEventConsumer(WebsocketConsumer):
     def push_notification(self, event):
         notification = event['notification']
         self.logger.info(f"Received notification for user {self.username}: {notification}")
-        self.send(text_data=json.dumps({
-            'notification': notification,
-        }))
+        self.send(text_data=json.dumps({'notification': notification,}))
 
     def task_event(self, event):
         task = event['task']
@@ -32,7 +30,13 @@ class UserEventConsumer(WebsocketConsumer):
 
     def migration_event(self, event):
         migration = event['migration']
-        self.logger.info(f"DIRT migration status for user {self.username}: {migration}")
-        self.send(text_data=json.dumps({
-            'migration': migration,
-        }))
+        data = {'migration': migration}
+        file = event.get('file', None)
+        msg = f"DIRT migration status for user {self.username}: {migration})"
+
+        if file is not None:
+            msg += (f"(file {file.name})" if file is not None else "")
+            data['file'] = file
+
+        self.logger.info(msg)
+        self.send(text_data=json.dumps(data))

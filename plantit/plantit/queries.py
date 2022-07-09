@@ -20,6 +20,8 @@ from django.db.models import Count
 from django.utils import timezone
 
 from pycyapi.clients import TerrainClient
+
+import plantit.migration
 import plantit.migration as migration
 from pycyapi.exceptions import Unauthorized
 import plantit.mapbox as mapbox
@@ -32,7 +34,7 @@ from plantit.notifications.models import Notification
 from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask, TaskCounter, TaskStatus
-from plantit.users.models import Profile, Migration
+from plantit.users.models import Profile, Migration, ManagedFile
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
 
@@ -288,6 +290,17 @@ def get_user_bundle(user: User):
         }
         redis.set(f"users/{user.username}", json.dumps(bundle))
         return bundle
+
+
+def get_managed_files(user: User, page: int = 1):
+    files = ManagedFile.objects.filter(user=user)
+    paginator = Paginator(files, 20)
+    paged = paginator.get_page(page)
+    return {
+        'previous_page': paged.has_previous() and paged.previous_page_number() or None,
+        'next_page': paged.has_next() and paged.next_page_number() or None,
+        'files': [task_to_dict(file) for file in list(paged)]
+    }
 
 
 def agent_to_dict(agent: Agent, username: str = None) -> dict:
@@ -758,7 +771,23 @@ def migration_to_dict(migration: Migration) -> dict:
         'num_metadata': migration.num_metadata,
         'num_outputs': migration.num_outputs,
         'num_logs': migration.num_logs,
-        'uploads': json.loads(migration.uploads if migration.uploads is not None else '{}'),
+        'uploaded': ManagedFile.objects.filter(migration=migration).count()
+    }
+
+
+def managed_file_to_dict(file: ManagedFile) -> dict:
+    return {
+        'id': file.id,
+        'name': file.name,
+        'nfs_path': file.nfs_path,
+        'path': file.path,
+        'type': file.type,
+        'folder': file.folder,
+        'orphan': file.orphan,
+        'missing': file.missing,
+        'uploaded': file.uploaded,
+        'entity_id': file.entity_id,
+        'collection_entity_id': file.collection_entity_id
     }
 
 

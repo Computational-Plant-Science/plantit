@@ -32,4 +32,21 @@ class Migration(models.Model):
     num_metadata = models.IntegerField(null=True, blank=True)
     num_outputs = models.IntegerField(null=True, blank=True)
     num_logs = models.IntegerField(null=True, blank=True)
-    uploads = models.JSONField(null=True, blank=True)
+    dirt_username = models.CharField(max_length=255, null=True, blank=True)
+
+
+class ManagedFile(models.Model):
+    migration: Migration = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    fid = models.BigIntegerField(null=True, blank=True, unique=True)
+    name = models.CharField(max_length=255, null=False, blank=False)
+    path = models.CharField(max_length=255, null=False, blank=False)
+    type = models.CharField(max_length=50, null=False, blank=False)
+    folder = models.CharField(max_length=255, null=False, blank=False)
+    orphan = models.BooleanField(default=False)
+    missing = models.BooleanField(default=False)
+    uploaded = models.DateTimeField(null=True, blank=True)
+    collection = models.CharField(max_length=255, null=False, blank=False)
+    entity_id = models.BigIntegerField(null=True, blank=True, unique=True)
+    collection_entity_id = models.BigIntegerField(null=True, blank=True)
+    nfs_path = models.CharField(max_length=255, null=False, blank=False, unique=True)
+    staging_path = models.CharField(max_length=255, null=False, blank=False)

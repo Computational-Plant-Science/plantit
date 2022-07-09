@@ -26,7 +26,7 @@ from pycyapi.clients import TerrainClient
 
 import plantit.queries as q
 import plantit.migration as mig
-from plantit.celery_tasks import migrate_dirt_datasets, Migration
+from plantit.celery_tasks import start_dirt_migration, Migration
 from plantit.celery_tasks import refresh_user_stats
 from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
@@ -425,7 +425,11 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         user.save()
 
         # submit migration task
-        migrate_dirt_datasets.s(user.username).apply_async(countdown=5)
+        start_dirt_migration.s(user.username).apply_async(countdown=5)
 
         # return status to client
         return JsonResponse({'migration': q.migration_to_dict(migration)})
+
+    @action(detail=False, methods=['get'])
+    def get_managed_files(self, request):
+        return JsonResponse({'managed_files': q.get_managed_files(request.user, page=int(request.GET.get('page', 1)))})

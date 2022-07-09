@@ -8,6 +8,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 
 import plantit.queries as q
+import plantit.users.models
 from plantit.ssh import SSH
 from plantit import settings
 from plantit.users.models import Profile, Migration
@@ -51,22 +52,27 @@ def get_db_connection():
                            password=settings.DIRT_MIGRATION_DB_PASSWORD)
 
 
-async def push_migration_event(user: User, migration: Migration):
-    await get_channel_layer().group_send(f"{user.username}", {
+async def push_migration_event(user: User, migration: Migration, file: plantit.users.models.ManagedFile = None):
+    data = {
         'type': 'migration_event',
         'migration': q.migration_to_dict(migration),
-    })
+    }
+    if file is not None: data['file'] = q.managed_file_to_dict(file)
+    await get_channel_layer().group_send(f"{user.username}", data)
 
 
 class ManagedFile(NamedTuple):
     id: str
     name: str
+    nfs_path: str
     path: str
     type: str
     folder: str
     orphan: bool
     missing: bool
     uploaded: Optional[str]
+    entity_id: str
+    collection_entity_id: str
 
 
 def row_to_managed_file(row):
