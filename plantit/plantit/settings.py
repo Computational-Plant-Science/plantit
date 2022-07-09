@@ -10,6 +10,7 @@ assert 'DJANGO_ALLOWED_HOSTS' in os.environ, f"{missing_variable}: DJANGO_ALLOWE
 assert 'DJANGO_SECURE_SSL_REDIRECT' in os.environ, f"{missing_variable}: DJANGO_SECURE_SSL_REDIRECT"
 assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_SESSION_COOKIE_SECURE"
 assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
+assert 'CELERY_EVENTLET_QUEUE' in os.environ, f"{missing_variable}: CELERY_EVENTLET_QUEUE"
 assert 'USERS_CACHE' in os.environ, f"{missing_variable}: USERS_CACHE"
 assert 'USERS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_REFRESH_MINUTES"
 assert 'USERS_STATS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_STATS_REFRESH_MINUTES"
@@ -60,9 +61,9 @@ assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATI
 assert 'DIRT_MIGRATION_DB_PASSWORD' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PASSWORD"
 assert 'DIRT_MIGRATION_DB_DATABASE' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_DATABASE"
 
-# global Celery task timeout
-CELERYD_TASK_SOFT_TIME_LIMIT = 60
 
+CELERYD_TASK_SOFT_TIME_LIMIT = 60  # global Celery task timeout
+CELERY_EVENTLET_QUEUE = os.environ.get('CELERY_EVENTLET_QUEUE')
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
 CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')

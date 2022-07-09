@@ -28,6 +28,7 @@ services:
       - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
       - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
+      - CELERY_EVENTLET_QUEUE=${CELERY_EVENTLET_QUEUE}
       - USERS_CACHE=${USERS_CACHE}
       - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
       - USERS_STATS_REFRESH_MINUTES=${USERS_STATS_REFRESH_MINUTES}
@@ -78,14 +79,10 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
-    command: ["/code/scripts/wait-for-postgres.sh",
-              "${SQL_HOST}",
-              "${SQL_USER}",
+    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "daphne",
-              "-b",
-              "0.0.0.0",
-              "-p",
-              "8000",
+              "-b", "0.0.0.0",
+              "-p", "8000",
               "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -99,16 +96,12 @@ services:
       start_period: 20s
   beat:
     image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh",
-              "${SQL_HOST}",
-              "${SQL_USER}",
+    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A",
-              "plantit",
+              "-A", "plantit",
               "beat",
-              "--scheduler",
-              "django_celery_beat.schedulers:DatabaseScheduler",
-              "--loglevel=info"]
+              "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler",
+              "--loglevel", "INFO"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -132,6 +125,7 @@ services:
       - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
       - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
+      - CELERY_EVENTLET_QUEUE=${CELERY_EVENTLET_QUEUE}
       - USERS_CACHE=${USERS_CACHE}
       - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
       - USERS_STATS_REFRESH_MINUTES=${USERS_STATS_REFRESH_MINUTES}
@@ -189,20 +183,16 @@ services:
       retries: 2
       start_period: 20s
     restart: always
+  # Celery prefork worker for standard (compute-bound) tasks
   celery:
     image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh",
-              "${SQL_HOST}",
-              "${SQL_USER}",
+    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A",
-              "plantit",
+              "-A", "plantit",
               "worker",
-              "-n",
-              "celery",
-              "--loglevel",
-              "INFO",
-              "--concurrency=2" ]
+              "-n", "celery",
+              "-c", "2",
+              "--loglevel", "INFO"]
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
@@ -227,6 +217,101 @@ services:
       - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
       - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
+      - CELERY_EVENTLET_QUEUE=${CELERY_EVENTLET_QUEUE}
+      - USERS_CACHE=${USERS_CACHE}
+      - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
+      - USERS_STATS_REFRESH_MINUTES=${USERS_STATS_REFRESH_MINUTES}
+      - STATS_WINDOW_WIDTH_DAYS=${STATS_WINDOW_WIDTH_DAYS}
+      - WORKFLOWS_CACHE=${WORKFLOWS_CACHE}
+      - WORKFLOWS_REFRESH_MINUTES=${WORKFLOWS_REFRESH_MINUTES}
+      - AGENT_KEYS=${AGENT_KEYS}
+      - MORE_USERS=${MORE_USERS}
+      - TASKS_TIMEOUT_MULTIPLIER=${TASKS_TIMEOUT_MULTIPLIER}
+      - TASKS_LOGS=${TASKS_LOGS}
+      - TASKS_REFRESH_SECONDS=${TASKS_REFRESH_SECONDS}
+      - TASKS_CLEANUP_MINUTES=${TASKS_CLEANUP_MINUTES}
+      - TASKS_STEP_TIME_LIMIT_SECONDS=${TASKS_STEP_TIME_LIMIT_SECONDS}
+      - TASKS_TEMPLATE_SCRIPT_SLURM=${TASKS_TEMPLATE_SCRIPT_SLURM}
+      - LAUNCHER_SCRIPT_NAME=${LAUNCHER_SCRIPT_NAME}
+      - INPUTS_FILE_NAME=${INPUTS_FILE_NAME}
+      - ICOMMANDS_IMAGE=${ICOMMANDS_IMAGE}
+      - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
+      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - DOCKER_USERNAME=${DOCKER_USERNAME}
+      - DOCKER_PASSWORD=${DOCKER_PASSWORD}
+      - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
+      - TUTORIALS_FILE=${TUTORIALS_FILE}
+      - FEEDBACK_FILE=${FEEDBACK_FILE}
+      - AGENTS_HEALTHCHECKS_MINUTES=${AGENTS_HEALTHCHECKS_MINUTES}
+      - AGENTS_HEALTHCHECKS_SAVED=${AGENTS_HEALTHCHECKS_SAVED}
+      - HTTP_TIMEOUT=${HTTP_TIMEOUT}
+      - DIRT_MIGRATION_STAGING_DIR=${DIRT_MIGRATION_STAGING_DIR}
+      - DIRT_MIGRATION_DATA_DIR=${DIRT_MIGRATION_DATA_DIR}
+      - DIRT_MIGRATION_HOST=${DIRT_MIGRATION_HOST}
+      - DIRT_MIGRATION_PORT=${DIRT_MIGRATION_PORT}
+      - DIRT_MIGRATION_USERNAME=${DIRT_MIGRATION_USERNAME}
+      - DIRT_MIGRATION_DB_HOST=${DIRT_MIGRATION_DB_HOST}
+      - DIRT_MIGRATION_DB_PORT=${DIRT_MIGRATION_DB_PORT}
+      - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
+      - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
+      - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
+    healthcheck:
+      test: celery -A plantit status | grep "OK"
+      interval: 60s
+      timeout: 60s
+      retries: 2
+      start_period: 20s
+    restart: always
+  # Celery worker with Eventlet pool for IO-bound tasks (https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html)
+  celerye:
+    image: computationalplantscience/plantit
+    command: [ "/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
+               "celery",
+               "-A", "plantit",
+               "worker",
+               "-n", "celerye",
+               "-P", "eventlet",
+               "-Q", "${CELERY_EVENTLET_QUEUE}",
+               "-c", "500",
+               "--loglevel", "INFO" ]
+    volumes:
+      - .:/code
+      - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
+    working_dir: /code/plantit
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+      - MAPBOX_FEATURE_REFRESH_MINUTES=${MAPBOX_FEATURE_REFRESH_MINUTES}
+      - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
+      - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
+      - CYVERSE_CLIENT_SECRET=${CYVERSE_CLIENT_SECRET}
+      - CYVERSE_TOKEN_REFRESH_MINUTES=${CYVERSE_TOKEN_REFRESH_MINUTES}
+      - CYVERSE_USERNAME=${CYVERSE_USERNAME}
+      - CYVERSE_PASSWORD=${CYVERSE_PASSWORD}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
+      - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
+      - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
+      - CELERY_EVENTLET_QUEUE=${CELERY_EVENTLET_QUEUE}
       - USERS_CACHE=${USERS_CACHE}
       - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
       - USERS_STATS_REFRESH_MINUTES=${USERS_STATS_REFRESH_MINUTES}

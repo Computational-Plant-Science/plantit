@@ -15,3 +15,6 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
+
+# route DIRT migration file transfer tasks to the eventlet worker
+app.conf.task_routes = {'plantit.celery_tasks.transfer*': {'queue': 'eventlet'}}

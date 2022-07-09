@@ -126,7 +126,8 @@ This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:3000`)
 - `postgres`: PostgreSQL database
-- `celery`: Celery background worker
+- `celery`: Celery prefork worker
+- `celerye`: Celery [eventlet](https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html) worker
 - `flower`: Flower web UI for Celery (`http://localhost:5555`)
 - `redis`: Redis instance (caching, Celery message broker)
 - `sandbox`: Ubuntu test environment
@@ -244,6 +245,7 @@ DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=<your django admin username>
 DJANGO_ADMIN_PASSWORD=<your django admin password>
 DJANGO_ADMIN_EMAIL=<your django admin email>
+CELERY_EVENTLET_QUEUE=eventlet
 TASKS_TEMPLATE_SCRIPT_SLURM=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
