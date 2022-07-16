@@ -928,8 +928,28 @@ def agents_healthchecks():
 # DIRT migration
 
 
-@app.task(bind=True)
-def transfer_dirt_file(self, id):
+def attach_file_metadata(client, file):
+    logger.info(f"Attached file {file.collection}/{file.name} metadata")
+
+    # get CyVerse data store ID of newly uploaded file, then get metadata and environmental data from DIRT and attach it as metadata
+    stat = client.stat(join(file.collection, file.name))
+    id = stat['id']
+    metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species = mig.get_root_image_info(file.entity_id)
+    props = [f"migrated={timezone.now().isoformat()}"]
+    if resolution is not None: props.append(f"resolution={resolution}")
+    if age is not None: props.append(f"age={age}")
+    if dry_biomass is not None: props.append(f"dry_biomass={dry_biomass}")
+    if fresh_biomass is not None: props.append(f"fresh_biomass={fresh_biomass}")
+    if family is not None: props.append(f"family={family}")
+    if genus is not None: props.append(f"genus={genus}")
+    if spad is not None: props.append(f"spad={spad}")
+    if species is not None: props.append(f"species={species}")
+    for k, v in metadata.items(): props.append(f"{k}={v}")
+    client.set_metadata(id, props, [])
+
+
+@app.task()
+def transfer_dirt_file(id):
     try:
         file = ManagedFile.objects.get(id=id)
         migration = file.migration
@@ -969,21 +989,8 @@ def transfer_dirt_file(self, id):
     # remove file from staging dir
     os.remove(file.staging_path)
 
-    # get CyVerse data store ID of newly uploaded file, then get metadata and environmental data from DIRT and attach it as metadata
-    stat = client.stat(join(file.collection, file.name))
-    id = stat['id']
-    metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species = mig.get_root_image_info(file.entity_id)
-    props = [f"migrated={timezone.now().isoformat()}"]
-    if resolution is not None: props.append(f"resolution={resolution}")
-    if age is not None: props.append(f"age={age}")
-    if dry_biomass is not None: props.append(f"dry_biomass={dry_biomass}")
-    if fresh_biomass is not None: props.append(f"fresh_biomass={fresh_biomass}")
-    if family is not None: props.append(f"family={family}")
-    if genus is not None: props.append(f"genus={genus}")
-    if spad is not None: props.append(f"spad={spad}")
-    if species is not None: props.append(f"species={species}")
-    for k, v in metadata.items(): props.append(f"{k}={v}")
-    client.set_metadata(id, props, [])
+    # get file metadata from DIRT and attach it to the file in the data store
+    attach_file_metadata(client, file)
 
     # push an update to client
     async_to_sync(mig.push_migration_event)(user, migration, file)
@@ -1006,8 +1013,9 @@ def start_dirt_migration(self, username: str):
     migration.dirt_username = dirt_username
     migration.save()
 
-    rootnfs_dir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)  # DIRT NFS path
-    staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)  # local staging folder for this user
+    # get DIRT NFS path and create local staging path for this user
+    rootnfs_dir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)
+    staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)
     Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
     # create client for CyVerse science API
@@ -1017,10 +1025,12 @@ def start_dirt_migration(self, username: str):
         logger.warning(f"Collection {migration_collection_path} already exists, aborting DIRT migration for {user.username}")
         return
 
-    # create top-level collection for transferred DIRT data
+    logger.info(f"Creating migration collection {migration_collection_path}")
+
+    # create top-level collection for DIRT data
     client.mkdir(migration_collection_path)
 
-    # get ID of newly created migration collection add collection timestamp as metadata
+    # get ID of top-level collection and add collection timestamp as metadata
     root_collection_id = client.stat(migration_collection_path)['id']
     end = timezone.now()
     client.set_metadata(root_collection_id, [
@@ -1028,11 +1038,7 @@ def start_dirt_migration(self, username: str):
         # TODO: anything else we need to add here?
     ], [])
 
-    # create subcollections for root image sets, image metadata, computation outputs and logs
-    client.mkdir(join(migration_collection_path, 'collections'))
-    client.mkdir(join(migration_collection_path, 'metadata'))
-    client.mkdir(join(migration_collection_path, 'outputs'))
-    client.mkdir(join(migration_collection_path, 'logs'))
+    logger.info(f"Inspecting managed files")
 
     # get all managed files from DIRT database and separate by type
     managed_files = mig.get_managed_files(dirt_username)
@@ -1041,7 +1047,15 @@ def start_dirt_migration(self, username: str):
     output_files = [f for f in managed_files if f.type == 'output']
     log_files = [f for f in managed_files if f.type == 'logs']
 
-    # create collections in CyVerse data store and attach metadata
+    logger.info(f"Creating subcollections")
+
+    # create subcollections for image sets, image metadata, computation outputs and logs
+    client.mkdir(join(migration_collection_path, 'collections'))
+    client.mkdir(join(migration_collection_path, 'metadata'))
+    client.mkdir(join(migration_collection_path, 'outputs'))
+    client.mkdir(join(migration_collection_path, 'logs'))
+
+    # create metadata-decorated subcollections for each group of files of each type
     collections_created = set()
     for file in image_files:
         # get file entity ID given root image file ID
@@ -1179,11 +1193,17 @@ def start_dirt_migration(self, username: str):
                                               nfs_path=join(rootnfs_dir, 'output-logs', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
 
+    logger.info(f"Submitting {len(managed_files)} file transfers "
+                f"({len(image_files)} images, "
+                f"{len(metadata_files)} metadata, "
+                f"{len(output_files)} output, "
+                f"{len(log_files)} log)")
+
     # submit file transfers
     transfers = group(transfer_dirt_file(file) for file in managed_files)()
     transfers.apply_async()
 
-    # persist number of each kind of managed file
+    # count each kind of managed file and persist totals
     migration.num_files = len(image_files)
     migration.num_metadata = len(metadata_files)
     migration.num_outputs = len(output_files)

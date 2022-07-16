@@ -105,7 +105,9 @@
     "rules": {},
     "overrides": [
       {
-        "files": ["*.vue"],
+        "files": [
+          "*.vue"
+        ],
         "rules": {
           "no-console": "off"
         }

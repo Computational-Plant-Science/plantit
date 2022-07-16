@@ -388,46 +388,40 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def start_dirt_migration(self, request):
+        # get or create the user's migration
         user = self.get_object()
         profile = Profile.objects.get(user=user)
         migration, created = Migration.objects.get_or_create(profile=profile)
 
-        # make sure a `dirt_migration` collection doesn't already exist
-        client = TerrainClient(access_token=profile.cyverse_access_token)
-        root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
-        if client.dir_exists(root_collection_path):
-            self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
-            return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
+        # if it isn't already running, record starting time and kick it off
+        if created or migration.started is None:
+            # make sure a `dirt_migration` collection doesn't already exist
+            client = TerrainClient(access_token=profile.cyverse_access_token)
+            root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
+            if client.dir_exists(root_collection_path):
+                self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")
+                return HttpResponseBadRequest(f"DIRT migration collection already exists for {user.username}")
 
-        # check for a DIRT CAS user with this user's username (or email address)
-        email = request.query_params.get('email', None)
-        dirt_username = mig.get_dirt_username(user.username, email)
+            # check for a DIRT CAS user with this user's username (or email address)
+            email = request.query_params.get('email', None)
+            dirt_username = mig.get_dirt_username(user.username, email)
 
-        # if we didn't find a DIRT user matching the provided email address, abort the migration
-        if dirt_username is None:
-            return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
+            # if we didn't find a DIRT user matching the provided email address, abort the migration
+            if dirt_username is None:
+                return HttpResponseBadRequest(f"Failed to find a DIRT user with CAS username '{user.username}' or email address '{email}'")
 
-        profile.dirt_email = email
-        profile.dirt_name = dirt_username
-        profile.save()
+            # persist DIRT info, target path and start time
+            profile.dirt_email = email
+            profile.dirt_name = dirt_username
+            migration.started = timezone.now()
+            migration.target_path = root_collection_path
+            migration.save()
+            profile.save()
+            user.save()
 
-        # if already started, just return the migration status
-        if not created and migration.started is not None:
-            return JsonResponse({'migration': q.migration_to_dict(migration)})
+            # submit the top-level migration task
+            start_dirt_migration.s(user.username).apply_async(countdown=5)
 
-        # record starting time
-        start = timezone.now()
-        migration.started = start
-        migration.target_path = root_collection_path
-        migration.uploads = json.dumps({})
-        migration.save()
-        profile.save()
-        user.save()
-
-        # submit migration task
-        start_dirt_migration.s(user.username).apply_async(countdown=5)
-
-        # return status to client
         return JsonResponse({'migration': q.migration_to_dict(migration)})
 
     @action(detail=False, methods=['get'])
