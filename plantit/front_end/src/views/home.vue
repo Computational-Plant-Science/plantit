@@ -163,220 +163,206 @@
                         "
                     ></router-view>
                     <div v-if="isRootPath" class="p-2">
-                        <b-row class="mb-2"><b-col>Welcome, {{ profile.djangoProfile.first_name }}.</b-col></b-row>
-                      <b-row><b-col>
-                                                    <b-badge
-                                                        :variant="
-                                                                profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        title="Running"
-                                                        ><i
-                                                            class="
-                                                                fas
-                                                                fa-th-large fa-fw
-                                                            "
-                                                        ></i>
-                                                        Running
-                                                    </b-badge>
-                        <b-row><b-col>
-                          <b-row
-                                        v-if="
-                                            !tasksLoading &&
-                                            tasksRunning.length === 0
-                                        "
-                                    >
-                                        <b-col>
-                                            <p
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-light'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                No tasks are running.
-                                            </p>
-                                        </b-col>
-                                    </b-row>
-                                    <b-list-group
-                                        class="text-left m-0 p-0 mt-1"
-                                    >
-                                        <taskblurb
-                                            v-for="task in filteredRunning"
-                                            v-bind:key="task.guid"
-                                            :task="task"
-                                            :project="true"
-                                        ></taskblurb>
-                                    </b-list-group>
-                        </b-col></b-row>
-                        </b-col></b-row>
-                      <b-row v-if="profile.stats !== null">
+                        <b-row class="mb-2"
+                            ><b-col
+                                >Welcome,
+                                {{ profile.djangoProfile.first_name }}.</b-col
+                            ></b-row
+                        >
+                        <b-row
+                            ><b-col>
+                                <b-badge
+                                    class="mb-2"
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    title="Running"
+                                    ><i class="fas fa-th-large fa-fw"></i>
+                                    Running
+                                </b-badge>
+                                <b-row
+                                    ><b-col>
+                                        <b-row
+                                            v-if="
+                                                !tasksLoading &&
+                                                tasksRunning.length === 0
+                                            "
+                                        >
+                                            <b-col>
+                                                <p
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    No tasks are running.
+                                                </p>
+                                            </b-col>
+                                        </b-row>
+                                        <b-list-group
+                                            class="text-left m-0 p-0 mt-1"
+                                        >
+                                            <taskblurb
+                                                v-for="task in filteredRunning"
+                                                v-bind:key="task.guid"
+                                                :task="task"
+                                                :project="true"
+                                            ></taskblurb>
+                                        </b-list-group> </b-col
+                                ></b-row> </b-col
+                        ></b-row>
+                        <b-row v-if="profile.stats !== null">
                             <b-col>
-                                                    <b-badge
-                                                        :variant="
-                                                            profile.darkMode
-                                                                ? 'outline-light'
-                                                                : 'white'
-                                                        "
-                                                        title="Usage"
-                                                        ><i
-                                                            class="
-                                                                fas
-                                                                fa-chart-pie
-                                                                fa-fw
-                                                            "
-                                                        ></i>
-                                                        Usage
-                                                    </b-badge>
+                                <b-badge
+                                    class="mb-2"
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    title="Usage"
+                                    ><i class="fas fa-chart-pie fa-fw"></i>
+                                    Usage
+                                </b-badge>
                                 <b-row>
-                                            <b-col md="auto">
-                                                <b
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Workflows
-                                                </b>
-                                                <br/>
-                                                <b>{{
-                                                    profile.stats
-                                                        .owned_workflows.length
-                                                }}</b>
-                                                owned
-                                                <br />
-                                                <b>{{
-                                                    profile.stats.workflow_usage
-                                                        .labels.length
-                                                }}</b>
-                                                used
-                                            </b-col>
-                                            <b-col md="auto">
-                                                <b
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Datasets
-                                                </b>
-                                                <br/>
-                                                <i
-                                                    class="fas fa-spinner"
-                                                    v-if="
-                                                        userDatasets ===
-                                                            undefined ||
-                                                        userDatasets.folders ===
-                                                            undefined
-                                                    "
-                                                ></i
-                                                ><b v-else>{{
-                                                    userDatasets.folders.length
-                                                }}</b>
-                                                owned
-                                                <br />
-                                                <i
-                                                    class="fas fa-spinner"
-                                                    v-if="sharedDatasetsLoading"
-                                                ></i
-                                                ><b v-else>{{
-                                                    sharedDatasets.folders
-                                                        .length
-                                                }}</b>
-                                                shared with you
-                                                <br />
-                                                <i
-                                                    class="fas fa-spinner"
-                                                    v-if="
-                                                        sharingDatasetsLoading
-                                                    "
-                                                ></i
-                                                ><b v-else>{{
-                                                    sharingDatasets.length
-                                                }}</b>
-                                                you've shared
-                                            </b-col>
-                                            <b-col md="auto">
-                                                <b
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Projects
-                                                </b>
-                                                <br/>
-                                                <b>{{ userProjects.length }}</b>
-                                                owned
-                                                <br />
-                                                <b>{{
-                                                    othersProjects.length
-                                                }}</b>
-                                                guest
-                                            </b-col>
-                                            <b-col
-                                                md="auto"
-                                                v-if="profile.stats !== null"
-                                            >
-                                                <b
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Agents
-                                                </b>
-                                                <br/>
-                                                <b>{{
-                                                    profile.stats.owned_agents
-                                                        .length
-                                                }}</b>
-                                                owned
-                                                <br />
-                                                <b>{{
-                                                    profile.stats.guest_agents
-                                                        .length
-                                                }}</b>
-                                                guest
-                                                <br />
-                                                <b>{{
-                                                    profile.stats.agent_usage
-                                                        .labels.length
-                                                }}</b>
-                                                used
-                                            </b-col>
-                                            <b-col md="auto">
-                                                <b
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-light'
-                                                            : 'text-dark'
-                                                    "
-                                                >
-                                                    Tasks
-                                                </b>
-                                                <br/>
-                                                <b>{{ tasksRunning.length }}</b>
-                                                running
-                                                <br />
-                                                <b>{{
-                                                    profile.stats.total_tasks
-                                                }}</b>
-                                                total
-                                                <br />
-                                                <b>{{
-                                                    prettifyDuration(
-                                                        profile.stats
-                                                            .total_task_seconds
-                                                    )
-                                                }}</b>
-                                                total runtime
-                                            </b-col>
+                                    <b-col md="auto">
+                                        <b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Workflows
+                                        </b>
+                                        <br />
+                                        <b>{{
+                                            profile.stats.owned_workflows.length
+                                        }}</b>
+                                        owned
+                                        <br />
+                                        <b>{{
+                                            profile.stats.workflow_usage.labels
+                                                .length
+                                        }}</b>
+                                        used
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Datasets
+                                        </b>
+                                        <br />
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="
+                                                userDatasets === undefined ||
+                                                userDatasets.folders ===
+                                                    undefined
+                                            "
+                                        ></i
+                                        ><b v-else>{{
+                                            userDatasets.folders.length
+                                        }}</b>
+                                        owned
+                                        <br />
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="sharedDatasetsLoading"
+                                        ></i
+                                        ><b v-else>{{
+                                            sharedDatasets.folders.length
+                                        }}</b>
+                                        shared with you
+                                        <br />
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="sharingDatasetsLoading"
+                                        ></i
+                                        ><b v-else>{{
+                                            sharingDatasets.length
+                                        }}</b>
+                                        you've shared
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Projects
+                                        </b>
+                                        <br />
+                                        <b>{{ userProjects.length }}</b>
+                                        owned
+                                        <br />
+                                        <b>{{ othersProjects.length }}</b>
+                                        guest
+                                    </b-col>
+                                    <b-col
+                                        md="auto"
+                                        v-if="profile.stats !== null"
+                                    >
+                                        <b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Agents
+                                        </b>
+                                        <br />
+                                        <b>{{
+                                            profile.stats.owned_agents.length
+                                        }}</b>
+                                        owned
+                                        <br />
+                                        <b>{{
+                                            profile.stats.guest_agents.length
+                                        }}</b>
+                                        guest
+                                        <br />
+                                        <b>{{
+                                            profile.stats.agent_usage.labels
+                                                .length
+                                        }}</b>
+                                        used
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <b
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Tasks
+                                        </b>
+                                        <br />
+                                        <b>{{ tasksRunning.length }}</b>
+                                        running
+                                        <br />
+                                        <b>{{ profile.stats.total_tasks }}</b>
+                                        total
+                                        <br />
+                                        <b>{{
+                                            prettifyDuration(
+                                                profile.stats.total_task_seconds
+                                            )
+                                        }}</b>
+                                        total runtime
+                                    </b-col>
                                 </b-row>
                                 <b-row>
                                     <b-col md="auto">
@@ -414,7 +400,8 @@
                                                 :layout="
                                                     workflowsUsagePlotLayout
                                                 "
-                                            ></Plotly></b-col>
+                                            ></Plotly
+                                        ></b-col>
                                         <b-col
                                             ><Plotly
                                                 v-if="showAgentsUsagePlot"
@@ -503,7 +490,7 @@ export default {
     name: 'home',
     components: {
         Plotly,
-        taskblurb
+        taskblurb,
     },
     data: function () {
         return {
@@ -540,7 +527,7 @@ export default {
                         type: 'line',
                         mode: 'lines',
                         fill: 'tozeroy',
-                        line: { color: '#d6df5D', shape: 'spline', },
+                        line: { color: '#d6df5D', shape: 'spline' },
                         connectgaps: true,
                         colorscale: 'Greens',
                     };
@@ -559,9 +546,9 @@ export default {
                                     type: 'line',
                                     mode: 'lines',
                                     fill: 'tozeroy',
-                                    line: { shape: 'spline', },
+                                    line: { shape: 'spline' },
                                     connectgaps: true,
-                                    stackgroup: 'one'
+                                    stackgroup: 'one',
                                 },
                             ]
                         )
@@ -581,7 +568,7 @@ export default {
                                     type: 'line',
                                     mode: 'lines',
                                     fill: 'tozeroy',
-                                    line: { shape: 'spline', },
+                                    line: { shape: 'spline' },
                                     connectgaps: true,
                                     colorscale: 'Greens',
                                 },
@@ -668,12 +655,28 @@ export default {
             );
         },
         pieColors() {
-          return [
-                          'rgb(146, 123, 21)', 'rgb(177, 180, 34)', 'rgb(206, 206, 40)', 'rgb(175, 51, 21)', 'rgb(35, 36, 21)',
-                          'rgb(177, 127, 38)', 'rgb(205, 152, 36)', 'rgb(99, 79, 37)', 'rgb(129, 180, 179)', 'rgb(124, 103, 37)',
-                          'rgb(33, 75, 99)', 'rgb(79, 129, 102)', 'rgb(151, 179, 100)', 'rgb(175, 49, 35)', 'rgb(36, 73, 147)',
-                          'rgb(56, 75, 126)', 'rgb(18, 36, 37)', 'rgb(34, 53, 101)', 'rgb(36, 55, 57)', 'rgb(6, 4, 4)'
-          ];
+            return [
+                'rgb(146, 123, 21)',
+                'rgb(177, 180, 34)',
+                'rgb(206, 206, 40)',
+                'rgb(175, 51, 21)',
+                'rgb(35, 36, 21)',
+                'rgb(177, 127, 38)',
+                'rgb(205, 152, 36)',
+                'rgb(99, 79, 37)',
+                'rgb(129, 180, 179)',
+                'rgb(124, 103, 37)',
+                'rgb(33, 75, 99)',
+                'rgb(79, 129, 102)',
+                'rgb(151, 179, 100)',
+                'rgb(175, 49, 35)',
+                'rgb(36, 73, 147)',
+                'rgb(56, 75, 126)',
+                'rgb(18, 36, 37)',
+                'rgb(34, 53, 101)',
+                'rgb(36, 55, 57)',
+                'rgb(6, 4, 4)',
+            ];
         },
         workflowPieData() {
             return [
@@ -682,8 +685,8 @@ export default {
                     labels: this.profile.stats.workflow_usage.labels,
                     type: 'pie',
                     marker: {
-                      colors: this.pieColors
-                    }
+                        colors: this.pieColors,
+                    },
                 },
             ];
         },
@@ -715,8 +718,8 @@ export default {
                     labels: this.profile.stats.agent_usage.labels,
                     type: 'pie',
                     marker: {
-                      colors: this.pieColors
-                    }
+                        colors: this.pieColors,
+                    },
                 },
             ];
         },
@@ -749,8 +752,8 @@ export default {
                     labels: this.profile.stats.project_usage.labels,
                     type: 'pie',
                     marker: {
-                      colors: this.pieColors
-                    }
+                        colors: this.pieColors,
+                    },
                 },
             ];
         },
@@ -768,8 +771,6 @@ export default {
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
                     },
-
-
                 },
                 showlegend: false,
                 height: 350,
@@ -845,7 +846,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -901,7 +902,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -915,7 +916,7 @@ export default {
             );
         },
         workflowsUsagePlotTraces() {
-          return Object.values(this.timeseriesWorkflowsUsage);
+            return Object.values(this.timeseriesWorkflowsUsage);
         },
         workflowsUsagePlotLayout() {
             return {
@@ -938,7 +939,7 @@ export default {
                     },
                     yanchor: 'bottom',
                     x: 0.5,
-                    y: -1
+                    y: -1,
                 },
                 xaxis: {
                     showgrid: false,
@@ -961,7 +962,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -998,7 +999,7 @@ export default {
                     },
                     yanchor: 'bottom',
                     x: 0.5,
-                    y: -1
+                    y: -1,
                 },
                 xaxis: {
                     showgrid: false,
@@ -1021,7 +1022,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 300,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
