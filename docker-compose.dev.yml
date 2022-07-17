@@ -193,7 +193,7 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # Celery prefork worker for standard (compute-bound) tasks
+  # Celery prefork worker for compute-bound tasks
   celery:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
@@ -202,7 +202,8 @@ services:
               "worker",
               "-n", "celery",
               "-c", "2",
-              "--loglevel", "INFO"]
+              "--loglevel", "INFO",
+              "--without-gossip"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -282,7 +283,7 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # Celery worker with Eventlet pool for IO-bound tasks (https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html)
+  # Celery Eventlet worker for IO-bound tasks (https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html)
   celerye:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
@@ -293,7 +294,8 @@ services:
               "-P", "eventlet",
               "-Q", "${CELERY_EVENTLET_QUEUE}",
               "-c", "100",
-              "--loglevel", "INFO"]
+              "--loglevel", "INFO",
+              "--without-gossip"]
     volumes:
       - .:/code
     working_dir: /code/plantit

@@ -8,8 +8,6 @@ from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.healthchecks
-import plantit.utils.agents
 import plantit.queries as q
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.healthchecks import is_healthy

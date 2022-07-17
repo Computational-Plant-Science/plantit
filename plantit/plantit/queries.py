@@ -1,9 +1,7 @@
-import asyncio
-import concurrent.futures
 import json
 import logging
 import traceback
-from collections import Counter, namedtuple, OrderedDict
+from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple, Dict
@@ -18,21 +16,18 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.utils import timezone
-
 from pycyapi.clients import TerrainClient
-
-import plantit.migration
-import plantit.migration as migration
 from pycyapi.exceptions import Unauthorized
+
 import plantit.mapbox as mapbox
-from plantit import github as github
 from plantit import loess as loess
-from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentRole
-from plantit.miappe.models import Investigation, Study
-from plantit.notifications.models import Notification
-from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
+from plantit.github import GitHubClient, AsyncGitHubClient
+from plantit.miappe.models import Investigation, Study
+from plantit.misc.models import NewsUpdate, FeaturedWorkflow
+from plantit.notifications.models import Notification
+from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask, TaskCounter, TaskStatus
 from plantit.users.models import Profile, Migration, ManagedFile
 from plantit.utils.misc import del_none
@@ -49,14 +44,14 @@ def get_project_workflows(project: Investigation):
 
 
 async def refresh_online_users_workflow_cache():
-    users = await sync_to_async(User.objects.all)()
-    online = await sync_to_async(filter_online)(users)
+    users = User.objects.all()
+    online = filter_online(users)
     logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
     for user in online:
-        profile = await sync_to_async(Profile.objects.get)(user=user)
+        profile = Profile.objects.get(user=user)
         username = profile.github_username
         if username is not None and username != '':
-            await refresh_user_workflow_cache(profile.github_username)
+            await refresh_user_workflow_cache_async(profile.github_username)
 
 
 @sync_to_async
@@ -64,7 +59,62 @@ def is_featured(owner, name, branch):
     return FeaturedWorkflow.objects.filter(owner=owner, name=name, branch=branch).exists()
 
 
-async def refresh_user_workflow_cache(github_username: str):
+def refresh_user_workflow_cache(github_username: str):
+    if github_username is None or github_username == '': raise ValueError(f"No GitHub username provided")
+
+    try:
+        profile = Profile.objects.get(github_username=github_username)
+        user = get_profile_user(profile)
+    except MultipleObjectsReturned:
+        logger.warning(f"Multiple users bound to Github user {github_username}!")
+        return
+    except:
+        logger.warning(f"Github user {github_username} does not exist")
+        return
+
+    # scrape GitHub to synchronize repos and workflow config
+    profile = await sync_to_async(Profile.objects.get)(user=user)
+    workflows = await github.list_connectable_repos_by_owner_async(github_username, profile.github_token)
+
+    # update the cache, first removing workflows that no longer exist
+    redis = RedisClient.get()
+    removed = 0
+    updated = 0
+    added = 0
+    old_keys = [key.decode('utf-8') for key in redis.scan_iter(match=f"workflows/{github_username}/*")]
+    new_keys = [f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}" for wf in workflows]
+    for old_key in old_keys:
+        # invalidate submission config cache
+        config_key = f"workflow_configs/{user.username}/{old_key.partition('/')[2]}"
+        if redis.exists(config_key):
+            logger.info(f"Removing cached workflow configuration {config_key}")
+            redis.delete(config_key)
+
+        if old_key not in new_keys:
+            logger.debug(f"Removing user workflow {old_key}")
+            removed += 1
+            redis.delete(old_key)
+        else:
+            logger.debug(f"Updating user workflow {old_key}")
+            updated += 1
+
+    # ...then adding/updating the workflows we just scraped
+    for wf in workflows:
+        # set flag if this is a featured workflow
+        wf['featured'] = await is_featured(github_username, wf['repo']['name'], wf['branch']['name'])
+
+        key = f"workflows/{github_username}/{wf['repo']['name']}/{wf['branch']['name']}"
+        if key not in old_keys:
+            logger.debug(f"Adding user workflow {key}")
+            added += 1
+        redis.set(key, json.dumps(del_none(wf)))
+
+    redis.set(f"workflows_updated/{github_username}", timezone.now().timestamp())
+    logger.info(
+        f"{len(workflows)} workflow(s) now in GitHub user's {github_username}'s workflow cache (added {added}, updated {updated}, removed {removed})")
+
+
+async def refresh_user_workflow_cache_async(github_username: str):
     if github_username is None or github_username == '': raise ValueError(f"No GitHub username provided")
 
     try:
@@ -79,7 +129,7 @@ async def refresh_user_workflow_cache(github_username: str):
 
     # scrape GitHub to synchronize repos and workflow config
     profile = await sync_to_async(Profile.objects.get)(user=user)
-    workflows = await github.list_connectable_repos_by_owner(github_username, profile.github_token)
+    workflows = await github.list_connectable_repos_by_owner_async(github_username, profile.github_token)
 
     # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
@@ -132,7 +182,7 @@ async def refresh_online_user_orgs_workflow_cache():
 
 async def refresh_org_workflow_cache(org_name: str, github_token: str):
     # scrape GitHub to synchronize repos and workflow config
-    workflows = await github.list_connectable_repos_by_org(org_name, github_token)
+    workflows = await github.list_connectable_repos_by_org_async(org_name, github_token)
 
     # update the cache, first removing workflows that no longer exist
     redis = RedisClient.get()
@@ -178,7 +228,7 @@ def list_user_workflows(owner: str) -> List[dict]:
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 
-async def list_user_org_workflows(user: User) -> Dict[str, List[dict]]:
+async def list_user_org_workflows_async(user: User) -> Dict[str, List[dict]]:
     orgs = await get_user_github_organizations(user)
     workflows = dict()
     for org in orgs: workflows[org['login']] = await sync_to_async(list_org_workflows)(org['login'])
@@ -201,7 +251,7 @@ def list_project_workflows(project: Investigation) -> List[dict]:
     return [json.loads(wf) for wf in [redis.get(key) for key in [f"workflows/{name}" for name in proj_dict['workflows']]] if wf is not None]
 
 
-async def get_workflow(
+async def get_workflow_async(
         owner: str,
         name: str,
         branch: str,
@@ -213,7 +263,7 @@ async def get_workflow(
     workflow = redis.get(f"workflows/{owner}/{name}/{branch}")
 
     if updated is None or workflow is None or invalidate:
-        bundle = await github.get_repo_bundle(owner, name, branch, github_token, cyverse_token)
+        bundle = await github.get_repo_bundle_async(owner, name, branch, github_token, cyverse_token)
         workflow = {
             'config': bundle['config'],
             'repo': bundle['repo'],
@@ -592,6 +642,17 @@ def refresh_user_cyverse_tokens(user: User):
     user.save()
 
 
+def get_user_github_profile(user: User) -> dict:
+    profile = Profile.objects.get(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return dict()
+
+    github = GitHubClient(access_token=profile.github_token)
+    return github.get_profile(profile.github_username)
+
 async def get_user_github_profile(user: User) -> dict:
     profile = await sync_to_async(Profile.objects.get)(user=user)
 
@@ -600,7 +661,8 @@ async def get_user_github_profile(user: User) -> dict:
         logger.warning(f"No GitHub token for user {user.username}")
         return dict()
 
-    return await github.get_profile(profile.github_username, profile.github_token)
+    github = AsyncGitHubClient(access_token=profile.github_token)
+    return await github.get_profile_async(profile.github_username)
 
 
 async def get_user_github_organizations(user: User) -> List[dict]:
@@ -611,7 +673,7 @@ async def get_user_github_organizations(user: User) -> List[dict]:
         logger.warning(f"No GitHub token for user {user.username}")
         return []
 
-    return await github.list_user_organizations(profile.github_username, profile.github_token)
+    return await github.list_user_organizations_async(profile.github_username, profile.github_token)
 
 
 def get_agents(user: User):
@@ -737,18 +799,16 @@ def get_task_project(task: Task):
     return task.project
 
 
-@sync_to_async
 def check_user_authentication(user):
     return user.is_authenticated
 
 
-@sync_to_async
 def get_profile_user(profile: Profile):
     return profile.user
 
 
 @sync_to_async
-def get_user_django_profile(user: User):
+def get_user_django_profile_async(user: User):
     profile = Profile.objects.get(user=user)
     return profile
 

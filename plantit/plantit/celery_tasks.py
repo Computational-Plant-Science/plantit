@@ -29,7 +29,7 @@ from plantit.users.models import Profile, Migration, ManagedFile
 from plantit.agents.models import Agent
 from plantit.celery import app
 from plantit.healthchecks import is_healthy
-from plantit.queries import refresh_user_workflow_cache, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
+from plantit.queries import refresh_user_workflow_cache_async, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
     refresh_user_cyverse_tokens
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
@@ -762,8 +762,8 @@ def find_stranded():
 
 
 @app.task()
-def refresh_all_users_stats():
-    task_name = refresh_all_users_stats.name
+def recompute_all_users_stats():
+    task_name = recompute_all_users_stats.name
     if not __acquire_lock(task_name):
         logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
         return
@@ -775,10 +775,8 @@ def refresh_all_users_stats():
         for user in User.objects.all():
             logger.info(f"Computing statistics for {user.username}")
 
-            # overall statistics (no need to save result, just trigger reevaluation)
-            async_to_sync(q.get_user_statistics)(user, True)
-
-            # timeseries (no need to save result, just trigger reevaluation)
+            # trigger reevaluation for stats and timeseries
+            q.get_user_statistics(user, invalidate=True)
             q.get_user_timeseries(user, invalidate=True)
 
         logger.info(f"Computing aggregate statistics")
@@ -805,10 +803,8 @@ def refresh_user_stats(username: str):
     try:
         logger.info(f"Aggregating statistics for {user.username}")
 
-        # overall statistics (no need to save result, just trigger reevaluation)
-        async_to_sync(q.get_user_statistics)(user, True)
-
-        # timeseries (no need to save result, just trigger reevaluation)
+        # trigger reevaluation for stats and timeseries
+        q.get_user_statistics(user, invalidate=True)
         q.get_user_timeseries(user, invalidate=True)
     finally:
         __release_lock(task_name)
@@ -822,7 +818,7 @@ def refresh_user_workflows(owner: str):
         return
 
     try:
-        async_to_sync(refresh_user_workflow_cache)(owner)
+        refresh_user_workflow_cache_async(owner)
     finally:
         __release_lock(task_name)
 
@@ -835,8 +831,8 @@ def refresh_all_workflows():
         return
 
     try:
-        async_to_sync(refresh_online_users_workflow_cache)()
-        async_to_sync(refresh_online_user_orgs_workflow_cache)()
+        refresh_online_users_workflow_cache()
+        refresh_online_user_orgs_workflow_cache()
     finally:
         __release_lock(task_name)
 
@@ -1257,7 +1253,7 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
     sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
     sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
-    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics')
+    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, recompute_all_users_stats.s(), name='refresh user statistics')
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache')
     sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')

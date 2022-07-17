@@ -189,8 +189,8 @@
                                 "
                                 ><i
                                     class="fas fa-question-circle fa-1x fa-fw"
-                                ></i
-                                > About</span
+                                ></i>
+                                About</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -208,8 +208,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-laptop-code fa-1x fa-fw"></i
-                                > API</span
+                                ><i class="fas fa-laptop-code fa-1x fa-fw"></i>
+                                API</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -226,8 +226,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-book fa-1x fa-fw"></i
-                                > Docs</span
+                                ><i class="fas fa-book fa-1x fa-fw"></i>
+                                Docs</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -246,8 +246,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fab fa-github fa-1x fa-fw"></i
-                                > GitHub</span
+                                ><i class="fab fa-github fa-1x fa-fw"></i>
+                                GitHub</span
                             >
                         </b-nav-item>
                         <b-nav-item
@@ -264,8 +264,8 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                > Stats</span
+                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
+                                Stats</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -285,8 +285,8 @@
                                 "
                                 ><i
                                     class="fas fa-satellite-dish fa-1x fa-fw"
-                                ></i
-                                > Status</span
+                                ></i>
+                                Status</span
                             ></b-nav-item
                         >
                     </b-row>
@@ -626,18 +626,22 @@
                             <i class="fas fa-folder-open fa-fw"></i>
                             DIRT Migration
                             <i
-                                v-if="!profileLoading && profile.migration.completed !== null"
+                                v-if="
+                                    !profileLoading &&
+                                    profile.migration.completed !== null
+                                "
                                 class="fas fa-check text-success fa-fw"
                             ></i>
-                          <b-spinner
-                            small
-                            v-else-if="profile.migration.started !== null &&
-                                    profile.migration.completed === null"
-                            label="Running..."
-                            :variant="profile.darkMode ? 'light' : 'dark'"
-                            class="mr-2"
-                        ></b-spinner
-                        >
+                            <b-spinner
+                                small
+                                v-else-if="
+                                    profile.migration.started !== null &&
+                                    profile.migration.completed === null
+                                "
+                                label="Running..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="mr-2"
+                            ></b-spinner>
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
@@ -818,9 +822,7 @@
                         ></b-spinner
                         ><i v-else class="fas fa-chevron-right fa-fw mr-1"></i>
                         {{
-                            migrationSubmitting
-                                ? 'Submitting'
-                                : 'Start'
+                            migrationSubmitting ? 'Submitting' : 'Start'
                         }}</b-button
                     >
                     <p v-if="profile.migration.started !== null">
@@ -830,44 +832,17 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
-                        <br/>
+                        <br />
                         <span v-if="profile.migration.num_files !== null"
-                            >{{ uploadedFiles.length }}/{{ profile.migration.num_files }} image files migrated.</span
+                            >{{ uploadedMigrationFiles }}/{{
+                                totalMigrationFiles
+                            }}
+                            files migrated.</span
                         >
                         <b-progress
                             v-if="profile.migration.num_files !== null"
-                            :value="uploadedFiles.length"
-                            :max="profile.migration.num_files"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_metadata !== null"
-                            >{{ uploadedMetadata.length }}/{{ profile.migration.num_metadata }} metadata files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_metadata !== null"
-                            :value="uploadedMetadata.length"
-                            :max="profile.migration.num_metadata"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_outputs !== null"
-                            >{{ uploadedOutputs.length }}/{{ profile.migration.num_outputs }} output files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_outputs !== null"
-                            :value="uploadedOutputs.length"
-                            :max="profile.migration.num_outputs"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_logs !== null"
-                            >{{ uploadedLogs.length }}/{{ profile.migration.num_logs }} log files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_logs !== null"
-                            :value="uploadedLogs.length"
-                            :max="profile.migration.num_logs"
+                            :value="uploadedMigrationFiles"
+                            :max="totalMigrationFiles"
                             animated
                             variant="success"
                         ></b-progress>
@@ -1021,21 +996,18 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
-        uploadedFiles() {
-          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'image');
+        uploadedMigrationFiles() {
+            return this.profileLoading ? 0 : this.profile.migration.uploaded;
         },
-        uploadedMetadata() {
-          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'metadata');
-        },
-        uploadedOutputs() {
-          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'output');
-        },
-        uploadedLogs() {
-          if (this.profileLoading || Object.keys(this.profile.migration.uploads).length === 0) return [];
-          return Object.values(this.profile.migration.uploads).filter(f => f.type === 'logs');
+        totalMigrationFiles() {
+            return this.profileLoading ||
+                this.profile.migration.num_files === null ||
+                this.profile.migration.num_files === undefined
+                ? 0
+                : this.profile.migration.num_files +
+                      this.profile.migration.num_metadata +
+                      this.profile.migration.num_outputs +
+                      this.profile.migration.num_logs;
         },
         maintenance() {
             let now = moment();
@@ -1495,16 +1467,23 @@ export default {
         },
         async handleTaskEvent(task) {
             await this.$store.dispatch('tasks/addOrUpdate', task);
-            if (task.is_failure || task.is_cancelled || task.is_timeout || task.is_complete) {
-              await this.$store.dispatch('alerts/add', {
-                variant: 'success',
-                message: `Task ${task.name} ${this.getTaskStatus(task)} on ${
-                    task.agent.name
-                }: ${
-                    task.orchestrator_logs[task.orchestrator_logs.length - 1]
-                }`,
-                guid: guid().toString(),
-              });
+            if (
+                task.is_failure ||
+                task.is_cancelled ||
+                task.is_timeout ||
+                task.is_complete
+            ) {
+                await this.$store.dispatch('alerts/add', {
+                    variant: 'success',
+                    message: `Task ${task.name} ${this.getTaskStatus(
+                        task
+                    )} on ${task.agent.name}: ${
+                        task.orchestrator_logs[
+                            task.orchestrator_logs.length - 1
+                        ]
+                    }`,
+                    guid: guid().toString(),
+                });
             }
         },
         getTaskStatus(task) {

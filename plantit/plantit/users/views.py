@@ -313,7 +313,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 response['github_profile'] = async_to_sync(q.get_user_github_profile)(user)
                 response['organizations'] = async_to_sync(q.get_user_github_organizations)(user)
                 response['workflows']['user'] = q.list_user_workflows(profile.github_username)
-                response['workflows']['org'] = async_to_sync(q.list_user_org_workflows)(user)
+                response['workflows']['org'] = async_to_sync(q.list_user_org_workflows_async)(user)
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
                 response['github_profile'] = None
@@ -395,6 +395,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         # if it isn't already running, record starting time and kick it off
         if created or migration.started is None:
+            self.logger.info(f"Created migration for {user.username}")
+
             # make sure a `dirt_migration` collection doesn't already exist
             client = TerrainClient(access_token=profile.cyverse_access_token)
             root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
@@ -421,6 +423,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
             # submit the top-level migration task
             start_dirt_migration.s(user.username).apply_async(countdown=5)
+        else:
+            self.logger.warning(f"Migration for {user.username} already exists")
 
         return JsonResponse({'migration': q.migration_to_dict(migration)})
 

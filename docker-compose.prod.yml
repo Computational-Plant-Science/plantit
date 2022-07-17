@@ -183,7 +183,7 @@ services:
       retries: 2
       start_period: 20s
     restart: always
-  # Celery prefork worker for standard (compute-bound) tasks
+  # Celery prefork worker for compute-bound tasks
   celery:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
@@ -192,7 +192,8 @@ services:
               "worker",
               "-n", "celery",
               "-c", "2",
-              "--loglevel", "INFO"]
+              "--loglevel", "INFO",
+              "--without-gossip"]
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
@@ -286,7 +287,8 @@ services:
                "-P", "eventlet",
                "-Q", "${CELERY_EVENTLET_QUEUE}",
                "-c", "500",
-               "--loglevel", "INFO" ]
+               "--loglevel", "INFO",
+               "--without-gossip"]
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
