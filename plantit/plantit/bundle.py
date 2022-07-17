@@ -3,7 +3,7 @@ import json
 from asgiref.sync import async_to_sync
 from django.contrib.auth.models import User
 
-from plantit.github import has_github_info, get_user_github_profile, get_user_github_organizations
+from plantit.github import has_github_info, get_user_github_profile, get_member_organizations
 from plantit.redis import RedisClient
 from plantit.users.models import Profile
 
@@ -21,7 +21,7 @@ def get_user_bundle(user: User):
         cached = redis.get(f"users/{user.username}")
         if cached is not None: return json.loads(cached)
         github_profile = async_to_sync(get_user_github_profile)(user)
-        github_organizations = async_to_sync(get_user_github_organizations)(user)
+        github_organizations = async_to_sync(get_member_organizations)(user)
         bundle = {
             'username': user.username,
             'first_name': user.first_name,

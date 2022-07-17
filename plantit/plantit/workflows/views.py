@@ -9,7 +9,7 @@ from django.http import JsonResponse, HttpResponseNotFound
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-from plantit.cache import list_org_workflows, list_public_workflows, list_user_workflows, get_user_github_organizations, get_workflow_async
+from plantit.cache import list_org_workflows, list_public_workflows, list_user_workflows, get_member_organizations, get_workflow_async
 from plantit.filters import list_user_project_workflows, list_user_org_workflows
 from plantit.github import AsyncGitHubClient
 from plantit.redis import RedisClient
@@ -82,7 +82,7 @@ async def get(request, owner, name, branch):
 async def search(request, owner, name, branch):
     profile = await get_user_django_profile_async(request.user)
     github = AsyncGitHubClient(access_token=profile.github_token)
-    repository = await github.get_repo_async(owner, name, branch)
+    repository = await github.get_repo(owner, name, branch)
     return HttpResponseNotFound() if repository is None else JsonResponse(repository)
 
 
@@ -107,5 +107,5 @@ async def refresh(request, owner, name, branch):
 async def branches(request, owner, name):
     profile = await get_user_django_profile_async(request.user)
     github = AsyncGitHubClient(access_token=profile.github_token)
-    repo_branches = await github.list_repo_branches_async(owner, name)
+    repo_branches = await github.list_repo_branches(owner, name)
     return JsonResponse({'branches': [branch['name'] for branch in repo_branches]})

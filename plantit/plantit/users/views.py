@@ -25,7 +25,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 import plantit.migration as mig
 from plantit.cache import list_users
 from plantit.cyverse import get_user_cyverse_profile
-from plantit.github import has_github_info, get_user_github_profile, get_user_github_organizations
+from plantit.github import has_github_info, get_user_github_profile, get_member_organizations
 from plantit.cache import list_user_workflows, list_public_workflows
 from plantit.celery_tasks import refresh_user_stats
 from plantit.celery_tasks import start_dirt_migration, Migration
@@ -316,7 +316,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if has_github_info(profile):
             try:
                 response['github_profile'] = async_to_sync(get_user_github_profile)(user)
-                response['organizations'] = async_to_sync(get_user_github_organizations)(user)
+                response['organizations'] = async_to_sync(get_member_organizations)(user)
                 response['workflows']['user'] = list_user_workflows(profile.github_username)
                 response['workflows']['org'] = async_to_sync(list_user_org_workflows)(user)
             except:

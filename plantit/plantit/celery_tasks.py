@@ -30,8 +30,6 @@ from plantit.users.models import Profile, Migration, ManagedFile
 from plantit.agents.models import Agent
 from plantit.celery import app
 from plantit.healthchecks import is_healthy
-from plantit.workflows import refresh_user_workflow_cache_async
-from plantit.cache import refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache
 from plantit.cyverse import refresh_user_cyverse_tokens
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
@@ -40,6 +38,9 @@ from plantit.task_lifecycle import parse_task_options, create_immediate_task, up
     get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
+from plantit.filters import filter_online_users
+from plantit.github import get_member_organizations
+from plantit.cache import refresh_user_workflow_cache, refresh_org_workflow_cache
 
 logger = get_task_logger(__name__)
 
@@ -833,8 +834,25 @@ def refresh_all_workflows():
         return
 
     try:
-        refresh_online_users_workflow_cache()
-        refresh_online_user_orgs_workflow_cache()
+        # refresh workflows from user-owned repos
+        users = User.objects.all()
+        online = filter_online_users(users)
+        logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
+        for user in online:
+            profile = Profile.objects.get(user=user)
+            github_login = profile.github_username
+            if github_login is not None and github_login != '':
+                refresh_user_workflow_cache(profile.github_username)
+
+        # refresh workflows belonging to user's member organizations
+        users = User.objects.all()
+        online = filter_online_users(users)
+        for user in online:
+            profile = Profile.objects.get(user=user)
+            github_organizations = get_member_organizations(user)
+            logger.info(f"Refreshing workflow cache for online user {user.username}'s {len(online)} organizations")
+            for org in github_organizations:
+                refresh_org_workflow_cache(org['login'], profile.github_token)
     finally:
         __release_lock(task_name)
 
