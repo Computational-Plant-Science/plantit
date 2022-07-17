@@ -15,7 +15,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from pycyapi.clients import TerrainClient, AsyncTerrainClient
 
-import plantit.queries as q
+import plantit.workflows as q
+import plantit.serialize
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
 from plantit.miappe.models import Investigation, Study
 from plantit.notifications.models import Notification
@@ -36,7 +37,7 @@ def sharing(request):
     """
 
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
-    return JsonResponse({'datasets': [q.dataset_access_policy_to_dict(policy) for policy in policies]})
+    return JsonResponse({'datasets': [plantit.serialize.dataset_access_policy_to_dict(policy) for policy in policies]})
 
 
 @sync_to_async
@@ -90,7 +91,7 @@ async def share(request):
         policy, created = await sync_to_async(DatasetAccessPolicy.objects.get_or_create)(owner=owner, guest=user, role=role, path=path)
         policies.append({
             'created': created,
-            'policy': await sync_to_async(q.dataset_access_policy_to_dict)(policy)
+            'policy': await sync_to_async(plantit.serialize.dataset_access_policy_to_dict)(policy)
         })
 
         notification = await sync_to_async(Notification.objects.create)(
@@ -117,7 +118,7 @@ async def share(request):
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
     for policy in (await sync_to_async(list)(policies)):
-        dataset = await sync_to_async(q.dataset_access_policy_to_dict)(policy)
+        dataset = await sync_to_async(plantit.serialize.dataset_access_policy_to_dict)(policy)
         datasets.append(dataset)
 
     return JsonResponse({'datasets': datasets})
@@ -183,7 +184,7 @@ async def unshare(request):
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
     datasets = []
     for policy in (await sync_to_async(list)(policies)):
-        dataset = await sync_to_async(q.dataset_access_policy_to_dict)(policy)
+        dataset = await sync_to_async(plantit.serialize.dataset_access_policy_to_dict)(policy)
         datasets.append(dataset)
 
     return JsonResponse({'datasets': datasets})

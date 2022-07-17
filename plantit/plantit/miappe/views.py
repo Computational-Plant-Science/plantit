@@ -1,6 +1,5 @@
-import json
-import uuid
 import logging
+import uuid
 
 import yaml
 from django.contrib.auth.decorators import login_required
@@ -10,8 +9,9 @@ from django.utils.dateparse import parse_date
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.queries as q
-from plantit.miappe.models import EnvironmentParameter, ExperimentalFactor, Study, Investigation
+from plantit.filters import filter_user_projects, filter_team_projects
+from plantit.miappe.models import EnvironmentParameter, Study, Investigation
+from plantit.serialize import project_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def suggested_experimental_factors(request):
 def list_or_create(request):
     if request.method == 'GET':
         team = request.GET.get('team', None)
-        projects = q.get_projects(team)
+        projects = filter_team_projects(team)
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
         body = request.data
@@ -44,7 +44,7 @@ def list_or_create(request):
         description = body['description'] if 'description' in body else None
         if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
         project = Investigation.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
-        return JsonResponse(q.project_to_dict(project))
+        return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -53,8 +53,8 @@ def list_or_create(request):
 def list_by_owner(request, owner):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-    projects = q.get_user_projects(request.user)
-    return JsonResponse({'projects': projects})
+    projects = filter_user_projects(request.user)
+    return JsonResponse({'projects': [project_to_dict(project) for project in projects]})
 
 
 @login_required
@@ -65,13 +65,13 @@ def get_or_delete(request, owner, title):
     if request.method == 'GET':
         try:
             project = Investigation.objects.get(owner=request.user, title=title)
-            return JsonResponse(q.project_to_dict(project))
+            return JsonResponse(project_to_dict(project))
         except:
             return HttpResponseNotFound()
     elif request.method == 'DELETE':
         project = Investigation.objects.get(owner=request.user, title=title)
         project.delete()
-        projects = [q.project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+        projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
         return JsonResponse({'projects': projects})
 
 
@@ -107,7 +107,7 @@ def add_team_member(request, owner, title):
     project.team.add(user)
     project.save()
 
-    return JsonResponse(q.project_to_dict(project))
+    return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -129,7 +129,7 @@ def remove_team_member(request, owner, title):
     project.team.remove(user)
     project.save()
 
-    return JsonResponse(q.project_to_dict(project))
+    return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -150,7 +150,7 @@ def add_study(request, owner, title):
         return HttpResponseNotFound()
 
     study = Study.objects.create(investigation=project, title=study_title, guid=guid, description=study_description)
-    return JsonResponse(q.project_to_dict(project))
+    return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -173,7 +173,7 @@ def remove_study(request, owner, title):
         return HttpResponseNotFound()
 
     study.delete()
-    return JsonResponse(q.project_to_dict(project))
+    return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -236,4 +236,4 @@ def edit_study(request, owner, title):
     for name, value in study_environment_parameters.items():
         EnvironmentParameter.objects.create(name=name, value=value, study=study)
 
-    return JsonResponse(q.project_to_dict(project))
+    return JsonResponse(project_to_dict(project))

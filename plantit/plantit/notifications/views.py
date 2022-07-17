@@ -4,7 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, JsonResponse
 
-import plantit.queries as q
+import plantit.filters
+import plantit.workflows as q
+import plantit.serialize
 from plantit.notifications.models import Notification
 
 
@@ -19,7 +21,7 @@ def list_by_user(request, owner):
     except: return HttpResponseNotFound()
 
     page = params.get('page') if 'page' in params else 1
-    notifications = q.get_notifications(user, page=page)
+    notifications = plantit.filters.filter_notifications(user, page=page)
     return JsonResponse({'notifications': notifications})
 
 
@@ -31,8 +33,8 @@ def get_or_dismiss(request, owner, guid):
     except: return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(q.notification_to_dict(notification))
+        return JsonResponse(plantit.serialize.notification_to_dict(notification))
     elif request.method == 'DELETE':
         notification.delete()
         notifications = Notification.objects.filter(user=user)
-        return JsonResponse({'notifications': [q.notification_to_dict(notification) for notification in notifications]})
+        return JsonResponse({'notifications': [plantit.serialize.notification_to_dict(notification) for notification in notifications]})

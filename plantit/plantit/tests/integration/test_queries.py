@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-import plantit.queries as q
+import plantit.workflows as q
+import plantit.statistics
 
 from plantit.users.models import Profile
 from plantit.tasks.models import Task
@@ -55,17 +56,17 @@ class QueriesTests(TestCase):
 
     def test_get_workflows_usage_timeseries(self):
         user = User.objects.get(username='wbonelli')
-        series = q.get_workflows_usage_timeseries(user)
+        series = plantit.statistics.get_workflows_usage_timeseries(user)
         pprint(series)
 
     # same test with different user
     def test_get_workflows_usage_timeseries2(self):
         user = User.objects.get(username='okn69169')
-        series = q.get_workflows_usage_timeseries(user)
+        series = plantit.statistics.get_workflows_usage_timeseries(user)
         pprint(series)
 
     def test_get_institutions_cache_miss(self):
-        institutions = q.get_institutions(invalidate=True)
+        institutions = plantit.statistics.get_institutions(invalidate=True)
         self.assertTrue('university of georgia' in institutions)
         self.assertTrue(institutions['university of georgia']['count'] == 1)
         self.assertTrue(institutions['university of georgia']
@@ -73,14 +74,14 @@ class QueriesTests(TestCase):
 
     # same test with different institution
     def test_get_institutions_cache_miss2(self):
-        institutions = q.get_institutions(invalidate=True)
+        institutions = plantit.statistics.get_institutions(invalidate=True)
         self.assertTrue('georgia tech' in institutions)
         self.assertTrue(institutions['georgia tech']['count'] == 1)
         self.assertTrue(institutions['georgia tech']
                         ['geocode']['text'] == 'Georgia Tech')
 
     def test_get_institutions_cache_hit(self):
-        institutions = q.get_institutions()
+        institutions = plantit.statistics.get_institutions()
 
         # TODO
         # self.assertTrue('university of georgia' in institutions)

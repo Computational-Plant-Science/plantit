@@ -19,7 +19,8 @@ from pycyapi.clients import TerrainClient
 
 import plantit.healthchecks
 import plantit.mapbox
-import plantit.queries as q
+import plantit.workflows as q
+import plantit.statistics
 import plantit.utils.agents
 import plantit.migration as mig
 from plantit.ssh import SSH
@@ -29,8 +30,9 @@ from plantit.users.models import Profile, Migration, ManagedFile
 from plantit.agents.models import Agent
 from plantit.celery import app
 from plantit.healthchecks import is_healthy
-from plantit.queries import refresh_user_workflow_cache_async, refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache, \
-    refresh_user_cyverse_tokens
+from plantit.workflows import refresh_user_workflow_cache_async
+from plantit.cache import refresh_online_users_workflow_cache, refresh_online_user_orgs_workflow_cache
+from plantit.cyverse import refresh_user_cyverse_tokens
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
@@ -776,12 +778,12 @@ def recompute_all_users_stats():
             logger.info(f"Computing statistics for {user.username}")
 
             # trigger reevaluation for stats and timeseries
-            q.get_user_statistics(user, invalidate=True)
-            q.get_user_timeseries(user, invalidate=True)
+            plantit.statistics.get_user_statistics(user, invalidate=True)
+            plantit.statistics.get_user_timeseries(user, invalidate=True)
 
         logger.info(f"Computing aggregate statistics")
-        redis.set("stats_counts", json.dumps(q.get_total_counts(True)))
-        redis.set("total_timeseries", json.dumps(q.get_aggregate_timeseries(True)))
+        redis.set("stats_counts", json.dumps(plantit.statistics.get_total_counts(True)))
+        redis.set("total_timeseries", json.dumps(plantit.statistics.get_aggregate_timeseries(True)))
     finally:
         __release_lock(task_name)
 
@@ -804,8 +806,8 @@ def refresh_user_stats(username: str):
         logger.info(f"Aggregating statistics for {user.username}")
 
         # trigger reevaluation for stats and timeseries
-        q.get_user_statistics(user, invalidate=True)
-        q.get_user_timeseries(user, invalidate=True)
+        plantit.statistics.get_user_statistics(user, invalidate=True)
+        plantit.statistics.get_user_timeseries(user, invalidate=True)
     finally:
         __release_lock(task_name)
 
@@ -847,7 +849,7 @@ def refresh_user_institutions():
     try:
         # TODO: move caching to query layer
         redis = RedisClient.get()
-        institutions = q.get_institutions(True)
+        institutions = plantit.statistics.get_institutions(True)
         for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
     finally:
         __release_lock(task_name)

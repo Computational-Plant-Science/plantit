@@ -6,7 +6,6 @@ from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import jwt
-import pymysql
 import requests
 from asgiref.sync import async_to_sync
 from django.conf import settings
@@ -16,24 +15,30 @@ from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
 from github import Github
+from pycyapi.clients import TerrainClient
 from requests import HTTPError
 from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from databases import Database
-from pycyapi.clients import TerrainClient
 
-import plantit.queries as q
 import plantit.migration as mig
-from plantit.celery_tasks import start_dirt_migration, Migration
+from plantit.cache import list_users
+from plantit.cyverse import get_user_cyverse_profile
+from plantit.github import has_github_info, get_user_github_profile, get_user_github_organizations
+from plantit.cache import list_user_workflows, list_public_workflows
 from plantit.celery_tasks import refresh_user_stats
+from plantit.celery_tasks import start_dirt_migration, Migration
+from plantit.filters import list_user_project_workflows, list_user_org_workflows, filter_managed_files, filter_tasks_paged, filter_delayed_tasks, \
+    filter_repeating_tasks, filter_triggered_tasks, filter_notifications, filter_agents, filter_user_projects
 from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils.misc import get_csrf_token
+from plantit.serialize import migration_to_dict
+from plantit.statistics import get_user_statistics
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +196,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        return JsonResponse({'users': q.list_users()})
+        return JsonResponse({'users': list_users()})
 
     @action(methods=['get'], detail=False)
     def acknowledge_first_login(self, request):
@@ -279,26 +284,26 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
-                'migration': q.migration_to_dict(migration)
+                'migration': migration_to_dict(migration)
             },
-            'stats': async_to_sync(q.get_user_statistics)(user),
-            'users': q.list_users(),
-            'tasks': q.get_tasks(user, page=1),
-            'delayed_tasks': q.get_delayed_tasks(user),
-            'repeating_tasks': q.get_repeating_tasks(user),
-            'triggered_tasks': q.get_triggered_tasks(user),
-            'notifications': q.get_notifications(user, page=1),
-            'agents': q.get_agents(user),
+            'stats': async_to_sync(get_user_statistics)(user),
+            'users': list_users(),
+            'tasks': filter_tasks_paged(user, page=1),
+            'delayed_tasks': filter_delayed_tasks(user),
+            'repeating_tasks': filter_repeating_tasks(user),
+            'triggered_tasks': filter_triggered_tasks(user),
+            'notifications': filter_notifications(user, page=1),
+            'agents': filter_agents(user),
             'workflows': {
-                'public': q.list_public_workflows(),
-                'project': q.list_user_project_workflows(user)
+                'public': list_public_workflows(),
+                'project': list_user_project_workflows(user)
             },
-            'projects': q.get_user_projects(user),
+            'projects': filter_user_projects(user),
         }
 
         if request.user.profile.cyverse_access_token != '':
             # if we can't get a profile from CyVerse, log the user out ( sorry :/ )
-            try: response['cyverse_profile'] = q.get_user_cyverse_profile(request.user)
+            try: response['cyverse_profile'] = get_user_cyverse_profile(request.user)
             except (HTTPError, ValueError) as e:
                 if '403' in str(e) or 'no CyVerse profile' in str(e):
                     logout(request)
@@ -308,12 +313,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 else: raise
 
         profile = Profile.objects.get(user=request.user)
-        if q.has_github_info(profile):
+        if has_github_info(profile):
             try:
-                response['github_profile'] = async_to_sync(q.get_user_github_profile)(user)
-                response['organizations'] = async_to_sync(q.get_user_github_organizations)(user)
-                response['workflows']['user'] = q.list_user_workflows(profile.github_username)
-                response['workflows']['org'] = async_to_sync(q.list_user_org_workflows_async)(user)
+                response['github_profile'] = async_to_sync(get_user_github_profile)(user)
+                response['organizations'] = async_to_sync(get_user_github_organizations)(user)
+                response['workflows']['user'] = list_user_workflows(profile.github_username)
+                response['workflows']['org'] = async_to_sync(list_user_org_workflows)(user)
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
                 response['github_profile'] = None
@@ -426,8 +431,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         else:
             self.logger.warning(f"Migration for {user.username} already exists")
 
-        return JsonResponse({'migration': q.migration_to_dict(migration)})
+        return JsonResponse({'migration': migration_to_dict(migration)})
 
     @action(detail=False, methods=['get'])
     def get_managed_files(self, request):
-        return JsonResponse({'managed_files': q.get_managed_files(request.user, page=int(request.GET.get('page', 1)))})
+        return JsonResponse({'managed_files': filter_managed_files(request.user, page=int(request.GET.get('page', 1)))})

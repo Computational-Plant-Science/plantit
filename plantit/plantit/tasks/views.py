@@ -12,7 +12,9 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileRe
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.queries as q
+import plantit.filters
+import plantit.workflows as q
+import plantit.serialize
 from plantit import settings
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 @api_view(['GET', 'POST'])
 def get_or_create(request):
     if request.method == 'GET':
-        return JsonResponse(q.get_tasks(request.user, page=int(request.GET.get('page', 1))))
+        return JsonResponse(plantit.filters.filter_tasks_paged(request.user, page=int(request.GET.get('page', 1))))
     elif request.method == 'POST':
         # get the task configuration from the request
         task_config = request.data
@@ -58,7 +60,7 @@ def get_or_create(request):
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
-            task_dict = q.task_to_dict(task)
+            task_dict = plantit.serialize.task_to_dict(task)
 
             log_task_status(task, [f"Created task {task.guid} on {task.agent.name}"])
             async_to_sync(push_task_channel_event)(task)
@@ -66,13 +68,13 @@ def get_or_create(request):
         # otherwise register delayed or repeating task
         elif task_type == 'after':
             task, created = create_delayed_task(request.user, task_config)
-            task_dict = q.delayed_task_to_dict(task)
+            task_dict = plantit.serialize.delayed_task_to_dict(task)
         elif task_type == 'every':
             task, created = create_repeating_task(request.user, task_config)
-            task_dict = q.repeating_task_to_dict(task)
+            task_dict = plantit.serialize.repeating_task_to_dict(task)
         elif task_type == 'watch':
             task, created = create_triggered_task(request.user, task_config)
-            task_dict = q.triggered_task_to_dict(task)
+            task_dict = plantit.serialize.triggered_task_to_dict(task)
 
         # currently we only support immediate, delayed, and periodic (repeating) tasks
         else:
@@ -88,21 +90,21 @@ def get_or_create(request):
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_delayed(request):
-    return JsonResponse({'tasks': q.get_delayed_tasks(request.user)})
+    return JsonResponse({'tasks': plantit.filters.filter_delayed_tasks(request.user)})
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_repeating(request):
-    return JsonResponse({'tasks': q.get_repeating_tasks(request.user)})
+    return JsonResponse({'tasks': plantit.filters.filter_repeating_tasks(request.user)})
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_triggered(request):
-    return JsonResponse({'tasks': q.get_triggered_tasks(request.user)})
+    return JsonResponse({'tasks': plantit.filters.filter_triggered_tasks(request.user)})
 
 
 @login_required
@@ -120,7 +122,7 @@ def get_task(request, guid):
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
 
-        return JsonResponse(q.task_to_dict(task))
+        return JsonResponse(plantit.serialize.task_to_dict(task))
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -340,7 +342,7 @@ def cancel(request, guid):
         return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
 
     __cancel(task)
-    return JsonResponse(q.task_to_dict(task))
+    return JsonResponse(plantit.serialize.task_to_dict(task))
 
 
 # TODO switch to post
@@ -355,7 +357,7 @@ def unschedule_delayed(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [q.delayed_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [plantit.serialize.delayed_task_to_dict(task) for task in
                                    DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
@@ -371,7 +373,7 @@ def unschedule_repeating(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [q.repeating_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [plantit.serialize.repeating_task_to_dict(task) for task in
                                    RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
@@ -387,7 +389,7 @@ def unschedule_triggered(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [q.triggered_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [plantit.serialize.triggered_task_to_dict(task) for task in
                                    TriggeredTask.objects.filter(user=request.user, enabled=True)]})
 
 
@@ -421,7 +423,7 @@ def search(request, owner, workflow_name, page):
         start = int(page) * 20
         count = start + 20
         tasks = Task.objects.filter(user=user, workflow_name=workflow_name).order_by('-created')[start:(start + count)]
-        return JsonResponse([q.task_to_dict(t) for t in tasks], safe=False)
+        return JsonResponse([plantit.serialize.task_to_dict(t) for t in tasks], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -438,7 +440,7 @@ def search_delayed(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([q.delayed_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([plantit.serialize.delayed_task_to_dict(t) for t in tasks], safe=False)
 
 
 @login_required
@@ -453,7 +455,7 @@ def search_repeating(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([q.repeating_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([plantit.serialize.repeating_task_to_dict(t) for t in tasks], safe=False)
 
 
 @login_required
@@ -468,4 +470,4 @@ def search_triggered(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([q.triggered_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([plantit.serialize.triggered_task_to_dict(t) for t in tasks], safe=False)

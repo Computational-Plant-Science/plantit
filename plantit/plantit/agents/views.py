@@ -8,7 +8,8 @@ from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.queries as q
+import plantit.filters
+from plantit.serialize import agent_to_dict
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.healthchecks import is_healthy
 from plantit.redis import RedisClient
@@ -20,7 +21,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @api_view(['GET'])
 def list(request):
-    return JsonResponse({'agents': q.get_agents(request.user)})
+    user = request.user
+    agents = plantit.filters.filter_agents(user)
+    return JsonResponse({'agents': [agent_to_dict(agent, user.username) for agent in agents]})
 
 
 @swagger_auto_schema(method='get', auto_schema=None)
@@ -34,7 +37,7 @@ def get(request, name):
         # list of authorized users, they're not authorized to access it
         if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
     except: return HttpResponseNotFound()
-    return JsonResponse(q.agent_to_dict(agent, request.user))
+    return JsonResponse(plantit.serialize.agent_to_dict(agent, request.user))
 
 
 @swagger_auto_schema(method='get', auto_schema=None)

@@ -6,13 +6,17 @@ import httpx
 import requests
 import traceback
 import yaml
+from asgiref.sync import sync_to_async
+from django.contrib.auth.models import User
 from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
+from plantit.users.models import Profile
+
 from plantit.validation import validate_workflow_configuration
 
-logger = logging.getLogger(__name__)
 
+# Clients
 
 class GitHubClient:
     def __init__(self, access_token: str, timeout_seconds: int = 15):
@@ -37,7 +41,7 @@ class GitHubClient:
         response.raise_for_status()
 
         profile = response.json()
-        logger.debug(f"Retrieved GitHub user profile {owner}")
+        self.__logger.debug(f"Retrieved GitHub user profile {owner}")
         return profile
 
     @retry(
@@ -61,7 +65,7 @@ class GitHubClient:
             timeout=timeout if timeout is not None else self.__timeout)
         repo = response.json()
         if 'message' in repo and repo['message'] == 'Not Found': raise ValueError(f"Repo {owner}/{name} not found")
-        logger.info(f"Retrieved repo {owner}/{name}:\n{repo}")
+        self.__logger.info(f"Retrieved repo {owner}/{name}:\n{repo}")
         return repo
 
     @retry(
@@ -104,7 +108,7 @@ class GitHubClient:
                                 timeout=timeout if timeout is not None else self.__timeout)
         jsn = response.json()
         if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
-            logger.warning(jsn['message'])
+            self.__logger.warning(jsn['message'])
             return []
         return jsn
 
@@ -132,11 +136,11 @@ class GitHubClient:
         elif response2.status_code == 200:
             jsn = response2.json()
         else:
-            logger.warning(f"Failed to retrieve README for {owner}/{name}")
+            self.__logger.warning(f"Failed to retrieve README for {owner}/{name}")
             return None
 
         text = requests.get(jsn['download_url']).text
-        logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
+        self.__logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
         return text
 
     @retry(
@@ -161,7 +165,7 @@ class GitHubClient:
                                 timeout=timeout if timeout is not None else self.__timeout)
         response.raise_for_status()
         config = response.text
-        logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
+        self.__logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
         return yaml.load(config)
 
     def get_repo_bundle(self,
@@ -210,13 +214,13 @@ class GitHubClient:
                     timeout=timeout if timeout is not None else self.__timeout)
 
                 if response.status_code == 404:
-                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                    self.__logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
-                    logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
+                    self.__logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                     continue
                 else:
-                    logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                    self.__logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
 
                 repository['organization'] = owner
 
@@ -272,10 +276,10 @@ class GitHubClient:
                     timeout=timeout if timeout is not None else self.__timeout)
 
                 if response.status_code == 404:
-                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                    self.__logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
-                    logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
+                    self.__logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                     continue
 
                 try:
@@ -321,10 +325,10 @@ class GitHubClient:
         response = requests.get(f"https://api.github.com/users/{username}/orgs",
                                 headers=headers,
                                 timeout=timeout if timeout is not None else self.__timeout)
-        if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
+        if response.status_code != 200: self.__logger.error(f"Failed to retrieve organizations for {username}")
         jsn = response.json()
         if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
-            logger.warning(jsn['message'])
+            self.__logger.warning(jsn['message'])
             return []
         return jsn
 
@@ -352,7 +356,7 @@ class AsyncGitHubClient:
             if response.status_code != 200: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
 
             profile = response.json()
-            logger.debug(f"Retrieved GitHub user profile {owner}")
+            self.__logger.debug(f"Retrieved GitHub user profile {owner}")
             return profile
 
     @retry(
@@ -380,7 +384,7 @@ class AsyncGitHubClient:
                 })
             repo = response.json()
             if 'message' in repo and repo['message'] == 'Not Found': raise ValueError(f"Repo {owner}/{name} not found")
-            logger.info(f"Retrieved repo {owner}/{name}:\n{repo}")
+            self.__logger.info(f"Retrieved repo {owner}/{name}:\n{repo}")
             return repo
 
     @retry(
@@ -421,7 +425,7 @@ class AsyncGitHubClient:
             response = await client.get(f"https://api.github.com/users/{owner}/repos")
             jsn = response.json()
             if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
-                logger.warning(jsn['message'])
+                self.__logger.warning(jsn['message'])
                 return []
             return jsn
 
@@ -452,11 +456,11 @@ class AsyncGitHubClient:
             elif response2.status == 200:
                 jsn = response2.json()
             else:
-                logger.warning(f"Failed to retrieve README for {owner}/{name}")
+                self.__logger.warning(f"Failed to retrieve README for {owner}/{name}")
                 return None
 
             text = requests.get(jsn['download_url']).text
-            logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
+            self.__logger.info(f"Retrieved README for {owner}/{name}:\n{text}")
             return text
 
     @retry(
@@ -480,7 +484,7 @@ class AsyncGitHubClient:
             response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
             response.raise_for_status()
             config = response.text
-            logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
+            self.__logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
             return yaml.load(config)
 
     async def get_repo_bundle_async(self,
@@ -534,13 +538,13 @@ class AsyncGitHubClient:
                         })
 
                     if response.status_code == 404:
-                        logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                        self.__logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                         continue
                     if response.status_code != 200:
-                        logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
+                        self.__logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                         continue
                     else:
-                        logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                        self.__logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
 
                     repository['organization'] = owner
 
@@ -600,10 +604,10 @@ class AsyncGitHubClient:
                         })
 
                     if response.status_code == 404:
-                        logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
+                        self.__logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                         continue
                     if response.status_code != 200:
-                        logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
+                        self.__logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                         continue
 
                     try:
@@ -648,9 +652,57 @@ class AsyncGitHubClient:
         }
         async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
             response = await client.get(f"https://api.github.com/users/{username}/orgs")
-            if response.status_code != 200: logger.error(f"Failed to retrieve organizations for {username}")
+            if response.status_code != 200: self.__logger.error(f"Failed to retrieve organizations for {username}")
             jsn = response.json()
             if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
-                logger.warning(jsn['message'])
+                self.__logger.warning(jsn['message'])
                 return []
             return jsn
+
+
+# Standalone functions
+
+logger = logging.getLogger(__name__)
+
+
+def get_user_github_profile(user: User) -> dict:
+    profile = Profile.objects.get(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return dict()
+
+    github = GitHubClient(access_token=profile.github_token)
+    return github.get_profile(profile.github_username)
+
+
+async def get_user_github_profile_async(user: User) -> dict:
+    profile = await sync_to_async(Profile.objects.get)(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return dict()
+
+    github = AsyncGitHubClient(access_token=profile.github_token)
+    return await github.get_profile_async(profile.github_username)
+
+
+def get_user_github_organizations(user: User) -> List[dict]:
+    profile = Profile.objects.get(user=user)
+
+    # if no GitHub auth token, the user hasn't linked their GitHub account yet
+    if profile.github_token is None or profile.github_token == '':
+        logger.warning(f"No GitHub token for user {user.username}")
+        return []
+
+    github = GitHubClient(profile.github_token)
+    return github.list_user_organizations(profile.github_username)
+
+
+def has_github_info(profile: Profile):
+    return profile.github_token is not None and \
+           profile.github_token != '' and \
+           profile.github_username is not None and \
+           profile.github_username != ''

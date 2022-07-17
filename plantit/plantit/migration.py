@@ -7,7 +7,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 
-import plantit.queries as q
+import plantit.workflows as q
+import plantit.serialize
 import plantit.users.models
 from plantit.ssh import SSH
 from plantit import settings
@@ -55,9 +56,9 @@ def get_db_connection():
 async def push_migration_event(user: User, migration: Migration, file: plantit.users.models.ManagedFile = None):
     data = {
         'type': 'migration_event',
-        'migration': q.migration_to_dict(migration),
+        'migration': plantit.serialize.migration_to_dict(migration),
     }
-    if file is not None: data['file'] = q.managed_file_to_dict(file)
+    if file is not None: data['file'] = plantit.serialize.managed_file_to_dict(file)
     await get_channel_layer().group_send(f"{user.username}", data)
 
 

@@ -4,35 +4,36 @@ from django.http import JsonResponse, HttpResponseNotFound
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.queries as q
+import plantit.workflows as q
+import plantit.statistics
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def institutions_info(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(q.get_institutions(invalidate))
+    return JsonResponse(plantit.statistics.get_institutions(invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def aggregate_counts(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(q.get_total_counts(invalidate))
+    return JsonResponse(plantit.statistics.get_total_counts(invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def aggregate_timeseries(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(q.get_aggregate_timeseries(invalidate))
+    return JsonResponse(plantit.statistics.get_aggregate_timeseries(invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def workflow_timeseries(request, owner, name, branch):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(q.get_workflow_usage_timeseries(owner, name, branch, invalidate))
+    return JsonResponse(plantit.statistics.get_workflow_usage_timeseries(owner, name, branch, invalidate))
 
 
 @login_required
@@ -40,4 +41,4 @@ def user_timeseries(request):
     username = request.GET.get('username', request.user.username)
     try: user = User.objects.get(username=username)
     except: return HttpResponseNotFound()
-    return JsonResponse(q.get_user_timeseries(user))
+    return JsonResponse(plantit.statistics.get_user_timeseries(user))

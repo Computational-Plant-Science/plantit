@@ -1,21 +1,18 @@
 import fileinput
+import logging
 import os
 import sys
-import logging
-from os import environ
 from os.path import join
-from pathlib import Path
 from typing import List
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from plantit.keypairs import get_user_private_key_path
-from plantit.queries import get_task_user, task_to_dict
+from plantit.serialize import task_to_dict
 from plantit.ssh import SSH
 from plantit.tasks.models import Task
-from plantit.utils.tasks import get_task_orchestrator_log_file_path, get_job_log_file_name, get_job_log_file_path, \
-    get_task_agent_log_file_name, get_task_agent_log_file_path
+from plantit.utils.tasks import get_task_orchestrator_log_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +25,11 @@ def get_task_ssh_client(task: Task) -> SSH:
         pkey=str(get_user_private_key_path(task.agent.user.username)))
 
 
-async def push_task_channel_event(task: Task):
-    user = await get_task_user(task)
-    await get_channel_layer().group_send(f"{user.username}", {
+def push_task_channel_event(task: Task):
+    user = task.user
+    async_to_sync(get_channel_layer().group_send)(f"{user.username}", {
         'type': 'task_event',
-        'task': await sync_to_async(task_to_dict)(task),
+        'task': task_to_dict(task),
     })
 
 
