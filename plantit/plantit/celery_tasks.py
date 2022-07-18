@@ -39,11 +39,13 @@ from plantit.task_lifecycle import parse_task_options, create_immediate_task, up
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 from plantit.filters import filter_online_users
-from plantit.github import get_member_organizations
-from plantit.cache import refresh_user_workflow_cache, refresh_org_workflow_cache
+from plantit.github import GitHubViews
+from plantit.cache import ModelViews, ManualCacheViews
 
 logger = get_task_logger(__name__)
 
+
+# delayed submissions
 
 @app.task(track_started=True)
 def create_and_submit_delayed(username, workflow, delayed_id: str = None):
@@ -125,18 +127,7 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
     async_to_sync(push_task_channel_event)(itask)
 
 
-#  Task Lifecycle  #
-#
-# prep environment
-# share dataset
-# submit script
-# poll status
-# (if successful)
-#   check results
-#   check transfer
-# unshare dataset
-# clean up
-
+# completion callbacks
 
 def __handle_job_success(task: Task, message: str):
     # update the task and persist it
@@ -178,6 +169,17 @@ def __handle_job_failure(task: Task, message: str):
     unshare_data.s(task.guid).apply_async()
     tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
+
+# task lifecycle
+# ====================
+#   prep environment
+#   share dataset
+#   submit job script
+#   poll job status until successful
+#   check results
+#   check data transfer
+#   unshare dataset
+#   clean up
 
 @app.task(track_started=True, bind=True)
 def prep_environment(self, guid: str):
@@ -814,19 +816,6 @@ def refresh_user_stats(username: str):
 
 
 @app.task()
-def refresh_user_workflows(owner: str):
-    task_name = refresh_user_workflows.name
-    if not __acquire_lock(task_name):
-        logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
-        return
-
-    try:
-        refresh_user_workflow_cache_async(owner)
-    finally:
-        __release_lock(task_name)
-
-
-@app.task()
 def refresh_all_workflows():
     task_name = refresh_all_workflows.name
     if not __acquire_lock(task_name):
@@ -834,25 +823,28 @@ def refresh_all_workflows():
         return
 
     try:
-        # refresh workflows from user-owned repos
+        # refresh workflows from repos owned by logged-in users
         users = User.objects.all()
         online = filter_online_users(users)
-        logger.info(f"Refreshing workflow cache for {len(online)} online user(s)")
+        logger.info(f"Refreshing workflow cache for {len(online)} user(s)")
+        cache = None
         for user in online:
+            if cache is None:
+                cache = ModelViews(client=RedisClient.get(), user=user)
+            else:
+                cache.user = user
+
             profile = Profile.objects.get(user=user)
             github_login = profile.github_username
             if github_login is not None and github_login != '':
-                refresh_user_workflow_cache(profile.github_username)
+                cache.get_user_workflows(user, invalidate=True)
 
-        # refresh workflows belonging to user's member organizations
-        users = User.objects.all()
-        online = filter_online_users(users)
+        # refresh workflows belonging to user organizations
         for user in online:
-            profile = Profile.objects.get(user=user)
-            github_organizations = get_member_organizations(user)
-            logger.info(f"Refreshing workflow cache for online user {user.username}'s {len(online)} organizations")
-            for org in github_organizations:
-                refresh_org_workflow_cache(org['login'], profile.github_token)
+            organizations = GitHubViews.get_member_organizations(user)
+            logger.info(f"Refreshing workflow cache for user {user.username}'s {len(online)} organizations")
+            for org in organizations:
+                cache.get_organization_workflows(org['login'], invalidate=True)
     finally:
         __release_lock(task_name)
 
@@ -865,7 +857,6 @@ def refresh_user_institutions():
         return
 
     try:
-        # TODO: move caching to query layer
         redis = RedisClient.get()
         institutions = plantit.statistics.get_institutions(True)
         for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))

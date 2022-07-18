@@ -407,7 +407,7 @@ class GitHubViewsBase(GitHubBase, metaclass=ABCMeta):
 
     @abstractmethod
     def get_connectable_workflows(self,
-                                  owner: str,
+                                  login: str,
                                   organization: bool = False,
                                   token: Optional[str] = None,
                                   timeout: Optional[int] = None) -> List[dict]:
@@ -415,7 +415,7 @@ class GitHubViewsBase(GitHubBase, metaclass=ABCMeta):
 
     @abstractmethod
     def get_workflows(self,
-                      owner: str,
+                      login: str,
                       organization: bool = False,
                       token: Optional[str] = None,
                       timeout: Optional[int] = None) -> List[dict]:
@@ -423,8 +423,8 @@ class GitHubViewsBase(GitHubBase, metaclass=ABCMeta):
 
     @abstractmethod
     def get_workflow_config(self,
-                            owner: str,
-                            name: str,
+                            login: str,
+                            repo: str,
                             branch: str = 'master',
                             token: Optional[str] = None,
                             timeout: Optional[int] = None) -> dict:
@@ -432,8 +432,8 @@ class GitHubViewsBase(GitHubBase, metaclass=ABCMeta):
 
     @abstractmethod
     def get_workflow_bundle(self,
-                            owner: str,
-                            name: str,
+                            login: str,
+                            repo: str,
                             branch: str,
                             token: Optional[str] = None,
                             timeout: Optional[int] = None) -> dict:
@@ -509,19 +509,6 @@ class GitHubViews(GitHubClient, GitHubViewsBase):
 
         return workflows
 
-    def get_workflows(self,
-                      owner: str,
-                      organization: bool = False,
-                      token: Optional[str] = None,
-                      timeout: Optional[int] = None) -> List[dict]:
-        bundle = self.get_repo_bundle(owner, name, branch, token, timeout)
-        workflow = {
-            'config': bundle['config'],
-            'repo': bundle['repo'],
-            'validation': bundle['validation'],
-            'branch': branch,
-            'featured': FeaturedWorkflow.objects.filter(owner=owner, name=name, branch=branch).exists()
-        }
 
     @retry(
         reraise=True,

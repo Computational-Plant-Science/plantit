@@ -21,7 +21,7 @@ def list_by_user(request, owner):
     except: return HttpResponseNotFound()
 
     page = params.get('page') if 'page' in params else 1
-    notifications = plantit.filters.filter_notifications(user, page=page)
+    notifications = plantit.filters.filter_notifications_paged(user, page=page)
     return JsonResponse({'notifications': notifications})
 
 

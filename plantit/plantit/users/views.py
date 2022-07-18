@@ -30,7 +30,7 @@ from plantit.cache import list_user_workflows, list_public_workflows
 from plantit.celery_tasks import refresh_user_stats
 from plantit.celery_tasks import start_dirt_migration, Migration
 from plantit.filters import list_user_project_workflows, list_user_org_workflows, filter_managed_files, filter_tasks_paged, filter_delayed_tasks, \
-    filter_repeating_tasks, filter_triggered_tasks, filter_notifications, filter_agents, filter_user_projects
+    filter_repeating_tasks, filter_triggered_tasks, filter_notifications_paged, filter_agents, filter_user_projects
 from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
@@ -292,7 +292,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'delayed_tasks': filter_delayed_tasks(user),
             'repeating_tasks': filter_repeating_tasks(user),
             'triggered_tasks': filter_triggered_tasks(user),
-            'notifications': filter_notifications(user, page=1),
+            'notifications': filter_notifications_paged(user, page=1),
             'agents': filter_agents(user),
             'workflows': {
                 'public': list_public_workflows(),

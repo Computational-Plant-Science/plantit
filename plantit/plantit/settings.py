@@ -54,7 +54,6 @@ assert 'DIRT_MIGRATION_STAGING_DIR' in os.environ, f"{missing_variable} DIRT_MIG
 assert 'DIRT_MIGRATION_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_HOST"
 assert 'DIRT_MIGRATION_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_PORT"
 assert 'DIRT_MIGRATION_USERNAME' in os.environ, f"{missing_variable} DIRT_MIGRATION_USERNAME"
-# assert 'DIRT_MIGRATION_DB_CONN_STR' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_CONN_STR"
 assert 'DIRT_MIGRATION_DB_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_HOST"
 assert 'DIRT_MIGRATION_DB_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PORT"
 assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_USER"

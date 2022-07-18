@@ -8,20 +8,20 @@ from plantit.datasets.models import DatasetAccessPolicy
 from plantit.miappe.models import Study, Investigation
 from plantit.misc.models import NewsUpdate
 from plantit.notifications.models import Notification
-from plantit.workflows import get_project_workflows
-from plantit.bundle import get_user_bundle
 from plantit.redis import RedisClient
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.users.models import Migration, ManagedFile
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
 
 
 def agent_to_dict(agent: Agent, username: str = None) -> dict:
+    role = AgentRole.admin if username is not None and agent.user.username == username else AgentRole.guest
     users_authorized = agent.users_authorized.all() if agent.users_authorized is not None else []
+    users_authorized = [user.username for user in users_authorized if user is not None]
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
-        'role': AgentRole.admin if username is not None and agent.user.username == username else AgentRole.guest,
+        'role': role,
         'description': agent.description,
         'hostname': agent.hostname,
         'username': agent.username,
@@ -31,16 +31,14 @@ def agent_to_dict(agent: Agent, username: str = None) -> dict:
         'max_cores': agent.max_cores,
         'max_processes': agent.max_processes,
         'queue': agent.queue,
-        # 'project': agent.project,  # don't want to reveal this to end users
         'workdir': agent.workdir,
         'executor': agent.scheduler,
         'disabled': agent.disabled,
         'public': agent.public,
         'gpus': agent.gpus,
-        # 'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'is_healthy': agent.is_healthy,
-        'users_authorized': [get_user_bundle(user) for user in users_authorized if user is not None],
+        'users_authorized': users_authorized,
     }
 
     if agent.user is not None: mapped['user'] = agent.user.username
@@ -89,10 +87,6 @@ def task_to_dict(task: Task) -> dict:
         } if task.study is not None else None,
         'work_dir': task.workdir,
         'orchestrator_logs': orchestrator_logs,
-        # 'inputs_detected': task.inputs_detected,
-        # 'inputs_downloaded': task.inputs_downloaded,
-        # 'inputs_submitted': task.inputs_submitted,
-        # 'inputs_completed': task.inputs_completed,
         'agent': agent_to_dict(task.agent) if task.agent is not None else None,
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),
@@ -165,7 +159,7 @@ def repeating_task_to_dict(task: RepeatingTask):
     }
 
 
-def triggered_task_to_dict(task: RepeatingTask):
+def triggered_task_to_dict(task: TriggeredTask):
     return {
         # 'agent': agent_to_dict(task.agent),
         'name': task.name,
@@ -227,7 +221,6 @@ def project_to_dict(project: Investigation) -> dict:
         'associated_publication': project.associated_publication,
         'studies': studies,
         'team': team,
-        'workflows': get_project_workflows(project)
     }
 
 

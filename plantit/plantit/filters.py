@@ -14,11 +14,9 @@ from plantit.serialize import notification_to_dict, task_to_dict, delayed_task_t
     project_to_dict
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.users.models import ManagedFile
-from plantit.cache import list_project_workflows, list_org_workflows
-from plantit.github import get_member_organizations
 
 
-def filter_notifications(user: User, page: int = 1, read: Optional[bool] = None):
+def filter_notifications_paged(user: User, page: int = 1, read: Optional[bool] = None):
     if read is None:
         notifications = Notification.objects.filter(user=user)
     else:
@@ -130,14 +128,3 @@ def filter_team_projects(team=None):
 def workflow_is_featured(owner, name, branch):
     return FeaturedWorkflow.objects.filter(owner=owner, name=name, branch=branch).exists()
 
-
-def list_user_project_workflows(user: User) -> Dict[str, List[dict]]:
-    projects = filter_user_projects(user)
-    return {project.guid: list_project_workflows(project) for project in projects}
-
-
-def list_user_org_workflows(user: User) -> Dict[str, List[dict]]:
-    orgs = get_member_organizations(user)
-    workflows = dict()
-    for org in orgs: workflows[org['login']] = list_org_workflows(org['login'])
-    return workflows
