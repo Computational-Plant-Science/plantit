@@ -9,9 +9,9 @@ from django.utils.dateparse import parse_date
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-from plantit.filters import filter_user_projects, filter_team_projects
+from plantit.redis import RedisClient
+from plantit.cache import ModelViews
 from plantit.miappe.models import EnvironmentParameter, Study, Investigation
-from plantit.serialize import project_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -34,27 +34,33 @@ def suggested_experimental_factors(request):
 @swagger_auto_schema(methods=['get', 'post'], auto_schema=None)
 @api_view(['GET', 'POST'])
 def list_or_create(request):
+    views = ModelViews(cache=RedisClient.get())
+
+    # get existing projects
     if request.method == 'GET':
         team = request.GET.get('team', None)
-        projects = filter_team_projects(team)
-        return JsonResponse({'projects': projects})
+        projects = views.get_team_projects(team)
+        return JsonResponse({'projects': [ModelViews.project_to_dict(project) for project in projects]})
+
+    # create new project
     elif request.method == 'POST':
         body = request.data
         title = body['title']
         description = body['description'] if 'description' in body else None
         if Investigation.objects.filter(title=title).count() > 0: return HttpResponseBadRequest('Duplicate title')
         project = Investigation.objects.create(owner=request.user, guid=str(uuid.uuid4()), title=title, description=description)
-        return JsonResponse(project_to_dict(project))
+        return JsonResponse(ModelViews.project_to_dict(project))
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def list_by_owner(request, owner):
+    views = ModelViews(cache=RedisClient.get())
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
-    projects = filter_user_projects(request.user)
-    return JsonResponse({'projects': [project_to_dict(project) for project in projects]})
+    projects = views.get_user_projects(request.user)
+    return JsonResponse({'projects': [ModelViews.project_to_dict(project) for project in projects]})
 
 
 @login_required
@@ -65,13 +71,13 @@ def get_or_delete(request, owner, title):
     if request.method == 'GET':
         try:
             project = Investigation.objects.get(owner=request.user, title=title)
-            return JsonResponse(project_to_dict(project))
+            return JsonResponse(ModelViews.project_to_dict(project))
         except:
             return HttpResponseNotFound()
     elif request.method == 'DELETE':
         project = Investigation.objects.get(owner=request.user, title=title)
         project.delete()
-        projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+        projects = [ModelViews.project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
         return JsonResponse({'projects': projects})
 
 
@@ -107,7 +113,7 @@ def add_team_member(request, owner, title):
     project.team.add(user)
     project.save()
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(ModelViews.project_to_dict(project))
 
 
 @login_required
@@ -129,7 +135,7 @@ def remove_team_member(request, owner, title):
     project.team.remove(user)
     project.save()
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(ModelViews.project_to_dict(project))
 
 
 @login_required
@@ -149,8 +155,8 @@ def add_study(request, owner, title):
     except:
         return HttpResponseNotFound()
 
-    study = Study.objects.create(investigation=project, title=study_title, guid=guid, description=study_description)
-    return JsonResponse(project_to_dict(project))
+    Study.objects.create(investigation=project, title=study_title, guid=guid, description=study_description)
+    return JsonResponse(ModelViews.project_to_dict(project))
 
 
 @login_required
@@ -173,14 +179,14 @@ def remove_study(request, owner, title):
         return HttpResponseNotFound()
 
     study.delete()
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(ModelViews.project_to_dict(project))
 
 
 @login_required
 @swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def edit_study(request, owner, title):
-    if request.method != 'POST': return HttpResponseNotAllowed()
+    if request.method != 'POST': return HttpResponseNotAllowed(["POST"])
     if request.user.username != owner: return HttpResponseForbidden()
 
     body = request.data
@@ -236,4 +242,4 @@ def edit_study(request, owner, title):
     for name, value in study_environment_parameters.items():
         EnvironmentParameter.objects.create(name=name, value=value, study=study)
 
-    return JsonResponse(project_to_dict(project))
+    return JsonResponse(ModelViews.project_to_dict(project))

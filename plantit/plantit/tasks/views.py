@@ -12,11 +12,10 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileRe
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.filters
-import plantit.workflows as q
-import plantit.serialize
 from plantit import settings
+from plantit.cache import ModelViews
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
+from plantit.redis import RedisClient
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
@@ -27,21 +26,22 @@ from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
 logger = logging.getLogger(__name__)
 
 
-# noinspection PyTypeChecker
-# @swagger_auto_schema(method='post', auto_schema=None)
-# @swagger_auto_schema(methods='get')
 @login_required
 @swagger_auto_schema(methods=['get', 'post'], auto_schema=None)
 @api_view(['GET', 'POST'])
 def get_or_create(request):
-    if request.method == 'GET':
-        return JsonResponse(plantit.filters.filter_tasks_paged(request.user, page=int(request.GET.get('page', 1))))
-    elif request.method == 'POST':
-        # get the task configuration from the request
-        task_config = request.data
+    views = ModelViews(cache=RedisClient.get())
 
-        # task type must be configured
-        task_type = task_config.get('type', None)
+    # retrieve an existing task
+    if request.method == 'GET':
+        page = int(request.GET.get('page', 1))
+        tasks = views.get_tasks_paged(request.user, page=page)
+        return JsonResponse(tasks)
+
+    # submit a new task
+    elif request.method == 'POST':
+        task_config = request.data                  # get the task configuration from the request
+        task_type = task_config.get('type', None)   # task type must be configured
         if task_type is None: return HttpResponseBadRequest()
         else: task_type = task_type.lower()
 
@@ -51,38 +51,34 @@ def get_or_create(request):
             if task_config.get('guid', None) is None:
                 return HttpResponseBadRequest()
 
-            # create task
+            # create task and submit to Celery
             task = create_immediate_task(request.user, task_config)
-
-            # submit Celery task chain
             (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
             created = True
-            task_dict = plantit.serialize.task_to_dict(task)
-
             log_task_status(task, [f"Created task {task.guid} on {task.agent.name}"])
             async_to_sync(push_task_channel_event)(task)
 
         # otherwise register delayed or repeating task
         elif task_type == 'after':
             task, created = create_delayed_task(request.user, task_config)
-            task_dict = plantit.serialize.delayed_task_to_dict(task)
+            logger.info(f"Created delayed task {task.name} on {task_config['agent']}")
         elif task_type == 'every':
             task, created = create_repeating_task(request.user, task_config)
-            task_dict = plantit.serialize.repeating_task_to_dict(task)
+            logger.info(f"Created repeating task {task.name} on {task_config['agent']}")
         elif task_type == 'watch':
             task, created = create_triggered_task(request.user, task_config)
-            task_dict = plantit.serialize.triggered_task_to_dict(task)
+            logger.info(f"Created triggered task {task.name} on {task_config['agent']}")
 
-        # currently we only support immediate, delayed, and periodic (repeating) tasks
+        # currently we only support immediate, delayed, periodic (repeating) and triggered (watched) tasks
         else:
             raise ValueError(f"Unsupported task type (expected: Now, After, Every, or Watch)")
 
         return JsonResponse({
             'created': created,
-            'task': task_dict
+            'task': ModelViews.delayed_task_to_dict(task)
         })
 
 
@@ -90,27 +86,35 @@ def get_or_create(request):
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_delayed(request):
-    return JsonResponse({'tasks': plantit.filters.filter_delayed_tasks(request.user)})
+    views = ModelViews(cache=RedisClient.get())
+    tasks = views.get_delayed_tasks(request.user)
+    return JsonResponse({'tasks': [ModelViews.delayed_task_to_dict(task) for task in tasks]})
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_repeating(request):
-    return JsonResponse({'tasks': plantit.filters.filter_repeating_tasks(request.user)})
+    views = ModelViews(cache=RedisClient.get())
+    tasks = views.get_repeating_tasks(request.user)
+    return JsonResponse({'tasks': [ModelViews.repeating_task_to_dict(task) for task in tasks]})
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_triggered(request):
-    return JsonResponse({'tasks': plantit.filters.filter_triggered_tasks(request.user)})
+    views = ModelViews(cache=RedisClient.get())
+    tasks = views.get_triggered_tasks(request.user)
+    return JsonResponse({'tasks': [ModelViews.triggered_task_to_dict(task) for task in tasks]})
 
 
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def get_task(request, guid):
+    views = ModelViews(cache=RedisClient.get())
+
     try:
         task = Task.objects.get(guid=guid)
         owns = request.user.username == task.user.username
@@ -122,7 +126,7 @@ def get_task(request, guid):
             logger.warning(f"Unauthorized access request for task {guid} from user {request.user.username}")
             return HttpResponseNotFound()
 
-        return JsonResponse(plantit.serialize.task_to_dict(task))
+        return JsonResponse(views.task_to_dict(task))
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -154,6 +158,8 @@ def get_task(request, guid):
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def download_output_file(request, guid):
+    views = ModelViews(cache=RedisClient.get())
+
     try:
         task = Task.objects.get(guid=guid)
         owns = request.user.username == task.user.username
@@ -169,29 +175,28 @@ def download_output_file(request, guid):
 
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
-    ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
+    ssh = get_task_ssh_client(task)
 
     with ssh:
         with ssh.client.open_sftp() as sftp:
-            file_path = join(workdir, path)
-            logger.info(f"Downloading {file_path}")
+            fpath = join(workdir, path)
+            logger.info(f"Downloading {fpath}")
 
-            stdin, stdout, stderr = ssh.client.exec_command('test -e {0} && echo exists'.format(file_path))
+            stdin, stdout, stderr = ssh.client.exec_command('test -e {0} && echo exists'.format(fpath))
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
             with tempfile.NamedTemporaryFile() as tf:
                 sftp.chdir(workdir)
                 sftp.get(path, tf.name)
-                lower = file_path.lower()
+                lower = fpath.lower()
+
                 if lower.endswith('.txt') or lower.endswith('.log') or lower.endswith('.out') or lower.endswith('.err'):
                     return FileResponse(open(tf.name, 'rb'))
                 elif lower.endswith('.zip'):
                     response = FileResponse(open(tf.name, 'rb'))
-                    # response['Content-Disposition'] = 'attachment; filename={}'.format("%s" % path)
                     return response
-                    # return FileResponse(open(tf.name, 'rb'), content_type='application/zip', as_attachment=True)
 
 
 @login_required
@@ -328,6 +333,8 @@ def __cancel(task: Task):
 @swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def cancel(request, guid):
+    views = ModelViews(cache=RedisClient.get())
+
     try:
         task = Task.objects.get(user=request.user, guid=guid)
     except MultipleObjectsReturned:
@@ -342,14 +349,14 @@ def cancel(request, guid):
         return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
 
     __cancel(task)
-    return JsonResponse(plantit.serialize.task_to_dict(task))
+    return JsonResponse(views.task_to_dict(task))
 
 
-# TODO switch to post
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def unschedule_delayed(request, guid):
+    # TODO switch to POST request
     try:
         task = DelayedTask.objects.get(user=request.user, name=guid)
     except:
@@ -357,15 +364,15 @@ def unschedule_delayed(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [plantit.serialize.delayed_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [ModelViews.delayed_task_to_dict(task) for task in
                                    DelayedTask.objects.filter(user=request.user, enabled=True)]})
 
 
-# TODO switch to post
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def unschedule_repeating(request, guid):
+    # TODO switch to POST request
     try:
         task = RepeatingTask.objects.get(user=request.user, name=guid)
     except:
@@ -373,15 +380,15 @@ def unschedule_repeating(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [plantit.serialize.repeating_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [ModelViews.repeating_task_to_dict(task) for task in
                                    RepeatingTask.objects.filter(user=request.user, enabled=True)]})
 
 
-# TODO switch to post
 @login_required
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def unschedule_triggered(request, guid):
+    # TODO switch to POST request
     try:
         task = TriggeredTask.objects.get(user=request.user, name=guid)
     except:
@@ -389,7 +396,7 @@ def unschedule_triggered(request, guid):
     task.delete()
 
     # TODO paginate
-    return JsonResponse({'tasks': [plantit.serialize.triggered_task_to_dict(task) for task in
+    return JsonResponse({'tasks': [ModelViews.triggered_task_to_dict(task) for task in
                                    TriggeredTask.objects.filter(user=request.user, enabled=True)]})
 
 

@@ -44,8 +44,8 @@ def create_immediate_task(user: User, config: dict):
     repo_branch = config['repo']['branch']
 
     # persist task configuration
-    redis = RedisClient.get()
-    redis.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(config))
+    cache = RedisClient.get()
+    cache.set(f"workflow_configs/{user.username}/{repo_owner}/{repo_name}/{repo_branch}", json.dumps(config))
 
     # get the task GUID and name
     guid = config.get('guid', None) if config['type'] == 'Now' else str(uuid.uuid4())
@@ -451,7 +451,11 @@ def check_job_logs_for_progress(task: Task):
 @retry(
     wait=wait_random_exponential(multiplier=5, max=120),
     stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    retry=(retry_if_exception_type(AuthenticationException) |
+           retry_if_exception_type(AuthenticationException) |
+           retry_if_exception_type(ChannelException) |
+           retry_if_exception_type(NoValidConnectionsError) |
+           retry_if_exception_type(SSHException)),
     reraise=True)
 def get_job_status_and_walltime(task: Task):
     ssh = get_task_ssh_client(task)
@@ -802,13 +806,13 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if output is not None: options['output'] = output
     if parameters is not None: options['parameters'] = parameters
     if env is not None: options['env'] = env
-    if mount is not None: options['mount'] = mount
-    if iterations is not None: options['iterations'] = iterations
+    if mount is not None: options['bind_mounts'] = mount
+    if iterations is not None: options['iterations'] = int(iterations)
     # if checksums is not None: options['checksums'] = checksums
     if log_file is not None: options['log_file'] = log_file
     if jobqueue is not None: options['jobqueue'] = jobqueue
     if no_cache is not None: options['no_cache'] = no_cache
-    if gpu is not None: options['gpus'] = task.agent.gpus
+    if gpu is not None: options['gpus'] = task.agent.gpus > 0
     if image is not None: options['image'] = image
     if shell is not None: options['shell'] = shell
 

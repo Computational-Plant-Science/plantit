@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
+from plantit.misc.models import FeaturedWorkflow
 from plantit.users.models import Profile
 from plantit.validation import validate_workflow_configuration
 
@@ -509,6 +510,20 @@ class GitHubViews(GitHubClient, GitHubViewsBase):
 
         return workflows
 
+    @retry(
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(3),
+        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+            Timeout) | retry_if_exception_type(HTTPError)))
+    def get_workflows(self,
+                      login: str,
+                      organization: bool = False,
+                      token: Optional[str] = None,
+                      timeout: Optional[int] = None) -> List[dict]:
+        # TODO
+        pass
 
     @retry(
         reraise=True,
@@ -569,54 +584,11 @@ class AsyncGitHubViews(AsyncGitHubClient, GitHubViewsBase):
         retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
             RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
             Timeout) | retry_if_exception_type(HTTPError)))
-    async def get_workflow_config(self,
-                                  owner: str,
-                                  name: str,
-                                  branch: str = 'master',
-                                  token: Optional[str] = None,
-                                  timeout: Optional[int] = None) -> dict:
-        headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-        }
-        async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-            response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
-            response.raise_for_status()
-            config = response.text
-            self.__logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
-            return yaml.load(config)
-
-    async def get_workflow_bundle(self,
-                                  owner: str,
-                                  name: str,
-                                  branch: str,
-                                  token: Optional[str] = None,
-                                  timeout: Optional[int] = None) -> dict:
-        tasks = [self.get_repo(owner, name, token, timeout), self.get_workflow_config(owner, name, branch, token, timeout)]
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
-        repo = responses[0]
-        config = responses[1]
-        valid, errors = validate_workflow_configuration(config)
-        return {
-            'repo': repo,
-            'config': config,
-            'validation': {
-                'is_valid': valid,
-                'errors': errors
-            }
-        }
-
-    @retry(
-        reraise=True,
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        stop=stop_after_attempt(3),
-        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
-            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-            Timeout) | retry_if_exception_type(HTTPError)))
-    async def list_connectable_workflows_by_org(self,
-                                                owner: str,
-                                                token: Optional[str] = None,
-                                                timeout: Optional[int] = None) -> List[dict]:
+    async def get_connectable_workflows(self,
+                                        owner: str,
+                                        organization: bool = False,
+                                        token: Optional[str] = None,
+                                        timeout: Optional[int] = None) -> List[dict]:
         headers = {
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
@@ -625,7 +597,6 @@ class AsyncGitHubViews(AsyncGitHubClient, GitHubViewsBase):
             workflows = []
             org_repos = await self.get_repos(owner, token, timeout)
 
-            # TODO refactor to send reqs in parallel
             for repository in org_repos:
                 branches = await self.get_repo_branches(owner, repository['name'], token, timeout)
                 for branch in branches:
@@ -645,7 +616,8 @@ class AsyncGitHubViews(AsyncGitHubClient, GitHubViewsBase):
                     else:
                         self.__logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
 
-                    repository['organization'] = owner
+                    if organization:
+                        repository['organization'] = owner
 
                     try:
                         config = yaml.safe_load(response.text)
@@ -681,55 +653,61 @@ class AsyncGitHubViews(AsyncGitHubClient, GitHubViewsBase):
         retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
             RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
             Timeout) | retry_if_exception_type(HTTPError)))
-    async def list_connectable_workflows_by_owner(self,
-                                                  owner: str,
-                                                  token: Optional[str] = None,
-                                                  timeout: Optional[int] = None) -> List[dict]:
+    def get_workflows(self,
+                      login: str,
+                      organization: bool = False,
+                      token: Optional[str] = None,
+                      timeout: Optional[int] = None) -> List[dict]:
+        # TODO
+        pass
+
+    @retry(
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(3),
+        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+            Timeout) | retry_if_exception_type(HTTPError)))
+    async def get_workflow_config(self,
+                                  owner: str,
+                                  name: str,
+                                  branch: str = 'master',
+                                  token: Optional[str] = None,
+                                  timeout: Optional[int] = None) -> dict:
         headers = {
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         }
         async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
-            workflows = []
-            owned_repos = await self.get_repos(owner, token, timeout)
-            for repository in owned_repos:
-                branches = await self.get_repo_branches(owner, repository['name'], token, timeout)
-                for branch in branches:
-                    response = await client.get(
-                        f"https://raw.githubusercontent.com/{owner}/{repository['name']}/{branch['name']}/plantit.yaml",
-                        headers={
-                            "Authorization": f"token {token}",
-                            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-                        })
+            response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/plantit.yaml")
+            response.raise_for_status()
+            config = response.text
+            self.__logger.info(f"Retrieved config for {owner}/{name}:\n{config}")
+            return yaml.load(config)
 
-                    if response.status_code == 404:
-                        self.__logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
-                        continue
-                    if response.status_code != 200:
-                        self.__logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
-                        continue
-
-                    try:
-                        config = yaml.safe_load(response.text)
-                        valid, errors = validate_workflow_configuration(config)
-                        workflows.append({
-                            'repo': repository,
-                            'config': config,
-                            'branch': branch,
-                            'validation': {
-                                'is_valid': valid,
-                                'errors': errors
-                            }
-                        })
-                    except Exception:
-                        workflows.append({
-                            'repo': repository,
-                            'config': {},
-                            'branch': branch,
-                            'validation': {
-                                'is_valid': False,
-                                'errors': [traceback.format_exc()]
-                            }
-                        })
-
-            return workflows
+    @retry(
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(3),
+        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+            Timeout) | retry_if_exception_type(HTTPError)))
+    async def get_workflow_bundle(self,
+                                  owner: str,
+                                  name: str,
+                                  branch: str,
+                                  token: Optional[str] = None,
+                                  timeout: Optional[int] = None) -> dict:
+        tasks = [self.get_repo(owner, name, token, timeout), self.get_workflow_config(owner, name, branch, token, timeout)]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        repo = responses[0]
+        config = responses[1]
+        valid, errors = validate_workflow_configuration(config)
+        return {
+            'repo': repo,
+            'config': config,
+            'validation': {
+                'is_valid': valid,
+                'errors': errors
+            }
+        }

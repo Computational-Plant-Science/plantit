@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 import plantit.filters
 from plantit.serialize import agent_to_dict
 from plantit.agents.models import Agent, AgentAccessPolicy
-from plantit.healthchecks import is_healthy
+from plantit.health import is_healthy
 from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)

@@ -1,15 +1,12 @@
 import json
 import os
 import traceback
-from copy import deepcopy
-from pathlib import Path
-from typing import List, NamedTuple, Optional
+from datetime import datetime
 from os import environ
 from os.path import join
-from datetime import datetime
+from pathlib import Path
 
-from asgiref.sync import async_to_sync, sync_to_async
-from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
@@ -17,30 +14,29 @@ from django.core.cache import cache
 from django.utils import timezone
 from pycyapi.clients import TerrainClient
 
-import plantit.healthchecks
-import plantit.mapbox
-import plantit.workflows as q
-import plantit.statistics
-import plantit.utils.agents
-import plantit.migration as mig
-from plantit.ssh import SSH
-from plantit.keypairs import get_user_private_key_path
+import plantit.migration as dirt_migration
 from plantit import settings
-from plantit.users.models import Profile, Migration, ManagedFile
-from plantit.agents.models import Agent
+from plantit.cache import ModelViews
 from plantit.celery import app
-from plantit.healthchecks import is_healthy
 from plantit.cyverse import refresh_user_cyverse_tokens
+from plantit.keypairs import get_user_private_key_path
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
+from plantit.ssh import SSH
 from plantit.ssh import execute_command
-from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
-    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
+from plantit.task_lifecycle import \
+    parse_task_options, \
+    create_immediate_task, \
+    upload_deployment_artifacts, \
+    submit_job_to_scheduler, \
+    get_job_status_and_walltime, \
+    list_result_files, \
+    cancel_task, \
+    submit_pull_to_scheduler, \
+    submit_push_to_scheduler
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
-from plantit.filters import filter_online_users
-from plantit.github import GitHubViews
-from plantit.cache import ModelViews, ManualCacheViews
+from plantit.users.models import Profile, Migration, ManagedFile
 
 logger = get_task_logger(__name__)
 
@@ -617,7 +613,6 @@ def unshare_data(self, guid: str):
     #     logger.warning(f"Task {guid} outbound path {task.transfer_path} used by another task, not revoking temporary data access")
     #     self.request.callbacks = None
     #     return guid
-
     logger.warning(f"Not revoking temporary data access for task {guid} outbound path {task.transfer_path}")
     return guid
 
@@ -774,25 +769,20 @@ def recompute_all_users_stats():
         return
 
     try:
-        # TODO: move caching to query layer
-        redis = RedisClient.get()
-
+        views = ModelViews(cache=RedisClient.get())
+        logger.info(f"Computing aggregate statistics")
+        views.get_aggregate_timeseries(invalidate=True)
         for user in User.objects.all():
             logger.info(f"Computing statistics for {user.username}")
-
-            # trigger reevaluation for stats and timeseries
-            plantit.statistics.get_user_statistics(user, invalidate=True)
-            plantit.statistics.get_user_timeseries(user, invalidate=True)
-
-        logger.info(f"Computing aggregate statistics")
-        redis.set("stats_counts", json.dumps(plantit.statistics.get_total_counts(True)))
-        redis.set("total_timeseries", json.dumps(plantit.statistics.get_aggregate_timeseries(True)))
+            views.get_user_statistics(user, invalidate=True)
+            views.get_user_timeseries(user, invalidate=True)
     finally:
         __release_lock(task_name)
 
 
 @app.task()
 def refresh_user_stats(username: str):
+    views = ModelViews(cache=RedisClient.get())
     task_name = refresh_user_stats.name
     if not __acquire_lock(task_name):
         logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
@@ -806,60 +796,38 @@ def refresh_user_stats(username: str):
         return
 
     try:
-        logger.info(f"Aggregating statistics for {user.username}")
-
-        # trigger reevaluation for stats and timeseries
-        plantit.statistics.get_user_statistics(user, invalidate=True)
-        plantit.statistics.get_user_timeseries(user, invalidate=True)
+        logger.info(f"Computing statistics for {user.username}")
+        views.get_user_statistics(user, invalidate=True)
+        views.get_user_timeseries(user, invalidate=True)
     finally:
         __release_lock(task_name)
 
 
 @app.task()
 def refresh_all_workflows():
+    views = ModelViews(cache=RedisClient.get())
     task_name = refresh_all_workflows.name
     if not __acquire_lock(task_name):
         logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
         return
 
     try:
-        # refresh workflows from repos owned by logged-in users
-        users = User.objects.all()
-        online = filter_online_users(users)
-        logger.info(f"Refreshing workflow cache for {len(online)} user(s)")
-        cache = None
-        for user in online:
-            if cache is None:
-                cache = ModelViews(client=RedisClient.get(), user=user)
-            else:
-                cache.user = user
-
-            profile = Profile.objects.get(user=user)
-            github_login = profile.github_username
-            if github_login is not None and github_login != '':
-                cache.get_user_workflows(user, invalidate=True)
-
-        # refresh workflows belonging to user organizations
-        for user in online:
-            organizations = GitHubViews.get_member_organizations(user)
-            logger.info(f"Refreshing workflow cache for user {user.username}'s {len(online)} organizations")
-            for org in organizations:
-                cache.get_organization_workflows(org['login'], invalidate=True)
+        views.get_workflows(invalidate=True)
     finally:
         __release_lock(task_name)
 
 
 @app.task()
 def refresh_user_institutions():
+    views = ModelViews(cache=RedisClient.get())
     task_name = refresh_user_institutions.name
     if not __acquire_lock(task_name):
         logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
         return
 
     try:
-        redis = RedisClient.get()
-        institutions = plantit.statistics.get_institutions(True)
-        for name, institution in institutions.items(): redis.set(f"institutions/{name}", json.dumps(institution))
+
+        views.get_institutions(invalidate=True)
     finally:
         __release_lock(task_name)
 
@@ -907,27 +875,14 @@ def refresh_all_user_cyverse_tokens():
 
 @app.task()
 def agents_healthchecks():
+    views = ModelViews(cache=RedisClient.get())
     task_name = agents_healthchecks.name
     if not __acquire_lock(task_name):
         logger.warning(f"Task '{task_name}' is already running, aborting (maybe consider a longer scheduling interval?)")
         return
 
     try:
-        for agent in Agent.objects.all():
-            healthy, output = is_healthy(agent)
-            plantit.healthchecks.is_healthy = healthy
-            agent.save()
-
-            redis = RedisClient.get()
-            length = redis.llen(f"healthchecks/{agent.name}")
-            checks_saved = int(settings.AGENTS_HEALTHCHECKS_SAVED)
-            if length > checks_saved: redis.rpop(f"healthchecks/{agent.name}")
-            check = {
-                'timestamp': timezone.now().isoformat(),
-                'healthy': healthy,
-                'output': output
-            }
-            redis.lpush(f"healthchecks/{agent.name}", json.dumps(check))
+        views.get_agent_healthchecks(invalidate=True)
     finally:
         __release_lock(task_name)
 
@@ -941,7 +896,7 @@ def attach_file_metadata(client, file):
     # get CyVerse data store ID of newly uploaded file, then get metadata and environmental data from DIRT and attach it as metadata
     stat = client.stat(join(file.collection, file.name))
     id = stat['id']
-    metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species = mig.get_root_image_info(file.entity_id)
+    metadata, resolution, age, dry_biomass, fresh_biomass, family, genus, spad, species = dirt_migration.get_root_image_info(file.entity_id)
     props = [f"migrated={timezone.now().isoformat()}"]
     if resolution is not None: props.append(f"resolution={resolution}")
     if age is not None: props.append(f"age={age}")
@@ -981,7 +936,7 @@ def transfer_dirt_file(id):
         logger.warning(f"File {file.nfs_path} not found! Skipping")
         file.missing = True
         file.save()
-        async_to_sync(mig.push_migration_event)(user, migration, file)
+        async_to_sync(dirt_migration.push_migration_event)(user, migration, file)
 
     logger.info(f"Uploading file from {file.staging_path} to collection {file.collection}")
 
@@ -1000,7 +955,7 @@ def transfer_dirt_file(id):
     attach_file_metadata(client, file)
 
     # push an update to client
-    async_to_sync(mig.push_migration_event)(user, migration, file)
+    async_to_sync(dirt_migration.push_migration_event)(user, migration, file)
 
 
 @app.task(bind=True)
@@ -1048,7 +1003,7 @@ def start_dirt_migration(self, username: str):
     logger.info(f"Inspecting managed files")
 
     # get all managed files from DIRT database and separate by type
-    managed_files = mig.get_managed_files(dirt_username)
+    managed_files = dirt_migration.get_managed_files(dirt_username)
     image_files = [f for f in managed_files if f.type == 'image']
     metadata_files = [f for f in managed_files if f.type == 'metadata']
     output_files = [f for f in managed_files if f.type == 'output']
@@ -1066,7 +1021,7 @@ def start_dirt_migration(self, username: str):
     collections_created = set()
     for file in image_files:
         # get file entity ID given root image file ID
-        file_entity_id = mig.get_file_entity_id(file.id)
+        file_entity_id = dirt_migration.get_file_entity_id(file.id)
 
         # if no corresponding file entity for this managed file, skip it
         if file_entity_id is None:
@@ -1074,7 +1029,7 @@ def start_dirt_migration(self, username: str):
             continue
 
         # get collection entity ID for the collection this image is in
-        collection_entity_id = mig.get_collection_entity_id(file_entity_id)
+        collection_entity_id = dirt_migration.get_collection_entity_id(file_entity_id)
 
         # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
         if collection_entity_id is None:
@@ -1091,7 +1046,7 @@ def start_dirt_migration(self, username: str):
                 client.mkdir(collection_path)
 
         # otherwise we have a corresponding marked collection, get its title
-        collection_name, collection_created, collection_changed = mig.get_marked_collection(collection_entity_id)
+        collection_name, collection_created, collection_changed = dirt_migration.get_marked_collection(collection_entity_id)
         collection_path = join(migration_collection_path, 'collections', collection_name)
 
         if collection_name not in collections_created:
@@ -1107,7 +1062,7 @@ def start_dirt_migration(self, username: str):
             file.collection_datastore_id = id
 
             # get metadata and environmental data and attach to file
-            metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(
+            metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = dirt_migration.get_marked_collection_info(
                 collection_entity_id)
             props = [
                 f"migrated={timezone.now().isoformat()}",
