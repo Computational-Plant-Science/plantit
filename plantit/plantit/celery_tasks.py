@@ -34,9 +34,10 @@ from plantit.task_lifecycle import \
     cancel_task, \
     submit_pull_to_scheduler, \
     submit_push_to_scheduler
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
+from plantit.task_resources import log_task_status, get_task_ssh_client
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 from plantit.users.models import Profile, Migration, ManagedFile
+from plantit.workflows.channels import Channels
 
 logger = get_task_logger(__name__)
 
@@ -62,7 +63,7 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
     log_task_status(task, [f"Created {task.user.username}'s (delayed) task {task.guid} on {task.agent.name}"])
-    async_to_sync(push_task_channel_event)(task)
+    Channels.push_task_event(task)
 
 
 @app.task(track_started=True)

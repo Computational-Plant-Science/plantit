@@ -4,15 +4,8 @@ from typing import List, Tuple, NamedTuple, Optional
 import pymysql
 from pymysql import MySQLError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
-from channels.layers import get_channel_layer
-from django.contrib.auth.models import User
 
-import plantit.workflows as q
-import plantit.serialize
-import plantit.users.models
-from plantit.ssh import SSH
 from plantit import settings
-from plantit.users.models import Profile, Migration
 
 SELECT_DIRT_CAS_USER = """SELECT * FROM cas_user WHERE cas_name = %s"""
 SELECT_DIRT_USER = """SELECT * FROM users WHERE mail = %s"""
@@ -53,16 +46,7 @@ def get_db_connection():
                            password=settings.DIRT_MIGRATION_DB_PASSWORD)
 
 
-async def push_migration_event(user: User, migration: Migration, file: plantit.users.models.ManagedFile = None):
-    data = {
-        'type': 'migration_event',
-        'migration': plantit.serialize.migration_to_dict(migration),
-    }
-    if file is not None: data['file'] = plantit.serialize.managed_file_to_dict(file)
-    await get_channel_layer().group_send(f"{user.username}", data)
-
-
-class ManagedFile(NamedTuple):
+class DirtFile(NamedTuple):
     id: str
     name: str
     nfs_path: str
@@ -82,7 +66,7 @@ def row_to_managed_file(row):
     path = row[2]
 
     if 'root-images' in path:
-        return ManagedFile(
+        return DirtFile(
             id=fid,
             name=name,
             path=path.replace('public://', ''),
@@ -92,7 +76,7 @@ def row_to_managed_file(row):
             missing=False,
             uploaded=None)
     elif 'metadata-files' in path:
-        return ManagedFile(
+        return DirtFile(
             id=fid,
             name=name,
             path=path.replace('public://', ''),
@@ -103,7 +87,7 @@ def row_to_managed_file(row):
             uploaded=None)
     elif 'output-files' in path or 'output-images' in path:
         folder = path.rpartition('output-files' if 'output-files' in path else 'output-images')[2].replace(name, '').replace('/', '')
-        return ManagedFile(
+        return DirtFile(
             id=fid,
             name=name,
             path=path.replace('public://', ''),
@@ -113,7 +97,7 @@ def row_to_managed_file(row):
             missing=False,
             uploaded=None)
     elif 'output-logs' in path:
-        return ManagedFile(
+        return DirtFile(
             id=fid,
             name=name,
             path=path.replace('public://', ''),
@@ -154,7 +138,7 @@ def get_dirt_username(username: str, email: Optional[str]) -> Optional[str]:
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=(retry_if_exception_type(MySQLError)))
-def get_managed_files(username: str) -> List[ManagedFile]:
+def get_managed_files(username: str) -> List[DirtFile]:
     db = get_db_connection()
 
     try:

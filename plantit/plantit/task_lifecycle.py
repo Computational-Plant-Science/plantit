@@ -4,6 +4,7 @@ import os
 import traceback
 import uuid
 from datetime import timedelta, datetime
+from math import ceil
 from os.path import join, isdir
 from pathlib import Path
 from typing import List
@@ -23,12 +24,12 @@ from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.task_resources import get_task_ssh_client
-from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
-    Input
+    Input, BindMount
+from plantit.utils.agents import has_virtual_memory
 from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_job_id, get_output_included_names, get_output_included_patterns, \
-    get_job_log_file_path, get_job_log_file_name, parse_bind_mount, parse_task_miappe_info
+    get_job_log_file_path, get_job_log_file_name, parse_bind_mount, parse_task_miappe_info, format_bind_mount
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,8 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         token = task.user.profile.cyverse_access_token
         client = TerrainClient(token)
         inputs = [client.stat(path)['path'].rpartition('/')[2]] if kind == InputKind.FILE else [f['label'] for f in client.list_files(path)]
-    else: inputs = []
+    else:
+        inputs = []
 
     # save the expected number of input files to the task
     task.inputs_detected = len(inputs)
@@ -250,11 +252,13 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     #   could catch the error and show an alert in the UI.
     with ssh.client.open_sftp() as sftp:
 
+        scripts = TaskScripts(task, options)
+
         # if we have inputs, compose and transfer the pull script
         if len(inputs) > 0:
             pull_script_path = join(work_dir, f"{task.guid}_pull.sh")
             with sftp.file(join(work_dir, pull_script_path), 'w') as pull_script:
-                lines = compose_pull_script(task, options)
+                lines = scripts.compose_pull_script()
                 for line in lines: pull_script.write(f"{line}\n".encode('utf-8'))
                 pull_script.seek(0)
                 logger.info(f"Uploaded pull script {pull_script_path} for task {task.guid}")
@@ -270,7 +274,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         # compose and transfer the job script
         job_script_path = join(work_dir, f"{task.guid}.sh")
         with sftp.file(job_script_path, 'w') as job_script:
-            lines = compose_job_script(task, options, inputs)
+            lines = scripts.compose_job_script(inputs)
             for line in lines: job_script.write(f"{line}\n".encode('utf-8'))
             job_script.seek(0)
             logger.info(f"Uploaded job script {job_script_path} for task {task.guid}")
@@ -279,7 +283,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         if task.agent.launcher:
             launcher_script_path = join(work_dir, settings.LAUNCHER_SCRIPT_NAME)
             with sftp.file(launcher_script_path, 'w') as launcher_script:
-                launcher_commands = compose_launcher_script(task, options, inputs)
+                launcher_commands = scripts.compose_launcher_script(inputs)
                 for line in launcher_commands: launcher_script.write(f"{line}\n".encode('utf-8'))
                 launcher_script.seek(0)
                 logger.info(f"Uploaded launcher script {launcher_script_path} for task {task.guid}")
@@ -287,7 +291,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         # compose and transfer the push script
         push_script_path = join(work_dir, f"{task.guid}_push.sh")
         with sftp.file(push_script_path, 'w') as push_script:
-            lines = compose_push_script(task, options)
+            lines = scripts.compose_push_script()
             for line in lines: push_script.write(f"{line}\n".encode('utf-8'))
             push_script.seek(0)
             logger.info(f"Uploaded push script {push_script_path} for task {task.guid}")
@@ -342,8 +346,10 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
         array_clause = ' ' if (n_inputs == 0 or kind == InputKind.DIRECTORY) else (' --array=1-' + str(n_inputs) + ' ')
     elif n_iterations > 1:
         array_clause = f" --array=1-{n_iterations}"
-    else: array_clause = ' '
-    if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
+    else:
+        array_clause = ' '
+    if task.agent.launcher:
+        command = f"sbatch{depend_clause}{task.guid}.sh"
     else:
         command = f"sbatch{depend_clause}{array_clause}{task.guid}.sh"
 
@@ -503,7 +509,8 @@ def get_job_status_and_walltime(task: Task):
             stdin, stdout, stderr = ssh.client.exec_command(f"test -e {log_file_path} && echo exists")
 
             # if log file doesn't exist, return None
-            if stdout.read().decode().strip() != 'exists': status = None
+            if stdout.read().decode().strip() != 'exists':
+                status = None
 
             # otherwise check the log file to see if job status was written there
             else:
@@ -817,3 +824,502 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if shell is not None: options['shell'] = shell
 
     return errors, options
+
+
+class TaskScripts:
+    """
+    Composes job scripts given a task and its deployment options.
+    """
+
+    def __init__(self, task: Task, options: TaskOptions):
+        self.__logger = logging.getLogger(__name__)
+
+        if task is None or options is None:
+            raise ValueError(f"Task and TaskOptions must both be provided")
+
+        self.__task = task
+        self.__options = options
+
+    # public script composition methods
+
+    def compose_pull_script(self) -> List[str]:
+        with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+            template = [line.strip() for line in template_file if line != '']
+            headers = self.__compose_pull_headers()
+            pull = self.__compose_pull_commands()
+            return template + \
+                   headers + \
+                   [self.__task.agent.pre_commands] + \
+                   pull
+
+    def compose_job_script(self, inputs: List[str]) -> List[str]:
+        with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+            template = [line.strip() for line in template_file if line != '']
+            headers = self.__compose_job_headers(inputs)
+            run = self.__compose_job_commands()
+            return template + \
+                   headers + \
+                   [self.__task.agent.pre_commands] + \
+                   run
+
+    def compose_push_script(self) -> List[str]:
+        with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+            template = [line.strip() for line in template_file if line != '']
+            headers = self.__compose_push_headers()
+            push = self.__compose_push_commands()
+            return template + \
+                   headers + \
+                   [self.__task.agent.pre_commands] + \
+                   push
+
+    def compose_launcher_script(self, inputs: List[str]) -> List[str]:
+        lines: List[str] = []
+        options = self.__options
+        work_dir = options['workdir']
+        image = options['image']
+        command = options['command']
+        env = options['env']
+        gpus = options[
+            'gpus'] if 'gpus' in options else 0  # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+        parameters = (options['parameters'] if 'parameters' in options else []) + [
+            Parameter(key='OUTPUT', value=options['output']['from']),
+            Parameter(key='GPUS', value=str(gpus))]
+        bind_mounts = options['bind_mounts'] if ('mount' in options and isinstance(options['bind_mounts'], list)) else []
+        no_cache = options['no_cache'] if 'no_cache' in options else False
+        shell = options['shell'] if 'shell' in options else None
+
+        if 'input' in options:
+            input_kind = options['input']['kind']
+            input_dir_name = options['input']['path'].rpartition('/')[2]
+
+            if input_kind == 'files':
+                for i, file_name in enumerate(inputs):
+                    input_path = join(options['workdir'], 'input', input_dir_name, file_name)
+                    lines = lines + TaskScripts.compose_singularity_invocation(
+                        work_dir=work_dir,
+                        image=image,
+                        commands=command,
+                        env=env,
+                        parameters=parameters + [Parameter(key='INPUT', value=input_path)],
+                        bind_mounts=bind_mounts,
+                        no_cache=no_cache,
+                        gpus=gpus,
+                        shell=shell,
+                        index=i)
+                return lines
+            elif input_kind == 'directory':
+                input_path = join(options['workdir'], 'input', input_dir_name)
+                parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+            elif input_kind == 'file':
+                input_path = join(options['workdir'], 'input', inputs[0])
+                parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+            else:
+                raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
+        elif 'iterations' in options:
+            iterations = options['iterations']
+            for i in range(0, iterations):
+                lines = lines + TaskScripts.compose_singularity_invocation(
+                    work_dir=work_dir,
+                    image=image,
+                    commands=command,
+                    env=env,
+                    parameters=parameters,
+                    bind_mounts=bind_mounts,
+                    no_cache=no_cache,
+                    gpus=gpus,
+                    shell=shell,
+                    index=i)
+            return lines
+
+        return lines + TaskScripts.compose_singularity_invocation(
+            work_dir=work_dir,
+            image=image,
+            commands=command,
+            env=env,
+            parameters=parameters,
+            bind_mounts=bind_mounts,
+            no_cache=no_cache,
+            gpus=gpus,
+            shell=shell)
+
+    # script subcomponents
+
+    def __compose_pull_headers(self) -> List[str]:
+        headers = []
+
+        # memory
+        if not has_virtual_memory(self.__task.agent):
+            headers.append(f"#SBATCH --mem=1GB")
+
+        # walltime
+        headers.append(f"#SBATCH --time=00:30:00")  # TODO: calculate as a function of input size?
+
+        # queue
+        queue = self.__task.agent.orchestrator_queue if (self.__task.agent.orchestrator_queue is not None
+                                                         and self.__task.agent.orchestrator_queue != '') else self.__task.agent.queue
+        headers.append(f"#SBATCH --partition={queue}")
+
+        # project/allocation
+        if self.__task.agent.project is not None and self.__task.agent.project != '':
+            headers.append(f"#SBATCH -A {self.__task.agent.project}")
+
+        # nodes
+        headers.append(f"#SBATCH -N 1")
+
+        # cores
+        headers.append(f"#SBATCH -n 1")
+
+        # email notifications
+        headers.append("#SBATCH --mail-type=END,FAIL")
+        headers.append(f"#SBATCH --mail-user={self.__task.user.email}")
+
+        # log files
+        headers.append("#SBATCH --output=plantit.%j.pull.out")
+        headers.append("#SBATCH --error=plantit.%j.pull.err")
+
+        return headers
+
+    def __compose_pull_commands(self) -> List[str]:
+        commands = []
+
+        # job arrays may cause an invalid singularity cache due to lots of simultaneous pulls of the same image...
+        # just pull it once ahead of time so it's already cached
+        # TODO: set the image path to the cached one
+        workflow_image = self.__options['image']
+        workflow_shell = self.__options.get('shell', None)
+        if workflow_shell is None: workflow_shell = 'sh'
+        pull_image_command = f"singularity exec {workflow_image} {workflow_shell} -c 'echo \"refreshing {workflow_image}\"'"
+        commands.append(pull_image_command)
+
+        # make sure we have inputs
+        if 'input' not in self.__options: return commands
+        input = self.__options['input']
+        if input is None: return []
+
+        # singularity must be pre-authenticated on the agent, e.g. with `singularity remote login --username <your username> docker://docker.io`
+        # also, if this is a job array, all jobs will invoke iget, but files will only be downloaded once (since we don't use -f for force)
+        input_path = input['path']
+        workdir = join(self.__task.agent.workdir, self.__task.workdir, 'input')
+        icommands_image = f"docker://{settings.ICOMMANDS_IMAGE}"
+        pull_data_command = f"singularity exec {icommands_image} iget -r {input_path} {workdir}"
+        commands.append(pull_data_command)
+
+        newline = '\n'
+        logger.debug(f"Using pull command: {newline.join(commands)}")
+        return commands
+
+    def __compose_job_headers(self, inputs: List[str]) -> List[str]:
+        if 'jobqueue' not in self.__options: return []
+        jobqueue = self.__options['jobqueue']
+        headers = []
+
+        # memory
+        if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(self.__task.agent):
+            memory = int((jobqueue['memory'] if 'memory' in jobqueue else jobqueue['mem']).replace('GB', ''))
+            memory = min(memory, self.__task.agent.max_mem)
+            headers.append(f"#SBATCH --mem={str(memory)}GB")
+
+        # walltime
+        if 'walltime' in jobqueue or 'time' in jobqueue:
+            walltime = self.__calculate_walltime()
+            # task.job_requested_walltime = walltime
+            # task.save()
+            headers.append(f"#SBATCH --time={walltime}")
+
+        # queue/partition
+        # if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '':
+        #     headers.append(f"#SBATCH --partition={task.agent.orchestrator_queue}")
+        # else:
+        #     headers.append(f"#SBATCH --partition={task.agent.queue}")
+        headers.append(f"#SBATCH --partition={self.__task.agent.queue}")
+
+        # allocation
+        if self.__task.agent.project is not None and self.__task.agent.project != '':
+            headers.append(f"#SBATCH -A {self.__task.agent.project}")
+
+        # cores per task
+        if 'cores' in jobqueue:
+            headers.append(f"#SBATCH -c {min(int(jobqueue['cores']), self.__task.agent.max_cores)}")
+
+        # nodes & tasks per node
+        if len(inputs) > 0 and self.__options['input']['kind'] == 'files':
+            nodes = self.__calculate_node_count(inputs)
+            tasks = min(len(inputs), self.__task.agent.max_tasks)
+            # if task.agent.job_array: headers.append(f"#SBATCH --array=1-{len(inputs)}")
+            headers.append(f"#SBATCH -N {nodes}")
+            headers.append(f"#SBATCH --ntasks={tasks}")
+        else:
+            headers.append("#SBATCH -N 1")
+            headers.append("#SBATCH --ntasks=1")
+
+        # gpus
+        gpus = self.__options['gpus'] if 'gpus' in self.__options else 0
+        if gpus:
+            headers.append(f"#SBATCH --gres=gpu:{gpus}")
+
+        # email notifications
+        headers.append("#SBATCH --mail-type=END,FAIL")
+        headers.append(f"#SBATCH --mail-user={self.__task.user.email}")
+
+        # log files
+        headers.append("#SBATCH --output=plantit.%j.out")
+        headers.append("#SBATCH --error=plantit.%j.err")
+
+        newline = '\n'
+        logger.debug(f"Using headers: {newline.join(headers)}")
+        return headers
+
+    def __compose_job_commands(self) -> List[str]:
+        commands = []
+
+        # if this agent uses TACC's launcher, use a parameter sweep script
+        if self.__task.agent.launcher:
+            commands.append(f"export LAUNCHER_WORKDIR={join(self.__task.agent.workdir, self.__task.workdir)}")
+            commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}")
+            commands.append("$LAUNCHER_DIR/paramrun")
+        # otherwise use SLURM job arrays
+        else:
+            options = self.__options
+            work_dir = options['workdir']
+            image = options['image']
+            command = options['command']
+            env = options['env']
+            # TODO: if workflow is configured for gpu, use the number of gpus configured on the agent
+            gpus = options['gpus'] if 'gpus' in options else 0
+            parameters = (options['parameters'] if 'parameters' in options else []) + [
+                Parameter(key='OUTPUT', value=options['output']['from']),
+                Parameter(key='GPUS', value=str(gpus))]
+            bind_mounts = options['bind_mounts'] if ('mount' in options and isinstance(options['bind_mounts'], list)) else []
+            no_cache = options['no_cache'] if 'no_cache' in options else False
+            shell = options['shell'] if 'shell' in options else None
+
+            if 'input' in options:
+                input_kind = options['input']['kind']
+                input_dir_name = options['input']['path'].rpartition('/')[2]
+
+                if input_kind == 'files' or input_kind == 'file':
+                    input_path = join(options['workdir'], 'input', input_dir_name, '$file') if input_kind == 'files' else join(options['workdir'],
+                                                                                                                               'input', '$file')
+                    parameters = parameters + [Parameter(key='INPUT', value=input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')]
+                    commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
+                elif options['input']['kind'] == 'directory':
+                    input_path = join(options['workdir'], 'input', input_dir_name)
+                    parameters = parameters + [Parameter(key='INPUT', value=input_path)]
+                else:
+                    raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
+
+            commands = commands + TaskScripts.compose_singularity_invocation(
+                work_dir=work_dir,
+                image=image,
+                commands=command,
+                env=env,
+                parameters=parameters,
+                bind_mounts=bind_mounts,
+                no_cache=no_cache,
+                gpus=gpus,
+                shell=shell)
+
+        newline = '\n'
+        logger.debug(f"Using container commands: {newline.join(commands)}")
+        return commands
+
+    def __compose_push_headers(self) -> List[str]:
+        headers = []
+
+        # memory
+        if not has_virtual_memory(self.__task.agent):
+            headers.append(f"#SBATCH --mem=1GB")
+
+        # walltime
+        # TODO: calculate as a function of number/size of output files?
+        headers.append(f"#SBATCH --time=02:00:00")
+
+        # queue
+        queue = self.__task.agent.orchestrator_queue if (self.__task.agent.orchestrator_queue is not None
+                                                         and self.__task.agent.orchestrator_queue != '') else self.__task.agent.queue
+        headers.append(f"#SBATCH --partition={queue}")
+
+        # project/allocation
+        if self.__task.agent.project is not None and self.__task.agent.project != '':
+            headers.append(f"#SBATCH -A {self.__task.agent.project}")
+
+        # nodes
+        headers.append(f"#SBATCH -N 1")
+
+        # cores
+        headers.append(f"#SBATCH -n 1")
+
+        # email notifications
+        headers.append("#SBATCH --mail-type=END,FAIL")
+        headers.append(f"#SBATCH --mail-user={self.__task.user.email}")
+
+        # log files
+        headers.append("#SBATCH --output=plantit.%j.push.out")
+        headers.append("#SBATCH --error=plantit.%j.push.err")
+
+        return headers
+
+    def __compose_push_commands(self) -> List[str]:
+        commands = []
+
+        # create staging directory
+        staging_dir = f"{self.__task.guid}_staging"
+        mkdir_command = f"mkdir -p {staging_dir}"
+        commands.append(mkdir_command)
+
+        # create zip directory
+        zip_dir = f"{self.__task.guid}_zip"
+        mkdir_command = f"mkdir -p {zip_dir}"
+        commands.append(mkdir_command)
+
+        # move results into staging and zip directories
+        mv_zip_dir_command = f"mv -t {zip_dir} "
+        output = self.__options['output']
+        if 'include' in output:
+            if 'names' in output['include']:
+                for name in output['include']['names']:
+                    commands.append(f"cp {name} {join(staging_dir, name)}")
+                    mv_zip_dir_command = mv_zip_dir_command + f"{name} "
+            if 'patterns' in output['include']:
+                for pattern in (list(output['include']['patterns'])):
+                    commands.append(f"cp *.{pattern} {staging_dir}/")
+                    mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
+                # include all scheduler log files in zip file
+                for pattern in ['out', 'err']:
+                    mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
+        else:
+            raise ValueError(f"No output filenames & patterns to include")
+        commands.append(mv_zip_dir_command)
+
+        # filter unwanted results from staging directory
+        # TODO: can we do this in a single step with mv?
+        # rm_command = f"rm "
+        # if 'exclude' in output:
+        #     if 'patterns' in output['exclude']:
+        #         command = command + ' ' + ' '.join(
+        #             ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+        #     if 'names' in output['exclude']:
+        #         command = command + ' ' + ' '.join(
+        #             ['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+
+        # zip results
+        zip_name = f"{self.__task.guid}.zip"
+        zip_path = join(staging_dir, zip_name)
+        zip_command = f"zip -r {zip_path} {zip_dir}/*"
+        commands.append(zip_command)
+
+        # transfer contents of staging dir to CyVerse
+        to_path = output['to']
+        image = f"docker://{settings.ICOMMANDS_IMAGE}"
+        # force = output['force']
+        force = False
+        # just_zip = output['just_zip']
+        just_zip = False
+        # push_command = f"singularity exec {image} iput -r{' -f ' if force else ' '}{staging_dir}{('/' + zip_name) if just_zip else '/*'} {to_path}/"
+        push_command = f"singularity exec {image} iput -f {staging_dir}{('/' + zip_name) if just_zip else '/*'} {to_path}/"
+        commands.append(push_command)
+
+        newline = '\n'
+        logger.debug(f"Using push commands: {newline.join(commands)}")
+        return commands
+
+    # Internal methods
+
+    def __calculate_node_count(self, inputs: List[str]):
+        node_count = min(len(inputs), self.__task.agent.max_nodes)
+        return 1 if self.__task.agent.launcher else (node_count if inputs is not None and not self.__task.agent.job_array else 1)
+
+    def __calculate_walltime(self):
+        # TODO: refactor (https://github.com/Computational-Plant-Science/plantit/issues/205)
+        # adjust based on number of input files and parallelism [requested walltime * input files / nodes]
+        # need to compute suggested walltime as a function of workflow, agent, and number of inputs
+        # how to do this? cache suggestions for each combination independently?
+        # issue ref: https://github.com/Computational-Plant-Science/plantit/issues/205
+        #
+        # a good first step might be to compute aggregate stats for runtimes per workflow per agent,
+        # to get a sense for the scaling of each as a function of inputs and resources available
+        #
+        # naive (bad) solution:
+        #   nodes = calculate_node_count(task, inputs)
+        #   adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+        # if a time limit was requested at submission time, use that
+        if self.__task.time_limit is not None:
+            requested = self.__task.time_limit
+            limit_type = 'user-requested'
+        else:
+            # otherwise use the default time limit from the workflow configuration
+            jobqueue = self.__options['jobqueue']
+            spl = jobqueue['walltime' if 'walltime' in jobqueue else 'time'].split(':')
+            hours = int(spl[0])
+            minutes = int(spl[1])
+            seconds = int(spl[2])
+            requested = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            limit_type = 'workflow-default'
+
+        # round to the nearest hour, making sure not to exceed agent's maximum, then convert to HH:mm:ss string
+        requested_hours = ceil(requested.total_seconds() / 60 / 60)
+        permitted_hours = ceil(self.__task.agent.max_time.total_seconds() / 60 / 60)
+        hours = requested_hours if requested_hours <= permitted_hours else permitted_hours
+        hours = '1' if hours == 0 else f"{hours}"  # if we rounded down to zero, bump to 1
+        if len(hours) == 1: hours = f"0{hours}"
+        walltime = f"{hours}:00:00"
+
+        logger.info(f"Using {limit_type} walltime {walltime} for {self.__task.user.username}'s task {self.__task.guid}")
+        return walltime
+
+    @staticmethod
+    def compose_singularity_invocation(
+            work_dir: str,
+            image: str,
+            commands: str,
+            env: List[EnvironmentVariable] = None,
+            bind_mounts: List[BindMount] = None,
+            parameters: List[Parameter] = None,
+            no_cache: bool = False,
+            gpus: int = 0,
+            shell: str = None,
+            docker_username: str = None,
+            docker_password: str = None,
+            index: int = None) -> List[str]:
+        command = ''
+
+        # prepend environment variables in SINGULARITYENV_<key> format
+        if env is not None:
+            if len(env) > 0: command += ' '.join([f"SINGULARITYENV_{v['key'].upper().replace(' ', '_')}=\"{v['value']}\"" for v in env])
+            command += ' '
+
+        # substitute parameters
+        if parameters is None: parameters = []
+        if index is not None: parameters.append(Parameter(key='INDEX', value=str(index)))
+        parameters.append(Parameter(key='WORKDIR', value=work_dir))
+        for parameter in parameters:
+            key = parameter['key'].upper().replace(' ', '_')
+            val = str(parameter['value'])
+            command += f" SINGULARITYENV_{key}=\"{val}\""
+
+        # singularity invocation and working directory
+        command += f" singularity exec --home {work_dir}"
+
+        # add bind mount arguments
+        if bind_mounts is not None and len(bind_mounts) > 0:
+            command += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+
+        # whether to use the Singularity cache
+        if no_cache: command += ' --disable-cache'
+
+        # whether to use GPUs (Nvidia)
+        if gpus: command += ' --nv'
+
+        # append the command
+        if shell is None: shell = 'sh'
+        command += f" {image} {shell} -c '{commands}'"
+
+        # don't want to reveal secrets, so log the command before prepending secret env vars
+        logger.debug(f"Using command: '{command}'")
+
+        # docker auth info (optional)
+        if docker_username is not None and docker_password is not None:
+            command = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + command
+
+        return [command]

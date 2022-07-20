@@ -32,7 +32,7 @@ from plantit.utils.misc import del_none
 from plantit.utils.tasks import has_output_target, get_task_orchestrator_log_file_path
 
 
-class ManualCacheViews(metaclass=ABCMeta):
+class CacheViews(metaclass=ABCMeta):
     @abstractmethod
     def get_users(self, invalidate: bool = False):
         pass
@@ -102,7 +102,7 @@ class ManualCacheViews(metaclass=ABCMeta):
         pass
 
 
-class CacheopsViews(metaclass=ABCMeta):
+class DatabaseViews(metaclass=ABCMeta):
     @abstractmethod
     def get_agents(self, user: User) -> List[Agent]:
         pass
@@ -152,7 +152,7 @@ class CacheopsViews(metaclass=ABCMeta):
         pass
 
 
-class ModelViews(ManualCacheViews, CacheopsViews):
+class ModelViews(CacheViews, DatabaseViews):
     def __init__(self, cache: Redis):
         super(ModelViews, self).__init__()
 
@@ -162,7 +162,7 @@ class ModelViews(ManualCacheViews, CacheopsViews):
         self.__logger = logging.getLogger(ModelViews.__name__)
         self.__cache = cache
 
-    # manual cache views
+    # cache views
 
     def get_users(self, invalidate: bool = False):
         pattern = "users/*"
@@ -374,7 +374,7 @@ class ModelViews(ManualCacheViews, CacheopsViews):
 
         return checks
 
-    # automatic (cacheops) views
+    # database views (automatically cached with django-cacheops)
 
     def get_agents(self, user: User) -> List[Agent]:
         # only return public agents and agents the requesting user is authorized to access

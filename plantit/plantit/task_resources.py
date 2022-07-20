@@ -5,32 +5,12 @@ import sys
 from os.path import join
 from typing import List
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
 from plantit.keypairs import get_user_private_key_path
-from plantit.serialize import task_to_dict
 from plantit.ssh import SSH
 from plantit.tasks.models import Task
 from plantit.utils.tasks import get_task_orchestrator_log_file_path
 
 logger = logging.getLogger(__name__)
-
-
-def get_task_ssh_client(task: Task) -> SSH:
-    return SSH(
-        host=task.agent.hostname,
-        port=task.agent.port,
-        username=task.agent.username,
-        pkey=str(get_user_private_key_path(task.agent.user.username)))
-
-
-def push_task_channel_event(task: Task):
-    user = task.user
-    async_to_sync(get_channel_layer().group_send)(f"{user.username}", {
-        'type': 'task_event',
-        'task': task_to_dict(task),
-    })
 
 
 def log_task_status(task: Task, messages: List[str]):
@@ -76,3 +56,11 @@ def get_remote_logs(log_file_name: str, log_file_path: str, task: Task, ssh: SSH
 def remove_task_orchestration_logs(task: Task):
     log_path = get_task_orchestrator_log_file_path(task)
     os.remove(log_path)
+
+
+def get_task_ssh_client(task: Task) -> SSH:
+    return SSH(
+        host=task.agent.hostname,
+        port=task.agent.port,
+        username=task.agent.username,
+        pkey=str(get_user_private_key_path(task.agent.user.username)))

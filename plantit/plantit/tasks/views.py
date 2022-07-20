@@ -4,7 +4,6 @@ import tempfile
 from os.path import join
 from pathlib import Path
 
-from asgiref.sync import async_to_sync
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
@@ -17,11 +16,12 @@ from plantit.cache import ModelViews
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
 from plantit.redis import RedisClient
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
+from plantit.task_resources import log_task_status, get_task_ssh_client
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
     get_job_log_file_path, \
     get_task_agent_log_file_path
+from plantit.workflows.channels import Channels
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def get_or_create(request):
 
             created = True
             log_task_status(task, [f"Created task {task.guid} on {task.agent.name}"])
-            async_to_sync(push_task_channel_event)(task)
+            Channels(views).push_task_event(task)
 
         # otherwise register delayed or repeating task
         elif task_type == 'after':
@@ -326,7 +326,8 @@ def get_agent_logs(request, guid):
 def __cancel(task: Task):
     cancel_task(task)
     log_task_status(task, [f"Cancelled user {task.user.username}'s task {task.guid}"])
-    push_task_channel_event(task)
+    views = ModelViews(cache=RedisClient.get())
+    Channels(views).push_task_event(task)
 
 
 @login_required
@@ -423,6 +424,8 @@ def exists(request, guid):
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def search(request, owner, workflow_name, page):
+    views = ModelViews(cache=RedisClient.get())
+
     try:
         user = User.objects.get(username=owner)
 
@@ -430,7 +433,7 @@ def search(request, owner, workflow_name, page):
         start = int(page) * 20
         count = start + 20
         tasks = Task.objects.filter(user=user, workflow_name=workflow_name).order_by('-created')[start:(start + count)]
-        return JsonResponse([plantit.serialize.task_to_dict(t) for t in tasks], safe=False)
+        return JsonResponse([views.task_to_dict(t) for t in tasks], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -440,6 +443,7 @@ def search(request, owner, workflow_name, page):
 @api_view(['GET'])
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
+
     try:
         tasks = DelayedTask.objects.filter(user=user)
     except:
@@ -447,7 +451,7 @@ def search_delayed(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([plantit.serialize.delayed_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([ModelViews.delayed_task_to_dict(t) for t in tasks], safe=False)
 
 
 @login_required
@@ -455,6 +459,7 @@ def search_delayed(request, owner, workflow_name):
 @api_view(['GET'])
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
+
     try:
         tasks = RepeatingTask.objects.filter(user=user)
     except:
@@ -462,7 +467,7 @@ def search_repeating(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([plantit.serialize.repeating_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([ModelViews.repeating_task_to_dict(t) for t in tasks], safe=False)
 
 
 @login_required
@@ -470,6 +475,7 @@ def search_repeating(request, owner, workflow_name):
 @api_view(['GET'])
 def search_triggered(request, owner, workflow_name):
     user = User.objects.get(username=owner)
+
     try:
         tasks = TriggeredTask.objects.filter(user=user)
     except:
@@ -477,4 +483,4 @@ def search_triggered(request, owner, workflow_name):
 
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([plantit.serialize.triggered_task_to_dict(t) for t in tasks], safe=False)
+    return JsonResponse([ModelViews.triggered_task_to_dict(t) for t in tasks], safe=False)

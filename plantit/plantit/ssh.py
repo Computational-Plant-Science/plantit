@@ -63,7 +63,8 @@ def clean_html(raw_html: str) -> str:
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(
+        ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
     reraise=True)
 def execute_interactive_command(
         ssh: SSH,
@@ -117,7 +118,8 @@ def execute_interactive_command(
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
+    retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(
+        ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
     reraise=True)
 def execute_command(
         ssh: SSH,
@@ -156,5 +158,7 @@ def execute_command(
         logger.warning(f"Received stderr from '{ssh.host}': '{clean}'")
         yield clean
 
-    if stdout.channel.recv_exit_status() != 0: raise Exception(f"Received non-zero exit status from '{ssh.host}'")
-    elif not allow_stderr and len(errors) > 0: raise Exception(f"Received stderr: {errors}")
+    if stdout.channel.recv_exit_status() != 0:
+        raise Exception(f"Received non-zero exit status from '{ssh.host}'")
+    elif not allow_stderr and len(errors) > 0:
+        raise Exception(f"Received stderr: {errors}")
