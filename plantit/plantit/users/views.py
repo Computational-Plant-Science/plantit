@@ -23,22 +23,17 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 import plantit.migration as mig
-from plantit.cache import list_users
+from plantit.cache import ModelViews
 from plantit.cyverse import get_user_cyverse_profile
-from plantit.github import has_github_info, get_user_github_profile, get_member_organizations
-from plantit.cache import list_user_workflows, list_public_workflows
 from plantit.celery_tasks import refresh_user_stats
 from plantit.celery_tasks import start_dirt_migration, Migration
-from plantit.filters import list_user_project_workflows, list_user_org_workflows, filter_managed_files, filter_tasks_paged, filter_delayed_tasks, \
-    filter_repeating_tasks, filter_triggered_tasks, filter_notifications_paged, filter_agents, filter_user_projects
+from plantit.github import GitHubViews
 from plantit.keypairs import get_or_create_user_keypair
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils.misc import get_csrf_token
-from plantit.serialize import migration_to_dict
-from plantit.statistics import get_user_statistics
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +191,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        return JsonResponse({'users': list_users()})
+        views = ModelViews(cache=RedisClient.get())
+        return JsonResponse({'users': views.get_users()})
 
     @action(methods=['get'], detail=False)
     def acknowledge_first_login(self, request):
@@ -260,6 +256,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
+        views = ModelViews(cache=RedisClient.get())
 
         # TODO: reenable
         if user.profile.push_notification_status == 'pending':
@@ -284,21 +281,21 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
-                'migration': migration_to_dict(migration)
+                'migration': ModelViews.migration_to_dict(migration)
             },
-            'stats': async_to_sync(get_user_statistics)(user),
-            'users': list_users(),
-            'tasks': filter_tasks_paged(user, page=1),
-            'delayed_tasks': filter_delayed_tasks(user),
-            'repeating_tasks': filter_repeating_tasks(user),
-            'triggered_tasks': filter_triggered_tasks(user),
-            'notifications': filter_notifications_paged(user, page=1),
-            'agents': filter_agents(user),
+            'stats': views.get_user_statistics(user),
+            'users': views.get_users(),
+            'tasks': views.get_tasks_paged(user=user, page=1),
+            'delayed_tasks': views.get_delayed_tasks(user),
+            'repeating_tasks': views.get_repeating_tasks(user),
+            'triggered_tasks': views.get_triggered_tasks(user),
+            'notifications': views.get_notifications_paged(user, page=1),
+            'agents': views.get_agents(user),
             'workflows': {
-                'public': list_public_workflows(),
-                'project': list_user_project_workflows(user)
+                'public': views.get_public_workflows(),
+                'project': views.get_user_project_workflows(user)
             },
-            'projects': filter_user_projects(user),
+            'projects': views.get_user_projects(user),
         }
 
         if request.user.profile.cyverse_access_token != '':
@@ -313,12 +310,13 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 else: raise
 
         profile = Profile.objects.get(user=request.user)
-        if has_github_info(profile):
+        github = GitHubViews(profile.github_token)
+        if github.has_github_info(profile):
             try:
-                response['github_profile'] = async_to_sync(get_user_github_profile)(user)
-                response['organizations'] = async_to_sync(get_member_organizations)(user)
-                response['workflows']['user'] = list_user_workflows(profile.github_username)
-                response['workflows']['org'] = async_to_sync(list_user_org_workflows)(user)
+                response['github_profile'] = github.get_github_profile(user)
+                response['organizations'] = github.get_member_organizations(user)
+                response['workflows']['user'] = views.get_user_workflows(user)
+                response['workflows']['org'] = views.get_user_org_workflows(user)
             except:
                 logger.warning(f"Failed to load Github info for user {request.user.username}: {traceback.format_exc()}")
                 response['github_profile'] = None
@@ -431,8 +429,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         else:
             self.logger.warning(f"Migration for {user.username} already exists")
 
-        return JsonResponse({'migration': migration_to_dict(migration)})
+        return JsonResponse({'migration': ModelViews.migration_to_dict(migration)})
 
     @action(detail=False, methods=['get'])
     def get_managed_files(self, request):
-        return JsonResponse({'managed_files': filter_managed_files(request.user, page=int(request.GET.get('page', 1)))})
+        views = ModelViews(cache=RedisClient.get())
+        return JsonResponse({'managed_files': views.get_managed_files_paged(user=request.user,
+                                                                            page=int(request.GET.get('page', 1)))})

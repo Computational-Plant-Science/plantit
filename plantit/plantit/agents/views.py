@@ -3,18 +3,28 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.filters
-from plantit.serialize import agent_to_dict
 from plantit.agents.models import Agent, AgentAccessPolicy
+from plantit.cache import ModelViews
 from plantit.health import is_healthy
 from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
+
+
+def authorized_for_agent(agent: Agent, user: User):
+    authorized_users = [u.username for u in agent.users_authorized.all()]
+
+    # if agent isn't public, requesting user doesn't own it, and isn't
+    # on list of authorized users, they aren't authorized to access it
+    return (agent.public or
+            agent.user == user or
+            user.username in authorized_users)
 
 
 @swagger_auto_schema(methods='get')
@@ -22,8 +32,9 @@ logger = logging.getLogger(__name__)
 @api_view(['GET'])
 def list(request):
     user = request.user
-    agents = plantit.filters.filter_agents(user)
-    return JsonResponse({'agents': [agent_to_dict(agent, user.username) for agent in agents]})
+    views = ModelViews(cache=RedisClient.get())
+    agents = views.get_agents(user)
+    return JsonResponse({'agents': [ModelViews.agent_to_dict(agent, user.username) for agent in agents]})
 
 
 @swagger_auto_schema(method='get', auto_schema=None)
@@ -32,12 +43,12 @@ def list(request):
 def get(request, name):
     try:
         agent = Agent.objects.get(name=name)
+        if not authorized_for_agent(agent=agent, user=request.user):
+            return HttpResponseNotFound()
+    except:
+        return HttpResponseNotFound()
 
-        # if the requesting user doesn't own the agent and isn't on its
-        # list of authorized users, they're not authorized to access it
-        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
-    except: return HttpResponseNotFound()
-    return JsonResponse(plantit.serialize.agent_to_dict(agent, request.user))
+    return JsonResponse(ModelViews.agent_to_dict(agent, request.user.username))
 
 
 @swagger_auto_schema(method='get', auto_schema=None)
@@ -46,12 +57,9 @@ def get(request, name):
 def exists(request, name):
     try:
         agent = Agent.objects.get(name=name)
-
-        # if the requesting user doesn't own the agent and isn't on its
-        # list of authorized users, they're not authorized to access it
-        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return JsonResponse({'exists': False})
-        return JsonResponse({'exists': True})
-    except: return JsonResponse({'exists': False})
+        return JsonResponse({'exists': authorized_for_agent(agent=agent, user=request.user)})
+    except:
+        return JsonResponse({'exists': False})
 
 
 @swagger_auto_schema(method='post', auto_schema=None)
@@ -60,11 +68,10 @@ def exists(request, name):
 def healthcheck(request, name):
     try:
         agent = Agent.objects.get(name=name)
-
-        # if the requesting user doesn't own the agent and isn't on its
-        # list of authorized users, they're not authorized to access it
-        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
-    except: return HttpResponseNotFound()
+        if not authorized_for_agent(agent=agent, user=request.user):
+            return HttpResponseNotFound()
+    except:
+        return HttpResponseNotFound()
 
     healthy, output = is_healthy(agent)
     check = {
@@ -92,11 +99,10 @@ def healthcheck(request, name):
 def healthchecks(request, name):
     try:
         agent = Agent.objects.get(name=name)
-
-        # if the requesting user doesn't own the agent and isn't on its
-        # list of authorized users, they're not authorized to access it
-        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
-    except: return HttpResponseNotFound()
+        if not authorized_for_agent(agent=agent, user=request.user):
+            return HttpResponseNotFound()
+    except:
+        return HttpResponseNotFound()
 
     redis = RedisClient.get()
     checks = [json.loads(check) for check in redis.lrange(f"healthchecks/{agent.name}", 0, -1)]
@@ -109,9 +115,9 @@ def healthchecks(request, name):
 def policies(request, name):
     try:
         agent = Agent.objects.get(name=name)
+        if not authorized_for_agent(agent=agent, user=request.user):
+            return HttpResponseNotFound()
+    except:
+        return HttpResponseNotFound()
 
-        # if the requesting user doesn't own the agent and isn't on its
-        # list of authorized users, they're not authorized to access it
-        if not agent.public and agent.user != request.user and request.user.username not in [u.username for u in agent.users_authorized.all()]: return HttpResponseNotFound()
-    except: return HttpResponseNotFound()
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})

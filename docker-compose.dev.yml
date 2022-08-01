@@ -193,7 +193,6 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # Celery prefork worker for compute-bound tasks
   celery:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
@@ -283,7 +282,6 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # Celery Eventlet worker for IO-bound tasks (https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html)
   celerye:
     image: computationalplantscience/plantit
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",

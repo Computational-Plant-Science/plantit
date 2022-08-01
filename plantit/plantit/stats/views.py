@@ -4,36 +4,40 @@ from django.http import JsonResponse, HttpResponseNotFound
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
-import plantit.workflows as q
-import plantit.statistics
+from plantit.cache import ModelViews
+from plantit.redis import RedisClient
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def institutions_info(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(plantit.statistics.get_institutions(invalidate))
+    views = ModelViews(cache=RedisClient.get())
+    return JsonResponse(views.get_institutions(invalidate=invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def aggregate_counts(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(plantit.statistics.get_total_counts(invalidate))
+    views = ModelViews(cache=RedisClient.get())
+    return JsonResponse(views.get_total_counts(invalidate=invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def aggregate_timeseries(request):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(plantit.statistics.get_aggregate_timeseries(invalidate))
+    views = ModelViews(cache=RedisClient.get())
+    return JsonResponse(views.get_aggregate_timeseries(invalidate=invalidate))
 
 
 @swagger_auto_schema(methods='get')
 @api_view(['get'])
 def workflow_timeseries(request, owner, name, branch):
     invalidate = request.GET.get('invalidate', False)
-    return JsonResponse(plantit.statistics.get_workflow_usage_timeseries(owner, name, branch, invalidate))
+    views = ModelViews(cache=RedisClient.get())
+    return JsonResponse(views.get_workflow_usage_timeseries(owner, name, branch, invalidate))
 
 
 @login_required
@@ -41,4 +45,5 @@ def user_timeseries(request):
     username = request.GET.get('username', request.user.username)
     try: user = User.objects.get(username=username)
     except: return HttpResponseNotFound()
-    return JsonResponse(plantit.statistics.get_user_timeseries(user))
+    views = ModelViews(cache=RedisClient.get())
+    return JsonResponse(views.get_user_timeseries(user))

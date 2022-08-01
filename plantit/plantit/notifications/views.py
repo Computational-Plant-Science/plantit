@@ -1,13 +1,10 @@
-from itertools import chain
-
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, JsonResponse
 
-import plantit.filters
-import plantit.workflows as q
-import plantit.serialize
+from plantit.cache import ModelViews
 from plantit.notifications.models import Notification
+from plantit.redis import RedisClient
 
 
 @login_required
@@ -20,8 +17,9 @@ def list_by_user(request, owner):
     try: user = User.objects.get(username=owner)
     except: return HttpResponseNotFound()
 
-    page = params.get('page') if 'page' in params else 1
-    notifications = plantit.filters.filter_notifications_paged(user, page=page)
+    page = int(params.get('page') if 'page' in params else 1)
+    views = ModelViews(cache=RedisClient.get())
+    notifications = views.get_notifications_paged(user=user, page=page)
     return JsonResponse({'notifications': notifications})
 
 
@@ -33,8 +31,8 @@ def get_or_dismiss(request, owner, guid):
     except: return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(plantit.serialize.notification_to_dict(notification))
+        return JsonResponse(ModelViews.notification_to_dict(notification))
     elif request.method == 'DELETE':
         notification.delete()
         notifications = Notification.objects.filter(user=user)
-        return JsonResponse({'notifications': [plantit.serialize.notification_to_dict(notification) for notification in notifications]})
+        return JsonResponse({'notifications': [ModelViews.notification_to_dict(n) for n in notifications]})
