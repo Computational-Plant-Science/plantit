@@ -63,7 +63,7 @@ class AsyncChannels(ChannelsBase):
     def __init__(self, views: ModelViews):
         super(AsyncChannels, self).__init__(views)
 
-    def push_task_event(self, task: Task):
+    async def push_task_event(self, task: Task):
         await get_channel_layer().group_send(f"{task.user.username}", {
             'type': 'task_event',
             'task': self.__views.task_to_dict(task),

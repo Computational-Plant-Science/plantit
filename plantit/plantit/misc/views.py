@@ -1,13 +1,12 @@
 from django.http import JsonResponse
 from django.utils import timezone
 
-import plantit.workflows as q
-import plantit.serialize
+from plantit.cache import ModelViews
 from plantit.misc.models import NewsUpdate, MaintenanceWindow
 
 
 def updates(request):
-    return JsonResponse({'updates': [plantit.serialize.update_to_dict(u) for u in list(NewsUpdate.objects.all().order_by('created'))]})
+    return JsonResponse({'updates': [ModelViews.update_to_dict(u) for u in list(NewsUpdate.objects.all().order_by('created'))]})
 
 
 def maintenance_windows(request):
