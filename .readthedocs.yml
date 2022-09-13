@@ -21,4 +21,4 @@ formats:
 python:
   version: 3.7
   install:
-    - requirements: dockerfiles/plantit/docs_requirements.txt
+    - requirements: dockerfiles/plantit_web/docs_requirements.txt

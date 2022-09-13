@@ -1,14 +1,14 @@
 # DIRT Specific
 Singularity
-plantit/files/
-plantit/public/
+plantit_web/files/
+plantit_web/public/
 **/migrations/*.py
 !**/migrations/__init__.py
-plantit/plantit/secret.py
-plantit/front_end/node_modules
-plantit/front_end/dist
-plantit/static/
-plantit/settings.py
+plantit_web/plantit_web/secret.py
+plantit_web/front_end/node_modules
+plantit_web/front_end/dist
+plantit_web/static/
+plantit_web/settings.py
 config/ssh/*
 config/certbot/*
 agent_keys
@@ -255,7 +255,7 @@ db/
 
 dagster.yaml
 
-plantit/.telemetry
+plantit_web/.telemetry
 !/dockerfiles/nginx/
 
 sandbox/*
@@ -266,7 +266,7 @@ users.json
 more_users.json
 
 *.postgresql
-plantit/postgres
+plantit_web/postgres
 
 logs
 sessions

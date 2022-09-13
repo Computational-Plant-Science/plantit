@@ -1,0 +1,79 @@
+name: Deploy web app
+on:
+  release:
+    branches:
+      - master
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Bootstrap, build, test, & push to Docker Hub
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          CYVERSE_USERNAME: ${{ secrets.CYVERSE_USERNAME }}
+          CYVERSE_PASSWORD: ${{ secrets.CYVERSE_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          CYVERSE_CLIENT_ID: ${{ secrets.CYVERSE_CLIENT_ID }}
+          CYVERSE_CLIENT_SECRET: ${{ secrets.CYVERSE_CLIENT_SECRET }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          chmod +x scripts/bootstrap.sh
+          bash scripts/bootstrap.sh -n
+          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
+          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
+          docker push computationalplantscience/plantit
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Create SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+          SSH_KEY_PATH: ~/.ssh/id_rsa # ${{ github.workspace }}/../private.key
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          HOST: ${{ secrets.PROD_HOST }}
+          PORT: ${{ secrets.PROD_PORT }}
+          USER: ${{ secrets.PROD_USER }}
+          DIRECTORY: ${{ secrets.PROD_DIRECTORY }}
+          EMAIL: ${{ secrets.PROD_EMAIL }}
+          CONFIG: prod
+        run: |
+          chmod +x scripts/deploy.sh
+
+          eval "$(ssh-agent -s)" # Start ssh-agent cache
+          chmod 600 ~/.ssh/id_rsa # Allow read access to the private key
+          ssh-add ~/.ssh/id_rsa # Add the private key to SSH
+
+          echo "Deploying $CONFIG"
+          ssh -v -o StrictHostKeyChecking=no -p $PORT "$USER@$SSH_HOST" <<EOF
+            cd $DIRECTORY
+            chmod +x scripts/deploy.sh
+            scripts/deploy.sh $CONFIG $HOST $EMAIL
+          EOF

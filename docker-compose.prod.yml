@@ -1,8 +1,8 @@
 version: '3.7'
 services:
-  plantit:
-    image: computationalplantscience/plantit
-    working_dir: /code/plantit
+  plantit_web:
+    image: computationalplantscience/plantit_web
+    working_dir: /code/plantit_web
     depends_on:
       - beat
       - celery
@@ -83,7 +83,7 @@ services:
               "daphne",
               "-b", "0.0.0.0",
               "-p", "8000",
-              "plantit.asgi:application"]
+              "plantit_web.asgi:application"]
     networks:
       - ngnix_network
       - default
@@ -95,16 +95,16 @@ services:
       retries: 2
       start_period: 20s
   beat:
-    image: computationalplantscience/plantit
+    image: computationalplantscience/plantit_web
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A", "plantit",
+              "-A", "plantit_web",
               "beat",
               "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler",
               "--loglevel", "INFO"]
     volumes:
       - .:/code
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -177,7 +177,7 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
@@ -185,10 +185,10 @@ services:
     restart: always
   # Celery prefork worker for compute-bound tasks
   celery:
-    image: computationalplantscience/plantit
+    image: computationalplantscience/plantit_web
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A", "plantit",
+              "-A", "plantit_web",
               "worker",
               "-n", "celery",
               "-c", "2",
@@ -197,7 +197,7 @@ services:
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -270,7 +270,7 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
@@ -278,10 +278,10 @@ services:
     restart: always
   # Celery worker with Eventlet pool for IO-bound tasks (https://docs.celeryq.dev/en/latest/userguide/concurrency/eventlet.html)
   celerye:
-    image: computationalplantscience/plantit
+    image: computationalplantscience/plantit_web
     command: [ "/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
                "celery",
-               "-A", "plantit",
+               "-A", "plantit_web",
                "worker",
                "-n", "celerye",
                "-P", "eventlet",
@@ -292,7 +292,7 @@ services:
     volumes:
       - .:/code
       - ${DIRT_MIGRATION_STAGING_DIR}:${DIRT_MIGRATION_STAGING_DIR}
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -365,7 +365,7 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
@@ -387,10 +387,10 @@ services:
       - ./config/nginx/conf.d:/etc/nginx/conf.d
       - ./config/certbot/conf:/etc/letsencrypt/
       - ./config/certbot/www:/var/www/certbot
-      - ./plantit/static/:/opt/plantit/static/:ro
-      - ./plantit/files/public/:/opt/plantit/public/:ro
+      - ./plantit_web/static/:/opt/plantit/static/:ro
+      - ./plantit_web/files/public/:/opt/plantit/public/:ro
     depends_on:
-      - plantit
+      - plantit_web
     networks:
       - ngnix_network
     restart: always

@@ -1,8 +1,8 @@
 version: '3.7'
 services:
-  plantit:
-    image: computationalplantscience/plantit
-    working_dir: /code/plantit
+  plantit_web:
+    image: computationalplantscience/plantit_web
+    working_dir: /code/plantit_web
     volumes:
       - .:/code
     environment:
@@ -74,7 +74,8 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
-    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}", "python", "manage.py", "runserver", "0.0.0.0:3000"]
+    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
+              "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
       - beat
@@ -112,11 +113,13 @@ services:
       start_period: 20s
     command: ["redis-server"]
   beat:
-    image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}", "celery", "-A", "plantit", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
+    image: computationalplantscience/plantit_web
+    command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
+              "celery", "-A", "plantit_web",
+              "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=INFO"]
     volumes:
       - .:/code
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -188,16 +191,16 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
       start_period: 20s
   celery:
-    image: computationalplantscience/plantit
+    image: computationalplantscience/plantit_web
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A", "plantit",
+              "-A", "plantit_web",
               "worker",
               "-n", "celery",
               "-c", "2",
@@ -205,7 +208,7 @@ services:
               "--without-gossip"]
     volumes:
       - .:/code
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -277,16 +280,16 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
       start_period: 20s
   celerye:
-    image: computationalplantscience/plantit
+    image: computationalplantscience/plantit_web
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "celery",
-              "-A", "plantit",
+              "-A", "plantit_web",
               "worker",
               "-n", "celerye",
               "-P", "eventlet",
@@ -296,7 +299,7 @@ services:
               "--without-gossip"]
     volumes:
       - .:/code
-    working_dir: /code/plantit
+    working_dir: /code/plantit_web
     depends_on:
       - postgres
       - redis
@@ -368,7 +371,7 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      test: celery -A plantit_web status | grep "OK"
       interval: 60s
       timeout: 60s
       retries: 2
