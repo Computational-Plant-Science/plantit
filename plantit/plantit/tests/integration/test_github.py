@@ -11,4 +11,4 @@ class GithubTests(TestCase):
         institutions = await github.list_user_organizations('w-bonelli', settings.GITHUB_TOKEN)
 
         self.assertGreater(len(institutions), 0)
-        self.assertTrue('Computational-Plant-Science' in [i['login'] for i in institutions])
+        self.assertTrue('Computational-Plant-Science' in [inst['login'] for inst in institutions])
