@@ -24,6 +24,7 @@ jobs:
           GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
           GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
           MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
           CYVERSE_CLIENT_ID: ${{ secrets.CYVERSE_CLIENT_ID }}
           CYVERSE_CLIENT_SECRET: ${{ secrets.CYVERSE_CLIENT_SECRET }}
