@@ -10,7 +10,6 @@ token = environ.get('GH_TOKEN')
 if not token:
     token = environ.get('GITHUB_TOKEN')
 
-
 username = environ.get('GH_USERNAME')
 if not username:
     username = environ.get('GITHUB_USERNAME')
