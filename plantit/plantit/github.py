@@ -302,4 +302,6 @@ async def list_user_organizations(username: str, token: str, timeout: int = 15) 
         if 'message' in jsn and 'OAuth App access restrictions' in jsn['message']:
             logger.warning(jsn['message'])
             return []
+        if not isinstance(jsn, list):
+            raise ValueError(f"Unexpected response: {jsn}")
         return jsn
