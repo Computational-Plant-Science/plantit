@@ -11,6 +11,7 @@ urlpatterns = [
     path(r'<guid>/', views.get_task),
     path(r'<guid>/exists/', views.exists),
     path(r'<guid>/cancel/', views.cancel),
+    path(r'<guid>/complete/', views.complete),
     path(r'<guid>/output/dl/', views.download_output_file),
     path(r'<guid>/unschedule_delayed/', views.unschedule_delayed),
     path(r'<guid>/unschedule_repeating/', views.unschedule_repeating),

@@ -36,7 +36,7 @@ class Migration(models.Model):
 
 
 class ManagedFile(models.Model):
-    migration: Migration = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    migration: Migration = models.ForeignKey(Migration, on_delete=models.CASCADE)
     fid = models.BigIntegerField(null=True, blank=True, unique=True)
     name = models.CharField(max_length=255, null=False, blank=False)
     path = models.CharField(max_length=255, null=False, blank=False)

@@ -4,11 +4,13 @@ import os
 import traceback
 import uuid
 from datetime import timedelta, datetime
+from os import environ
 from os.path import join, isdir
 from pathlib import Path
 from typing import List
 
 import binascii
+from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -21,9 +23,10 @@ from plantit import docker as docker
 from plantit.agents.models import Agent
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
+from plantit.sns import SnsClient
 from plantit.ssh import SSH, execute_command
-from plantit.task_resources import get_task_ssh_client
-from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script
+from plantit.task_resources import get_task_ssh_client, log_task_status, push_task_channel_event
+from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script, compose_report_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
@@ -288,9 +291,19 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         push_script_path = join(work_dir, f"{task.guid}_push.sh")
         with sftp.file(push_script_path, 'w') as push_script:
             lines = compose_push_script(task, options)
-            for line in lines: push_script.write(f"{line}\n".encode('utf-8'))
+            for line in lines:
+                push_script.write(f"{line}\n".encode('utf-8'))
             push_script.seek(0)
             logger.info(f"Uploaded push script {push_script_path} for task {task.guid}")
+
+        # compose and transfer the completion reporting script
+        report_script_path = join(work_dir, f"{task.guid}_report.sh")
+        with sftp.file(report_script_path, 'w') as report_script:
+            lines = compose_report_script(task)
+            for line in lines:
+                report_script.write(f"{line}\n".encode('utf-8'))
+            report_script.seek(0)
+            logger.info(f"Uploaded report script {report_script_path} for task {task.guid}")
 
 
 def submit_pull_to_scheduler(task: Task, ssh: SSH) -> str:

@@ -346,39 +346,92 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     return commands
 
 
+def compose_report_headers(task: Task) -> List[str]:
+    headers = []
+
+    # memory
+    if not has_virtual_memory(task.agent):
+        headers.append(f"#SBATCH --mem=1GB")
+
+    # walltime
+    headers.append(f"#SBATCH --time=00:10:00")
+
+    # queue
+    queue = task.agent.orchestrator_queue if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '' else task.agent.queue
+    headers.append(f"#SBATCH --partition={queue}")
+
+    # project/allocation
+    if task.agent.project is not None and task.agent.project != '':
+        headers.append(f"#SBATCH -A {task.agent.project}")
+
+    # nodes
+    headers.append(f"#SBATCH -N 1")
+
+    # cores
+    headers.append(f"#SBATCH -n 1")
+
+    # email notifications
+    headers.append("#SBATCH --mail-type=END,FAIL")
+    headers.append(f"#SBATCH --mail-user={task.user.email}")
+
+    # log files
+    headers.append("#SBATCH --output=plantit.%j.report.out")
+    headers.append("#SBATCH --error=plantit.%j.report.err")
+
+    return headers
+
+
+def compose_report_commands(task: Task) -> List[str]:
+    image = f"docker://{settings.CURL_IMAGE}"
+    return [
+        f"singularity exec {image} -L -v -X POST https://plantit.cyverse.org/apis/v1/tasks/{task.guid}/complete/"
+    ]
+
+
 # Job scripts
 
 def compose_pull_script(task: Task, options: TaskOptions) -> List[str]:
     with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
         template = [line.strip() for line in template_file if line != '']
         headers = compose_pull_headers(task)
-        pull = compose_pull_commands(task, options)
+        command = compose_pull_commands(task, options)
         return template + \
                headers + \
                [task.agent.pre_commands] + \
-               pull
+               command
 
 
 def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
     with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
         template = [line.strip() for line in template_file if line != '']
         headers = compose_job_headers(task, options, inputs)
-        run = compose_job_commands(task, options)
+        command = compose_job_commands(task, options)
         return template + \
                headers + \
                [task.agent.pre_commands] + \
-               run
+               command
 
 
 def compose_push_script(task: Task, options: TaskOptions) -> List[str]:
     with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
         template = [line.strip() for line in template_file if line != '']
         headers = compose_push_headers(task)
-        push = compose_push_commands(task, options)
+        command = compose_push_commands(task, options)
         return template + \
                headers + \
                [task.agent.pre_commands] + \
-               push
+               command
+
+
+def compose_report_script(task: Task) -> List[str]:
+    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
+        template = [line.strip() for line in template_file if line != '']
+        headers = compose_report_headers(task)
+        command = compose_report_commands(task)
+        return template + \
+               headers + \
+               [task.agent.pre_commands] + \
+               command
 
 
 def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
