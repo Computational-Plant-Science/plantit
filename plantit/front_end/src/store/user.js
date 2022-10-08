@@ -103,7 +103,7 @@ export const user = {
                     commit('setStats', response.data.stats);
                     commit(
                         'setDirtMigration',
-                        response.data.django_profile.migration
+                        response.data.migration
                     );
                     commit('setProfileLoading', false);
                 })
