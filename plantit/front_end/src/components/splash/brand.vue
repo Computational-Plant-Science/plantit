@@ -21,9 +21,9 @@
                         >
                             <b-img
                                 style="
-                                    max-width: 1.2rem;
+                                    max-width: 2.5rem;
                                     position: relative;
-                                    top: -6px;
+                                    left: 5px
                                 "
                                 :src="require('../../assets/logo.png')"
                                 left
@@ -146,7 +146,7 @@
                             >
                         </b-nav-item>-->
                 </b-row>
-                <b-row>
+                <!--<b-row>
                     <b-col md="auto">
                         <i class="text-theme mt-4 ml-1 text-left">
                             <span
@@ -167,10 +167,10 @@
                         </i></b-col
                     >
                     <b-col></b-col>
-                </b-row>
+                </b-row> -->
             </template>
             <template #default>
-                <b-container id="main">
+                <b-container id="main" fluid>
                     <b-row align-v="center" v-if="maintenance !== undefined"
                         ><b-col class="text-center" align-self="center"
                             ><b-alert variant="warning" :show="true"

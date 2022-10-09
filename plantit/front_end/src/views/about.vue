@@ -9,7 +9,16 @@
                         :class="profile.darkMode ? 'text-white' : 'text-theme'"
                         style="text-decoration: underline; z-index: 100"
                     >
-                        <small>about</small>plant<small
+                        <b-img
+                            style="
+                                max-width: 2.5rem;
+                                position: relative;
+                                left: 5px;
+                            "
+                            :src="require('../assets/logo.png')"
+                            class="m-0 p-0"
+                        ></b-img
+                        >plant<small
                             class="mb-3 text-success"
                             style="
                                 text-decoration: underline;
@@ -25,10 +34,16 @@
             <b-row
                 ><b-col>
                     <p>
-                        <code>plantit</code> is a science gateway for
-                        image-based plant phenotyping: free
-                        software-as-a-service for HPC/HTC phenotyping in the
-                        browser. Registered users can access and annotate data
+                        <b-img
+                            style="
+                                max-width: 1.5rem;
+                                position: relative;
+                                top: -3px
+                            "
+                            :src="require('../assets/logo.png')"
+                            class="m-0 p-0"
+                        ></b-img
+                        > free service for image-based plant phenotyping automation. Registered users can access and annotate data
                         stored in the CyVerse cloud and submit (possibly highly
                         parallel) trait extraction pipelines, simulations, or
                         other tasks to clusters and supercomputers, no
@@ -41,8 +56,16 @@
                         clicks.
                     </p>
                     <p>
-                        <code>plantit</code> was preceded by &mdash; grew out
-                        of, as it were &mdash;
+                        <b-img
+                            style="
+                                max-width: 1.5rem;
+                                position: relative;
+                                top: -3px
+                            "
+                            :src="require('../assets/logo.png')"
+                            class="m-0 p-0"
+                        ></b-img
+                        > preceded by &mdash; grew out of, as it were &mdash;
                         <b-link href="http://dirt.cyverse.org/?q=welcome"
                             >DIRT</b-link
                         >
@@ -62,10 +85,18 @@
                         >.
                     </p>
                     <p>
-                        <code>plantit</code> is like glue: it sits between
-                        things and binds them together. It is not any of the
-                        following technologies (although it employs several
-                        internally):
+                        <b-img
+                            style="
+                                max-width: 1.5rem;
+                                position: relative;
+                                top: -3px
+                            "
+                            :src="require('../assets/logo.png')"
+                            class="m-0 p-0"
+                        ></b-img
+                        > like glue: sitting between things, binding them
+                        together. It is not any of the following technologies
+                        (although it employs several internally):
                     </p>
                     <ul>
                         <li>
@@ -121,9 +152,17 @@
                         </li>
                     </ul>
                     <p>
-                        <code>plantit</code> is flexible enough to run most
-                        container-friendly workflows, but if you want to do
-                        genomics, a different tool (e.g.,
+                        <b-img
+                            style="
+                                max-width: 1.5rem;
+                                position: relative;
+                                top: -3px
+                            "
+                            :src="require('../assets/logo.png')"
+                            class="m-0 p-0"
+                        ></b-img
+                        > flexible enough to run most bioinformatics workflows,
+                        but if you want to do genomics, a different tool (e.g.,
                         <b-link href="https://genomevolution.org/CoGe/"
                             >CoGe</b-link
                         >
@@ -143,12 +182,10 @@
                         regarding a use case.
                     </p>
                     <p>
-                        <code>plantit</code> developers make no guarantees
-                        regarding the products of analyses performed on the
-                        platform. Researchers must ensure the validity of their
-                        own results. We encourage contacting workflow developers
-                        via GitHub or the other mechanisms provided in workflow
-                        descriptions to confirm suitability for your use case.
+                        <i><b>note:</b> developers make no guarantees regarding the
+                        products of analyses performed on the platform.
+                        Researchers must ensure the validity of their own
+                        results.</i>
                     </p>
                 </b-col>
             </b-row>

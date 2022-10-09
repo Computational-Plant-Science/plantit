@@ -8,7 +8,7 @@
             <b-row align-v="center">
                 <b-col class="text-center">
                     <b-img
-                        :src="require('../assets/PlantITLoading.gif')"
+                        :src="require('../assets/loading_spinner.gif')"
                         style="transform: translate(0px, 150px); opacity: 0.1"
                     ></b-img>
                 </b-col>

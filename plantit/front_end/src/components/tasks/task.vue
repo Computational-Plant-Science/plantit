@@ -1298,7 +1298,7 @@ export default {
             if (this.noPreview(file))
                 return require('../../assets/no_preview_thumbnail.png');
             else if (!this.getTask.result_previews_loaded)
-                return require('../../assets/PlantITLoading.gif');
+                return require('../../assets/loading_spinner.gif');
             else return this.thumbnailFor(file.path);
         },
         async thumbnailFor(path) {

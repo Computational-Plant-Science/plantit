@@ -141,10 +141,9 @@
                         >
                             <b-img
                                 style="
-                                    max-width: 1.5rem;
+                                    max-width: 2rem;
                                     position: absolute;
-                                    top: -5px;
-                                    left: 10px;
+                                    left: 8px;
                                 "
                                 :src="require('../assets/logo.png')"
                                 left

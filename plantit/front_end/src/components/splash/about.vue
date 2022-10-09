@@ -126,7 +126,7 @@
                                 <small
                                     ><b-img
                                         style="
-                                            max-width: 0.7rem;
+                                            max-width: 1.5rem;
                                             position: relative;
                                             top: 1px;
                                         "

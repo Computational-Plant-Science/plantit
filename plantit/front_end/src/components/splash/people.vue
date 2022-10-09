@@ -17,7 +17,7 @@
                     bottom: -150px;
                 "
                 center
-                :src="require('../../assets/PlantITLoading.gif')"
+                :src="require('../../assets/loading_spinner.gif')"
             ></b-img>
             <br />
             <br />
