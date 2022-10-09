@@ -38,18 +38,19 @@
                             style="
                                 max-width: 1.5rem;
                                 position: relative;
-                                top: -3px
+                                top: -3px;
                             "
                             :src="require('../assets/logo.png')"
                             class="m-0 p-0"
-                        ></b-img
-                        > free service for image-based plant phenotyping automation. Registered users can access and annotate data
-                        stored in the CyVerse cloud and submit (possibly highly
-                        parallel) trait extraction pipelines, simulations, or
-                        other tasks to clusters and supercomputers, no
-                        programming experience required. It's also a
-                        platform-as-a-service for developers, closely integrated
-                        with GitHub and Docker. Add a
+                        ></b-img>
+                        free service for image-based plant phenotyping
+                        automation. Registered users can access and annotate
+                        data stored in the CyVerse cloud and submit (possibly
+                        highly parallel) trait extraction pipelines,
+                        simulations, or other tasks to clusters and
+                        supercomputers, no programming experience required. It's
+                        also a platform-as-a-service for developers, closely
+                        integrated with GitHub and Docker. Add a
                         <code>plantit.yaml</code> file to any public repository
                         to integrate a container workflow, allowing researchers
                         to deploy it to a cluster or supercomputer with a few
@@ -60,12 +61,12 @@
                             style="
                                 max-width: 1.5rem;
                                 position: relative;
-                                top: -3px
+                                top: -3px;
                             "
                             :src="require('../assets/logo.png')"
                             class="m-0 p-0"
-                        ></b-img
-                        > preceded by &mdash; grew out of, as it were &mdash;
+                        ></b-img>
+                        preceded by &mdash; grew out of, as it were &mdash;
                         <b-link href="http://dirt.cyverse.org/?q=welcome"
                             >DIRT</b-link
                         >
@@ -89,12 +90,12 @@
                             style="
                                 max-width: 1.5rem;
                                 position: relative;
-                                top: -3px
+                                top: -3px;
                             "
                             :src="require('../assets/logo.png')"
                             class="m-0 p-0"
-                        ></b-img
-                        > like glue: sitting between things, binding them
+                        ></b-img>
+                        like glue: sitting between things, binding them
                         together. It is not any of the following technologies
                         (although it employs several internally):
                     </p>
@@ -156,12 +157,12 @@
                             style="
                                 max-width: 1.5rem;
                                 position: relative;
-                                top: -3px
+                                top: -3px;
                             "
                             :src="require('../assets/logo.png')"
                             class="m-0 p-0"
-                        ></b-img
-                        > flexible enough to run most bioinformatics workflows,
+                        ></b-img>
+                        flexible enough to run most bioinformatics workflows,
                         but if you want to do genomics, a different tool (e.g.,
                         <b-link href="https://genomevolution.org/CoGe/"
                             >CoGe</b-link
@@ -182,10 +183,12 @@
                         regarding a use case.
                     </p>
                     <p>
-                        <i><b>note:</b> developers make no guarantees regarding the
-                        products of analyses performed on the platform.
-                        Researchers must ensure the validity of their own
-                        results.</i>
+                        <i
+                            ><b>note:</b> developers make no guarantees
+                            regarding the products of analyses performed on the
+                            platform. Researchers must ensure the validity of
+                            their own results.</i
+                        >
                     </p>
                 </b-col>
             </b-row>

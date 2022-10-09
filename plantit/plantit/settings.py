@@ -61,6 +61,7 @@ assert 'DIRT_MIGRATION_DB_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATI
 assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_USER"
 assert 'DIRT_MIGRATION_DB_PASSWORD' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PASSWORD"
 assert 'DIRT_MIGRATION_DB_DATABASE' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_DATABASE"
+assert 'FIND_STRANDED_TASKS' in os.environ, f"{missing_variable} FIND_STRANDED_TASKS"
 
 
 CELERYD_TASK_SOFT_TIME_LIMIT = 60  # global Celery task timeout
@@ -115,6 +116,8 @@ DIRT_MIGRATION_DB_PORT = os.environ.get("DIRT_MIGRATION_DB_PORT")
 DIRT_MIGRATION_DB_USER = os.environ.get("DIRT_MIGRATION_DB_USER")
 DIRT_MIGRATION_DB_PASSWORD = os.environ.get("DIRT_MIGRATION_DB_PASSWORD")
 DIRT_MIGRATION_DB_DATABASE = os.environ.get("DIRT_MIGRATION_DB_DATABASE")
+
+FIND_STRANDED_TASKS = bool(os.environ.get("FIND_STRANDED_TASKS", False))
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

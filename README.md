@@ -289,6 +289,9 @@ TUTORIALS_FILE=/code/tutorials.pdf
 FEEDBACK_FILE=/code/feedback.pdf
 CELERY_AUTH=user:password
 HTTP_TIMEOUT=15
+CURL_IMAGE=curlimages/curl
+GH_USERNAME=<your github username>
+FIND_STRANDED_TASKS=True
 ```
 
 Note that the following environment variables must be supplied manually:

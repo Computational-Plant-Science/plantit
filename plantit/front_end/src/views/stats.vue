@@ -42,8 +42,8 @@
                             "
                             ><template #title
                                 ><h1 class="text-success text-center">
-                                    <span v-if="workflowCount >= 0">{{
-                                        workflowCount
+                                    <span v-if="publicWorkflows.length >= 0">{{
+                                        publicWorkflows.length
                                     }}</span
                                     ><b-spinner
                                         v-else
@@ -63,7 +63,7 @@
                                     "
                                     ><i class="fas fa-stream fa-fw"></i>
                                     <br />
-                                    Phenomics
+                                    Public
                                     <br />
                                     Workflows</b-button
                                 ></template
@@ -194,7 +194,7 @@
                                 ></span
                             >
                         </b-tab>
-                        <b-tab
+                        <!--<b-tab
                             title="Developers"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -273,7 +273,7 @@
                                     ></b-card
                                 ></b-card-group
                             ></b-tab
-                        >
+                        >-->
 
                         <b-tab
                             title="Tasks"
@@ -300,7 +300,7 @@
                                 </h1>
                                 <b-button
                                     :variant="
-                                        activeTab === 3
+                                        activeTab === 2
                                             ? profile.darkMode
                                                 ? 'outline-success'
                                                 : 'success'
@@ -372,7 +372,7 @@
                                 </h1>
                                 <b-button
                                     :variant="
-                                        activeTab === 4
+                                        activeTab === 3
                                             ? profile.darkMode
                                                 ? 'outline-success'
                                                 : 'success'

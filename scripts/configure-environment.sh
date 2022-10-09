@@ -32,6 +32,13 @@ else
   github_secret="${GITHUB_SECRET}"
 fi
 
+if [[ -z "${GH_USERNAME}" ]]; then
+  gh_username="some_github_username"
+  echo "Warning: GH_USERNAME environment variable missing"
+else
+  gh_username="${GH_USERNAME}"
+fi
+
 if [[ -z "${CYVERSE_CLIENT_ID}" ]]; then
   cyverse_client_id="some_cyverse_client_id"
   echo "Warning: CYVERSE_CLIENT_ID environment variable missing"
@@ -163,4 +170,7 @@ TUTORIALS_FILE=/code/tutorials.pdf
 FEEDBACK_FILE=/code/feedback.pdf
 CELERY_AUTH=user:password
 HTTP_TIMEOUT=15
+CURL_IMAGE=curlimages/curl
+GH_USERNAME=$gh_username
+FIND_STRANDED_TASKS=True
 EOT

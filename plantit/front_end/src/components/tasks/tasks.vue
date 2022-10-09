@@ -48,7 +48,7 @@
                         >Click here to load more completed tasks.</b-popover
                     ></b-col
                 >
-                <b-col md="auto" class="ml-0 mb-1" align-self="center"
+                <b-col md="auto" class="ml-0 mb-0" align-self="center"
                     ><b-button
                         id="refresh-tasks"
                         :disabled="tasksLoading"

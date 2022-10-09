@@ -76,6 +76,7 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
+      - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -191,6 +192,7 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
+      - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -282,6 +284,7 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
+      - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -375,6 +378,7 @@ services:
       - DIRT_MIGRATION_DB_USER=${DIRT_MIGRATION_DB_USER}
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
+      - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

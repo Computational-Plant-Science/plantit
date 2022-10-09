@@ -552,18 +552,21 @@ def test_results(self, guid: str):
         # make sure we got the results we expected
         missing = [r for r in results if not r['exists']]
         if len(missing) > 0:
-            message = f"Found {len(found)} results, missing {len(missing)}: {', '.join([m['name'] for m in missing])}"
+            message = f"Found {len(found)} results for task {task.guid}, missing {len(missing)}: {', '.join([m['name'] for m in missing])}"
         else:
-            message = f"Found {len(found)} results"
+            message = f"Found {len(found)} results for task {task.guid}"
 
         # log status update and push it to client(s)
         log_task_status(task, [message])
         async_to_sync(push_task_channel_event)(task)
 
         return guid
+    except FileNotFoundError:
+        logger.warning(f"Results directory not found for {task.guid}, may not have completed yet")
+        return
     except Exception:
         self.request.callbacks = None
-        message = f"Failed to check results: {traceback.format_exc()}"
+        message = f"Failed to check results for task {task.guid}: {traceback.format_exc()}"
 
         # mark the task failed and persist it
         task.status = TaskStatus.FAILURE
@@ -1316,9 +1319,12 @@ def start_dirt_migration(self, username: str):
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
+
     sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
     sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics')
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache')
-    # sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')
+
+    if settings.FIND_STRANDED_TASKS:
+        sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')
