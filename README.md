@@ -10,7 +10,7 @@
             >it</small>
 </h3>
 
-high-throughput phenotyping in the browser
+continuous phenotyping automation
 
 ![commit](https://github.com/Computational-Plant-Science/plantit/workflows/commit/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
