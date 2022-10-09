@@ -39,6 +39,7 @@ high-throughput phenotyping in the browser
   - [Installation](#installation)
     - [Setting up a development environment](#setting-up-a-development-environment)
       - [Running tests](#running-tests)
+      - [Reverse proxying with `ngrok`](#reverse-proxying-with-ngrok)
     - [Deploying to production](#deploying-to-production)
       - [SSL Certificates](#ssl-certificates)
   - [Configuring environment variables](#configuring-environment-variables)
