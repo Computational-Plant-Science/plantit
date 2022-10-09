@@ -1927,6 +1927,32 @@
                                                                                                 ></i>
                                                                                             </b-alert>
                                                                                             <b-alert
+                                                                                                v-else-if="
+                                                                                                    input.path !==
+                                                                                                        undefined &&
+                                                                                                    input.path !==
+                                                                                                        null &&
+                                                                                                    input.path.includes(
+                                                                                                        ' '
+                                                                                                    )
+                                                                                                "
+                                                                                                class="mt-1"
+                                                                                                variant="danger"
+                                                                                                :show="
+                                                                                                    true
+                                                                                                "
+                                                                                            >
+                                                                                                <i
+                                                                                                    class="fas fa-exclamation text-danger"
+                                                                                                ></i>
+                                                                                                Input
+                                                                                                path
+                                                                                                may
+                                                                                                not
+                                                                                                contain
+                                                                                                spaces
+                                                                                            </b-alert>
+                                                                                            <b-alert
                                                                                                 v-else
                                                                                                 class="mt-1"
                                                                                                 :variant="
@@ -2280,6 +2306,32 @@
                                                                                             ></multiselect>
                                                                                         </b-col>
                                                                                     </b-row>
+                                                                                    <b-alert
+                                                                                        v-if="
+                                                                                            output.to !==
+                                                                                                undefined &&
+                                                                                            output.to !==
+                                                                                                null &&
+                                                                                            output.to.includes(
+                                                                                                ' '
+                                                                                            )
+                                                                                        "
+                                                                                        class="mt-1"
+                                                                                        variant="danger"
+                                                                                        :show="
+                                                                                            true
+                                                                                        "
+                                                                                    >
+                                                                                        <i
+                                                                                            class="fas fa-exclamation text-danger"
+                                                                                        ></i>
+                                                                                        Output
+                                                                                        path
+                                                                                        may
+                                                                                        not
+                                                                                        contain
+                                                                                        spaces
+                                                                                    </b-alert>
                                                                                 </b-collapse>
                                                                             </b-col>
                                                                         </b-row>
@@ -4927,20 +4979,23 @@ export default {
                 );
             else return true;
         },
-        inputValid: function () {
+        inputValid() {
             if (
                 this.getWorkflow !== null &&
                 this.getWorkflow.config.input !== undefined
-            )
-                return (
+            ) {
+               return (
                     this.getWorkflow.config.input.kind !== undefined &&
-                    this.input.path !== '' &&
                     this.input.kind !== '' &&
                     this.selectedInput !== null &&
+                    this.selectedInput.path !== undefined &&
+                    this.selectedInput.path !== null &&
+                    this.selectedInput.path !== '' &&
+                    !this.selectedInput.path.includes(' ') &&
                     ((this.input.kind !== 'directory' &&
                         this.inputFiletypeSelected) ||
-                        this.input.kind === 'directory')
-                );
+                        this.input.kind === 'directory'));
+            }
             return true;
         },
         outputValid: function () {
@@ -4951,7 +5006,12 @@ export default {
             //     this.getWorkflow.config.input !== undefined &&
             //     this.getWorkflow.config.output.to !== undefined
             // )
-            return this.output.to !== '';
+            return (
+                this.output.to !== undefined &&
+                this.output.to !== null &&
+                this.output.to !== '' &&
+                !this.output.to.includes(' ')
+            );
             // return true;
         },
         agentValid() {
