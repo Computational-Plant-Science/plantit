@@ -128,17 +128,17 @@ export const workflows = {
         setProject({ commit }, workflows) {
             commit('setProject', workflows);
         },
-        setUserLoading({commit}, loading) {
-            commit('setUserLoading', loading)
+        setUserLoading({ commit }, loading) {
+            commit('setUserLoading', loading);
         },
-        setPublicLoading({commit}, loading) {
-            commit('setPublicLoading', loading)
+        setPublicLoading({ commit }, loading) {
+            commit('setPublicLoading', loading);
         },
-        setOrgLoading({commit}, loading) {
-            commit('setOrgLoading', loading)
+        setOrgLoading({ commit }, loading) {
+            commit('setOrgLoading', loading);
         },
-        setProjectLoading({commit}, loading) {
-            commit('setProjectLoading', loading)
+        setProjectLoading({ commit }, loading) {
+            commit('setProjectLoading', loading);
         },
         async loadPublic({ commit }) {
             commit('setPublicLoading', true);

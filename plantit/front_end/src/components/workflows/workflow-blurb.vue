@@ -21,7 +21,9 @@
                         {{ workflow.config.name }}
                     </b-link>
                 </h5>
-                <small v-if="workflow.config.author">{{ workflow.config.author }}</small>
+                <small v-if="workflow.config.author">{{
+                    workflow.config.author
+                }}</small>
                 <h5 v-else>
                     <b-link
                         class="text-danger"

@@ -21,8 +21,8 @@ export default {
     components: {
         brand,
         about,
-        sponsors
-    }
+        sponsors,
+    },
 };
 </script>
 

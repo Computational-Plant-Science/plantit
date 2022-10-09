@@ -186,11 +186,11 @@ import moment from 'moment';
 export default {
     name: 'agents',
     data: function () {
-      return {
-        bindingAgent: false,
-        agentHost: '',
-        agentUser: '',
-      };
+        return {
+            bindingAgent: false,
+            agentHost: '',
+            agentUser: '',
+        };
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
@@ -211,9 +211,7 @@ export default {
         refreshAgents() {
             this.$store.dispatch('agents/loadAll');
         },
-        bindAgent() {
-
-        },
+        bindAgent() {},
         isJobQueue(executor) {
             return executor !== 'Local';
         },

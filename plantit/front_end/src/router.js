@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
+import notfound from './components/not-found.vue';
 import splash from './views/splash.vue';
 import about from './views/about.vue';
 import stats from './views/stats.vue';
@@ -31,8 +32,8 @@ let router = new Router({
             meta: {
                 title: 'plantIT',
                 crumb: [],
-                requiresAuth: false
-            }
+                requiresAuth: false,
+            },
         },
         {
             path: '/about',
@@ -41,8 +42,8 @@ let router = new Router({
             meta: {
                 title: 'About plantIT',
                 crumb: [],
-                requiresAuth: false
-            }
+                requiresAuth: false,
+            },
         },
         {
             path: '/stats',
@@ -51,8 +52,8 @@ let router = new Router({
             meta: {
                 title: 'plantIT stats',
                 crumb: [],
-                requiresAuth: false
-            }
+                requiresAuth: false,
+            },
         },
         // {
         //     path: '/beta',
@@ -73,10 +74,10 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'Home',
-                        href: '/home'
-                    }
+                        href: '/home',
+                    },
                 ],
-                requiresAuth: false
+                requiresAuth: false,
             },
             children: [
                 {
@@ -88,14 +89,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Users',
-                                href: '/home/users'
-                            }
+                                href: '/home/users',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -108,18 +109,18 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Users',
-                                        href: '/home/users'
-                                    }
+                                        href: '/home/users',
+                                    },
                                 ],
-                                requiresAuth: true
+                                requiresAuth: true,
                             },
-                            children: []
-                        }
-                    ]
+                            children: [],
+                        },
+                    ],
                 },
                 {
                     path: 'datasets',
@@ -131,14 +132,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Datasets',
-                                href: '/home/datasets'
-                            }
+                                href: '/home/datasets',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -151,17 +152,17 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Datasets',
-                                        href: '/datasets/datasets'
-                                    }
+                                        href: '/datasets/datasets',
+                                    },
                                 ],
-                                requiresAuth: true
-                            }
-                        }
-                    ]
+                                requiresAuth: true,
+                            },
+                        },
+                    ],
                 },
                 {
                     path: 'workflows',
@@ -172,14 +173,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Workflows',
-                                href: '/home/workflows'
-                            }
+                                href: '/home/workflows',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -192,17 +193,17 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Workflows',
-                                        href: '/home/workflows'
-                                    }
+                                        href: '/home/workflows',
+                                    },
                                 ],
-                                requiresAuth: true
-                            }
-                        }
-                    ]
+                                requiresAuth: true,
+                            },
+                        },
+                    ],
                 },
                 {
                     path: 'agents',
@@ -213,14 +214,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Agents',
-                                href: '/home/agents'
-                            }
+                                href: '/home/agents',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -233,17 +234,17 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Agents',
-                                        href: '/home/agents'
-                                    }
+                                        href: '/home/agents',
+                                    },
                                 ],
-                                requiresAuth: true
-                            }
-                        }
-                    ]
+                                requiresAuth: true,
+                            },
+                        },
+                    ],
                 },
                 {
                     path: 'tasks',
@@ -254,14 +255,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Tasks',
-                                href: '/home/tasks'
-                            }
+                                href: '/home/tasks',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -274,17 +275,17 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Tasks',
-                                        href: '/home/tasks'
-                                    }
+                                        href: '/home/tasks',
+                                    },
                                 ],
-                                requiresAuth: true
-                            }
-                        }
-                    ]
+                                requiresAuth: true,
+                            },
+                        },
+                    ],
                 },
                 {
                     path: 'projects',
@@ -295,14 +296,14 @@ let router = new Router({
                         crumb: [
                             {
                                 text: 'Home',
-                                href: '/home'
+                                href: '/home',
                             },
                             {
                                 text: 'Projects',
-                                href: '/home/projects'
-                            }
+                                href: '/home/projects',
+                            },
                         ],
-                        requiresAuth: true
+                        requiresAuth: true,
                     },
                     children: [
                         {
@@ -315,38 +316,35 @@ let router = new Router({
                                 crumb: [
                                     {
                                         text: 'Home',
-                                        href: '/home'
+                                        href: '/home',
                                     },
                                     {
                                         text: 'Projects',
-                                        href: '/home/projects'
-                                    }
+                                        href: '/home/projects',
+                                    },
                                 ],
-                                requiresAuth: true
-                            }
-                        }
-                    ]
-                }
-            ]
+                                requiresAuth: true,
+                            },
+                        },
+                    ],
+                },
+            ],
         },
         {
             path: '*',
             name: '404',
-            component: () =>
-                import(
-                    /* webpackChunkName: "about" */ './components/not-found.vue'
-                ),
+            component: notfound,
             meta: {
                 title: 'Not Found',
                 crumb: [
                     {
-                        text: '404'
-                    }
+                        text: '404',
+                    },
                 ],
-                requiresAuth: false
-            }
-        }
-    ]
+                requiresAuth: false,
+            },
+        },
+    ],
 });
 
 router.beforeEach(async (to, from, next) => {
@@ -357,28 +355,28 @@ router.beforeEach(async (to, from, next) => {
         to.meta.title = `Workflow: ${to.params.name} (${to.params.branch})`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.owner}/${to.params.name}/${to.params.branch}`
+            text: `${to.params.owner}/${to.params.name}/${to.params.branch}`,
         });
     }
     if (to.name === 'task') {
         to.meta.title = `Task: ${to.params.owner}/${to.params.guid}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.owner}/${to.params.guid}`
+            text: `${to.params.owner}/${to.params.guid}`,
         });
     }
     if (to.name === 'agent') {
         to.meta.title = `Agent: ${to.params.name}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.name}`
+            text: `${to.params.name}`,
         });
     }
     if (to.name === 'project') {
         to.meta.title = `Project: ${to.params.owner}/${to.params.title}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.owner}/${to.params.title}`
+            text: `${to.params.owner}/${to.params.title}`,
         });
     }
     // if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;

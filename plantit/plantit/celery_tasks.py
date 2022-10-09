@@ -32,7 +32,7 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
-    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
+    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler, submit_report_to_scheduler
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 
@@ -312,13 +312,14 @@ def submit_jobs(self, guid: str):
             else:
                 pull_id = None
 
-            # schedule user workflow and outbound transfer jobs
+            # schedule user workflow, outbound transfer, and completion reporting jobs
             job_id = submit_job_to_scheduler(task, ssh, pull_id=pull_id)
             push_id = submit_push_to_scheduler(task, ssh, job_id=job_id)
-            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)'])
+            report_id = submit_report_to_scheduler(task, ssh, push_id=push_id)
+            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)', report_id + ' (report completion)'])
 
             # persist the last job ID to the task
-            task.job_id = push_id
+            task.job_id = report_id
             task.updated = timezone.now()
             task.save()
             logger.info(f"Task {task.guid} job ID: {task.job_id}")
@@ -454,7 +455,6 @@ def poll_jobs(self, guid: str):
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
 
-            # submit the outbound data transfer job
             (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
             tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
@@ -836,7 +836,8 @@ def find_stranded():
             if (now - task.updated).total_seconds() > (5 * period):
                 if task.job_id is not None:
                     logger.warning(f"Checking stranded task: {task.guid}")
-                    test_results.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+                    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(
+                        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
     finally:
         __release_lock(task_name)
 
@@ -1320,4 +1321,4 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics')
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache')
-    sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')
+    # sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')

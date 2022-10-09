@@ -24,8 +24,8 @@ export const notifications = {
         },
     },
     actions: {
-        setLoading({commit}, loading) {
-            commit('setLoading', loading)
+        setLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
         async setAll({ commit }, notifications) {
             commit('setAll', notifications);

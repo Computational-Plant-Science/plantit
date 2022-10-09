@@ -42,9 +42,13 @@ export const tasks = {
             // check if task.delayed_id or task.repeating_id matches any delayed or repeating tasks and remove them
             let j = state.delayed.findIndex((t) => t.name === task.delayed_id);
             if (j !== -1) state.delayed.splice(j, 1);
-            let k = state.repeating.findIndex((t) => t.name === task.repeating_id);
+            let k = state.repeating.findIndex(
+                (t) => t.name === task.repeating_id
+            );
             if (k !== -1) state.repeating.splice(k, 1);
-            let l = state.triggered.findIndex((t) => t.name === task.triggered_id);
+            let l = state.triggered.findIndex(
+                (t) => t.name === task.triggered_id
+            );
             if (l !== -1) state.triggered.splice(l, 1);
         },
         addDelayed(state, task) {
@@ -70,8 +74,8 @@ export const tasks = {
         setTriggered({ commit }, tasks) {
             commit('setTriggered', tasks);
         },
-        setLoading({commit}, loading) {
-            commit('setLoading', loading)
+        setLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
         async loadAll({ commit }) {
             commit('setLoading', true);
@@ -214,7 +218,7 @@ export const tasks = {
     getters: {
         task: (state) => (guid) => {
             let found = state.tasks.find((t) => guid === t.guid);
-            return (found !== undefined) ? found : null;
+            return found !== undefined ? found : null;
         },
         tasks: (state) => (state.tasks === undefined ? [] : state.tasks),
         tasksDelayed: (state) => state.delayed,

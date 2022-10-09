@@ -16,8 +16,8 @@ export const users = {
         },
     },
     actions: {
-        setLoading({commit}, loading) {
-            commit('setLoading', loading)
+        setLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
         setAll({ commit }, users) {
             commit('set', users);

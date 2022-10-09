@@ -182,7 +182,7 @@
                                                 <b-row>
                                                     <b-col>
                                                         <small>scheduler</small>
-                                                        <br/>
+                                                        <br />
                                                         <b class="ml-3">
                                                             {{
                                                                 getAgent.executor
@@ -196,7 +196,7 @@
                                                             >working
                                                             directory</small
                                                         >
-                                                      <br/>
+                                                        <br />
                                                         <b class="ml-3">
                                                             {{
                                                                 getAgent.workdir
@@ -207,9 +207,10 @@
                                                 <b-row>
                                                     <b-col>
                                                         <small
-                                                            >setup commands</small
+                                                            >setup
+                                                            commands</small
                                                         >
-                                                      <br/>
+                                                        <br />
                                                         <b class="ml-3"
                                                             ><code>{{
                                                                 getAgent.pre_commands
@@ -259,8 +260,10 @@
                                                             getAgent.max_mem
                                                         ) > 0
                                                     "
-                                                    ><b>{{ getAgent.max_mem
-                                                  }}</b><small>
+                                                    ><b>{{
+                                                        getAgent.max_mem
+                                                    }}</b
+                                                    ><small>
                                                         GB memory</small
                                                     ></span
                                                 >
@@ -296,7 +299,15 @@
                                         <br />
                                         <b-row>
                                             <b-col md="auto">
-                                                <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Connection Status</h5> </b-col
+                                                <h5
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    Connection Status
+                                                </h5> </b-col
                                             ><b-col></b-col
                                             ><b-col class="ml-0" md="auto"
                                                 ><b-button
@@ -307,7 +318,9 @@
                                                             : 'white'
                                                     "
                                                     size="sm"
-                                                    :disabled="checkingConnection"
+                                                    :disabled="
+                                                        checkingConnection
+                                                    "
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Verify connection to ' +
@@ -336,13 +349,13 @@
                                                 ></b-col
                                             >
                                         </b-row>
-                                        <Plotly
+                                        <!--<Plotly
                                             v-if="healthchecks.length > 0"
                                             :data="healthchecksTimeseriesData"
                                             :layout="
                                                 healthchecksTimeseriesLayout
                                             "
-                                        ></Plotly>
+                                        ></Plotly>-->
                                     </b-col>
                                 </b-row>
                             </div>
@@ -360,12 +373,10 @@ import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import { guid } from '@/utils';
-import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'agent',
     components: {
-        Plotly,
     },
     data: function () {
         return {
@@ -388,7 +399,9 @@ export default {
         ]),
         ...mapGetters('agents', ['agent', 'agentsLoading', 'agentsPermitted']),
         authorized() {
-            return this.agentsPermitted(this.profile.djangoProfile.username).map(a => a.name).includes(this.getAgent.name);
+            return this.agentsPermitted(this.profile.djangoProfile.username)
+                .map((a) => a.name)
+                .includes(this.getAgent.name);
         },
         agentLoading() {
             return this.agentsLoading;

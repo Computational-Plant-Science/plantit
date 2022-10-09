@@ -6,18 +6,22 @@
             <b-row>
                 <b-col class="text-center"
                     ><b-img
-                        style="max-width: 5rem;transform: translate(0px, 20px);"
+                        style="max-width: 5rem; transform: translate(0px, 20px)"
                         :src="require('../assets/logo.png')"
                         center
                         class="m-0 p-0 mb-1"
                     ></b-img>
                     <h1
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline;"
+                        style="text-decoration: underline"
                     >
                         plant<small
                             class="mb-3 text-success"
-                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                            style="
+                                text-decoration: underline;
+                                text-shadow: 1px 0 0 #000, 0 -1px 0 #000,
+                                    0 1px 0 #000, -1px 0 0 #000;
+                            "
                             >IT</small
                         ><small class="ml-1">beta</small>
                     </h1>
@@ -27,8 +31,8 @@
             <b-row
                 ><b-col class="text-center"
                     ><b>Thanks for your interest in PlantIT!</b><br />Feedback
-                    is crucial and much appreciated. Here are a couple ways to get
-                    started. <br /><br />
+                    is crucial and much appreciated. Here are a couple ways to
+                    get started. <br /><br />
                     <h5>1</h5>
                     If you'd prefer to read about the platform first, you can
                     download the
@@ -66,8 +70,8 @@
                             name: 'workflow',
                             params: {
                                 owner: 'Computational-Plant-Science',
-                                name: 'plantit-example-hello-world'
-                            }
+                                name: 'plantit-example-hello-world',
+                            },
                         }"
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
                         ><span
@@ -150,10 +154,10 @@ import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'beta',
-    data: function() {
+    data: function () {
         return {
             downloading: false,
-            togglingHints: false
+            togglingHints: false,
         };
     },
     methods: {
@@ -172,10 +176,10 @@ export default {
                     `/apis/v1/feedback/tutorials/`,
 
                     {
-                        responseType: 'blob'
+                        responseType: 'blob',
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
@@ -186,7 +190,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     alert(`Failed to download tutorials`);
                     throw error;
@@ -199,10 +203,10 @@ export default {
                     `/apis/v1/feedback/feedback/`,
 
                     {
-                        responseType: 'blob'
+                        responseType: 'blob',
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
@@ -213,16 +217,16 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     alert(`Failed to download feedback form`);
                     throw error;
                 });
-        }
+        },
     },
     computed: {
-        ...mapGetters('user', ['profile'])
-    }
+        ...mapGetters('user', ['profile']),
+    },
 };
 </script>
 

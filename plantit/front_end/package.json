@@ -6,19 +6,15 @@
     "serve": "vue-cli-service serve --port 8085",
     "build": "vue-cli-service build",
     "watch": "vue-cli-service build --watch",
-    "lint": "vue-cli-service lint",
-    "test": "jest"
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@babel/runtime-corejs2": "^7.14.8",
     "@mapbox/mapbox-gl-geocoder": "^4.7.2",
     "@mapbox/mapbox-sdk": "^0.13.0",
     "@sentry/browser": "^5.30.0",
     "@sentry/integrations": "^5.30.0",
     "@vue/cli": "^5.0.8",
-    "@vue/cli-plugin-unit-jest": "^5.0.8",
     "axios": "^0.21.2",
-    "babel-core": "^7.0.0-bridge.0",
     "bootstrap-vue": "^2.21.2",
     "chai": "^4.3.4",
     "core-js": "^2.6.12",
@@ -29,7 +25,6 @@
     "google-fonts-webpack-plugin": "^0.4.4",
     "highlight.js": "^11.2.0",
     "inject-loader": "^4.0.1",
-    "jest-serializer-vue": "^2.0.2",
     "jquery": "^3.6.0",
     "js-cookie": "^2.2.0",
     "jwt-decode": "^3.1.2",
@@ -57,7 +52,6 @@
     "vue-jstree": "^2.1.6",
     "vue-markdown": "^2.2.4",
     "vue-multiselect": "^2.1.6",
-    "vue-plotly": "^1.1.0",
     "vue-router": "^3.5.2",
     "vue-socket.io": "^3.0.10",
     "vue-tags-component": "^1.3.0",
@@ -68,29 +62,20 @@
     "vuex-persistedstate": "^4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.8",
-    "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^7.14.8",
     "@testing-library/vue": "^5.8.1",
-    "@vue/cli-plugin-babel": "^3.5.0",
     "@vue/cli-plugin-eslint": "^3.5.0",
     "@vue/cli-service": "^5.0.8",
     "@vue/eslint-config-prettier": "^4.0.1",
     "@vue/test-utils": "^1.2.2",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-eslint": "^10.1.0",
-    "babel-jest": "^23.6.0",
     "dotenv-webpack": "^3.0.0",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0",
-    "jest": "^26.6.3",
     "js-yaml": "^4.1.0",
     "raw-loader": "^4.0.2",
     "style-resources-loader": "^1.4.1",
     "vue-cli-plugin-bootstrap-vue": "^0.2.0",
     "vue-cli-plugin-style-resources-loader": "^0.1.5",
     "vue-friendly-iframe": "^0.19.0",
-    "vue-jest": "^3.0.7",
     "vue-template-compiler": "^2.6.14"
   },
   "eslintConfig": {
@@ -112,10 +97,7 @@
           "no-console": "off"
         }
       }
-    ],
-    "parserOptions": {
-      "parser": "babel-eslint"
-    }
+    ]
   },
   "prettier": {
     "tabWidth": 4,
@@ -130,18 +112,5 @@
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
-  ],
-  "jest": {
-    "moduleNameMapper": {
-      "^vue$": "vue/dist/vue.common.js"
-    },
-    "moduleFileExtensions": [
-      "js",
-      "vue"
-    ],
-    "transform": {
-      "^.+\\.js$": "<rootDir>/node_modules/babel-jest",
-      ".*\\.(vue)$": "<rootDir>/node_modules/vue-jest"
-    }
-  }
+  ]
 }

@@ -384,7 +384,7 @@ def compose_report_headers(task: Task) -> List[str]:
 def compose_report_commands(task: Task) -> List[str]:
     image = f"docker://{settings.CURL_IMAGE}"
     return [
-        f"singularity exec {image} -L -v -X POST https://plantit.cyverse.org/apis/v1/tasks/{task.guid}/complete/"
+        f"singularity exec {image} curl -L -v -X POST {settings.API_URL}/tasks/{task.guid}/complete/"
     ]
 
 

@@ -25,8 +25,8 @@ export const agents = {
         setAll({ commit }, agents) {
             commit('setAgents', agents);
         },
-        setLoading({commit}, loading) {
-            commit('setLoading', loading)
+        setLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
         async loadAll({ commit }) {
             commit('setLoading', true);
@@ -42,7 +42,6 @@ export const agents = {
                     throw error;
                 });
         },
-
         async load({ commit }, name) {
             commit('setLoading', true);
             await axios

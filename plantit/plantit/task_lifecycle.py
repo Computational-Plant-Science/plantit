@@ -397,6 +397,28 @@ def submit_push_to_scheduler(task: Task, ssh: SSH, job_id: str = None) -> str:
     return push_id
 
 
+def submit_report_to_scheduler(task: Task, ssh: SSH, push_id: str = None) -> str:
+    # setup command
+    setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+
+    # command
+    command = f"sbatch{' ' if push_id is None else (' --depend=afterany:' + push_id + ' ')}{task.guid}_report.sh"
+
+    # workdir
+    workdir = join(task.agent.workdir, task.workdir)
+
+    # submit to agent's scheduler
+    lines = []
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+        stripped = line.strip()
+        if stripped:
+            logger.info(f"[{task.agent.name}] {stripped}")
+            lines.append(stripped)
+
+    report_id = parse_job_id(lines[-1])
+    return report_id
+
+
 def cancel_task(task: Task):
     try:
         # mark task cancelled

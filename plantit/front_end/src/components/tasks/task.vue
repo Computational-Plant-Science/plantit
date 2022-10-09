@@ -396,14 +396,14 @@
                                         : 'theme-container-light m-0 p-1 pt-3 pb-3'
                                 "
                             >
-                                <b-row class="m-0"
+                                <!--<b-row class="m-0"
                                     ><b-col
                                         ><Plotly
                                             style="position: relative"
                                             :data="timeseriesData"
                                             :layout="timeseriesLayout"
                                         ></Plotly></b-col
-                                ></b-row>
+                                ></b-row>-->
                                 <b-row class="m-0">
                                     <b-col
                                         v-if="
@@ -1221,14 +1221,12 @@ import { guid } from '@/utils';
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'task',
     components: {
         WorkflowBlurb,
         datatree,
-        Plotly,
     },
     data() {
         return {

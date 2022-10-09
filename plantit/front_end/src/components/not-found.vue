@@ -5,9 +5,7 @@
         <b-container>
             <b-row align-content="center">
                 <b-col>
-                    <h5 class="text-center">
-                        this page does not exist
-                    </h5>
+                    <h5 class="text-center">this page does not exist</h5>
                 </b-col>
             </b-row>
         </b-container>
@@ -17,5 +15,7 @@
 <script>
 // @ is an alias to /src
 
-export default {};
+export default {
+    name: 'notfound',
+};
 </script>

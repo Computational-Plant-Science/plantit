@@ -57,7 +57,8 @@ def get_or_create(request):
             task = create_immediate_task(request.user, task_config)
 
             # submit Celery task chain
-            (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+            # (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+            (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s()).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
@@ -478,24 +479,26 @@ def search_triggered(request, owner, workflow_name):
 @api_view(['POST'])
 def complete(request, guid):
     try:
-        task = Task.objects.get(user=request.user, guid=guid)
+        task = Task.objects.get(guid=guid)
     except MultipleObjectsReturned:
         tasks = list(Task.objects.filter(user=request.user, guid=guid))
         logger.warning(f"Found {len(tasks)} tasks for user {request.user.username} matching GUID {guid}")
         for task in tasks:
             complete_task(task)
         return HttpResponseServerError()
-    except:
+    except Exception as e:
+        logger.error(e)
         return HttpResponseNotFound()
 
     if task.is_complete:
         return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
 
-    success = request.data.get('success', None)
-    if success is None:
-        return HttpResponseBadRequest()
+    # success = request.data.get('success', None)
+    # if success is None:
+    #     return HttpResponseBadRequest()
 
-    complete_task(task, bool(success))
+    # complete_task(task, bool(success))
+    complete_task(task, True)
     return JsonResponse(q.task_to_dict(task))
 
 
