@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent">
         <b-row class="m-1"
             ><b-col align-self="center" cols="3">
                 <i v-if="profile.darkMode" class="fas fa-sun fa-1x fa-fw"></i>
@@ -49,14 +49,14 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'settings',
-    data: function() {
+    data: function () {
         return {
             togglingDarkMode: false,
-            togglingPushNotifications: false
+            togglingPushNotifications: false,
         };
     },
     computed: {
-        ...mapGetters('user', ['profile', 'profileLoading'])
+        ...mapGetters('user', ['profile', 'profileLoading']),
     },
     methods: {
         async toggleDarkMode() {
@@ -68,8 +68,8 @@ export default {
             this.togglingPushNotifications = true;
             await this.$store.dispatch('user/togglePushNotifications');
             this.togglingPushNotifications = false;
-        }
-    }
+        },
+    },
 };
 </script>
 

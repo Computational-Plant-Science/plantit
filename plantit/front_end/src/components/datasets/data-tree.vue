@@ -57,9 +57,7 @@
                     {{
                         isDir
                             ? `${subDirCount} ${
-                                  subDirCount === 1
-                                      ? 'folder'
-                                      : 'folders'
+                                  subDirCount === 1 ? 'folder' : 'folders'
                               }, ${fileCount} ${
                                   fileCount === 1 ? 'file' : 'files'
                               }`
@@ -92,17 +90,13 @@
                         v-model="filesToUpload"
                         :placeholder="
                             'Upload to \'' +
-                                (internalLoaded
-                                    ? internalNode.label
-                                    : node.label) +
-                                '\''
+                            (internalLoaded ? internalNode.label : node.label) +
+                            '\''
                         "
                         :drop-placeholder="
                             'Upload to \'' +
-                                (internalLoaded
-                                    ? internalNode.label
-                                    : node.label) +
-                                '\''
+                            (internalLoaded ? internalNode.label : node.label) +
+                            '\''
                         "
                     ></b-form-file>
                     <span v-if="create" class="ml-2">
@@ -544,13 +538,16 @@
                         :disabled="internalLoading"
                         @click="refresh"
                     >
-                        <i v-if="!internalLoading" class="fas fa-sync-alt fa-fw"></i>
-                      <b-spinner
-                        v-else
-                        variant="secondary"
-                        small
-                        label="Loading"
-                    ></b-spinner>
+                        <i
+                            v-if="!internalLoading"
+                            class="fas fa-sync-alt fa-fw"
+                        ></i>
+                        <b-spinner
+                            v-else
+                            variant="secondary"
+                            small
+                            label="Loading"
+                        ></b-spinner>
                     </b-button>
                     <b-button
                         v-if="
@@ -568,26 +565,22 @@
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
                     <b-button
-                            v-if="isOwned && !isRoot"
-                            class="ml-1 mr-1"
-                            size="sm"
-                            :disabled="deletingDirectory"
-                            title="Delete Folder"
-                            @click="
-                                deleteFolder(
-                                    internalLoaded
-                                        ? internalNode.path
-                                        : node.path,
-                                    profile.djangoProfile.cyverse_token
-                                )
-                            "
-                            :variant="
-                                profile.darkMode
-                                    ? 'outline-light'
-                                    : 'outline-dark'
-                            "
-                            ><i class="fas fa-trash text-danger fa-fw"></i
-                        ></b-button>
+                        v-if="isOwned && !isRoot"
+                        class="ml-1 mr-1"
+                        size="sm"
+                        :disabled="deletingDirectory"
+                        title="Delete Folder"
+                        @click="
+                            deleteFolder(
+                                internalLoaded ? internalNode.path : node.path,
+                                profile.djangoProfile.cyverse_token
+                            )
+                        "
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
+                        ><i class="fas fa-trash text-danger fa-fw"></i
+                    ></b-button>
                     <!--<b-dropdown
                         class="mr-1 ml-1"
                         v-if="
@@ -961,54 +954,113 @@
             ></b-col>
         </b-row>
         <b-row class="p-0">
-          <b-col>
-            <b-card
-                v-if="upload && !isShared && (filesToUpload.length > 0 || uploadingFiles.length > 0)"
-                no-body
-                  :bg-variant="profile.darkMode ? 'dark' : 'light'">
-            <b-row>
-              <b-col>
-                <b-list-group>
-                  <b-list-group-item :class="profile.darkMode ? 'darkitems' : ''" v-for="file in filesToUpload" v-bind:key="file.name">
-                    <span><i class="fas fa-upload fa-fw"></i> {{ file.name }}</span> <span v-if="uploadedFiles.some(f => f.name === file.name)"><i class="fas fa-check text-success ml-1"></i></span><span v-else-if="uploading"><b-spinner label="Uploading..." class="ml-1" variant="secondary" small></b-spinner></span>
-                  </b-list-group-item>
-                </b-list-group>
-              </b-col>
-            </b-row>
-              <b-row class="mt-2">
-              <b-col>
-          <b-button
-                        block
-                        size="sm"
-                        :disabled="filesToUpload.length === 0 || uploading"
-                        @click="
-                            uploadFiles(
-                                filesToUpload,
-                                internalLoaded ? internalNode.path : node.path,
-                                profile.djangoProfile.cyverse_token
-                            )
-                        "
-                        :variant="
-                            profile.darkMode ? 'outline-light' : 'outline-dark'
-                        "
-                        ><b-spinner v-if="uploading" label="Uploading..." class="ml-1" variant="secondary" small></b-spinner> <i v-else class="fas fa-angle-right fa-fw"></i
-                    > Upload</b-button>
-                </b-col>
-            </b-row>
-              </b-card>
-              <b-card
-                  v-if="!isShared && deletingPaths.length > 0"
-                  no-body
-                  :bg-variant="profile.darkMode ? 'dark' : 'light'">
-                <b-row>
-              <b-col>
-                <b-list-group-item :class="profile.darkMode ? 'darkitems' : ''" :variant="profile.darkMode ? 'dark' : 'light'" v-for="path in deletingPaths" v-bind:key="path">
-                    <span class="text-danger"><i class="fas fa-trash fa-fw"></i> Deleting {{ path }}</span>
-                    <span><b-spinner label="Uploading..." class="ml-1" variant="danger" small></b-spinner></span>
-                  </b-list-group-item>
-              </b-col>
-                </b-row>
-              </b-card>
+            <b-col>
+                <b-card
+                    v-if="
+                        upload &&
+                        !isShared &&
+                        (filesToUpload.length > 0 || uploadingFiles.length > 0)
+                    "
+                    no-body
+                    :bg-variant="profile.darkMode ? 'dark' : 'light'"
+                >
+                    <b-row>
+                        <b-col>
+                            <b-list-group>
+                                <b-list-group-item
+                                    :class="profile.darkMode ? 'darkitems' : ''"
+                                    v-for="file in filesToUpload"
+                                    v-bind:key="file.name"
+                                >
+                                    <span
+                                        ><i class="fas fa-upload fa-fw"></i>
+                                        {{ file.name }}</span
+                                    >
+                                    <span
+                                        v-if="
+                                            uploadedFiles.some(
+                                                (f) => f.name === file.name
+                                            )
+                                        "
+                                        ><i
+                                            class="fas fa-check text-success ml-1"
+                                        ></i></span
+                                    ><span v-else-if="uploading"
+                                        ><b-spinner
+                                            label="Uploading..."
+                                            class="ml-1"
+                                            variant="secondary"
+                                            small
+                                        ></b-spinner
+                                    ></span>
+                                </b-list-group-item>
+                            </b-list-group>
+                        </b-col>
+                    </b-row>
+                    <b-row class="mt-2">
+                        <b-col>
+                            <b-button
+                                block
+                                size="sm"
+                                :disabled="
+                                    filesToUpload.length === 0 || uploading
+                                "
+                                @click="
+                                    uploadFiles(
+                                        filesToUpload,
+                                        internalLoaded
+                                            ? internalNode.path
+                                            : node.path,
+                                        profile.djangoProfile.cyverse_token
+                                    )
+                                "
+                                :variant="
+                                    profile.darkMode
+                                        ? 'outline-light'
+                                        : 'outline-dark'
+                                "
+                                ><b-spinner
+                                    v-if="uploading"
+                                    label="Uploading..."
+                                    class="ml-1"
+                                    variant="secondary"
+                                    small
+                                ></b-spinner>
+                                <i v-else class="fas fa-angle-right fa-fw"></i>
+                                Upload</b-button
+                            >
+                        </b-col>
+                    </b-row>
+                </b-card>
+                <b-card
+                    v-if="!isShared && deletingPaths.length > 0"
+                    no-body
+                    :bg-variant="profile.darkMode ? 'dark' : 'light'"
+                >
+                    <b-row>
+                        <b-col>
+                            <b-list-group-item
+                                :class="profile.darkMode ? 'darkitems' : ''"
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                v-for="path in deletingPaths"
+                                v-bind:key="path"
+                            >
+                                <span class="text-danger"
+                                    ><i class="fas fa-trash fa-fw"></i> Deleting
+                                    {{ path }}</span
+                                >
+                                <span
+                                    ><b-spinner
+                                        label="Uploading..."
+                                        class="ml-1"
+                                        variant="danger"
+                                        small
+                                    ></b-spinner
+                                ></span>
+                            </b-list-group-item>
+                        </b-col>
+                    </b-row>
+                </b-card>
             </b-col>
         </b-row>
         <b-row
@@ -1157,11 +1209,13 @@
                             formatBytes(child['file-size'])
                         }}</small></b-col
                     >
-                    <b-col md="auto" align-self="center"><b-img-lazy
+                    <b-col md="auto" align-self="center"
+                        ><b-img-lazy
                             v-if="previewsLoaded && fileIsImage(child.label)"
                             :src="getFileURL(child)"
                             style="width: 2rem; height: 2rem"
-                        ></b-img-lazy></b-col>
+                        ></b-img-lazy
+                    ></b-col>
                     <b-col md="auto" align-self="center">
                         <b-button
                             id="popover-reactive-1"
@@ -1193,8 +1247,8 @@
                                     ? 'outline-light'
                                     : 'outline-dark'
                             "
-                            ><i class="fas fa-download fa-fw"></i></b-button
-                    >
+                            ><i class="fas fa-download fa-fw"></i
+                        ></b-button>
                         <b-button
                             v-if="isOwned"
                             class="m-1"
@@ -1208,7 +1262,7 @@
                             "
                             variant="outline-danger"
                             ><i class="fas fa-trash fa-fw"></i></b-button
-                        ></b-col>
+                    ></b-col>
                 </b-row>
             </b-overlay>
         </b-list-group-item>
@@ -1911,15 +1965,15 @@ export default {
             });
         },
         removeItemAll(arr, value) {
-          var i = 0;
-          while (i < arr.length) {
-            if (arr[i] === value) {
-              arr.splice(i, 1);
-            } else {
-              ++i;
+            var i = 0;
+            while (i < arr.length) {
+                if (arr[i] === value) {
+                    arr.splice(i, 1);
+                } else {
+                    ++i;
+                }
             }
-          }
-          return arr;
+            return arr;
         },
         waitForDeletion(path) {
             this.waitFor(
@@ -1936,7 +1990,7 @@ export default {
                             guid: guid().toString(),
                         });
                         this.removeItemAll(this.deletingPaths, path);
-                        setTimeout(this.refresh, 2000)
+                        setTimeout(this.refresh, 2000);
                     }
                     return deleted;
                 },
@@ -1993,27 +2047,38 @@ export default {
                 });
         },
         refreshAfterDeletion() {
-          this.$emit('deleted');
-          this.$parent.$emit('deleted');
+            this.$emit('deleted');
+            this.$parent.$emit('deleted');
         },
         async deleteFolder(path, token) {
-          await this.$bvModal
-                .msgBoxConfirm(`Are you sure you want to delete folder '${path}'?`, {
-                    size: 'sm',
-                    bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
-                    footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
-                    footerBorderVariant: this.profile.darkMode
-                        ? 'dark'
-                        : 'white',
-                    footerTextVariant: this.profile.darkMode ? 'white' : 'dark',
-                    bodyTextVariant: this.profile.darkMode ? 'white' : 'dark',
-                    bodyBorderVariant: this.profile.darkMode ? 'dark' : 'white',
-                    okVariant: 'outline-danger',
-                    cancelVariant: 'secondary',
-                    okTitle: 'Yes',
-                    cancelTitle: 'No',
-                    centered: true,
-                })
+            await this.$bvModal
+                .msgBoxConfirm(
+                    `Are you sure you want to delete folder '${path}'?`,
+                    {
+                        size: 'sm',
+                        bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                        footerBgVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        footerBorderVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        footerTextVariant: this.profile.darkMode
+                            ? 'white'
+                            : 'dark',
+                        bodyTextVariant: this.profile.darkMode
+                            ? 'white'
+                            : 'dark',
+                        bodyBorderVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        okVariant: 'outline-danger',
+                        cancelVariant: 'secondary',
+                        okTitle: 'Yes',
+                        cancelTitle: 'No',
+                        centered: true,
+                    }
+                )
                 .then(async (value) => {
                     if (value) {
                         this.deleting = true;
@@ -2049,22 +2114,33 @@ export default {
         },
         async deleteFile(path, token) {
             await this.$bvModal
-                .msgBoxConfirm(`Are you sure you want to delete file '${path}'?`, {
-                    size: 'sm',
-                    bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
-                    footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
-                    footerBorderVariant: this.profile.darkMode
-                        ? 'dark'
-                        : 'white',
-                    footerTextVariant: this.profile.darkMode ? 'white' : 'dark',
-                    bodyTextVariant: this.profile.darkMode ? 'white' : 'dark',
-                    bodyBorderVariant: this.profile.darkMode ? 'dark' : 'white',
-                    okVariant: 'outline-danger',
-                    cancelVariant: 'secondary',
-                    okTitle: 'Yes',
-                    cancelTitle: 'No',
-                    centered: true,
-                })
+                .msgBoxConfirm(
+                    `Are you sure you want to delete file '${path}'?`,
+                    {
+                        size: 'sm',
+                        bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
+                        footerBgVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        footerBorderVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        footerTextVariant: this.profile.darkMode
+                            ? 'white'
+                            : 'dark',
+                        bodyTextVariant: this.profile.darkMode
+                            ? 'white'
+                            : 'dark',
+                        bodyBorderVariant: this.profile.darkMode
+                            ? 'dark'
+                            : 'white',
+                        okVariant: 'outline-danger',
+                        cancelVariant: 'secondary',
+                        okTitle: 'Yes',
+                        cancelTitle: 'No',
+                        centered: true,
+                    }
+                )
                 .then(async (value) => {
                     if (value) {
                         this.deleting = true;
@@ -2184,7 +2260,7 @@ export default {
         async uploadFiles(files, to_path, token) {
             this.uploading = true;
             this.uploadingFiles = files;
-            let uploads = files.map(file => {
+            let uploads = files.map((file) => {
                 let data = new FormData();
                 data.append('file', file, file.name);
                 return axios
@@ -2196,7 +2272,8 @@ export default {
                                 Authorization: 'Bearer ' + token,
                                 'Content-Type': 'multipart/form-data',
                             },
-                        })
+                        }
+                    )
                     .then((response) => {
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
@@ -2215,7 +2292,7 @@ export default {
                         });
                         throw error;
                     });
-                });
+            });
             await Promise.all(uploads);
             this.filesToUpload = [];
             this.uploadingFiles = [];

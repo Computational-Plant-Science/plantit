@@ -52,3 +52,4 @@ pycyapi
 aiomysql
 databases[aiomysql]
 PyMySQL
+eventlet

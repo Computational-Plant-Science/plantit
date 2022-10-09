@@ -101,10 +101,7 @@ export const user = {
                         response.data.django_profile.push_notifications
                     );
                     commit('setStats', response.data.stats);
-                    commit(
-                        'setDirtMigration',
-                        response.data.django_profile.migration
-                    );
+                    commit('setDirtMigration', response.data.migration);
                     commit('setProfileLoading', false);
                 })
                 .catch((error) => {

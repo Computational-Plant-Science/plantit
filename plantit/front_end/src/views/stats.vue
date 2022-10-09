@@ -107,11 +107,12 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
-                          <span text-center>
+                            <span text-center>
                                 <h1 class="text-success">
-                                    <span v-if="featuredWorkflows.length >= 0">{{
-                                        featuredWorkflows.length
-                                    }}</span>
+                                    <span
+                                        v-if="featuredWorkflows.length >= 0"
+                                        >{{ featuredWorkflows.length }}</span
+                                    >
                                     <b-spinner
                                         v-else
                                         label="Loading..."
@@ -165,11 +166,11 @@
                                     <br />
                                     Scientists &<br />Researchers</b-button
                                 ></template
-                            ><Plotly
+                            ><!--<Plotly
                                 v-if="showUsersPlot"
                                 :data="usersPlotTraces"
                                 :layout="usersPlotLayout"
-                            ></Plotly>
+                            ></Plotly>-->
                             <br />
                             <span text-center>
                                 <h1 class="text-success">
@@ -192,8 +193,7 @@
                                     Online</b-badge
                                 ></span
                             >
-                        </b-tab
-                        >
+                        </b-tab>
                         <b-tab
                             title="Developers"
                             :title-link-class="
@@ -232,7 +232,7 @@
                                     Developers</b-button
                                 ></template
                             >
-                          <b-card-group
+                            <b-card-group
                                 ><b-card
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -275,7 +275,7 @@
                             ></b-tab
                         >
 
-                      <b-tab
+                        <b-tab
                             title="Tasks"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -284,8 +284,9 @@
                                 profile.darkMode
                                     ? 'theme-dark m-0 p-3'
                                     : 'theme-light m-0 p-3'
-                            ">
-                        <template #title
+                            "
+                        >
+                            <template #title
                                 ><h1 class="text-success text-center">
                                     <span v-if="taskCount >= 0">{{
                                         taskCount
@@ -316,33 +317,38 @@
                                     Submissions
                                 </b-button></template
                             >
-                          <b-row align-h="center">
-                            <b-col>
-                              <h1 v-if="runningCount >= 0" class="text-success">
-                                {{ runningCount }}
-                            </h1>
-                            <b-spinner
-                                v-else
-                                type="grow"
-                                label="Loading..."
-                                variant="secondary"
-                            ></b-spinner
-                            ><b-badge
-                                :variant="
-                                    profile.darkMode ? 'outline-light' : 'white'
-                                "
-                                ><i class="fas fa-terminal fa-fw"></i>
-                                Running</b-badge
-                            >
-                          </b-col>
-                          </b-row>
-                          <br/><Plotly
+                            <b-row align-h="center">
+                                <b-col>
+                                    <h1
+                                        v-if="runningCount >= 0"
+                                        class="text-success"
+                                    >
+                                        {{ runningCount }}
+                                    </h1>
+                                    <b-spinner
+                                        v-else
+                                        type="grow"
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner
+                                    ><b-badge
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        ><i class="fas fa-terminal fa-fw"></i>
+                                        Running</b-badge
+                                    >
+                                </b-col>
+                            </b-row>
+                            <br /><!--<Plotly
                                 v-if="showTasksTotalPlot"
                                 :data="tasksTotalPlotTraces"
                                 :layout="tasksTotalPlotLayout"
-                            ></Plotly>
-                            </b-tab>
-                      <b-tab
+                            ></Plotly>-->
+                        </b-tab>
+                        <b-tab
                             title="Institutions"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -381,14 +387,15 @@
                                     Represented
                                     <br />
                                     Institutions
-                                </b-button></template>
-                        <!--<b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>-->
-                        <!--<div id="map" style="height: 40rem; width: 100%"></div>-->
-                    </b-tab>
+                                </b-button></template
+                            >
+                            <!--<b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>-->
+                            <!--<div id="map" style="height: 40rem; width: 100%"></div>-->
+                        </b-tab>
                     </b-tabs>
                 </b-col>
             </b-row>
-          <div id="map" style="height: 40rem; width: 100%"></div>
+            <div id="map" style="height: 40rem; width: 100%"></div>
         </b-container>
     </div>
 </template>
@@ -399,14 +406,12 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import mapboxgl from 'mapbox-gl';
-import { Plotly } from 'vue-plotly';
 import moment from 'moment';
 
 export default {
     name: 'stats',
     components: {
         blurb,
-        Plotly,
     },
     data: function () {
         return {
@@ -624,13 +629,13 @@ export default {
             'publicWorkflowsLoading',
         ]),
         getInstitutions() {
-          return Object.values(this.institutions);
+            return Object.values(this.institutions);
         },
         workflows() {
             return this.publicWorkflows.filter((wf) => !wf.example);
         },
         featuredWorkflows() {
-            return this.publicWorkflows.filter(wf => wf.featured);
+            return this.publicWorkflows.filter((wf) => wf.featured);
         },
         developers() {
             return Array.from(
@@ -688,7 +693,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -743,13 +748,13 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 yaxis2: {
-                  showticklabels: false,
+                    showticklabels: false,
                     overlaying: 'y',
-                    side: 'right'
-                  },
+                    side: 'right',
+                },
                 height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
                 plot_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -804,7 +809,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',
@@ -859,7 +864,7 @@ export default {
                     showline: true,
                     zeroline: false,
                     showticklabels: false,
-                    autotick: false
+                    autotick: false,
                 },
                 height: 400,
                 paper_bgcolor: this.profile.darkMode ? '#212529' : '#ffffff',

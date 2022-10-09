@@ -75,9 +75,7 @@ export default {
         async deleteTriggered(id) {
             this.unschedulingTriggered = true;
             await axios
-                .get(
-                    `/apis/v1/tasks/${id}/unschedule_triggered/`
-                )
+                .get(`/apis/v1/tasks/${id}/unschedule_triggered/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(

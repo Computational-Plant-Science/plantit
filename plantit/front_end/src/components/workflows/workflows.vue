@@ -222,11 +222,7 @@
                                     <br />
                                     <br />
                                     <i
-                                        class="
-                                            fas
-                                            fa-exclamation-circle fa-fw fa-3x
-                                            text-warning
-                                        "
+                                        class="fas fa-exclamation-circle fa-fw fa-3x text-warning"
                                     ></i
                                     ><br />
                                     We need to link your
@@ -458,7 +454,6 @@ export default {
         word-break: break-word
         white-space: normal
 .jv-code
-    .jv-toggle
     &:before
         padding: 0px 2px
         border-radius: 2px

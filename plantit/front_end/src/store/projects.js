@@ -36,8 +36,8 @@ export const projects = {
         setOthers({ commit }, user) {
             commit('setOthers', user);
         },
-        setLoading({commit}, loading) {
-            commit('setLoading', loading)
+        setLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
         async loadUser({ commit, rootState }) {
             commit('setLoading', true);

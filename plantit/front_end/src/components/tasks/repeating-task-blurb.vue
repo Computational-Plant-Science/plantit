@@ -75,9 +75,7 @@ export default {
         async deleteRepeating(id) {
             this.unschedulingRepeating = true;
             await axios
-                .get(
-                    `/apis/v1/tasks/${id}/unschedule_repeating/`
-                )
+                .get(`/apis/v1/tasks/${id}/unschedule_repeating/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(

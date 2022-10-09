@@ -75,9 +75,7 @@ export default {
         async deleteDelayed(id) {
             this.unschedulingDelayed = true;
             await axios
-                .get(
-                    `/apis/v1/tasks/${id}/unschedule_delayed/`
-                )
+                .get(`/apis/v1/tasks/${id}/unschedule_delayed/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(

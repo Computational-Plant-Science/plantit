@@ -17,8 +17,8 @@
                         name: 'project',
                         params: {
                             owner: project.owner,
-                            title: project.title
-                        }
+                            title: project.title,
+                        },
                     }"
                     >{{ project.title }}</b-link
                 >
@@ -61,20 +61,20 @@ export default {
     props: {
         project: Object,
         selectable: {
-          type: Boolean,
-          default: true
-        }
+            type: Boolean,
+            default: true,
+        },
     },
     methods: {
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
-        }
+        },
     },
     computed: {
-        ...mapGetters('user', ['profile', 'profileLoading'])
-    }
+        ...mapGetters('user', ['profile', 'profileLoading']),
+    },
 };
 </script>
 

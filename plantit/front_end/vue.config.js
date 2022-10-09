@@ -3,18 +3,18 @@ module.exports = {
     assetsDir: 'assets/',
     pluginOptions: {
         'dotenv-webpack': {
-            path: ''
+            path: '',
         },
         'style-resources-loader': {
             preProcessor: 'sass',
-            patterns: []
+            patterns: [],
         },
         'google-fonts-webpack-plugin': {
             fonts: [
                 { family: 'Source Sans Pro' },
-                { family: 'Roboto', variants: ['400'] }
-            ]
-        }
+                { family: 'Roboto', variants: ['400'] },
+            ],
+        },
     },
     chainWebpack(config) {
         //Allow npm build watch to work: https://github.com/vuejs/vue-cli/issues/1120
@@ -25,5 +25,5 @@ module.exports = {
             .use('raw-loader')
             .loader('raw-loader')
             .end();
-    }
+    },
 };

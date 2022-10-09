@@ -150,6 +150,10 @@ Note that the bootstrap script will not clear migrations. To restore to a totall
 
 Once the containers are up, tests can be run with `docker-compose -f docker-compose.dev.yml exec plantit ./manage.py test`.
 
+##### Reverse proxying with `ngrok`
+
+To test remote job submissions using a local development version of the `plantit` web application, you will need a service of some kind to accept and forward job completion signals to your machine's `localhost`. One convenient tool is [`ngrok`](https://ngrok.com/). After downloading and adding the `ngrok` executable to your path, run `ngrok http 3000` to start a tunnel, then set the `DJANGO_API_URL` variable in `.env` to the URL `ngrok` reports it's listening on.
+
 #### Deploying to production
 
 In production configuration, NGINX serves static assets and reverse-proxies Django via Gunicorn (both in the same container).
@@ -224,7 +228,7 @@ key=value
 `bootstrap.sh` will generate an `.env` file like the following if one does not exist:
 
 ```
-VUE_APP_TITLE=plantit
+VITE_TITLE=plantit
 MAPBOX_TOKEN=<your Mapbox token>
 MAPBOX_FEATURE_REFRESH_MINUTES=60
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/idp/cyverse_handle_temporary_code/

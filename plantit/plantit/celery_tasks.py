@@ -1,15 +1,12 @@
 import json
 import os
 import traceback
-from copy import deepcopy
 from pathlib import Path
-from typing import List, NamedTuple, Optional
 from os import environ
 from os.path import join
 from datetime import datetime
 
-from asgiref.sync import async_to_sync, sync_to_async
-from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
@@ -35,7 +32,7 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
-    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler
+    get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler, submit_report_to_scheduler
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 
@@ -56,7 +53,7 @@ def create_and_submit_delayed(username, workflow, delayed_id: str = None):
     task.save()
 
     # submit head of (task chain to) Celery
-    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s()).apply_async(
         countdown=5,  # TODO: make initial delay configurable
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
@@ -78,7 +75,7 @@ def create_and_submit_repeating(username, workflow, repeating_id: str = None):
     task.save()
 
     # submit head of (task chain to) Celery
-    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+    (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s()).apply_async(
         countdown=5,  # TODO: make initial delay configurable
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
@@ -114,7 +111,7 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
     task.save()
 
     # submit head of (task chain to) Celery
-    (prep_environment.s(itask.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+    (prep_environment.s(itask.guid) | share_data.s() | submit_jobs.s()).apply_async(
         countdown=5,  # TODO: make initial delay configurable
         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
@@ -133,47 +130,6 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
 #   check transfer
 # unshare dataset
 # clean up
-
-
-def __handle_job_success(task: Task, message: str):
-    # update the task and persist it
-    now = timezone.now()
-    task.updated = now
-    task.job_status = TaskStatus.COMPLETED
-    task.save()
-
-    # log status to file and push to client(s)
-    log_task_status(task, [message])
-    async_to_sync(push_task_channel_event)(task)
-
-    # push AWS SNS task completion notification
-    if task.user.profile.push_notification_status == 'enabled':
-        SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-    # submit the outbound data transfer job
-    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-    tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
-
-
-def __handle_job_failure(task: Task, message: str):
-    # mark the task failed and persist it
-    task.status = TaskStatus.FAILURE
-    now = timezone.now()
-    task.updated = now
-    task.completed = now
-    task.save()
-
-    # log status to file and push to client(s)
-    log_task_status(task, [message])
-    async_to_sync(push_task_channel_event)(task)
-
-    # push AWS SNS notification
-    if task.user.profile.push_notification_status == 'enabled':
-        SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
-
-    # revoke access to the user's datasets then clean up the task
-    unshare_data.s(task.guid).apply_async()
-    tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
 @app.task(track_started=True, bind=True)
@@ -212,7 +168,26 @@ def prep_environment(self, guid: str):
         return guid
     except Exception:
         self.request.callbacks = None
-        __handle_job_failure(task, f"Failed to prep environment: {traceback.format_exc()}")
+
+        # mark the task failed and persist it
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # log status to file and push to client(s)
+        message = f"Failed to prep environment: {traceback.format_exc()}"
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+        # revoke access to the user's datasets then clean up the task
+        unshare_data.s(task.guid).apply_async()
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
 @app.task(track_started=True, bind=True)
@@ -279,7 +254,26 @@ def share_data(self, guid: str):
     except Exception:
         logger.warning(traceback.format_exc())
         self.request.callbacks = None
-        __handle_job_failure(task, f"Failed to grant temporary data access")
+
+        # mark the task failed and persist it
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # log status to file and push to client(s)
+        message = f"Failed to grant temporary data access"
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+        # revoke access to the user's datasets then clean up the task
+        unshare_data.s(task.guid).apply_async()
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
 @app.task(track_started=True, bind=True)
@@ -318,13 +312,14 @@ def submit_jobs(self, guid: str):
             else:
                 pull_id = None
 
-            # schedule user workflow and outbound transfer jobs
+            # schedule user workflow, outbound transfer, and completion reporting jobs
             job_id = submit_job_to_scheduler(task, ssh, pull_id=pull_id)
             push_id = submit_push_to_scheduler(task, ssh, job_id=job_id)
-            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)'])
+            report_id = submit_report_to_scheduler(task, ssh, push_id=push_id)
+            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)', report_id + ' (report completion)'])
 
             # persist the last job ID to the task
-            task.job_id = push_id
+            task.job_id = report_id
             task.updated = timezone.now()
             task.save()
             logger.info(f"Task {task.guid} job ID: {task.job_id}")
@@ -335,7 +330,26 @@ def submit_jobs(self, guid: str):
         return guid
     except Exception:
         self.request.callbacks = None
-        __handle_job_failure(task, f"Failed to schedule jobs: {traceback.format_exc()}")
+
+        # mark the task failed and persist it
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # log status to file and push to client(s)
+        message = f"Failed to schedule jobs: {traceback.format_exc()}"
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+        # revoke access to the user's datasets then clean up the task
+        unshare_data.s(task.guid).apply_async()
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
 @app.task(track_started=True, bind=True)
@@ -381,7 +395,24 @@ def poll_jobs(self, guid: str):
                 poll_jobs.s(guid).apply_async(countdown=refresh_delay)
             else:
                 # otherwise the job completed and the scheduler's forgotten about it in the interval between polls
-                __handle_job_success(task, f"Job {task.job_id} ended with unknown status")
+                # update the task and persist it
+                now = timezone.now()
+                task.updated = now
+                task.job_status = TaskStatus.COMPLETED
+                task.save()
+
+                # log status to file and push to client(s)
+                message = f"Job {task.job_id} ended with unknown status"
+                log_task_status(task, [message])
+                async_to_sync(push_task_channel_event)(task)
+
+                # push AWS SNS task completion notification
+                if task.user.profile.push_notification_status == 'enabled':
+                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
+
+                # submit the outbound data transfer job
+                (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+                tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
             # in either case, return early
             return guid
@@ -409,13 +440,49 @@ def poll_jobs(self, guid: str):
         task.save()
 
         if job_complete:
-            __handle_job_success(task, f"Job {task.job_id} ended with status {job_status}")
+            # update the task and persist it
+            now = timezone.now()
+            task.updated = now
+            task.job_status = TaskStatus.COMPLETED
+            task.save()
+
+            # log status to file and push to client(s)
+            message = f"Job {task.job_id} ended with status {job_status}"
+            log_task_status(task, [message])
+            async_to_sync(push_task_channel_event)(task)
+
+            # push AWS SNS task completion notification
+            if task.user.profile.push_notification_status == 'enabled':
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
+
+            (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+            tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
+
             return guid
         else:
             # if past due time...
             if now > task.due_time:
                 cancel_task(task)
-                __handle_job_failure(task, f"Job {task.job_id} {job_status} is past its due time {str(task.due_time)} and was cancelled")
+
+                # mark the task failed and persist it
+                task.status = TaskStatus.FAILURE
+                now = timezone.now()
+                task.updated = now
+                task.completed = now
+                task.save()
+
+                # log status to file and push to client(s)
+                message = f"Job {task.job_id} {job_status} is past its due time {str(task.due_time)} and was cancelled"
+                log_task_status(task, [message])
+                async_to_sync(push_task_channel_event)(task)
+
+                # push AWS SNS notification
+                if task.user.profile.push_notification_status == 'enabled':
+                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+                # revoke access to the user's datasets then clean up the task
+                unshare_data.s(task.guid).apply_async()
+                tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
             else:
                 # log the status update
                 # log_task_status(task, [f"Job {task.job_id} {job_status}, refreshing in {refresh_delay}s"])
@@ -427,7 +494,26 @@ def poll_jobs(self, guid: str):
                 poll_jobs.s(guid).apply_async(countdown=refresh_delay)
     except:
         self.request.callbacks = None
-        __handle_job_failure(task, f"Failed to poll job {task.job_id} status: {traceback.format_exc()}")
+
+        # mark the task failed and persist it
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # log status to file and push to client(s)
+        message = f"Failed to poll job {task.job_id} status: {traceback.format_exc()}"
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+        # revoke access to the user's datasets then clean up the task
+        unshare_data.s(task.guid).apply_async()
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
 
 @app.task(track_started=True, bind=True)
@@ -742,21 +828,16 @@ def find_stranded():
         return
 
     try:
-        # check if any running tasks haven't been updated in a while
+        # check if any tasks haven't been updated in a while
         running = Task.objects.filter(status=TaskStatus.RUNNING)
         for task in running:
             now = timezone.now()
             period = int(environ.get('TASKS_REFRESH_SECONDS'))
-
-            # if the task is still running and hasn't been updated in the last 2 refresh cycles, it might be stranded
-            if (now - task.updated).total_seconds() > (2 * period):
-                logger.warning(f"Found possibly stranded task: {task.guid}")
             if (now - task.updated).total_seconds() > (5 * period):
-                logger.info(f"Trying to rescue stranded task: {task.guid}")
                 if task.job_id is not None:
-                    poll_jobs.s(task.guid).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
-                else:
-                    logger.error(f"Couldn't rescue stranded task '{task.guid}' (no job ID)")
+                    logger.warning(f"Checking stranded task: {task.guid}")
+                    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(
+                        soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
     finally:
         __release_lock(task_name)
 
@@ -1240,4 +1321,4 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics')
     sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
     sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache')
-    sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')
+    # sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')

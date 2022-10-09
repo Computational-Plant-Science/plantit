@@ -56,7 +56,7 @@ export const datasets = {
         },
     },
     actions: {
-        setUserLoading({commit}, loading) {
+        setUserLoading({ commit }, loading) {
             commit('setUserLoading', loading);
         },
         async loadUser({ commit, rootState }) {
@@ -84,7 +84,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        setPublicLoading({commit}, loading) {
+        setPublicLoading({ commit }, loading) {
             commit('setPublicLoading', loading);
         },
         async loadPublic({ commit, rootState }) {
@@ -108,7 +108,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        setSharedLoading({commit}, loading) {
+        setSharedLoading({ commit }, loading) {
             commit('setSharedLoading', loading);
         },
         async loadShared({ commit, rootState }) {
@@ -132,7 +132,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        setSharingLoading({commit}, loading) {
+        setSharingLoading({ commit }, loading) {
             commit('setSharedLoading', loading);
         },
         setSharing({ commit }, datasets) {

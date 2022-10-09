@@ -279,8 +279,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'cyverse_token': user.profile.cyverse_access_token,
                 'hints': user.profile.hints,
                 'first': user.profile.first_login,
-                'migration': q.migration_to_dict(migration)
             },
+            'migration': q.migration_to_dict(migration),
             'stats': async_to_sync(q.get_user_statistics)(user),
             'users': q.list_users(),
             'tasks': q.get_tasks(user, page=1),

@@ -428,7 +428,6 @@
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
-import router from '@/router';
 import * as Sentry from '@sentry/browser';
 import { guid } from '@/utils';
 import taskblurb from '@/components/tasks/task-blurb';
@@ -480,10 +479,10 @@ export default {
                     throw error;
                 });
         },
-        async deleteRepeating(guid) {
+        async deleteRepeating(id) {
             this.unschedulingRepeating = true;
             await axios
-                .get(`/apis/v1/tasks/${guid}/unschedule_repeating/`)
+                .get(`/apis/v1/tasks/${id}/unschedule_repeating/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(
@@ -509,10 +508,10 @@ export default {
                     throw error;
                 });
         },
-        async deleteTriggered(guid) {
+        async deleteTriggered(id) {
             this.unschedulingTriggered = true;
             await axios
-                .get(`/apis/v1/tasks/${guid}/unschedule_triggered/`)
+                .get(`/apis/v1/tasks/${id}/unschedule_triggered/`)
                 .then(async (response) => {
                     await Promise.all([
                         this.$store.dispatch(

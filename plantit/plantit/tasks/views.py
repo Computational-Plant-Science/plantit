@@ -1,6 +1,7 @@
 import json
 import logging
 import tempfile
+from os import environ
 from os.path import join
 from pathlib import Path
 
@@ -8,16 +9,19 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest, \
+    HttpResponseServerError
+from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
 import plantit.queries as q
+from plantit.sns import SnsClient
 from plantit import settings
-from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs
+from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs, test_results, test_push, unshare_data, tidy_up
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
 from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask
+from plantit.tasks.models import Task, TaskStatus, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
     get_job_log_file_path, \
     get_task_agent_log_file_path
@@ -53,7 +57,8 @@ def get_or_create(request):
             task = create_immediate_task(request.user, task_config)
 
             # submit Celery task chain
-            (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+            # (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s() | poll_jobs.s()).apply_async(
+            (prep_environment.s(task.guid) | share_data.s() | submit_jobs.s()).apply_async(
                 countdown=5,  # TODO: make initial delay configurable
                 soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
 
@@ -332,7 +337,7 @@ def cancel(request, guid):
         tasks = list(Task.objects.filter(user=request.user, guid=guid))
         logger.warning(f"Found {len(tasks)} tasks for user {request.user.username} matching GUID {guid}")
         for task in tasks: __cancel(task)
-        return HttpResponseBadRequest()
+        return HttpResponseServerError()
     except:
         return HttpResponseNotFound()
 
@@ -469,3 +474,70 @@ def search_triggered(request, owner, workflow_name):
     # TODO paginate
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
     return JsonResponse([q.triggered_task_to_dict(t) for t in tasks], safe=False)
+
+
+@api_view(['POST'])
+def complete(request, guid):
+    try:
+        task = Task.objects.get(guid=guid)
+    except MultipleObjectsReturned:
+        tasks = list(Task.objects.filter(user=request.user, guid=guid))
+        logger.warning(f"Found {len(tasks)} tasks for user {request.user.username} matching GUID {guid}")
+        for task in tasks:
+            complete_task(task)
+        return HttpResponseServerError()
+    except Exception as e:
+        logger.error(e)
+        return HttpResponseNotFound()
+
+    if task.is_complete:
+        return HttpResponse(f"User {request.user.username}'s task {guid} already completed")
+
+    # success = request.data.get('success', None)
+    # if success is None:
+    #     return HttpResponseBadRequest()
+
+    # complete_task(task, bool(success))
+    complete_task(task, True)
+    return JsonResponse(q.task_to_dict(task))
+
+
+def complete_task(task: Task, success: bool):
+    message = f"User {task.user.username}'s task {task.guid} {'completed successfully' if success else 'failed'}"
+    if success:
+        # update the task and persist it
+        now = timezone.now()
+        task.updated = now
+        task.job_status = TaskStatus.COMPLETED
+        task.save()
+
+        # log status to file and push to client(s)
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS task completion notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
+
+        # submit the outbound data transfer job
+        (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
+    else:
+        # mark the task failed and persist it
+        task.status = TaskStatus.FAILURE
+        now = timezone.now()
+        task.updated = now
+        task.completed = now
+        task.save()
+
+        # log status to file and push to client(s)
+        log_task_status(task, [message])
+        async_to_sync(push_task_channel_event)(task)
+
+        # push AWS SNS notification
+        if task.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", message, {})
+
+        # revoke access to the user's datasets then clean up the task
+        unshare_data.s(task.guid).apply_async()
+        tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)

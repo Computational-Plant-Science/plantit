@@ -49,7 +49,14 @@
                                         <b-img
                                             class="avatar"
                                             rounded="circle"
-                                            style="max-height: 5rem; max-width: 5rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd;opacity:0.9"
+                                            style="
+                                                max-height: 5rem;
+                                                max-width: 5rem;
+                                                position: relative;
+                                                top: 20px;
+                                                box-shadow: -2px 2px 2px #adb5bd;
+                                                opacity: 0.9;
+                                            "
                                             :src="
                                                 profile.githubProfile
                                                     ? profile.githubProfile
@@ -82,7 +89,7 @@
                                 <b-col class="ml-0 mr-0" align-self="end">
                                     <b-img
                                         rounded
-                                        style="max-height: 2rem;"
+                                        style="max-height: 2rem"
                                         class="ml-1 mr-1 mb-3"
                                         :src="
                                             require('@/assets/logos/cyverse_logo.png')
@@ -108,7 +115,7 @@
                                         "
                                         :href="
                                             'https://github.com/' +
-                                                profile.githubProfile.login
+                                            profile.githubProfile.login
                                         "
                                     >
                                         <i
@@ -116,7 +123,7 @@
                                         ></i>
                                         {{
                                             'https://github.com/' +
-                                                profile.githubProfile.login
+                                            profile.githubProfile.login
                                         }}
                                     </a>
                                 </b-col>
@@ -191,7 +198,7 @@ import moment from 'moment';
 
 export default {
     name: 'User',
-    data: function() {
+    data: function () {
         return {
             isOpen: false,
             isLoading: false,
@@ -201,26 +208,26 @@ export default {
         };
     },
     computed: {
-        ...mapGetters('user', ['profile', 'profileLoading'])
+        ...mapGetters('user', ['profile', 'profileLoading']),
     },
     methods: {
-        prettify: function(date) {
+        prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        prettifyShort: function(date) {
+        prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;
         },
-        prettifyDuration: function(dur) {
+        prettifyDuration: function (dur) {
             return moment.duration(dur, 'seconds').humanize();
-        }
+        },
     },
     filters: {
         format_date(value) {
             return moment(value).format('MM/DD/YY hh:mm');
-        }
-    }
+        },
+    },
 };
 </script>
 

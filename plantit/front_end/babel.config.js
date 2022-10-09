@@ -3,13 +3,13 @@ module.exports = {
         [
             '@vue/app',
             {
-                useBuiltIns: 'entry'
-            }
+                useBuiltIns: 'entry',
+            },
         ],
     ],
     env: {
         test: {
-            presets: [['@babel/preset-env', { targets: { node: 'current' } }]]
-        }
-    }
+            presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+        },
+    },
 };

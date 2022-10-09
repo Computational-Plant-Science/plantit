@@ -1,4 +1,3 @@
-import '@babel/polyfill';
 import Vue from 'vue';
 import './plugins/bootstrap-vue';
 import App from './App.vue';
@@ -11,10 +10,10 @@ import store from './store/store';
 import Axios from 'axios';
 import VueAnalytics from 'vue-analytics';
 import VueMarkdown from 'vue-markdown';
-import AsyncComputed from 'vue-async-computed'
+import AsyncComputed from 'vue-async-computed';
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
-import JsonViewer from 'vue-json-viewer'
+import JsonViewer from 'vue-json-viewer';
 // import Keycloak from 'keycloak-js';
 
 Axios.defaults.xsrfCookieName = 'csrftoken';
@@ -32,7 +31,7 @@ Vue.use(JsonViewer);
 Vue.use(
     new VueSocketIO({
         debug: true,
-        connection: SocketIO(process.env.VUE_API_URL)
+        connection: SocketIO(process.env.VUE_API_URL),
     })
 );
 Vue.use(VueLogger);
@@ -41,7 +40,7 @@ Vue.use(VueFriendlyIframe);
 if (process.env.VUE_APP_ANALYTICS_ID) {
     Vue.use(VueAnalytics, {
         id: process.env.VUE_APP_ANALYTICS_ID,
-        router
+        router,
     });
 }
 
@@ -55,7 +54,7 @@ if (
             process.env.VUE_APP_SENTRY_IO_KEY +
             '@sentry.io/' +
             process.env.VUE_APP_SENTRY_IO_PROJECT,
-        integrations: [new Integrations.Vue({ Vue, attachProps: true })]
+        integrations: [new Integrations.Vue({ Vue, attachProps: true })],
     });
 }
 
@@ -89,7 +88,7 @@ export const bus = new Vue();
 new Vue({
     router,
     store,
-    render: h => h(App)
+    render: (h) => h(App),
 }).$mount('#app');
 // `        } else {
 // `            Vue.$log.info('Authenticated');

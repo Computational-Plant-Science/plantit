@@ -30,8 +30,7 @@
                                 {{ openedDataset.path }}
                             </h4>
                             <small
-                                >Open on
-                                <b>{{ openedDataset.agent }}</b></small
+                                >Open on <b>{{ openedDataset.agent }}</b></small
                             ><br />
                             <small
                                 >Showing
@@ -52,8 +51,8 @@
                         <b-dropdown
                             :disabled="
                                 !dataLoading &&
-                                    data !== null &&
-                                    data.files.length === 0
+                                data !== null &&
+                                data.files.length === 0
                             "
                             dropleft
                             :variant="
@@ -105,8 +104,8 @@
                         <span
                             v-if="
                                 !dataLoading &&
-                                    data !== null &&
-                                    data.files.length === 0
+                                data !== null &&
+                                data.files.length === 0
                             "
                             >No files in this dataset.</span
                         >
@@ -120,7 +119,7 @@
                                 "
                                 v-for="file in currentPageFiles"
                                 v-bind:key="file.id"
-                                style="min-width: 20rem;"
+                                style="min-width: 20rem"
                                 class="overflow-hidden mb-4 mr-4 text-left"
                                 :bg-variant="
                                     profile.darkMode ? 'dark' : 'white'
@@ -189,7 +188,8 @@
                             controls
                             :interval="0"
                             @sliding-end="
-                                slide => renderPreview(currentPageFiles[slide])
+                                (slide) =>
+                                    renderPreview(currentPageFiles[slide])
                             "
                         >
                             <b-carousel-slide
@@ -203,7 +203,7 @@
                                 ><template
                                     v-if="
                                         fileIsText(file.label) ||
-                                            fileIs3dModel(file.label)
+                                        fileIs3dModel(file.label)
                                     "
                                     #img
                                     ><div
@@ -213,7 +213,10 @@
                                                 ? 'theme-container-dark'
                                                 : 'theme-container-light'
                                         "
-                                        style="min-height: 50rem;white-space: pre-line;"
+                                        style="
+                                            min-height: 50rem;
+                                            white-space: pre-line;
+                                        "
                                     >
                                         {{ file.textContent }}
                                     </div></template
@@ -227,7 +230,10 @@
                                                 ? 'theme-container-dark'
                                                 : 'theme-container-light'
                                         "
-                                        style="min-height: 50rem;white-space: pre-line;"
+                                        style="
+                                            min-height: 50rem;
+                                            white-space: pre-line;
+                                        "
                                         :id="file.id"
                                     ></div
                                 ></template>
@@ -238,7 +244,7 @@
                                                 ? 'theme-container-dark p-3'
                                                 : 'theme-container-light p-3'
                                         "
-                                        style="opacity: 0.9;"
+                                        style="opacity: 0.9"
                                     >
                                         <b-col class="text-left">
                                             <h5
@@ -258,9 +264,7 @@
                                         </b-col>
                                         <b-col md="auto" align-self="end">
                                             <b-button
-                                                :title="
-                                                    `Download ${file.label}`
-                                                "
+                                                :title="`Download ${file.label}`"
                                                 :variant="
                                                     profile.darkMode
                                                         ? 'outline-light'
@@ -275,9 +279,7 @@
                                             </b-button>
                                             <b-button
                                                 v-if="fileIsImage(file.label)"
-                                                :title="
-                                                    `Annotate ${file.label}`
-                                                "
+                                                :title="`Annotate ${file.label}`"
                                                 :variant="
                                                     profile.darkMode
                                                         ? 'outline-light'
@@ -312,7 +314,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export default {
     name: 'dataset',
-    data: function() {
+    data: function () {
         return {
             data: null,
             dataLoading: false,
@@ -329,8 +331,8 @@ export default {
                 geometry: null,
                 renderer: null,
                 loader: null,
-                id: null
-            }
+                id: null,
+            },
         };
     },
     beforeDestroy() {
@@ -338,7 +340,7 @@ export default {
     },
     async mounted() {
         await this.loadDataset();
-        if (this.data.files.some(f => f.label.endsWith('ply'))) {
+        if (this.data.files.some((f) => f.label.endsWith('ply'))) {
             this.renderPreviews(false);
             this.renderPreview(this.currentPageFiles[0]);
         }
@@ -351,7 +353,7 @@ export default {
         viewMode() {
             if (
                 this.data !== null &&
-                this.data.files.some(f => f.label.endsWith('ply'))
+                this.data.files.some((f) => f.label.endsWith('ply'))
             ) {
                 this.unrenderPreview();
                 if (
@@ -364,10 +366,10 @@ export default {
         openedDataset() {
             if (
                 this.data !== null &&
-                this.data.files.some(f => f.label.endsWith('ply'))
+                this.data.files.some((f) => f.label.endsWith('ply'))
             )
                 this.renderPreviews();
-        }
+        },
     },
     methods: {
         renderPreview(f) {
@@ -391,7 +393,7 @@ export default {
             var comp = this;
             loader.load(
                 `/apis/v1/datasets/thumbnail/?path=${f.path}`,
-                function(geometry) {
+                function (geometry) {
                     geometry.computeVertexNormals();
 
                     // const material = new THREE.MeshStandardMaterial({
@@ -401,7 +403,7 @@ export default {
                     const material = new THREE.PointsMaterial({
                         // color: 0x0055ff,
                         size: 0.005,
-                        vertexColors: THREE.VertexColors
+                        vertexColors: THREE.VertexColors,
                     });
                     const mesh = new THREE.Points(geometry, material);
                     //const mesh = new THREE.Mesh(geometry, material);
@@ -427,7 +429,7 @@ export default {
 
             scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
-            var addShadowedLight = function(x, y, z, color, intensity) {
+            var addShadowedLight = function (x, y, z, color, intensity) {
                 const directionalLight = new THREE.DirectionalLight(
                     color,
                     intensity
@@ -452,19 +454,19 @@ export default {
                 directionalLight.shadow.bias = -0.001;
             };
 
-            var onWindowResize = function() {
+            var onWindowResize = function () {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
 
                 renderer.setSize(window.innerWidth, window.innerHeight);
             };
 
-            var animate = function() {
+            var animate = function () {
                 requestAnimationFrame(animate);
                 render();
             };
 
-            var render = function() {
+            var render = function () {
                 // const timer = Date.now() * 0.00005;
 
                 // camera.position.x = Math.sin(timer) * 2.5;
@@ -516,12 +518,12 @@ export default {
         },
         renderPreviews(plys = false) {
             this.data.files
-                .filter(f => this.fileIsText(f.label))
-                .map(async f => await this.loadTextContent(f));
+                .filter((f) => this.fileIsText(f.label))
+                .map(async (f) => await this.loadTextContent(f));
             if (plys)
                 this.data.files
-                    .filter(f => this.fileIs3dModel(f.label))
-                    .map(f => this.renderPreview(f));
+                    .filter((f) => this.fileIs3dModel(f.label))
+                    .map((f) => this.renderPreview(f));
         },
         async downloadFile(file) {
             this.downloading = true;
@@ -532,12 +534,12 @@ export default {
                         headers: {
                             Authorization:
                                 'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
+                                this.profile.djangoProfile.cyverse_token,
                         },
-                        responseType: 'blob'
+                        responseType: 'blob',
                     }
                 )
-                .then(response => {
+                .then((response) => {
                     let url = window.URL.createObjectURL(
                         new Blob([response.data])
                     );
@@ -548,7 +550,7 @@ export default {
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     alert(`Failed to download '${file.path}''`);
                     throw error;
@@ -556,67 +558,26 @@ export default {
         },
         fileIsImage(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'png' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpeg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'czi'
+                file.toLowerCase().split('.').pop() === 'png' ||
+                file.toLowerCase().split('.').pop() === 'jpg' ||
+                file.toLowerCase().split('.').pop() === 'jpeg' ||
+                file.toLowerCase().split('.').pop() === 'czi'
             );
         },
         fileIsText(file) {
             return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'txt' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'csv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'tsv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yaml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'log' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'out' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'err'
+                file.toLowerCase().split('.').pop() === 'txt' ||
+                file.toLowerCase().split('.').pop() === 'csv' ||
+                file.toLowerCase().split('.').pop() === 'tsv' ||
+                file.toLowerCase().split('.').pop() === 'yml' ||
+                file.toLowerCase().split('.').pop() === 'yaml' ||
+                file.toLowerCase().split('.').pop() === 'log' ||
+                file.toLowerCase().split('.').pop() === 'out' ||
+                file.toLowerCase().split('.').pop() === 'err'
             );
         },
         fileIs3dModel(file) {
-            return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'ply'
-            );
+            return file.toLowerCase().split('.').pop() === 'ply';
         },
         async closeDataset() {
             await this.$bvModal
@@ -629,26 +590,26 @@ export default {
                         cancelVariant: 'white',
                         okTitle: 'Yes',
                         cancelTitle: 'No',
-                        centered: true
+                        centered: true,
                     }
                 )
-                .then(async value => {
+                .then(async (value) => {
                     if (value) {
                         await this.$store.dispatch('datasets/closeOpened');
                         await router.push({
                             name: 'user',
                             params: {
-                                username: this.profile.djangoProfile.username
-                            }
+                                username: this.profile.djangoProfile.username,
+                            },
                         });
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     throw err;
                 });
         },
         annotateFile() {},
-        prettifyShort: function(date) {
+        prettifyShort: function (date) {
             return `${moment(date).fromNow()}`;
         },
         setViewMode(mode) {
@@ -663,15 +624,15 @@ export default {
                         headers: {
                             Authorization:
                                 'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
-                        }
+                                this.profile.djangoProfile.cyverse_token,
+                        },
                     }
                 )
-                .then(async response => {
+                .then(async (response) => {
                     this.data = response.data;
                     this.dataLoading = false;
                 })
-                .catch(error => {
+                .catch((error) => {
                     Sentry.captureException(error);
                     this.dataLoading = false;
                     throw error;
@@ -680,8 +641,8 @@ export default {
         async loadTextContent(file) {
             await axios
                 .get(`/apis/v1/datasets/content/?path=${file.path}`)
-                .then(response => {
-                    this.data.files = this.data.files.map(f => {
+                .then((response) => {
+                    this.data.files = this.data.files.map((f) => {
                         if (f.label === file.label) {
                             if (
                                 f.label.endsWith('yml') ||
@@ -695,16 +656,13 @@ export default {
                         return f;
                     });
                 });
-        }
+        },
     },
     asyncComputed: {},
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
-        ...mapGetters('datasets', [
-            'openedDataset',
-            'openedDatasetLoading'
-        ]),
+        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         filesShown() {
             return this.totalFileCount < this.filesPerPage
                 ? this.totalFileCount
@@ -736,8 +694,8 @@ export default {
                       this.currentPage - 1,
                       this.filesPerPage
                   );
-        }
-    }
+        },
+    },
 };
 </script>
 

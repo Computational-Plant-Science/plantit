@@ -10,7 +10,12 @@
         >
             <b-img
                 rounded
-                style="min-height: 30rem;position: absolute;left:-180px;bottom:-150px"
+                style="
+                    min-height: 30rem;
+                    position: absolute;
+                    left: -180px;
+                    bottom: -150px;
+                "
                 center
                 :src="require('../../assets/PlantITLoading.gif')"
             ></b-img>
@@ -22,7 +27,10 @@
                     <b-col
                         ><b-img
                             center
-                            style="max-width: 15rem;transform: translate(0px, 20px);"
+                            style="
+                                max-width: 15rem;
+                                transform: translate(0px, 20px);
+                            "
                             :src="require('../../assets//cps2.png')"
                             class="m-0 p-0"
                         ></b-img
@@ -151,7 +159,7 @@
                                         border-variant="white"
                                         title="Chris Cotter"
                                         sub-title="Developer"
-                                        style="min-width: 20rem;"
+                                        style="min-width: 20rem"
                                     >
                                         <template
                                             v-slot:footer
@@ -277,7 +285,7 @@
 
 <script>
 export default {
-    name: 'people'
+    name: 'people',
 };
 </script>
 
