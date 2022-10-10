@@ -42,8 +42,11 @@
                             "
                             ><template #title
                                 ><h1 class="text-success text-center">
-                                    <span v-if="publicWorkflows.length >= 0">{{
+                                    <!--<span v-if="publicWorkflows.length >= 0">{{
                                         publicWorkflows.length
+                                    }}</span
+                                    >--><span v-if="workflowCount >= 0">{{
+                                        workflowCount
                                     }}</span
                                     ><b-spinner
                                         v-else
@@ -63,9 +66,9 @@
                                     "
                                     ><i class="fas fa-stream fa-fw"></i>
                                     <br />
-                                    Public
+                                    phenomics
                                     <br />
-                                    Workflows</b-button
+                                    workflows</b-button
                                 ></template
                             >
                             <!--<b-row>
@@ -107,7 +110,7 @@
                                         :linkable="false"
                                     ></blurb></b-card
                             ></b-card-group>
-                            <span text-center>
+                            <!--<span text-center>
                                 <h1 class="text-success">
                                     <span
                                         v-if="featuredWorkflows.length >= 0"
@@ -128,7 +131,7 @@
                                     ><i class="fas fa-signal fa-fw"></i>
                                     Featured</b-badge
                                 ></span
-                            >
+                            >-->
                         </b-tab>
                         <b-tab
                             :title-link-class="
@@ -164,7 +167,7 @@
                                 >
                                     <i class="fas fa-user fa-fw"></i>
                                     <br />
-                                    Scientists &<br />Researchers</b-button
+                                    scientists &<br />researchers</b-button
                                 ></template
                             ><!--<Plotly
                                 v-if="showUsersPlot"
@@ -194,7 +197,7 @@
                                 ></span
                             >
                         </b-tab>
-                        <!--<b-tab
+                        <b-tab
                             title="Developers"
                             :title-link-class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
@@ -227,9 +230,9 @@
                                     "
                                     ><i class="fas fa-code fa-fw"></i>
                                     <br />
-                                    Workflow
+                                    workflow
                                     <br />
-                                    Developers</b-button
+                                    developers</b-button
                                 ></template
                             >
                             <b-card-group
@@ -273,7 +276,7 @@
                                     ></b-card
                                 ></b-card-group
                             ></b-tab
-                        >-->
+                        >
 
                         <b-tab
                             title="Tasks"
@@ -312,9 +315,9 @@
                                     :title="`Tasks`"
                                     ><i class="fas fa-terminal fa-fw"></i>
                                     <br />
-                                    Workflow
+                                    workflow
                                     <br />
-                                    Submissions
+                                    submissions
                                 </b-button></template
                             >
                             <b-row align-h="center">
@@ -384,9 +387,9 @@
                                     title="Institutions"
                                     ><i class="fas fa-university fa-fw"></i>
                                     <br />
-                                    Represented
+                                    represented
                                     <br />
-                                    Institutions
+                                    institutions
                                 </b-button></template
                             >
                             <!--<b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>-->
@@ -439,7 +442,7 @@ export default {
         this.configureMap();
 
         // load stats
-        await this.loadCounts();
+        await this.loadCounts(true);
         await this.loadInstitutions();
         await this.loadTimeseries();
 
@@ -492,9 +495,9 @@ export default {
                 popup.remove();
             });
         },
-        async loadCounts() {
+        async loadCounts(invalidate) {
             await axios
-                .get('/apis/v1/stats/counts/')
+                .get(`/apis/v1/stats/counts/?invalidate=${invalidate}`)
                 .then((response) => {
                     this.userCount = response.data.users;
                     this.onlineCount = response.data.online;

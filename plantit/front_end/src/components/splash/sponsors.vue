@@ -1,4 +1,6 @@
 <template>
+  <div class="vertical-center m-0 p-0">
+    <b-container>
     <b-card
         align="center"
         class="rounded-0 text-center m-0"
@@ -6,7 +8,7 @@
         border-variant="light"
         header-bg-variant="white"
         header-border-variant="white"
-        style="border: none; box-shadow: none"
+        style="border: none; box-shadow: none;"
     >
         <b-row>
             <b-col>
@@ -75,6 +77,8 @@
             </b-col>
         </b-row>
     </b-card>
+    </b-container>
+  </div>
 </template>
 
 <script>

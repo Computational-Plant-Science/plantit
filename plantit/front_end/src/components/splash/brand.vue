@@ -7,23 +7,21 @@
             footer-bg-variant="transparent"
             border-variant="default"
             text-variant="white"
-            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-            style="width: 90%; margin: 30px auto; float: none; opacity: 0.95"
+            bg-variant="dark"
+            style="width: 60%; margin: 30px auto; float: none; opacity: 0.95"
         >
             <template #header>
                 <b-row class="p-1"
                     ><b-col md="auto" align-self="center">
                         <h4
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-theme'
-                            "
+                            class="text-white"
                             style="text-decoration: underline; z-index: 100"
                         >
                             <b-img
                                 style="
                                     max-width: 2.5rem;
                                     position: relative;
-                                    left: 5px
+                                    left: 5px;
                                 "
                                 :src="require('../../assets/logo.png')"
                                 left
@@ -53,25 +51,13 @@
                         </h4>
                     </b-col>
                     <b-col md="auto" align-self="center"
-                        ><b-link
-                            to="/about"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                        ><b-link to="/about" class="text-secondary"
                             ><i class="fas fa-question-circle fa-1x fa-fw"></i>
                             About</b-link
                         ></b-col
                     >
                     <b-col md="auto" align-self="center">
-                        <b-link
-                            href="/apis/v1/swagger/"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                        <b-link href="/apis/v1/swagger/" class="text-secondary"
                             ><i class="fas fa-laptop-code fa-1x fa-fw"></i>
                             API</b-link
                         >
@@ -79,11 +65,7 @@
                     <b-col md="auto" align-self="center">
                         <b-link
                             href="https://plantit.readthedocs.io/en/latest"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                            class="text-secondary"
                             ><i class="fas fa-book fa-1x fa-fw"></i>
                             Docs</b-link
                         >
@@ -91,23 +73,13 @@
                     <b-col md="auto" align-self="center">
                         <b-link
                             href="https://github.com/Computational-Plant-Science/plantit"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                            class="text-secondary"
                             ><i class="fab fa-github fa-1x fa-fw"></i>
                             GitHub</b-link
                         >
                     </b-col>
                     <b-col md="auto" align-self="center"
-                        ><b-link
-                            to="/stats"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                        ><b-link to="/stats" class="text-secondary"
                             ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
                             Stats</b-link
                         ></b-col
@@ -115,11 +87,7 @@
                     <b-col md="auto" align-self="center"
                         ><b-link
                             href="https://stats.uptimerobot.com/yAgPxH7KNJ"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                            class="text-secondary"
                             ><i class="fas fa-satellite-dish fa-1x fa-fw"></i>
                             Status</b-link
                         ></b-col
@@ -128,19 +96,11 @@
                     <!--<b-nav-item
                             href="#"
                             class="mt-2"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
+                            link-class="text-secondary"
                             title="Slack"
                         >
                             <span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
+                                class="text-secondary"
                                 ><i class="fab fa-slack fa-1x fa-fw"></i>
                                 Slack</span
                             >
@@ -150,18 +110,10 @@
                     <b-col md="auto">
                         <i class="text-theme mt-4 ml-1 text-left">
                             <span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-theme'
-                                "
+                                class="text-light"
                                 >a browser gateway for </span
                             ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-theme'
-                                "
+                                class="text-light"
                                 >computational plant phenomics
                             </span>
                         </i></b-col
@@ -185,15 +137,7 @@
                             class="text-left"
                             style="overflow-y: scroll; max-height: 50%"
                         >
-                            <h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-white'
-                                        : 'text-dark'
-                                "
-                            >
-                                Recent news
-                            </h5>
+                            <h5 class="text-white">Recent news</h5>
                             <span v-if="loadingUpdates">
                                 <b-spinner
                                     type="spinner"
@@ -204,22 +148,13 @@
                             </span>
                             <span
                                 v-else-if="updates.length === 0"
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
+                                class="text-light"
                                 >No updates to show.</span
                             >
                             <b-row
                                 v-for="update in getUpdates"
                                 v-bind:key="update.created"
-                                ><b-col
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
+                                ><b-col class="text-white"
                                     ><small>{{
                                         prettify(update.created)
                                     }}</small>
@@ -238,52 +173,25 @@
                     ><b-col></b-col
                     ><b-col align-self="center" md="auto">
                         <b-button
-                            v-if="
-                                !profile.loggedIn && maintenance === undefined
-                            "
-                            variant="white"
+                            v-if="maintenance === undefined"
+                            variant="outline-dark"
                             block
-                            class="text-center"
+                            class="text-right text-white"
                             href="/apis/v1/idp/cyverse_login/"
                         >
-                            Log in with
-                            <b-img
-                                :src="
-                                    require('@/assets/sponsors/cyversebw-notext.png')
-                                "
-                                height="18px"
-                                alt="Cyverse"
-                            ></b-img>
-                            <b>CyVerse</b>
-                        </b-button>
-                        <b-button
-                            v-else-if="maintenance === undefined"
-                            variant="white"
-                            class="text-right"
-                            block
-                            href="/apis/v1/idp/cyverse_login/"
-                        >
-                            <span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-success'
-                                        : 'text-dark'
-                                "
-                            >
-                                <i class="fas fa-arrow-circle-right fa-fw"></i>
-                                Log In</span
-                            >
+                            <i class="fas fa-arrow-circle-right fa-fw"></i>
+                            Log In
                         </b-button>
                     </b-col></b-row
                 >
             </template>
         </b-card>
-        <div style="position: absolute; bottom: 0; left: 49%">
+        <!--<div style="position: absolute; bottom: 0; left: 49%">
             <i
                 class="fas fa-chevron-down fa-5x fa-fw"
                 id="about-down-arrow"
             ></i>
-        </div>
+        </div>-->
     </div>
 </template>
 
@@ -327,76 +235,6 @@ export default {
                 .sort((u) => u.created)
                 .reverse();
         },
-        tasksRunningPlotData() {
-            if (this.timeseriesTasksRunning === null)
-                return { x: [], y: [], type: 'scatter' };
-            return [
-                {
-                    x: this.timeseriesTasksRunning[0].x.map((t) =>
-                        moment(t).format('YYYY-MM-DD HH:mm:ss')
-                    ),
-                    y: this.timeseriesTasksRunning[0].y,
-                    text: this.timeseriesTasksRunning[0].y.map(
-                        () => `running tasks`
-                    ),
-                    type: 'scatter',
-                    line: { color: '#d6df5D' },
-                },
-            ];
-        },
-        tasksRunningPlotLayout() {
-            return {
-                font: {
-                    color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                },
-                autosize: true,
-                images: [
-                    {
-                        x: 0.385,
-                        y: 0.2,
-                        sizex: 1.2,
-                        sizey: 1.2,
-                        source: require('../../assets/logo.png'),
-                        xanchor: 'middle',
-                        yanchor: 'bottom',
-                        opacity: 0.15,
-                    },
-                ],
-                title: {
-                    // text: 'Tasks Running',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                legend: {
-                    orientation: 'h',
-                    font: {
-                        color: this.profile.darkMode ? '#ffffff' : '#1c1e23',
-                    },
-                },
-                xaxis: {
-                    showgrid: false,
-                    showline: true,
-                    linecolor: 'rgb(102, 102, 102)',
-                    titlefont: {
-                        font: {
-                            color: 'rgb(204, 204, 204)',
-                        },
-                    },
-                    tickfont: {
-                        font: {
-                            color: 'rgb(102, 102, 102)',
-                        },
-                    },
-                },
-                yaxis: {
-                    dtick: 1,
-                    showticklabels: false,
-                },
-                paper_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-                plot_bgcolor: this.profile.darkMode ? '#1c1e23' : '#ffffff',
-            };
-        },
     },
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
@@ -404,7 +242,6 @@ export default {
             this.getVersion(),
             this.loadMaintenanceWindows(),
             this.loadUpdates(),
-            this.loadTimeseries(),
         ]);
     },
     methods: {
@@ -452,19 +289,7 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async loadTimeseries() {
-            await axios
-                .get('/apis/v1/stats/timeseries/')
-                .then((response) => {
-                    this.timeseriesUsers = [response.data.users];
-                    this.timeseriesTasks = [response.data.tasks];
-                    this.timeseriesTasksRunning = [response.data.tasks_running];
-                })
-                .catch((error) => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        },
+
     },
 };
 </script>
@@ -484,9 +309,9 @@ export default {
     align-items: center
 
 #background
-    background-image: url('../../assets/frontpage/index_bg.png')
-    background-blend-mode: normal
-    background-color: hsla(0%, 0%, 100%, 1)
+    background-image: url('../../assets/frontpage/index_bg_blurred.png')
+    background-blend-mode: hard-light
+    background-color: #212529 // hsla(0%, 0%, 0%, 1)
     background-repeat: no-repeat
     background-position: center
     background-size: cover
@@ -495,9 +320,6 @@ export default {
     white-space: nowrap
     position: relative
     text-align: center
-
-#background:after
-    opacity: 0.5
 
 #main
     text-align: center

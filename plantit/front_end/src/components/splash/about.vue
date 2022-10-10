@@ -25,7 +25,7 @@
                             ></b-spinner
                         ></b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">phenomics workflows</h5>
+                            ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="userCount >= 0" class="text-success">
@@ -40,7 +40,7 @@
                         ></b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">
-                                scientists & researchers
+                                researchers
                             </h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
@@ -58,7 +58,7 @@
                             ></b-spinner
                         ></b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">workflow developers</h5>
+                            ><h5 class="text-white">developers</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="taskCount >= 0" class="text-success">
@@ -72,7 +72,7 @@
                             ></b-spinner>
                         </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">workflow submissions</h5>
+                            ><h5 class="text-white">submissions</h5>
                         </b-col>
                     </b-row>
                     <!--<br/>
@@ -107,9 +107,9 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Phenomics automation rooted in the cloud
+                                    plant phenomics rooted in the cloud
                                 </h4>
-                                Built on
+                                built on
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
@@ -215,9 +215,9 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Open source workflows for open science
+                                    portable pipelines for open science
                                 </h4>
-                                Deploy
+                                deploy
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"

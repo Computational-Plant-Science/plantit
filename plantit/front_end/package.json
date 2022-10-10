@@ -66,6 +66,7 @@
     "@vue/cli-service": "^5.0.8",
     "@vue/eslint-config-prettier": "^4.0.1",
     "@vue/test-utils": "^1.2.2",
+    "@vueuse/core": "^9.3.0",
     "dotenv-webpack": "^3.0.0",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0",
