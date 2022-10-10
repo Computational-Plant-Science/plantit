@@ -42,10 +42,7 @@
                             "
                             ><template #title
                                 ><h1 class="text-success text-center">
-                                    <!--<span v-if="publicWorkflows.length >= 0">{{
-                                        publicWorkflows.length
-                                    }}</span
-                                    >--><span v-if="workflowCount >= 0">{{
+                                    <span v-if="workflowCount >= 0">{{
                                         workflowCount
                                     }}</span
                                     ><b-spinner
@@ -71,67 +68,6 @@
                                     workflows</b-button
                                 ></template
                             >
-                            <!--<b-row>
-                                <b-col
-                                    ><Plotly
-                                        v-if="showWorkflowsUsagePlot"
-                                        :data="workflowsUsagePlotTraces"
-                                        :layout="workflowsUsagePlotLayout"
-                                    ></Plotly
-                                ></b-col>
-                            </b-row>-->
-                            <br />
-                            <b-card-group deck columns
-                                ><b-card
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    class="overflow-hidden text-left p-2"
-                                    v-for="workflow in featuredWorkflows"
-                                    v-bind:key="
-                                        workflow.config.name +
-                                        '/' +
-                                        workflow.branch.name
-                                    "
-                                    no-body
-                                    style="min-width: 50rem"
-                                    ><blurb
-                                        :workflow="workflow"
-                                        :linkable="false"
-                                    ></blurb></b-card
-                            ></b-card-group>
-                            <!--<span text-center>
-                                <h1 class="text-success">
-                                    <span
-                                        v-if="featuredWorkflows.length >= 0"
-                                        >{{ featuredWorkflows.length }}</span
-                                    >
-                                    <b-spinner
-                                        v-else
-                                        label="Loading..."
-                                        variant="secondary"
-                                    ></b-spinner>
-                                </h1>
-                                <b-badge
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    ><i class="fas fa-signal fa-fw"></i>
-                                    Featured</b-badge
-                                ></span
-                            >-->
                         </b-tab>
                         <b-tab
                             :title-link-class="
@@ -169,32 +105,6 @@
                                     <br />
                                     scientists &<br />researchers</b-button
                                 ></template
-                            ><!--<Plotly
-                                v-if="showUsersPlot"
-                                :data="usersPlotTraces"
-                                :layout="usersPlotLayout"
-                            ></Plotly>-->
-                            <br />
-                            <span text-center>
-                                <h1 class="text-success">
-                                    <span v-if="onlineCount >= 0">{{
-                                        onlineCount
-                                    }}</span>
-                                    <b-spinner
-                                        v-else
-                                        label="Loading..."
-                                        variant="secondary"
-                                    ></b-spinner>
-                                </h1>
-                                <b-badge
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
-                                    ><i class="fas fa-signal fa-fw"></i>
-                                    Online</b-badge
-                                ></span
                             >
                         </b-tab>
                         <b-tab
@@ -320,36 +230,6 @@
                                     submissions
                                 </b-button></template
                             >
-                            <b-row align-h="center">
-                                <b-col>
-                                    <h1
-                                        v-if="runningCount >= 0"
-                                        class="text-success"
-                                    >
-                                        {{ runningCount }}
-                                    </h1>
-                                    <b-spinner
-                                        v-else
-                                        type="grow"
-                                        label="Loading..."
-                                        variant="secondary"
-                                    ></b-spinner
-                                    ><b-badge
-                                        :variant="
-                                            profile.darkMode
-                                                ? 'outline-light'
-                                                : 'white'
-                                        "
-                                        ><i class="fas fa-terminal fa-fw"></i>
-                                        Running</b-badge
-                                    >
-                                </b-col>
-                            </b-row>
-                            <br /><!--<Plotly
-                                v-if="showTasksTotalPlot"
-                                :data="tasksTotalPlotTraces"
-                                :layout="tasksTotalPlotLayout"
-                            ></Plotly>-->
                         </b-tab>
                         <b-tab
                             title="Institutions"
@@ -392,8 +272,6 @@
                                     institutions
                                 </b-button></template
                             >
-                            <!--<b-row><b-col><b-list-group><b-list-group-item class="text-left" v-for="inst in getInstitutions" v-bind:key="inst.institution">{{ inst.institution }} ({{ inst.count }})</b-list-group-item></b-list-group></b-col></b-row>-->
-                            <!--<div id="map" style="height: 40rem; width: 100%"></div>-->
                         </b-tab>
                     </b-tabs>
                 </b-col>
@@ -404,7 +282,6 @@
 </template>
 
 <script>
-import blurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -414,7 +291,6 @@ import moment from 'moment';
 export default {
     name: 'stats',
     components: {
-        blurb,
     },
     data: function () {
         return {
