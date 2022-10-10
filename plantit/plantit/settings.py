@@ -62,8 +62,8 @@ assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATI
 assert 'DIRT_MIGRATION_DB_PASSWORD' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PASSWORD"
 assert 'DIRT_MIGRATION_DB_DATABASE' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_DATABASE"
 assert 'FIND_STRANDED_TASKS' in os.environ, f"{missing_variable} FIND_STRANDED_TASKS"
-assert 'PULL_JOB_WALLTIME' in os.environ, f"{missing_variable} PULL_JOB_WALLTIME"
-assert 'PUSH_JOB_WALLTIME' in os.environ, f"{missing_variable} PUSH_JOB_WALLTIME"
+# assert 'PULL_JOB_WALLTIME' in os.environ, f"{missing_variable} PULL_JOB_WALLTIME"
+# assert 'PUSH_JOB_WALLTIME' in os.environ, f"{missing_variable} PUSH_JOB_WALLTIME"
 
 
 CELERYD_TASK_SOFT_TIME_LIMIT = 60  # global Celery task timeout
@@ -119,8 +119,8 @@ DIRT_MIGRATION_DB_USER = os.environ.get("DIRT_MIGRATION_DB_USER")
 DIRT_MIGRATION_DB_PASSWORD = os.environ.get("DIRT_MIGRATION_DB_PASSWORD")
 DIRT_MIGRATION_DB_DATABASE = os.environ.get("DIRT_MIGRATION_DB_DATABASE")
 FIND_STRANDED_TASKS = bool(os.environ.get("FIND_STRANDED_TASKS", False))
-PULL_JOB_WALLTIME = os.environ.get("PULL_JOB_WALLTIME", "01:00:00")
-PUSH_JOB_WALLTIME = os.environ.get("PUSH_JOB_WALLTIME", "01:00:00")
+PULL_JOB_WALLTIME = os.environ.get("PULL_JOB_WALLTIME", "02:00:00")
+PUSH_JOB_WALLTIME = os.environ.get("PUSH_JOB_WALLTIME", "02:00:00")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

@@ -81,6 +81,8 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
       - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
+      - PULL_JOB_WALLTIME=${PULL_JOB_WALLTIME}
+      - PUSH_JOB_WALLTIME=${PUSH_JOB_WALLTIME}
     command: ["/code/scripts/wait-for-postgres.sh", "${SQL_HOST}", "${SQL_USER}",
               "daphne",
               "-b", "0.0.0.0",
@@ -180,6 +182,8 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
       - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
+      - PULL_JOB_WALLTIME=${PULL_JOB_WALLTIME}
+      - PUSH_JOB_WALLTIME=${PUSH_JOB_WALLTIME}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -274,6 +278,8 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
       - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
+      - PULL_JOB_WALLTIME=${PULL_JOB_WALLTIME}
+      - PUSH_JOB_WALLTIME=${PUSH_JOB_WALLTIME}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -370,6 +376,8 @@ services:
       - DIRT_MIGRATION_DB_DATABASE=${DIRT_MIGRATION_DB_DATABASE}
       - DIRT_MIGRATION_DB_PASSWORD=${DIRT_MIGRATION_DB_PASSWORD}
       - FIND_STRANDED_TASKS=${FIND_STRANDED_TASKS}
+      - PULL_JOB_WALLTIME=${PULL_JOB_WALLTIME}
+      - PUSH_JOB_WALLTIME=${PUSH_JOB_WALLTIME}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
