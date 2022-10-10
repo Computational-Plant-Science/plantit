@@ -75,7 +75,8 @@ def compose_pull_headers(task: Task) -> List[str]:
         headers.append(f"#SBATCH --mem=1GB")
 
     # walltime
-    headers.append(f"#SBATCH --time=00:30:00")  # TODO: calculate as a function of input size?
+    walltime = settings.PULL_JOB_WALLTIME
+    headers.append(f"#SBATCH --time={walltime}")  # TODO: calculate as a function of input size?
 
     # queue
     queue = task.agent.orchestrator_queue if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '' else task.agent.queue
@@ -255,7 +256,8 @@ def compose_push_headers(task: Task) -> List[str]:
 
     # walltime
     # TODO: calculate as a function of number/size of output files?
-    headers.append(f"#SBATCH --time=02:00:00")
+    walltime = settings.PUSH_JOB_WALLTIME
+    headers.append(f"#SBATCH --time={walltime}")
 
     # queue
     queue = task.agent.orchestrator_queue if task.agent.orchestrator_queue is not None and task.agent.orchestrator_queue != '' else task.agent.queue

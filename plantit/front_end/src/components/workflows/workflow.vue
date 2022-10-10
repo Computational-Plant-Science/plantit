@@ -4984,7 +4984,7 @@ export default {
                 this.getWorkflow !== null &&
                 this.getWorkflow.config.input !== undefined
             ) {
-               return (
+                return (
                     this.getWorkflow.config.input.kind !== undefined &&
                     this.input.kind !== '' &&
                     this.selectedInput !== null &&
@@ -4994,7 +4994,8 @@ export default {
                     !this.selectedInput.path.includes(' ') &&
                     ((this.input.kind !== 'directory' &&
                         this.inputFiletypeSelected) ||
-                        this.input.kind === 'directory'));
+                        this.input.kind === 'directory')
+                );
             }
             return true;
         },
