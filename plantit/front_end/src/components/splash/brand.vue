@@ -1,99 +1,108 @@
 <template>
-    <div id="background" class="vertical-center m-0 p-0">
-        <b-card
-            align="center"
-            class="p-1 text-white"
-            header-bg-variant="transparent"
-            footer-bg-variant="transparent"
-            border-variant="default"
-            text-variant="white"
-            bg-variant="dark"
-            style="width: 60%; margin: 30px auto; float: none; opacity: 0.95"
-        >
-            <template #header>
-                <b-row class="p-1"
-                    ><b-col md="auto" align-self="center">
-                        <h4
-                            class="text-white"
-                            style="text-decoration: underline; z-index: 100"
-                        >
-                            <b-img
-                                style="
-                                    max-width: 2.5rem;
-                                    position: relative;
-                                    left: 5px;
-                                "
-                                :src="require('../../assets/logo.png')"
-                                left
-                                class="m-0 p-0"
-                            ></b-img
-                            >plant<small
-                                class="mb-3 text-success"
-                                style="
-                                    text-decoration: underline;
-                                    text-shadow: 1px 1px 2px black;
-                                    z-index: 100;
-                                "
-                                ><small>IT</small></small
+    <div class="vertical-center m-0 p-0">
+        <div id="background"></div>
+        <div id="gradient"></div>
+        <div id="foreground">
+            <b-card
+                align="center"
+                class="p-1 text-white"
+                header-bg-variant="transparent"
+                footer-bg-variant="transparent"
+                border-variant="success"
+                text-variant="white"
+                bg-variant="dark"
+                style="width: 60%; margin: 30px auto; float: none; opacity: 0.9"
+            >
+                <template #header>
+                    <b-row class="p-1"
+                        ><b-col md="auto" align-self="center">
+                            <h4
+                                class="text-white"
+                                style="text-decoration: underline; z-index: 100"
                             >
-                            <small
-                                ><small
+                                <b-img
+                                    style="
+                                        max-width: 2.5rem;
+                                        position: relative;
+                                        left: 5px;
+                                    "
+                                    :src="require('../../assets/logo.png')"
+                                    left
+                                    class="m-0 p-0"
+                                ></b-img
+                                >plant<small
+                                    class="mb-3 text-success"
+                                    style="
+                                        text-decoration: underline;
+                                        text-shadow: 1px 1px 2px black;
+                                        z-index: 100;
+                                    "
+                                    ><small>IT</small></small
+                                >
+                                <small
                                     ><small
-                                        ><b-badge variant="success"
-                                            ><span v-if="version !== 0">{{
-                                                version
-                                            }}</span
-                                            ><i
-                                                class="fas fa-spinner"
-                                                v-else
-                                            ></i></b-badge></small></small
-                            ></small>
-                        </h4>
-                    </b-col>
-                    <b-col md="auto" align-self="center"
-                        ><b-link to="/about" class="text-secondary"
-                            ><i class="fas fa-question-circle fa-1x fa-fw"></i>
-                            About</b-link
-                        ></b-col
-                    >
-                    <b-col md="auto" align-self="center">
-                        <b-link href="/apis/v1/swagger/" class="text-secondary"
-                            ><i class="fas fa-laptop-code fa-1x fa-fw"></i>
-                            API</b-link
+                                        ><small
+                                            ><b-badge variant="success"
+                                                ><span v-if="version !== 0">{{
+                                                    version
+                                                }}</span
+                                                ><i
+                                                    class="fas fa-spinner"
+                                                    v-else
+                                                ></i></b-badge></small></small
+                                ></small>
+                            </h4>
+                        </b-col>
+                        <b-col md="auto" align-self="center"
+                            ><b-link to="/about" class="text-secondary"
+                                ><i
+                                    class="fas fa-question-circle fa-1x fa-fw"
+                                ></i>
+                                About</b-link
+                            ></b-col
                         >
-                    </b-col>
-                    <b-col md="auto" align-self="center">
-                        <b-link
-                            href="https://plantit.readthedocs.io/en/latest"
-                            class="text-secondary"
-                            ><i class="fas fa-book fa-1x fa-fw"></i>
-                            Docs</b-link
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="/apis/v1/swagger/"
+                                class="text-secondary"
+                                ><i class="fas fa-laptop-code fa-1x fa-fw"></i>
+                                API</b-link
+                            >
+                        </b-col>
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="https://plantit.readthedocs.io/en/latest"
+                                class="text-secondary"
+                                ><i class="fas fa-book fa-1x fa-fw"></i>
+                                Docs</b-link
+                            >
+                        </b-col>
+                        <b-col md="auto" align-self="center">
+                            <b-link
+                                href="https://github.com/Computational-Plant-Science/plantit"
+                                class="text-secondary"
+                                ><i class="fab fa-github fa-1x fa-fw"></i>
+                                GitHub</b-link
+                            >
+                        </b-col>
+                        <b-col md="auto" align-self="center"
+                            ><b-link to="/stats" class="text-secondary"
+                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
+                                Stats</b-link
+                            ></b-col
                         >
-                    </b-col>
-                    <b-col md="auto" align-self="center">
-                        <b-link
-                            href="https://github.com/Computational-Plant-Science/plantit"
-                            class="text-secondary"
-                            ><i class="fab fa-github fa-1x fa-fw"></i>
-                            GitHub</b-link
+                        <b-col md="auto" align-self="center"
+                            ><b-link
+                                href="https://stats.uptimerobot.com/yAgPxH7KNJ"
+                                class="text-secondary"
+                                ><i
+                                    class="fas fa-satellite-dish fa-1x fa-fw"
+                                ></i>
+                                Status</b-link
+                            ></b-col
                         >
-                    </b-col>
-                    <b-col md="auto" align-self="center"
-                        ><b-link to="/stats" class="text-secondary"
-                            ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
-                            Stats</b-link
-                        ></b-col
-                    >
-                    <b-col md="auto" align-self="center"
-                        ><b-link
-                            href="https://stats.uptimerobot.com/yAgPxH7KNJ"
-                            class="text-secondary"
-                            ><i class="fas fa-satellite-dish fa-1x fa-fw"></i>
-                            Status</b-link
-                        ></b-col
-                    >
-                    <b-col></b-col>
-                    <!--<b-nav-item
+                        <b-col></b-col>
+                        <!--<b-nav-item
                             href="#"
                             class="mt-2"
                             link-class="text-secondary"
@@ -105,8 +114,8 @@
                                 Slack</span
                             >
                         </b-nav-item>-->
-                </b-row>
-                <!--<b-row>
+                    </b-row>
+                    <!--<b-row>
                     <b-col md="auto">
                         <i class="text-theme mt-4 ml-1 text-left">
                             <span
@@ -120,78 +129,79 @@
                     >
                     <b-col></b-col>
                 </b-row> -->
-            </template>
-            <template #default>
-                <b-container id="main" fluid>
-                    <b-row align-v="center" v-if="maintenance !== undefined"
-                        ><b-col class="text-center" align-self="center"
-                            ><b-alert variant="warning" :show="true"
-                                >CyVerse is undergoing maintenance scheduled to
-                                complete
-                                {{ prettify(maintenance.end) }}.</b-alert
-                            ></b-col
+                </template>
+                <template #default>
+                    <b-container id="main" fluid>
+                        <b-row align-v="center" v-if="maintenance !== undefined"
+                            ><b-col class="text-center" align-self="center"
+                                ><b-alert variant="warning" :show="true"
+                                    >CyVerse is undergoing maintenance scheduled
+                                    to complete
+                                    {{ prettify(maintenance.end) }}.</b-alert
+                                ></b-col
+                            >
+                        </b-row>
+                        <b-row
+                            ><b-col
+                                class="text-left"
+                                style="overflow-y: scroll; max-height: 50%"
+                            >
+                                <h5 class="text-white">Recent news</h5>
+                                <span v-if="loadingUpdates">
+                                    <b-spinner
+                                        type="spinner"
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner>
+                                    Loading updates...
+                                </span>
+                                <span
+                                    v-else-if="updates.length === 0"
+                                    class="text-light"
+                                    >No updates to show.</span
+                                >
+                                <b-row
+                                    v-for="update in getUpdates"
+                                    v-bind:key="update.created"
+                                    ><b-col class="text-white"
+                                        ><small>{{
+                                            prettify(update.created)
+                                        }}</small>
+                                        <VueMarkdown>{{
+                                            update.content
+                                        }}</VueMarkdown>
+                                        <!--<p>{{ update.content }}</p>--></b-col
+                                    ></b-row
+                                >
+                            </b-col></b-row
                         >
-                    </b-row>
+                    </b-container>
+                </template>
+                <template #footer>
                     <b-row
-                        ><b-col
-                            class="text-left"
-                            style="overflow-y: scroll; max-height: 50%"
-                        >
-                            <h5 class="text-white">Recent news</h5>
-                            <span v-if="loadingUpdates">
-                                <b-spinner
-                                    type="spinner"
-                                    label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner>
-                                Loading updates...
-                            </span>
-                            <span
-                                v-else-if="updates.length === 0"
-                                class="text-light"
-                                >No updates to show.</span
+                        ><b-col></b-col
+                        ><b-col align-self="center" md="auto">
+                            <b-button
+                                v-if="maintenance === undefined"
+                                variant="dark"
+                                block
+                                class="text-right text-white"
+                                href="/apis/v1/idp/cyverse_login/"
                             >
-                            <b-row
-                                v-for="update in getUpdates"
-                                v-bind:key="update.created"
-                                ><b-col class="text-white"
-                                    ><small>{{
-                                        prettify(update.created)
-                                    }}</small>
-                                    <VueMarkdown>{{
-                                        update.content
-                                    }}</VueMarkdown>
-                                    <!--<p>{{ update.content }}</p>--></b-col
-                                ></b-row
-                            >
+                                <i class="fas fa-arrow-circle-right fa-fw"></i>
+                                Log In
+                            </b-button>
                         </b-col></b-row
                     >
-                </b-container>
-            </template>
-            <template #footer>
-                <b-row
-                    ><b-col></b-col
-                    ><b-col align-self="center" md="auto">
-                        <b-button
-                            v-if="maintenance === undefined"
-                            variant="outline-dark"
-                            block
-                            class="text-right text-white"
-                            href="/apis/v1/idp/cyverse_login/"
-                        >
-                            <i class="fas fa-arrow-circle-right fa-fw"></i>
-                            Log In
-                        </b-button>
-                    </b-col></b-row
-                >
-            </template>
-        </b-card>
-        <!--<div style="position: absolute; bottom: 0; left: 49%">
+                </template>
+            </b-card>
+            <!--<div style="position: absolute; bottom: 0; left: 49%">
             <i
                 class="fas fa-chevron-down fa-5x fa-fw"
                 id="about-down-arrow"
             ></i>
         </div>-->
+        </div>
     </div>
 </template>
 
@@ -289,7 +299,6 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-
     },
 };
 </script>
@@ -318,8 +327,24 @@ export default {
     min-height: 100vh
     width: 100%
     white-space: nowrap
-    position: relative
+    position: absolute
     text-align: center
+
+#gradient
+  position: absolute
+  width: 100%
+  height: 100%
+  background: transparent
+  background: linear-gradient(top, rgba( 255, 255, 255, 255 ) 0%, #212529 100% )
+  background: -moz-linear-gradient(top, rgba( 255, 255, 255, 0) 0%, #212529 100% )
+  // background: -ms-linear-gradient(top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+  // background: -o-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+  // background: -webkit-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+
+#foreground
+  // min-height: 100vh
+  width: 100%
+  position: relative
 
 #main
     text-align: center
