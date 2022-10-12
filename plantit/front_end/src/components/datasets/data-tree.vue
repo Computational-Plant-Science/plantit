@@ -32,7 +32,8 @@
                     :variant="profile.darkMode ? 'outline-light' : 'white'"
                     :disabled="
                         !select ||
-                        (select !== 'directory' && select !== 'files')
+                        (select !== 'directory' && select !== 'files') ||
+                        isUserHome((internalLoaded ? internalNode : node).path)
                     "
                     @click="
                         selectNode(
@@ -2484,6 +2485,15 @@ export default {
             bus.$emit('close');
 
             this.$parent.toggle();
+        },
+        isUserHome(path) {
+            let spl = path.split('/');
+            return (
+                spl.length === 4 &&
+                spl[1] === 'iplant' &&
+                spl[2] === 'home' &&
+                spl[3] === this.profile.djangoProfile.username
+            );
         },
     },
 };
