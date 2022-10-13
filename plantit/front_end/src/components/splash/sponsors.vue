@@ -3,12 +3,11 @@
         <b-container>
             <b-card
                 align="center"
-                class="rounded-0 text-center m-0 shadowed"
+                class="rounded-0 text-center m-0 p-3 shadowed"
                 bg-variant="white"
-                border-variant="light"
+                border-variant="dark"
                 header-bg-variant="white"
                 header-border-variant="white"
-                style="border: none"
             >
                 <b-row>
                     <b-col>
