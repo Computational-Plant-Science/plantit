@@ -329,9 +329,9 @@ export default {
   background: transparent
   background: linear-gradient(top, rgba( 255, 255, 255, 255 ) 0%, #212529 100% )
   background: -moz-linear-gradient(top, rgba( 255, 255, 255, 0) 0%, #212529 100% )
-  // background: -ms-linear-gradient(top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
-  // background: -o-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
-  // background: -webkit-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+  background: -ms-linear-gradient(top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+  background: -o-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
+  background: -webkit-linear-gradient( top, rgba( 255, 255, 255, 0 ) 0%, #212529 100% )
 
 #foreground
   // min-height: 100vh

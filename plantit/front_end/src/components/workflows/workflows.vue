@@ -32,7 +32,7 @@
                         :disabled="workflowsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
-                        class="ml-0 mt-0 mr-0"
+                        class="ml-0 mt-0 mr-0 darklinks"
                         :title="context"
                         ><template #button-content>
                             <span v-if="context === 'Featured'"

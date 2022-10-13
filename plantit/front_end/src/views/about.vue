@@ -31,7 +31,7 @@
                 </b-col>
             </b-row>
             <br />
-            <b-row
+            <b-row class="lightlinks"
                 ><b-col>
                     <p>
                         <b-img

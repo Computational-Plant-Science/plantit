@@ -362,19 +362,6 @@
                                         total runtime
                                     </b-col>
                                 </b-row>
-                                <b-row>
-                                    <b-col md="auto">
-                                        <b
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Recent Usage
-                                        </b>
-                                    </b-col>
-                                </b-row>
                             </b-col>
                         </b-row>
                     </div>
