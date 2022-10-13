@@ -4,11 +4,12 @@
         <div id="gradient"></div>
         <div id="foreground">
             <b-card
+                id="foreground-menu"
                 align="center"
                 class="p-1 text-white"
                 header-bg-variant="transparent"
                 footer-bg-variant="transparent"
-                border-variant="success"
+                border-variant="dark"
                 text-variant="white"
                 bg-variant="dark"
                 style="width: 60%; margin: 30px auto; float: none; opacity: 0.9"
@@ -336,6 +337,9 @@ export default {
   // min-height: 100vh
   width: 100%
   position: relative
+
+#foreground-menu
+  box-shadow: 2px 2px 5px -1px $success
 
 #main
     text-align: center
