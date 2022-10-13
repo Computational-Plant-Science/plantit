@@ -146,7 +146,7 @@
                                 class="text-left"
                                 style="overflow-y: scroll; max-height: 50%"
                             >
-                                <h5 class="text-white">Recent news</h5>
+                                <h5 class="text-white">News</h5>
                                 <span v-if="loadingUpdates">
                                     <b-spinner
                                         type="spinner"
@@ -167,14 +167,12 @@
                                         ><small>{{
                                             prettify(update.created)
                                         }}</small>
-                                        <VueMarkdown>{{
-                                            update.content
-                                        }}</VueMarkdown>
-                                        <!--<p>{{ update.content }}</p>--></b-col
-                                    ></b-row
-                                >
-                            </b-col></b-row
-                        >
+                                        <div
+                                            class="lightlinks"
+                                            v-html="toHtml(update.content)"
+                                        ></div></b-col
+                                ></b-row> </b-col
+                        ></b-row>
                     </b-container>
                 </template>
                 <template #footer>
@@ -195,12 +193,6 @@
                     >
                 </template>
             </b-card>
-            <!--<div style="position: absolute; bottom: 0; left: 49%">
-            <i
-                class="fas fa-chevron-down fa-5x fa-fw"
-                id="about-down-arrow"
-            ></i>
-        </div>-->
         </div>
     </div>
 </template>
@@ -210,13 +202,10 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
-import VueMarkdown from 'vue-markdown';
+import { marked } from 'marked';
 
 export default {
     name: 'home-brand',
-    components: {
-        VueMarkdown,
-    },
     data: function () {
         return {
             version: 0,
@@ -255,6 +244,9 @@ export default {
         ]);
     },
     methods: {
+        toHtml(content) {
+            return marked(content);
+        },
         prettify: function (date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
@@ -307,7 +299,6 @@ export default {
 @import '../../scss/_colors.sass'
 @import '../../scss/main.sass'
 
-
 .vertical-center
     min-height: 100%
     /* Fallback for browsers do NOT support vh unit */
@@ -357,6 +348,15 @@ export default {
     margin: 0 auto
     color: white
 
+#markdown
+  background-color: $light
+  border-radius: 5px
+  width: auto
+  color: $dark
+
+  a:hover
+    color: $dark
+
 #main-nav
     width: 60%
     background-color: $color-box-background
@@ -389,4 +389,5 @@ export default {
 
 .avatar
     height: 35px
+
 </style>

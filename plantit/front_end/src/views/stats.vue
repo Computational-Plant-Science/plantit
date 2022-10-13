@@ -61,7 +61,7 @@
                                             ? 'outline-light'
                                             : 'white'
                                     "
-                                    ><i class="fas fa-stream fa-fw"></i>
+                                >
                                     <br />
                                     phenomics
                                     <br />
@@ -101,7 +101,6 @@
                                             : 'white'
                                     "
                                 >
-                                    <i class="fas fa-user fa-fw"></i>
                                     <br />
                                     scientists &<br />researchers</b-button
                                 ></template
@@ -138,7 +137,7 @@
                                             ? 'outline-light'
                                             : 'white'
                                     "
-                                    ><i class="fas fa-code fa-fw"></i>
+                                >
                                     <br />
                                     workflow
                                     <br />
@@ -223,7 +222,7 @@
                                     "
                                     v-b-tooltip.hover
                                     :title="`Tasks`"
-                                    ><i class="fas fa-terminal fa-fw"></i>
+                                >
                                     <br />
                                     workflow
                                     <br />
@@ -265,7 +264,7 @@
                                     "
                                     v-b-tooltip.hover
                                     title="Institutions"
-                                    ><i class="fas fa-university fa-fw"></i>
+                                >
                                     <br />
                                     represented
                                     <br />
@@ -290,8 +289,7 @@ import moment from 'moment';
 
 export default {
     name: 'stats',
-    components: {
-    },
+    components: {},
     data: function () {
         return {
             map: {},

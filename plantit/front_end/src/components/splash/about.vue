@@ -74,6 +74,20 @@
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">submissions</h5>
                         </b-col>
+                        <b-col align-self="end" class="text-right mr-0"
+                            ><h1 v-if="institutionCount >= 0" class="text-success">
+                                {{ institutionCount }}
+                            </h1>
+                            <b-spinner
+                                v-else
+                                type="spinner"
+                                label="Loading..."
+                                variant="success"
+                            ></b-spinner>
+                        </b-col>
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">institutions</h5>
+                        </b-col>
                     </b-row>
                     <!--<br/>
                     <b-row v-if="profile.loggedIn">
@@ -252,7 +266,7 @@ import moment from 'moment';
 export default {
     name: 'home-about',
     async mounted() {
-        await Promise.all([this.loadCounts(), this.loadTimeseries()]);
+        await Promise.all([this.loadCounts(true), this.loadTimeseries()]);
     },
     data: function () {
         return {
@@ -260,18 +274,20 @@ export default {
             workflowCount: -1,
             developerCount: -1,
             taskCount: -1,
+            institutionCount: -1,
             timeseriesTasksRunning: null,
         };
     },
     methods: {
-        async loadCounts() {
+        async loadCounts(invalidate) {
             await axios
-                .get('/apis/v1/stats/counts/')
+                .get(`/apis/v1/stats/counts/?invalidate=${invalidate}`)
                 .then((response) => {
                     this.userCount = response.data.users;
                     this.workflowCount = response.data.workflows;
                     this.developerCount = response.data.developers;
                     this.taskCount = response.data.tasks;
+                    this.institutionCount = response.data.institutions;
                 })
                 .catch((error) => {
                     Sentry.captureException(error);
