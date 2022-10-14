@@ -11,7 +11,6 @@
         >
             <navigation v-if="!isRootPath"></navigation>
             <router-view></router-view>
-            <br />
         </b-container>
     </div>
 </template>

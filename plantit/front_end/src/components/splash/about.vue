@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="m-0 p-0">
         <b-card
             class="rounded-0 text-center"
             bg-variant="dark"
@@ -10,7 +10,6 @@
             footer-border-variant="white"
         >
             <template slot="header" style="border: none">
-                <br />
                 <b-container v-if="userCount >= 0">
                     <b-row>
                         <b-col align-self="end" class="text-right mr-0"

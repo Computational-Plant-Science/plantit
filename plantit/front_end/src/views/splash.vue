@@ -4,7 +4,7 @@
             <b-col class="m-0 p-0">
                 <brand></brand>
                 <about></about>
-                <sponsors></sponsors>
+                <!--<sponsors></sponsors>-->
             </b-col>
         </b-row>
     </b-container>
@@ -14,14 +14,14 @@
 // @ is an alias to /src
 import brand from '@/components/splash/brand.vue';
 import about from '@/components/splash/about.vue';
-import sponsors from '../components/splash/sponsors';
+// import sponsors from '../components/splash/sponsors';
 
 export default {
     name: 'splash',
     components: {
         brand,
         about,
-        sponsors,
+        // sponsors,
     },
 };
 </script>
