@@ -8,6 +8,7 @@ from datetime import datetime
 
 from asgiref.sync import async_to_sync
 from celery import group
+from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -1320,11 +1321,13 @@ def start_dirt_migration(self, username: str):
 def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
-    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
-    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
-    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, refresh_all_users_stats.s(), name='refresh user statistics')
-    sender.add_periodic_task(int(settings.AGENTS_HEALTHCHECKS_MINUTES) * 60, agents_healthchecks.s(), name='check agent connections')
-    sender.add_periodic_task(int(settings.WORKFLOWS_REFRESH_MINUTES) * 60, refresh_all_workflows.s(), name='refresh workflows cache')
+    daily = crontab(day_of_week="*", hour=0, minute=0)
+    hourly = crontab(day_of_week="*", hour="*", minute=0)
+
+    sender.add_periodic_task(daily, refresh_user_institutions.s(), name='refresh user institutions')
+    sender.add_periodic_task(hourly, refresh_all_users_stats.s(), name='refresh user statistics')
+    sender.add_periodic_task(hourly, agents_healthchecks.s(), name='check agent connections')
+    sender.add_periodic_task(hourly, refresh_all_workflows.s(), name='refresh workflows cache')
 
     if settings.FIND_STRANDED_TASKS:
-        sender.add_periodic_task(int(settings.TASKS_REFRESH_SECONDS), find_stranded, name='check for stranded tasks')
+        sender.add_periodic_task(hourly, find_stranded, name='check for stranded tasks')
