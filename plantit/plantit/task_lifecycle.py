@@ -311,7 +311,8 @@ def submit_pull_to_scheduler(task: Task, ssh: SSH) -> str:
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
 
     # command
-    command = f"sbatch {task.guid}_pull.sh"
+    script_path = Path(task.agent.workdir) / task.workdir / f"{task.guid}_pull.sh"
+    command = f"sbatch {script_path}"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)
@@ -324,8 +325,7 @@ def submit_pull_to_scheduler(task: Task, ssh: SSH) -> str:
             logger.info(f"[{task.agent.name}] {stripped}")
             lines.append(stripped)
 
-    pull_id = parse_job_id(lines[-1])
-    return pull_id
+    return parse_job_id(lines[-1])
 
 
 def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
@@ -351,14 +351,15 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
     n_inputs = len(inputs)
     n_iterations = int(options['iterations'])
     depend_clause = ' ' if pull_id is None else (' --depend=afterany:' + pull_id + ' ')
+    script_path = Path(task.agent.workdir) / task.workdir / f"{task.guid}.sh"
     if 'input' in options:
         array_clause = ' ' if (n_inputs == 0 or kind == InputKind.DIRECTORY) else (' --array=1-' + str(n_inputs) + ' ')
     elif n_iterations > 1:
         array_clause = f" --array=1-{n_iterations}"
     else: array_clause = ' '
-    if task.agent.launcher: command = f"sbatch{depend_clause}{task.guid}.sh"
+    if task.agent.launcher: command = f"sbatch{depend_clause}{script_path}"
     else:
-        command = f"sbatch{depend_clause}{array_clause}{task.guid}.sh"
+        command = f"sbatch{depend_clause}{array_clause}{script_path}"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)
@@ -380,7 +381,8 @@ def submit_push_to_scheduler(task: Task, ssh: SSH, job_id: str = None) -> str:
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
 
     # command
-    command = f"sbatch{' ' if job_id is None else (' --depend=afterany:' + job_id + ' ')}{task.guid}_push.sh"
+    script_path = Path(task.agent.workdir) / task.workdir / f"{task.guid}_push.sh"
+    command = f"sbatch{' ' if job_id is None else (' --depend=afterany:' + job_id + ' ')}{script_path}"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)
@@ -402,7 +404,8 @@ def submit_report_to_scheduler(task: Task, ssh: SSH, push_id: str = None) -> str
     setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
 
     # command
-    command = f"sbatch{' ' if push_id is None else (' --depend=afterany:' + push_id + ' ')}{task.guid}_report.sh"
+    script_path = Path(task.agent.workdir) / task.workdir / f"{task.guid}_report.sh"
+    command = f"sbatch{' ' if push_id is None else (' --depend=afterany:' + push_id + ' ')}{script_path}"
 
     # workdir
     workdir = join(task.agent.workdir, task.workdir)
