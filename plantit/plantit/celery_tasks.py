@@ -317,9 +317,11 @@ def submit_jobs(self, guid: str):
             job_id = submit_job_to_scheduler(task, ssh, pull_id=pull_id)
             push_id = submit_push_to_scheduler(task, ssh, job_id=job_id)
             report_id = submit_report_to_scheduler(task, ssh, push_id=push_id)
-            job_ids.extend([job_id + ' (user workflow)', push_id + ' (outbound transfer)', report_id + ' (report completion)'])
+            job_ids.extend([job_id + ' (user workflow)',
+                            push_id + ' (outbound transfer)',
+                            report_id + ' (report completion)'])
 
-            # persist the last job ID to the task
+            # persist the last job ID
             task.job_id = report_id
             task.updated = timezone.now()
             task.save()
@@ -332,7 +334,7 @@ def submit_jobs(self, guid: str):
     except Exception:
         self.request.callbacks = None
 
-        # mark the task failed and persist it
+        # mark the task failed
         task.status = TaskStatus.FAILURE
         now = timezone.now()
         task.updated = now

@@ -136,8 +136,9 @@ def execute_command(
         allow_stderr: Whether to permit `stderr` output (by default an error is thrown).
 
     Returns:
-
+        A generator yielding line-by-line output from the command.
     """
+
     full_command = f"{setup_command} && {command}"
     if directory is not None: full_command = f"cd {directory} && {full_command}"
 

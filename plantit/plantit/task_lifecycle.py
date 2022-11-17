@@ -319,7 +319,7 @@ def submit_pull_to_scheduler(task: Task, ssh: SSH) -> str:
 
     # submit to agent's scheduler
     lines = []
-    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, allow_stderr=True):
         stripped = line.strip()
         if stripped:
             logger.info(f"[{task.agent.name}] {stripped}")
@@ -366,14 +366,13 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
 
     # submit the job to the agent's scheduler
     lines = []
-    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, allow_stderr=True):
         stripped = line.strip()
         if stripped:
             logger.info(f"[{task.agent.name}] {stripped}")
             lines.append(stripped)
 
-    job_id = parse_job_id(lines[-1])
-    return job_id
+    return parse_job_id(lines[-1])
 
 
 def submit_push_to_scheduler(task: Task, ssh: SSH, job_id: str = None) -> str:
@@ -389,14 +388,13 @@ def submit_push_to_scheduler(task: Task, ssh: SSH, job_id: str = None) -> str:
 
     # submit to agent's scheduler
     lines = []
-    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, allow_stderr=True):
         stripped = line.strip()
         if stripped:
             logger.info(f"[{task.agent.name}] {stripped}")
             lines.append(stripped)
 
-    push_id = parse_job_id(lines[-1])
-    return push_id
+    return parse_job_id(lines[-1])
 
 
 def submit_report_to_scheduler(task: Task, ssh: SSH, push_id: str = None) -> str:
@@ -412,14 +410,13 @@ def submit_report_to_scheduler(task: Task, ssh: SSH, push_id: str = None) -> str
 
     # submit to agent's scheduler
     lines = []
-    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, directory=workdir, allow_stderr=True):
+    for line in execute_command(ssh=ssh, setup_command=setup_command, command=command, allow_stderr=True):
         stripped = line.strip()
         if stripped:
             logger.info(f"[{task.agent.name}] {stripped}")
             lines.append(stripped)
 
-    report_id = parse_job_id(lines[-1])
-    return report_id
+    return parse_job_id(lines[-1])
 
 
 def cancel_task(task: Task):
@@ -439,7 +436,6 @@ def cancel_task(task: Task):
                     ssh=ssh,
                     setup_command=':',
                     command=f"squeue -u {task.agent.username}",
-                    directory=join(task.agent.workdir, task.workdir),
                     allow_stderr=True):
                 logger.info(line)
                 lines.append(line)
@@ -449,11 +445,9 @@ def cancel_task(task: Task):
                     ssh=ssh,
                     setup_command=':',
                     command=f"scancel {task.job_id}",
-                    directory=join(task.agent.workdir, task.workdir),
                     allow_stderr=True)
     except:
         logger.warning(f"Error canceling job on {task.agent.name}: {traceback.format_exc()}")
-        return
 
 
 def check_job_logs_for_progress(task: Task):
@@ -502,7 +496,6 @@ def get_job_status_and_walltime(task: Task):
             ssh=ssh,
             setup_command=":",
             command=f"squeue --user={task.agent.username}",
-            directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
 
         try:
@@ -518,7 +511,6 @@ def get_job_status_and_walltime(task: Task):
             ssh=ssh,
             setup_command=':',
             command=f"sacct -j {task.job_id}",
-            directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
 
         try:
