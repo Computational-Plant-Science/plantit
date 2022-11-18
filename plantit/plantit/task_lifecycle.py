@@ -232,7 +232,9 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
     if 'input' in options:
         # create a directory for them
         logger.info(f"Creating input directory for task {task.guid}")
-        for line in list(execute_command(ssh=ssh, setup_command=':', command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
+        # setup command
+        setup_command = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+        for line in list(execute_command(ssh=ssh, setup_command=setup_command, command=f"mkdir {join(work_dir, 'input')}")): logger.debug(line)
 
         # get their filenames
         if 'input' not in options or options['input'] is None: inputs = []
