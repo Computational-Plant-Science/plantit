@@ -26,6 +26,8 @@ class Agent(models.Model):
     username = models.CharField(max_length=100)
     port = models.PositiveIntegerField(default=22)
     hostname = models.CharField(max_length=250)
+    jump_port = models.PositiveIntegerField(default=22)
+    jump_hostname = models.CharField(max_length=250, blank=True, null=True)
     pre_commands = models.TextField(blank=True, null=True, default=None)
     max_time = models.DurationField(blank=False, null=False, default=timedelta(hours=1))
     max_walltime = models.PositiveIntegerField(blank=True, null=True, default=10)

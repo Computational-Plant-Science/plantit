@@ -21,11 +21,21 @@ logger = logging.getLogger(__name__)
 
 
 def get_task_ssh_client(task: Task) -> SSH:
-    return SSH(
-        host=task.agent.hostname,
-        port=task.agent.port,
-        username=task.agent.username,
-        pkey=str(get_user_private_key_path(task.agent.user.username)))
+    agent = task.agent
+    if agent.jump_hostname:
+        return SSH(
+            host=agent.hostname,
+            port=agent.port,
+            username=agent.username,
+            pkey=str(get_user_private_key_path(agent.user.username)),
+            jump_host=agent.jump_hostname,
+            jump_port=agent.jump_port)
+    else:
+        return SSH(
+            host=agent.hostname,
+            port=agent.port,
+            username=agent.username,
+            pkey=str(get_user_private_key_path(agent.user.username)))
 
 
 async def push_task_channel_event(task: Task):

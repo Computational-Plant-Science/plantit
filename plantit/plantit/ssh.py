@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class SSH:
     """
-    Wraps a paramiko client with either password or key authentication.
-    Preserves context manager usability.
+    Wraps a Paramiko client with password or SSH keypair authentication.
+    Supports proxy-jump pattern and preserves context manager usability.
     """
 
     def __init__(self,
@@ -21,7 +21,10 @@ class SSH:
                  username: str,
                  password: str = None,
                  pkey: str = None,
-                 reject_if_missing_host_key: bool = False):
+                 reject_if_missing_host_key: bool = False,
+                 jump_host: str = None,
+                 jump_port: int = None,
+                 timeout: int = 10):
         self.client = None
         self.host = host
         self.port = port
@@ -29,6 +32,9 @@ class SSH:
         self.password = password
         self.pkey = pkey
         self.reject_if_missing_host_key = reject_if_missing_host_key
+        self.jump_host = jump_host
+        self.jump_port = jump_port
+        self.timeout = timeout
         self.logger = logging.getLogger(__name__)
 
     def __enter__(self):
@@ -41,10 +47,26 @@ class SSH:
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if self.password is not None:
-            client.connect(self.host, self.port, self.username, self.password, timeout=5)
+            if self.jump_host:
+                jump_client = paramiko.SSHClient()
+                jump_client.connect(self.jump_host, self.jump_port, self.username, self.password, timeout=self.timeout)
+                socket = jump_client.get_transport().open_channel(
+                    'direct-tcpip', (self.host, self.port), ('', 0)
+                )
+                client.connect(self.host, self.port, self.username, self.password, timeout=5, sock=socket)
+            else:
+                client.connect(self.host, self.port, self.username, self.password, timeout=5)
         elif self.pkey is not None:
             key = paramiko.RSAKey.from_private_key_file(self.pkey)
-            client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key, timeout=5)
+            if self.jump_host:
+                jump_client = paramiko.SSHClient()
+                jump_client.connect(self.jump_host, self.jump_port, self.username, pkey=key, timeout=self.timeout)
+                socket = jump_client.get_transport().open_channel(
+                    'direct-tcpip', (self.host, self.port), ('', 0)
+                )
+                client.connect(self.host, self.port, self.username, pkey=key, timeout=5, sock=socket)
+            else:
+                client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key, timeout=self.timeout)
         else:
             raise ValueError(f"No authentication strategy provided")
 
