@@ -41,30 +41,34 @@ class SSH:
         client = paramiko.SSHClient()
         client.load_host_keys('../config/ssh/known_hosts')
 
+        jump_client = paramiko.SSHClient()
+        jump_client.load_host_keys('../config/ssh/known_hosts')
+
         if self.reject_if_missing_host_key:
             client.set_missing_host_key_policy(paramiko.RejectPolicy())
+            jump_client.set_missing_host_key_policy(paramiko.RejectPolicy())
         else:
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            jump_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if self.password is not None:
             if self.jump_host:
-                jump_client = paramiko.SSHClient()
                 jump_client.connect(self.jump_host, self.jump_port, self.username, self.password, timeout=self.timeout)
                 socket = jump_client.get_transport().open_channel(
                     'direct-tcpip', (self.host, self.port), ('', 0)
                 )
-                client.connect(self.host, self.port, self.username, self.password, timeout=5, sock=socket)
+
+                client.connect(self.host, self.port, self.username, self.password, timeout=self.timeout, sock=socket)
             else:
-                client.connect(self.host, self.port, self.username, self.password, timeout=5)
+                client.connect(self.host, self.port, self.username, self.password, timeout=self.timeout)
         elif self.pkey is not None:
             key = paramiko.RSAKey.from_private_key_file(self.pkey)
             if self.jump_host:
-                jump_client = paramiko.SSHClient()
                 jump_client.connect(self.jump_host, self.jump_port, self.username, pkey=key, timeout=self.timeout)
                 socket = jump_client.get_transport().open_channel(
                     'direct-tcpip', (self.host, self.port), ('', 0)
                 )
-                client.connect(self.host, self.port, self.username, pkey=key, timeout=5, sock=socket)
+                client.connect(self.host, self.port, self.username, pkey=key, timeout=self.timeout, sock=socket)
             else:
                 client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key, timeout=self.timeout)
         else:
