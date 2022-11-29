@@ -41,7 +41,7 @@ def compose_singularity_invocation(
 
     # add bind mount arguments
     if bind_mounts is not None and len(bind_mounts) > 0:
-        command += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+        command += (' --bind ' + ','.join([format_bind_mount(mount_point) for mount_point in bind_mounts]))
 
     # whether to use the Singularity cache
     if no_cache: command += ' --disable-cache'

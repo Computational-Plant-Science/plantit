@@ -1,3 +1,4 @@
+import os
 import uuid
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -305,3 +306,18 @@ class TaskUtilsTests(TestCase):
         project, study = parse_task_miappe_info(miappe)
         self.assertEqual(project, 'test-project')
         self.assertEqual(study, 'test-study')
+
+    # def test_parse_bind_mount(self):
+    #     workdir = "/tmp"
+    #     mount_str = "/opt/dev:/opt/app"
+    #     mount = parse_bind_mount(workdir, mount_str)
+    #     actual = f"{mount['host_path']}:{mount['container_path']}"
+    #     assert mount_str == actual
+
+    #     # os.path.join() ignores any arguments preceding one with a leading slash
+    #     # but in this case we really want to join the two paths, make sure it did
+    #     mount_str_no_host_path = "/opt/app"
+    #     mount = parse_bind_mount(workdir, mount_str_no_host_path)
+    #     expected = f"{workdir}{mount_str_no_host_path}:{mount_str_no_host_path}"
+    #     actual = f"{mount['host_path']}:{mount['container_path']}"
+    #     assert expected == actual

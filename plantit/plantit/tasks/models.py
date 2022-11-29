@@ -210,6 +210,9 @@ class BindMount(TypedDict):
     host_path: str
     container_path: str
 
+    def __repr__(self):
+        return f"{self.host_path}:{self.container_path}"
+
 
 class Parameter(TypedDict):
     key: str
