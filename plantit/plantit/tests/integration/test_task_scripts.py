@@ -9,6 +9,7 @@ from plantit.users.models import Profile
 from plantit.tokens import TerrainToken
 from plantit.task_lifecycle import create_immediate_task
 from plantit.task_scripts import compose_singularity_invocation
+from plantit.tasks.models import BindMount
 
 
 class TaskLifecycleTests(TestCase):

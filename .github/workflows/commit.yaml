@@ -3,9 +3,16 @@ on:
   push:
     branches:
       - master
+      - develop*
+      - patch*
+  pull_request:
+    branches:
+      - master
+      - develop
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2

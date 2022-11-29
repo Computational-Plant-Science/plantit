@@ -218,6 +218,10 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
         no_cache = options['no_cache'] if 'no_cache' in options else False
         shell = options['shell'] if 'shell' in options else None
 
+        # for any bind mounts, create eponymous subdirectories of the working directory
+        for mount in bind_mounts:
+            commands.append(f"mkdir -p {mount['host_path']}")
+
         if 'input' in options:
             input_kind = options['input']['kind']
             input_dir_name = options['input']['path'].rpartition('/')[2]

@@ -13,14 +13,8 @@ from plantit.tasks.models import Task, BindMount
 logger = logging.getLogger(__name__)
 
 
-def format_bind_mount(workdir: str, bind_mount: BindMount) -> str:
-    return bind_mount['host_path'] + ':' + bind_mount['container_path'] if bind_mount['host_path'] != '' else workdir + ':' + bind_mount[
-        'container_path']
-
-
-def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:
-    split = bind_mount.rpartition(':')
-    return BindMount(host_path=split[0], container_path=split[2]) if len(split) > 0 else BindMount(host_path=workdir, container_path=bind_mount)
+def format_bind_mount(bind_mount: BindMount) -> str:
+    return bind_mount['host_path'] + ':' + bind_mount['container_path']
 
 
 def get_task_orchestrator_log_file_name(task: Task):
