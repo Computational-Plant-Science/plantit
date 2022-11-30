@@ -104,7 +104,7 @@ def compose_pull_headers(task: Task) -> List[str]:
 
 
 def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = []
+    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
 
     # job arrays may cause an invalid singularity cache due to lots of simultaneous pulls of the same image...
     # just pull it once ahead of time so it's already cached
@@ -196,7 +196,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 
 
 def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = []
+    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
 
     # if this agent uses TACC's launcher, use a parameter sweep script
     if task.agent.launcher:
@@ -285,7 +285,7 @@ def compose_push_headers(task: Task) -> List[str]:
 
 
 def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = []
+    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
 
     # create staging directory
     staging_dir = f"{task.guid}_staging"
