@@ -17,10 +17,11 @@ from rest_framework.decorators import api_view
 
 import plantit.queries as q
 from plantit.sns import SnsClient
+from plantit.ssh import get_agent_ssh_client
 from plantit import settings
 from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs, test_results, test_push, unshare_data, tidy_up
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
+from plantit.task_resources import push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TaskStatus, DelayedTask, RepeatingTask, TriggeredTask
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, \
     get_job_log_file_path, \
@@ -142,7 +143,7 @@ def get_task(request, guid):
 #     except:
 #         return HttpResponseNotFound()
 #
-#     ssh = get_task_ssh_client(task, auth)
+#     ssh = get_agent_ssh_client(agent)
 #     workdir = join(task.agent.workdir, task.workdir)
 #
 #     with tempfile.NamedTemporaryFile() as temp_file:
@@ -172,7 +173,7 @@ def download_output_file(request, guid):
 
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
-    ssh = get_task_ssh_client(task)
+    ssh = get_agent_ssh_client(task.agent)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:

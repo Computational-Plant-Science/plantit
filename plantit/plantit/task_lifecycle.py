@@ -24,8 +24,8 @@ from plantit.agents.models import Agent
 from plantit.miappe.models import Investigation, Study
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
-from plantit.ssh import SSH, execute_command
-from plantit.task_resources import get_task_ssh_client, log_task_status, push_task_channel_event
+from plantit.ssh import SSH, execute_command, get_agent_ssh_client
+from plantit.task_resources import log_task_status, push_task_channel_event
 from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script, compose_report_script
 from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
     EnvironmentVariable, Parameter, \
@@ -431,7 +431,7 @@ def cancel_task(task: Task):
         task.save()
 
         # cancel any jobs associated with the task
-        ssh = get_task_ssh_client(task)
+        ssh = get_agent_ssh_client(task.agent)
         with ssh:
             lines = []
             for line in execute_command(
@@ -488,7 +488,7 @@ def check_job_logs_for_progress(task: Task):
     retry=(retry_if_exception_type(AuthenticationException) | retry_if_exception_type(AuthenticationException) | retry_if_exception_type(ChannelException) | retry_if_exception_type(NoValidConnectionsError) | retry_if_exception_type(SSHException)),
     reraise=True)
 def get_job_status_and_walltime(task: Task):
-    ssh = get_task_ssh_client(task)
+    ssh = get_agent_ssh_client(task.agent)
     status = None
     walltime = None
 
@@ -566,7 +566,7 @@ def list_result_files(task: Task) -> List[dict]:
 
     seen = []
     results = []
-    ssh = get_task_ssh_client(task)
+    ssh = get_agent_ssh_client(task.agent)
     zip_dir = join(task.agent.workdir, task.workdir, f"{task.guid}_staging")
     expected_names = get_output_included_names(task)
     expected_patterns = get_output_included_patterns(task)

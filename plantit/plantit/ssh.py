@@ -6,6 +6,9 @@ import paramiko
 from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
+from plantit.agents.models import Agent
+from plantit.keypairs import get_user_private_key_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -185,3 +188,20 @@ def execute_command(
 
     if stdout.channel.recv_exit_status() != 0: raise Exception(f"Received non-zero exit status from '{ssh.host}'")
     elif not allow_stderr and len(errors) > 0: raise Exception(f"Received stderr: {errors}")
+
+
+def get_agent_ssh_client(agent: Agent) -> SSH:
+    if agent.jump_hostname:
+        return SSH(
+            host=agent.hostname,
+            port=agent.port,
+            username=agent.username,
+            pkey=str(get_user_private_key_path(agent.user.username)),
+            jump_host=agent.jump_hostname,
+            jump_port=agent.jump_port)
+    else:
+        return SSH(
+            host=agent.hostname,
+            port=agent.port,
+            username=agent.username,
+            pkey=str(get_user_private_key_path(agent.user.username)))

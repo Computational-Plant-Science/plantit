@@ -31,10 +31,10 @@ from plantit.queries import refresh_user_workflow_cache, refresh_online_users_wo
     refresh_user_cyverse_tokens
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
-from plantit.ssh import execute_command
+from plantit.ssh import execute_command, get_agent_ssh_client
 from plantit.task_lifecycle import parse_task_options, create_immediate_task, upload_deployment_artifacts, submit_job_to_scheduler, \
     get_job_status_and_walltime, list_result_files, cancel_task, submit_pull_to_scheduler, submit_push_to_scheduler, submit_report_to_scheduler
-from plantit.task_resources import get_task_ssh_client, push_task_channel_event, log_task_status
+from plantit.task_resources import push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TriggeredTask, TaskStatus
 
 logger = get_task_logger(__name__)
@@ -154,7 +154,7 @@ def prep_environment(self, guid: str):
 
         # create working directory and upload deployment artifacts to agent
         work_dir = join(task.agent.workdir, task.guid)
-        ssh = get_task_ssh_client(task)
+        ssh = get_agent_ssh_client(task.agent)
         with ssh:
             for line in list(execute_command(ssh=ssh, setup_command=':', command=f"mkdir -v {work_dir}")): logger.info(line)
             upload_deployment_artifacts(task, ssh, options)
@@ -301,7 +301,7 @@ def submit_jobs(self, guid: str):
         parse_errors, options = parse_task_options(task)
         if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
-        ssh = get_task_ssh_client(task)
+        ssh = get_agent_ssh_client(task.agent)
         with ssh:
             job_ids = []
 
@@ -540,7 +540,7 @@ def test_results(self, guid: str):
 
     try:
         # get logs from agent filesystem
-        # ssh = get_task_ssh_client(task)
+        # ssh = get_agent_ssh_client(task.agent)
         # get_task_remote_logs(task, ssh)
 
         # get results from agent filesystem, then save them to cache and update the task
@@ -793,7 +793,7 @@ def tidy_up(guid: str):
 
         logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
         command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
-        ssh = get_task_ssh_client(task)
+        ssh = get_agent_ssh_client(task.agent)
         with ssh:
             for line in execute_command(ssh=ssh, setup_command=task.agent.pre_commands, command=command, directory=task.agent.workdir,
                                         allow_stderr=True):

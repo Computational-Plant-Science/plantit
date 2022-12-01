@@ -20,24 +20,6 @@ from plantit.utils.tasks import get_task_orchestrator_log_file_path, get_job_log
 logger = logging.getLogger(__name__)
 
 
-def get_task_ssh_client(task: Task) -> SSH:
-    agent = task.agent
-    if agent.jump_hostname:
-        return SSH(
-            host=agent.hostname,
-            port=agent.port,
-            username=agent.username,
-            pkey=str(get_user_private_key_path(agent.user.username)),
-            jump_host=agent.jump_hostname,
-            jump_port=agent.jump_port)
-    else:
-        return SSH(
-            host=agent.hostname,
-            port=agent.port,
-            username=agent.username,
-            pkey=str(get_user_private_key_path(agent.user.username)))
-
-
 async def push_task_channel_event(task: Task):
     user = await get_task_user(task)
     await get_channel_layer().group_send(f"{user.username}", {

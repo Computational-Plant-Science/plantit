@@ -8,10 +8,13 @@ from requests import RequestException, ReadTimeout, Timeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit.agents.models import Agent
-from plantit.ssh import SSH, execute_command
+from plantit.ssh import SSH, execute_command, get_agent_ssh_client
 from plantit.keypairs import get_user_private_key_path
 
 logger = logging.getLogger(__name__)
+
+
+
 
 
 @retry(
@@ -32,7 +35,7 @@ def is_healthy(agent: Agent) -> (bool, List[str]):
 
     output = []
     try:
-        ssh = SSH(host=agent.hostname, port=agent.port, username=agent.username, pkey=str(get_user_private_key_path(agent.user.username)))
+        ssh = get_agent_ssh_client(agent)
 
         try:
             with ssh:
