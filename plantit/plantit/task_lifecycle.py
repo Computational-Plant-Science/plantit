@@ -27,11 +27,11 @@ from plantit.sns import SnsClient
 from plantit.ssh import SSH, execute_command, get_agent_ssh_client
 from plantit.task_resources import log_task_status, push_task_channel_event
 from plantit.task_scripts import compose_job_script, compose_launcher_script, compose_push_script, compose_pull_script, compose_report_script
-from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, InputKind, \
+from plantit.tasks.models import DelayedTask, RepeatingTask, TriggeredTask, Task, TaskStatus, TaskCounter, TaskOptions, BindMount, InputKind, \
     EnvironmentVariable, Parameter, \
     Input
 from plantit.utils.tasks import parse_task_eta, parse_task_time_limit, parse_job_id, get_output_included_names, get_output_included_patterns, \
-    get_job_log_file_path, get_job_log_file_name, parse_bind_mount, parse_task_miappe_info
+    get_job_log_file_path, get_job_log_file_name, parse_task_miappe_info
 
 logger = logging.getLogger(__name__)
 
@@ -726,8 +726,10 @@ def parse_task_options(task: Task) -> (List[str], TaskOptions):
     if 'mount' in config:
         if not all(mount_point != '' for mount_point in config['mount']):
             errors.append('Every bind mount must be non-empty')
+        elif any(":" in mount_point for mount_point in config['mount']):
+            errors.append('Bind mounts must specify only the container path (host path is assigned automatically)')
         else:
-            mount = [parse_bind_mount(work_dir, mount_point) for mount_point in config['mount']]
+            mount = [BindMount(host_path=os.path.join(work_dir, mount_point.lstrip(os.path.sep)), container_path=mount_point) for mount_point in config['mount']]
 
     iterations = None
     if 'iterations' in config:
