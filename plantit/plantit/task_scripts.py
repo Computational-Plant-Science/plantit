@@ -69,6 +69,7 @@ def calculate_walltime(task: Task, options: TaskOptions, inputs: List[str]):
 
 def compose_pull_headers(task: Task) -> List[str]:
     headers = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # memory
     if not has_virtual_memory(task.agent):
@@ -97,14 +98,15 @@ def compose_pull_headers(task: Task) -> List[str]:
     headers.append(f"#SBATCH --mail-user={task.user.email}")
 
     # log files
-    headers.append("#SBATCH --output=plantit.%j.pull.out")
-    headers.append("#SBATCH --error=plantit.%j.pull.err")
+    headers.append(f"#SBATCH --output={join(workdir, 'plantit.%j.pull.out')}")
+    headers.append(f"#SBATCH --error={join(workdir, 'plantit.%j.pull.err')}")
 
     return headers
 
 
 def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
+    commands = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # job arrays may cause an invalid singularity cache due to lots of simultaneous pulls of the same image...
     # just pull it once ahead of time so it's already cached
@@ -123,7 +125,7 @@ def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     # singularity must be pre-authenticated on the agent, e.g. with `singularity remote login --username <your username> docker://docker.io`
     # also, if this is a job array, all jobs will invoke iget, but files will only be downloaded once (since we don't use -f for force)
     input_path = input['path']
-    workdir = join(task.agent.workdir, task.workdir, 'input')
+    workdir = join(workdir, 'input')
     icommands_image = f"docker://{settings.ICOMMANDS_IMAGE}"
     pull_data_command = f"singularity exec {icommands_image} iget -r {input_path} {workdir}"
     commands.append(pull_data_command)
@@ -137,6 +139,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
     if 'jobqueue' not in options: return []
     jobqueue = options['jobqueue']
     headers = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # memory
     if ('memory' in jobqueue or 'mem' in jobqueue) and not has_virtual_memory(task.agent):
@@ -187,8 +190,8 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
     headers.append(f"#SBATCH --mail-user={task.user.email}")
 
     # log files
-    headers.append("#SBATCH --output=plantit.%j.out")
-    headers.append("#SBATCH --error=plantit.%j.err")
+    headers.append(f"#SBATCH --output={join(workdir, 'plantit.%j.out')}")
+    headers.append(f"#SBATCH --error={join(workdir, 'plantit.%j.err')}")
 
     newline = '\n'
     logger.debug(f"Using headers: {newline.join(headers)}")
@@ -196,16 +199,16 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 
 
 def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
+    commands = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # if this agent uses TACC's launcher, use a parameter sweep script
     if task.agent.launcher:
-        commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}")
+        commands.append(f"export LAUNCHER_WORKDIR={workdir}")
         commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}")
         commands.append("$LAUNCHER_DIR/paramrun")
     # otherwise use SLURM job arrays
     else:
-        work_dir = options['workdir']
         image = options['image']
         command = options['command']
         env = options['env']
@@ -220,23 +223,23 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
 
         # for any bind mounts, create eponymous subdirectories of the working directory
         for mount in bind_mounts:
-            commands.append(f"mkdir -p {mount['host_path']}")
+            commands.append(f"mkdir -p {join(workdir, mount['host_path'])}")
 
         if 'input' in options:
             input_kind = options['input']['kind']
             input_dir_name = options['input']['path'].rpartition('/')[2]
 
             if input_kind == 'files' or input_kind == 'file':
-                input_path = join(options['workdir'], 'input', input_dir_name, '$file') if input_kind == 'files' else join(options['workdir'], 'input', '$file')
+                input_path = join(workdir, 'input', input_dir_name, '$file') if input_kind == 'files' else join(workdir, 'input', '$file')
                 parameters = parameters + [Parameter(key='INPUT', value=input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')]
                 commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
             elif options['input']['kind'] == 'directory':
-                input_path = join(options['workdir'], 'input', input_dir_name)
+                input_path = join(workdir, 'input', input_dir_name)
                 parameters = parameters + [Parameter(key='INPUT', value=input_path)]
             else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
 
         commands = commands + compose_singularity_invocation(
-            work_dir=work_dir,
+            work_dir=workdir,
             image=image,
             commands=command,
             env=env,
@@ -253,6 +256,7 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
 
 def compose_push_headers(task: Task) -> List[str]:
     headers = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # memory
     if not has_virtual_memory(task.agent):
@@ -282,22 +286,23 @@ def compose_push_headers(task: Task) -> List[str]:
     headers.append(f"#SBATCH --mail-user={task.user.email}")
 
     # log files
-    headers.append("#SBATCH --output=plantit.%j.push.out")
-    headers.append("#SBATCH --error=plantit.%j.push.err")
+    headers.append(f"#SBATCH --output={join(workdir, 'plantit.%j.push.out')}")
+    headers.append(f"#SBATCH --error={join(workdir, 'plantit.%j.push.err')}")
 
     return headers
 
 
 def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
-    commands = [f"cd {join(task.agent.workdir, task.workdir)}"]
+    commands = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # create staging directory
-    staging_dir = f"{task.guid}_staging"
+    staging_dir = join(workdir, f"{task.guid}_staging")
     mkdir_command = f"mkdir -p {staging_dir}"
     commands.append(mkdir_command)
 
     # create zip directory
-    zip_dir = f"{task.guid}_zip"
+    zip_dir = join(workdir, f"{task.guid}_zip")
     mkdir_command = f"mkdir -p {zip_dir}"
     commands.append(mkdir_command)
 
@@ -307,17 +312,17 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     if 'include' in output:
         if 'names' in output['include']:
             for name in output['include']['names']:
-                commands.append(f"cp {name} {join(staging_dir, name)}")
+                commands.append(f"cp {join(workdir, name)} {join(staging_dir, name)}")
                 mv_zip_dir_command = mv_zip_dir_command + f"{name} "
         if 'patterns' in output['include']:
             for pattern in (list(output['include']['patterns'])):
-                commands.append(f"cp *.{pattern} {staging_dir}/")
-                mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
+                commands.append(f"cp *{join(workdir, pattern)}* {staging_dir}/")
+                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*{pattern}*")
             # include all scheduler log files in zip file
             for pattern in ['out', 'err']:
-                mv_zip_dir_command = mv_zip_dir_command + f"*.{pattern} "
+                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*.{pattern}")
     else: raise ValueError(f"No output filenames & patterns to include")
-    commands.append(mv_zip_dir_command)
+    commands.append(mv_zip_dir_command + " || echo 'No files to move'")
 
     # filter unwanted results from staging directory
     # TODO: can we do this in a single step with mv?
@@ -354,6 +359,7 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
 
 def compose_report_headers(task: Task) -> List[str]:
     headers = []
+    workdir = join(task.agent.workdir, task.workdir)
 
     # memory
     if not has_virtual_memory(task.agent):
@@ -381,8 +387,8 @@ def compose_report_headers(task: Task) -> List[str]:
     headers.append(f"#SBATCH --mail-user={task.user.email}")
 
     # log files
-    headers.append("#SBATCH --output=plantit.%j.report.out")
-    headers.append("#SBATCH --error=plantit.%j.report.err")
+    headers.append(f"#SBATCH --output={join(workdir, 'plantit.%j.report.out')}")
+    headers.append(f"#SBATCH --error={join(workdir, 'plantit.%j.report.err')}")
 
     return headers
 
@@ -441,8 +447,8 @@ def compose_report_script(task: Task) -> List[str]:
 
 
 def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
+    workdir = join(task.agent.workdir, task.workdir)
     lines: List[str] = []
-    work_dir = options['workdir']
     image = options['image']
     command = options['command']
     env = options['env']
@@ -461,9 +467,9 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
 
         if input_kind == 'files':
             for i, file_name in enumerate(inputs):
-                input_path = join(options['workdir'], 'input', input_dir_name, file_name)
+                input_path = join(workdir, 'input', input_dir_name, file_name)
                 lines = lines + compose_singularity_invocation(
-                    work_dir=work_dir,
+                    work_dir=workdir,
                     image=image,
                     commands=command,
                     env=env,
@@ -475,17 +481,17 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
                     index=i)
             return lines
         elif input_kind == 'directory':
-            input_path = join(options['workdir'], 'input', input_dir_name)
+            input_path = join(workdir, 'input', input_dir_name)
             parameters = parameters + [Parameter(key='INPUT', value=input_path)]
         elif input_kind == 'file':
-            input_path = join(options['workdir'], 'input', inputs[0])
+            input_path = join(workdir, 'input', inputs[0])
             parameters = parameters + [Parameter(key='INPUT', value=input_path)]
         else: raise ValueError(f"Unsupported \'input.kind\': {input_kind}")
     elif 'iterations' in options:
         iterations = options['iterations']
         for i in range(0, iterations):
             lines = lines + compose_singularity_invocation(
-                work_dir=work_dir,
+                work_dir=workdir,
                 image=image,
                 commands=command,
                 env=env,
@@ -498,7 +504,7 @@ def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str])
         return lines
 
     return lines + compose_singularity_invocation(
-        work_dir=work_dir,
+        work_dir=workdir,
         image=image,
         commands=command,
         env=env,
