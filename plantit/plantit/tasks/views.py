@@ -19,7 +19,7 @@ import plantit.queries as q
 from plantit.sns import SnsClient
 from plantit.ssh import get_agent_ssh_client
 from plantit import settings
-from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs, test_results, test_push, unshare_data, tidy_up
+from plantit.celery_tasks import prep_environment, share_data, submit_jobs, poll_jobs, test_results, unshare_data, tidy_up
 from plantit.task_lifecycle import create_immediate_task, create_delayed_task, create_repeating_task, create_triggered_task, cancel_task
 from plantit.task_resources import push_task_channel_event, log_task_status
 from plantit.tasks.models import Task, TaskStatus, DelayedTask, RepeatingTask, TriggeredTask
@@ -521,7 +521,7 @@ def complete_task(task: Task, success: bool):
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
 
         # submit the outbound data transfer job
-        (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+        (test_results.s(task.guid) | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
         tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
     else:
         # mark the task failed and persist it

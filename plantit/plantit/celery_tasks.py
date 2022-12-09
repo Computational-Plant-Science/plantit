@@ -414,7 +414,7 @@ def poll_jobs(self, guid: str):
                     SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
 
                 # submit the outbound data transfer job
-                (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+                (test_results.s(task.guid) | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
                 tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
             # in either case, return early
@@ -458,7 +458,7 @@ def poll_jobs(self, guid: str):
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"plantit task {task.guid}", message, {})
 
-            (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
+            (test_results.s(task.guid) | unshare_data.s()).apply_async(soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
             tidy_up.s(task.guid).apply_async(countdown=int(environ.get('TASKS_CLEANUP_MINUTES')) * 60)
 
             return guid
@@ -842,7 +842,7 @@ def find_stranded():
             if (now - task.updated).total_seconds() > (5 * period):
                 if task.job_id is not None:
                     logger.warning(f"Checking stranded task: {task.guid}")
-                    (test_results.s(task.guid) | test_push.s() | unshare_data.s()).apply_async(
+                    (test_results.s(task.guid) | unshare_data.s()).apply_async(
                         soft_time_limit=int(settings.TASKS_STEP_TIME_LIMIT_SECONDS))
     finally:
         __release_lock(task_name)
