@@ -313,14 +313,14 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
         if 'names' in output['include']:
             for name in output['include']['names']:
                 commands.append(f"cp {join(workdir, name)} {join(staging_dir, name)}")
-                mv_zip_dir_command = mv_zip_dir_command + f"{name} "
+                mv_zip_dir_command = mv_zip_dir_command + join(staging_dir, name) + " "
         if 'patterns' in output['include']:
             for pattern in (list(output['include']['patterns'])):
                 commands.append(f"cp *{join(workdir, pattern)}* {staging_dir}/")
-                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*{pattern}*")
+                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*{pattern}*") + " "
             # include all scheduler log files in zip file
             for pattern in ['out', 'err']:
-                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*.{pattern}")
+                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*.{pattern}") + " "
     else: raise ValueError(f"No output filenames & patterns to include")
     commands.append(mv_zip_dir_command + " || echo 'No files to move'")
 
