@@ -338,7 +338,7 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     # zip results
     zip_name = f"{task.guid}.zip"
     zip_path = join(staging_dir, zip_name)
-    zip_command = f"zip -r {zip_path} {zip_dir}/*"
+    zip_command = f"zip -j -r {zip_path} {zip_dir}/*"
     commands.append(zip_command)
 
     # transfer contents of staging dir to CyVerse
