@@ -5,10 +5,10 @@ on:
       - master
       - develop*
       - patch*
-  pull_request:
-    branches:
-      - master
-      - develop
+  # pull_request:
+  #   branches:
+  #     - master
+  #     - develop
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,7 +42,6 @@ jobs:
           docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
         
       - name: Push Docker image
-        if: github.repository == 'Computational-Plant-Science/plantit'
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
