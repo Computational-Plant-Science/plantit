@@ -232,7 +232,7 @@ def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
             if input_kind == 'files' or input_kind == 'file':
                 input_path = join(workdir, 'input', input_dir_name, '$file') if input_kind == 'files' else join(workdir, 'input', '$file')
                 parameters = parameters + [Parameter(key='INPUT', value=input_path), Parameter(key='INDEX', value='$SLURM_ARRAY_TASK_ID')]
-                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {settings.INPUTS_FILE_NAME} | tail -1)")
+                commands.append(f"file=$(head -n $SLURM_ARRAY_TASK_ID {join(workdir, settings.INPUTS_FILE_NAME)} | tail -1)")
             elif options['input']['kind'] == 'directory':
                 input_path = join(workdir, 'input', input_dir_name)
                 parameters = parameters + [Parameter(key='INPUT', value=input_path)]
