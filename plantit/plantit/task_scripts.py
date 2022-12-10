@@ -107,6 +107,7 @@ def compose_pull_headers(task: Task) -> List[str]:
 def compose_pull_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
     workdir = join(task.agent.workdir, task.workdir)
+    commands.append(f"cd {workdir}")
 
     # job arrays may cause an invalid singularity cache due to lots of simultaneous pulls of the same image...
     # just pull it once ahead of time so it's already cached
@@ -201,6 +202,7 @@ def compose_job_headers(task: Task, options: TaskOptions, inputs: List[str]) -> 
 def compose_job_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
     workdir = join(task.agent.workdir, task.workdir)
+    commands.append(f"cd {workdir}")
 
     # if this agent uses TACC's launcher, use a parameter sweep script
     if task.agent.launcher:
@@ -295,6 +297,7 @@ def compose_push_headers(task: Task) -> List[str]:
 def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     commands = []
     workdir = join(task.agent.workdir, task.workdir)
+    commands.append(f"cd {workdir}")
 
     # create staging directory
     staging_dir = join(workdir, f"{task.guid}_staging")
@@ -302,27 +305,39 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     commands.append(mkdir_command)
 
     # create zip directory
-    zip_dir = join(workdir, f"{task.guid}_zip")
+    zip_dir = join(staging_dir, f"{task.guid}_zip")
     mkdir_command = f"mkdir -p {zip_dir}"
     commands.append(mkdir_command)
 
-    # move results into staging and zip directories
-    mv_zip_dir_command = f"mv -t {zip_dir} "
+    # copy output files to staging directory
     output = options['output']
     if 'include' in output:
+        cp_cmd = f"cp -t "
+
+        # exact matches
         if 'names' in output['include']:
             for name in output['include']['names']:
-                commands.append(f"cp {join(workdir, name)} {join(staging_dir, name)}")
-                mv_zip_dir_command = mv_zip_dir_command + join(staging_dir, name) + " "
+                path = join(workdir, name)
+                trap_msg = f"echo 'No included names to move'"
+                commands.append(f"{cp_cmd} {staging_dir} {path} || {trap_msg}")
+                commands.append(f"{cp_cmd} {zip_dir} {path} || {trap_msg}")
+
+        # glob matches
         if 'patterns' in output['include']:
             for pattern in (list(output['include']['patterns'])):
-                commands.append(f"cp *{join(workdir, pattern)}* {staging_dir}/")
-                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*{pattern}*") + " "
-            # include all scheduler log files in zip file
-            for pattern in ['out', 'err']:
-                mv_zip_dir_command = mv_zip_dir_command + join(workdir, f"*.{pattern}") + " "
-    else: raise ValueError(f"No output filenames & patterns to include")
-    commands.append(mv_zip_dir_command + " || echo 'No files to move'")
+                pattern = join(workdir, f"**{pattern}*")
+                trap_msg = f"echo 'No included patterns to move'"
+                commands.append(f"{cp_cmd} {staging_dir} {pattern} || {trap_msg}")
+                commands.append(f"{cp_cmd} {zip_dir} {pattern} || {trap_msg}")
+
+        # include all scheduler log files in zip file
+        for pattern in ['out', 'err']:
+            pattern = join(workdir, f"**{pattern}*")
+            trap_msg = f"echo 'No log files to move'"
+            commands.append(f"{cp_cmd} {staging_dir} {pattern} || {trap_msg}")
+            commands.append(f"{cp_cmd} {zip_dir} {pattern} || {trap_msg}")
+    else:
+        raise ValueError(f"No outputs specified")
 
     # filter unwanted results from staging directory
     # TODO: can we do this in a single step with mv?
@@ -340,6 +355,9 @@ def compose_push_commands(task: Task, options: TaskOptions) -> List[str]:
     zip_path = join(staging_dir, zip_name)
     zip_command = f"zip -j -r {zip_path} {zip_dir}/*"
     commands.append(zip_command)
+
+    # remove zip dir
+    commands.append(f"rm -rf {zip_dir}")
 
     # transfer contents of staging dir to CyVerse
     to_path = output['to']
