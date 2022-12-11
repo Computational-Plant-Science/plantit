@@ -509,6 +509,7 @@ def complete_task(task: Task, success: bool):
         # update the task and persist it
         now = timezone.now()
         task.updated = now
+        task.completed = now
         task.job_status = TaskStatus.COMPLETED
         task.save()
 
