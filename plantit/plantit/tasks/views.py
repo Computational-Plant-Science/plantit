@@ -510,7 +510,8 @@ def complete_task(task: Task, success: bool):
         now = timezone.now()
         task.updated = now
         task.completed = now
-        task.job_status = TaskStatus.COMPLETED
+        task.job_status = "COMPLETED"
+        task.status = TaskStatus.COMPLETED
         task.save()
 
         # log status to file and push to client(s)
