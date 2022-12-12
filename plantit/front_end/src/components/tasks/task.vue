@@ -1111,7 +1111,7 @@
                     </b-row>
                     <b-card
                         class="mt-2"
-                        v-if="getTask.is_complete && getTask.transferred"
+                        v-if="getTask.is_complete"
                         :bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         border-variant="default"
