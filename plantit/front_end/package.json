@@ -18,7 +18,7 @@
     "bootstrap-vue": "^2.21.2",
     "chai": "^4.3.4",
     "core-js": "^2.6.12",
-    "cron-parser": "^3.5.0",
+    "cron-parser": "^4.7.0",
     "cronstrue": "^1.114.0",
     "dcrf-client": "^0.3.0",
     "elliptic": "^6.5.4",
