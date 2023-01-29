@@ -13,7 +13,7 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
-from pycyapi.clients import TerrainClient
+from pycyapi.cyverse.clients import CyverseClient
 
 import plantit.healthchecks
 import plantit.mapbox
@@ -94,7 +94,7 @@ def create_and_submit_triggered(username, workflow, triggered_id: str = None):
         return
 
     # check if the data have changed since last time we checked
-    client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+    client = CyverseClient(access_token=task.user.profile.cyverse_access_token)
     modified = datetime.fromtimestamp(int(str(client.stat(path=task.path)['date-modified']).strip("0")))
 
     # if the data haven't changed, nothing to do
@@ -245,7 +245,7 @@ def share_data(self, guid: str):
                 })
 
         # share the user's source and target collections with the plantit CyVerse user
-        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        client = CyverseClient(access_token=task.user.profile.cyverse_access_token)
         client.share_many(username=settings.CYVERSE_USERNAME, paths=paths)
 
         # log_task_status(task, [f"Granted temporary data access"])
@@ -615,7 +615,7 @@ def test_push(self, guid: str):
         # check the expected filenames against the contents of the CyVerse collection
         path = task.workflow['output']['to']
 
-        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        client = CyverseClient(access_token=task.user.profile.cyverse_access_token)
         actual = [file['path'].rpartition('/')[2] for file in client.list_files(path)]
         expected = [file['name'] for file in json.loads(RedisClient.get().get(f"results/{task.guid}")) if file['exists']]
         newline = '\n'
@@ -733,7 +733,7 @@ def unshare_data(self, guid: str):
             paths.append(options['input']['path'])
 
         # revoke the plantit CyVerse user's access to the source and target collections
-        client = TerrainClient(access_token=task.user.profile.cyverse_access_token)
+        client = CyverseClient(access_token=task.user.profile.cyverse_access_token)
         client.unshare_many(username=task.user.username, paths=paths)
 
         # log_task_status(task, [f"Revoked temporary data access"])
@@ -1046,7 +1046,7 @@ def transfer_dirt_file(self, id):
     logger.info(f"Uploading file from {file.staging_path} to collection {file.collection}")
 
     # create client for CyVerse APIs and create collection for migrated DIRT data
-    client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
+    client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
     client.upload(from_path=file.staging_path, to_prefix=file.collection)  # upload the file to the corresponding collection
 
     # persist managed file record
@@ -1098,7 +1098,7 @@ def start_dirt_migration(self, username: str):
     Path(staging_dir).mkdir(parents=True, exist_ok=True)
 
     # create client for CyVerse science API
-    client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
+    client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
     migration_collection_path = f"/iplant/home/{user.username}/dirt_migration"
     if client.dir_exists(migration_collection_path):
         logger.warning(f"Collection {migration_collection_path} already exists, aborting DIRT migration for {user.username}")
@@ -1290,7 +1290,7 @@ def start_dirt_migration(self, username: str):
 #         return
 #
 #     # create client for CyVerse APIs and create collection for migrated DIRT data
-#     client = TerrainClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
+#     client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
 #     root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
 #
 #     # get ID of newly created migration collection add collection timestamp as metadata
@@ -1327,7 +1327,7 @@ def setup_periodic_tasks(sender, **kwargs):
     hourly = crontab(day_of_week="*", hour="*", minute=0)
 
     sender.add_periodic_task(daily, refresh_user_institutions.s(), name='refresh user institutions')
-    sender.add_periodic_task(hourly, refresh_all_users_stats.s(), name='refresh user statistics')
+    # sender.add_periodic_task(hourly, refresh_all_users_stats.s(), name='refresh user statistics')
     sender.add_periodic_task(hourly, agents_healthchecks.s(), name='check agent connections')
     sender.add_periodic_task(hourly, refresh_all_workflows.s(), name='refresh workflows cache')
 

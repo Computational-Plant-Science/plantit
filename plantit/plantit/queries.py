@@ -19,11 +19,11 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from django.utils import timezone
 
-from pycyapi.clients import TerrainClient
+from pycyapi.cyverse.clients import CyverseClient
 
 import plantit.migration
 import plantit.migration as migration
-from pycyapi.exceptions import Unauthorized
+from pycyapi.cyverse.exceptions import Unauthorized
 import plantit.mapbox as mapbox
 from plantit import github as github
 from plantit import loess as loess
@@ -531,7 +531,7 @@ def list_user_projects(user: User):
 
 
 def get_user_cyverse_profile(user: User) -> dict:
-    client = TerrainClient(user.profile.cyverse_access_token)
+    client = CyverseClient(user.profile.cyverse_access_token)
     profile = client.user_info(user.username)
     if profile is None: raise ValueError(f"User {user.username} has no CyVerse profile")
 
@@ -560,7 +560,7 @@ def refresh_user_cyverse_tokens(user: User):
         return
 
     try:
-        client = TerrainClient(user.profile.cyverse_access_token)
+        client = CyverseClient(user.profile.cyverse_access_token)
         access_token, refresh_token = client.refresh_tokens(
             username=user.username,
             client_id=settings.CYVERSE_CLIENT_ID,

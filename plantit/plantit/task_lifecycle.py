@@ -18,7 +18,7 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTasks
 from paramiko.ssh_exception import AuthenticationException, ChannelException, NoValidConnectionsError, SSHException
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
-from pycyapi.clients import TerrainClient
+from pycyapi.cyverse.clients import CyverseClient
 from plantit import docker as docker
 from plantit.agents.models import Agent
 from plantit.miappe.models import Investigation, Study
@@ -79,7 +79,6 @@ def create_immediate_task(user: User, config: dict):
         name=guid if name is None or name == '' else name,
         user=user,
         workflow=workflow,
-        transfer_path=workflow['output']['to'],
         workflow_owner=repo_owner,
         workflow_name=repo_name,
         workflow_branch=repo_branch,
@@ -201,7 +200,7 @@ def create_triggered_task(user: User, config: dict):
 
     # check when the path was last modified
     watch_path = config['workflow']['input']['path']
-    client = TerrainClient(access_token=user.profile.cyverse_access_token)
+    client = CyverseClient(access_token=user.profile.cyverse_access_token)
     modified = datetime.fromtimestamp(int(str(client.stat(path=watch_path)['date-modified']).strip("0")))
 
     task, created = TriggeredTask.objects.get_or_create(
@@ -241,7 +240,7 @@ def upload_deployment_artifacts(task: Task, ssh: SSH, options: TaskOptions):
         kind = options['input']['kind']
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
-        client = TerrainClient(token)
+        client = CyverseClient(token)
         inputs = [client.stat(path)['path'].rpartition('/')[2]] if kind == InputKind.FILE else [f['label'] for f in client.list_files(path)]
     else: inputs = []
 
@@ -343,7 +342,7 @@ def submit_job_to_scheduler(task: Task, ssh: SSH, pull_id: str) -> str:
         kind = options['input']['kind']
         path = options['input']['path']
         token = task.user.profile.cyverse_access_token
-        client = TerrainClient(token)
+        client = CyverseClient(token)
         inputs = [client.stat(path)['path'].rpartition('/')[2]] if kind == InputKind.FILE else [f['label'] for f in client.list_files(path)]
 
     # setup command
