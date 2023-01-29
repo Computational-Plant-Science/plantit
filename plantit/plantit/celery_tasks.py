@@ -1133,6 +1133,7 @@ def start_dirt_migration(self, username: str):
     for file in image_files:
         # get file entity ID given root image file ID
         file_entity_id = mig.get_file_entity_id(file.id)
+        file.entity_id = file_entity_id
 
         # if no corresponding file entity for this managed file, skip it
         if file_entity_id is None:
@@ -1206,6 +1207,8 @@ def start_dirt_migration(self, username: str):
                                               orphan=file.orphan,
                                               missing=file.missing,
                                               uploaded=file.uploaded,
+                                              entity_id=file.file_entity_id,
+                                              collection_entity_id=file.collection_entity_id,
                                               nfs_path=join(rootnfs_dir, 'root-images', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
     for file in metadata_files:

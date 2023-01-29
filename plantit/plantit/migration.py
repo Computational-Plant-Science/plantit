@@ -71,8 +71,8 @@ class ManagedFile(NamedTuple):
     orphan: bool
     missing: bool
     uploaded: Optional[str]
-    entity_id: str
-    collection_entity_id: str
+    entity_id: Optional[str]
+    collection_entity_id: Optional[str]
 
 
 def row_to_managed_file(row):
@@ -94,7 +94,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            path=path.replace('public://', ''),
+            nfs_path=path.replace('public://', ''),
             type='metadata',
             folder=path.rpartition('metadata-files')[2].replace(name, '').replace('/', ''),
             orphan=False,
@@ -105,7 +105,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            path=path.replace('public://', ''),
+            nfs_path=path.replace('public://', ''),
             type='output',
             folder=folder,
             orphan=False,
@@ -115,7 +115,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            path=path.replace('public://', ''),
+            nfs_path=path.replace('public://', ''),
             type='logs',
             folder=path.rpartition('output-logs')[2].replace(name, '').replace('/', ''),
             orphan=False,
