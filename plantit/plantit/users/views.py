@@ -22,7 +22,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from databases import Database
-from pycyapi.clients import TerrainClient
+from pycyapi.cyverse.clients import CyverseClient
 
 import plantit.queries as q
 import plantit.migration as mig
@@ -393,7 +393,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         migration, created = Migration.objects.get_or_create(profile=profile)
 
         # make sure a `dirt_migration` collection doesn't already exist
-        client = TerrainClient(access_token=profile.cyverse_access_token)
+        client = CyverseClient(access_token=profile.cyverse_access_token)
         root_collection_path = f"/iplant/home/{user.username}/dirt_migration"
         if client.dir_exists(root_collection_path):
             self.logger.warning(f"Collection {root_collection_path} already exists, aborting DIRT migration for {user.username}")

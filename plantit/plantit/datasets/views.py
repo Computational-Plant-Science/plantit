@@ -13,7 +13,7 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from pycyapi.clients import TerrainClient, AsyncTerrainClient
+from pycyapi.cyverse.clients import CyverseClient, AsyncCyverseClient
 
 import plantit.queries as q
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
@@ -54,7 +54,7 @@ async def shared(request):
 
     policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
     paths = [policy.path for policy in policies]
-    client = AsyncTerrainClient(request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    client = AsyncCyverseClient(request.user.profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
     dirs = await client.get_dirs_async(paths)
     return JsonResponse({'datasets': [dir for dir in dirs]})
 
@@ -111,7 +111,7 @@ async def share(request):
         })
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    client = AsyncCyverseClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
     await client.share_async(body)
 
     policies = await sync_to_async(DatasetAccessPolicy.objects.filter)(owner=request.user)
@@ -176,7 +176,7 @@ async def unshare(request):
     })
 
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    client = AsyncCyverseClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
     await client.unshare_async(body)
 
     await sync_to_async(policy.delete)()
@@ -207,6 +207,6 @@ async def create(request):
     body = json.loads(request.body.decode('utf-8'))
     path = body['path']
     profile = await sync_to_async(Profile.objects.get)(user=owner)
-    client = AsyncTerrainClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
+    client = AsyncCyverseClient(profile.cyverse_access_token, int(settings.HTTP_TIMEOUT))
     await client.mkdir_async(path)
     return JsonResponse({'path': path})
