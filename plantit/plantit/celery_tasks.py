@@ -1133,7 +1133,7 @@ def start_dirt_migration(self, username: str):
     for file in image_files:
         # get file entity ID given root image file ID
         file_entity_id = mig.get_file_entity_id(file.id)
-        file.entity_id = file_entity_id
+        file._replace(entity_id=file_entity_id)
 
         # if no corresponding file entity for this managed file, skip it
         if file_entity_id is None:
@@ -1145,9 +1145,10 @@ def start_dirt_migration(self, username: str):
 
         # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
         if collection_entity_id is None:
-            logger.warning(f"DIRT root image collection with entity ID {file_entity_id} not found")
+            logger.warning(f"DIRT root image collection with entity ID {collection_entity_id} not found")
 
             # create the collection if we need to
+            collection_name = file.folder
             collection_path = join(migration_collection_path, 'collections', file.folder)
             if file.folder not in collections_created:
                 # mark this collection as seen
@@ -1156,10 +1157,10 @@ def start_dirt_migration(self, username: str):
                 # create the collection in the data store
                 logger.info(f"Creating DIRT migration subcollection {collection_path}")
                 client.mkdir(collection_path)
-
-        # otherwise we have a corresponding marked collection, get its title
-        collection_name, collection_created, collection_changed = mig.get_marked_collection(collection_entity_id)
-        collection_path = join(migration_collection_path, 'collections', collection_name)
+        else:
+            # otherwise we have a corresponding marked collection, get its title
+            collection_name, collection_created, collection_changed = mig.get_marked_collection(collection_entity_id)
+            collection_path = join(migration_collection_path, 'collections', collection_name)
 
         if collection_name not in collections_created:
             collections_created.add(collection_name)
@@ -1171,7 +1172,7 @@ def start_dirt_migration(self, username: str):
             # get CyVerse ID of newly created collection
             stat = client.stat(collection_path)
             id = stat['id']
-            file.collection_datastore_id = id
+            file._replace(collection_datastore_id=id)
 
             # get metadata and environmental data and attach to file
             metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(
@@ -1195,8 +1196,8 @@ def start_dirt_migration(self, username: str):
             client.set_metadata(id, props, [])
 
         # persist collection information on managed file record
-        file.collection = collection_name
-        file.collection_entity_id = collection_entity_id
+        file._replace(collection=collection_name)
+        file._replace(collection_entity_id=collection_entity_id)
 
         # create managed file record
         file_rec = ManagedFile.objects.create(migration=migration,
@@ -1207,7 +1208,7 @@ def start_dirt_migration(self, username: str):
                                               orphan=file.orphan,
                                               missing=file.missing,
                                               uploaded=file.uploaded,
-                                              entity_id=file.file_entity_id,
+                                              entity_id=file.entity_id,
                                               collection_entity_id=file.collection_entity_id,
                                               nfs_path=join(rootnfs_dir, 'root-images', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))

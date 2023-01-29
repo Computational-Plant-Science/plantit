@@ -64,15 +64,17 @@ async def push_migration_event(user: User, migration: Migration, file: plantit.u
 class ManagedFile(NamedTuple):
     id: str
     name: str
-    nfs_path: str
     path: str
     type: str
     folder: str
     orphan: bool
     missing: bool
     uploaded: Optional[str]
-    entity_id: Optional[str]
-    collection_entity_id: Optional[str]
+    nfs_path: Optional[str] = None
+    entity_id: Optional[str] = None
+    collection: Optional[str] = None
+    collection_entity_id: Optional[str] = None
+    collection_datastore_id: Optional[str] = None
 
 
 def row_to_managed_file(row):
@@ -94,7 +96,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            nfs_path=path.replace('public://', ''),
+            path=path.replace('public://', ''),
             type='metadata',
             folder=path.rpartition('metadata-files')[2].replace(name, '').replace('/', ''),
             orphan=False,
@@ -105,7 +107,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            nfs_path=path.replace('public://', ''),
+            path=path.replace('public://', ''),
             type='output',
             folder=folder,
             orphan=False,
@@ -115,7 +117,7 @@ def row_to_managed_file(row):
         return ManagedFile(
             id=fid,
             name=name,
-            nfs_path=path.replace('public://', ''),
+            path=path.replace('public://', ''),
             type='logs',
             folder=path.rpartition('output-logs')[2].replace(name, '').replace('/', ''),
             orphan=False,
