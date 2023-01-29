@@ -347,3 +347,38 @@ To build the `sphinx` documentation locally, use:
 ```shell
 docker run -v $(pwd):/opt/dev -w /opt/dev computationalplantscience/plantit sphinx-build -b html docs docs_output
 ```
+
+### Testing DIRT migrations
+
+The DIRT migration feature allows users of the original [DIRT](http://dirt.cyverse.org/) web application to migrate their data to `plantit`. To test this feature, you will need to have access to the DIRT server and database. The following environment variables must be set:
+
+- `DIRT_MIGRATION_DATA_DIR`: the directory on the DIRT server where DIRT data is stored
+- `DIRT_MIGRATION_HOST`: the hostname of the DIRT server
+- `DIRT_MIGRATION_PORT`: the SSH port of the DIRT server
+- `DIRT_MIGRATION_USERNAME`: the SSH username for the DIRT server
+- `DIRT_MIGRATION_DB_HOST`: the hostname of the DIRT database server
+- `DIRT_MIGRATION_DB_PORT`: the port of the DIRT database server
+- `DIRT_MIGRATION_DB_USER`: the username of the DIRT database user
+- `DIRT_MIGRATION_DB_DATABASE`: the name of the DIRT database
+- `DIRT_MIGRATION_DB_PASSWORD`: the DIRT database password
+
+An SSH tunnel must also be opened to the DIRT server, as the database is not open to external connections. For instance, to open a tunnel from port 5678 on the DIRT server to port 3306 on a development machine:
+
+```shell
+ssh -L 3306:localhost:3306 -p 5678 <your cyverse username>@<DIRT server IP or FQDN>
+```
+
+On some Linux systems it may be necessary to:
+- substitute the loopback IP address `127.0.0.1` for `localhost`
+
+Be sure to set `DIRT_MIGRATION_DB_HOST=host.docker.internal` to point the Docker containers to the host's loopback/localhost address.
+
+Some extra configuration is necessary for Linux systems to allow containers to access services running on the local host. The `docker-compose.dev.yml` configuration file configures the `plantit`, `celery`, and `celerye` containers with the `extra_hosts` option:
+
+```yaml
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+```
+
+This is only necessary on Linux systems. On Mac and Windows, the `host.docker.internal` hostname is automatically configured. See [this post](https://stackoverflow.com/a/43541732/6514033) for more information.
+

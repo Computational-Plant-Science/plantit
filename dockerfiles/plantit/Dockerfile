@@ -5,7 +5,9 @@ RUN apt-get -y update && apt-get install -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
+    default-mysql-client \
     openssh-client \
+    iputils-ping \
     sshpass \
     curl \
     vim \
@@ -35,4 +37,3 @@ RUN chmod +x scripts/ssh-copy-id.expect
 RUN chmod +x scripts/wait-for-it.sh
 RUN chmod +x scripts/wait-for-postgres.sh
 RUN pip3 install coveralls
-
