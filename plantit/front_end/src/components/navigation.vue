@@ -173,26 +173,6 @@
                     ></b-nav-item>
                     <b-row align-v="center" class="pl-3 pr-3">
                         <b-nav-item
-                            title="about"
-                            to="/about"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i
-                                    class="fas fa-question-circle fa-1x fa-fw"
-                                ></i>
-                                About</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
                             title="docs"
                             class="mr-1"
                             href="/apis/v1/swagger/"
@@ -249,24 +229,6 @@
                                 GitHub</span
                             >
                         </b-nav-item>
-                        <b-nav-item
-                            class="mr-1"
-                            to="/stats"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
-                                Stats</span
-                            ></b-nav-item
-                        >
                         <b-nav-item
                             class="mr-1"
                             title="status"
@@ -1110,16 +1072,6 @@ export default {
     created: async function () {
         this.crumbs = this.$route.meta.crumb;
 
-        // no need to load all user data if we're in the about or stats view
-        if (this.$route.name === 'about' || this.$route.name === 'stats') {
-            await Promise.all([
-                this.getVersion(),
-                this.$store.dispatch('workflows/loadPublic'),
-                // this.$store.dispatch('datasets/loadPublic'),
-            ]);
-            return;
-        }
-
         let begin = Date.now();
         console.log(begin);
 
@@ -1278,7 +1230,6 @@ export default {
                         'user/setPushNotifications',
                         response.data.django_profile.push_notifications
                     );
-                    this.$store.dispatch('user/setStats', response.data.stats);
                     this.$store.dispatch(
                         'user/setDirtMigration',
                         response.data.migration

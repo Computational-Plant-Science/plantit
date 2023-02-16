@@ -6,7 +6,7 @@
             <b-row>
                 <b-col class="text-center"
                     ><h4
-                        :class="profile.darkMode ? 'text-white' : 'text-theme'"
+                        class="text-white"
                         style="text-decoration: underline; z-index: 100"
                     >
                         <b-img
@@ -31,7 +31,7 @@
                 </b-col>
             </b-row>
             <br />
-            <b-row class="lightlinks"
+            <b-row class="text-light lightlinks"
                 ><b-col>
                     <p>
                         <b-img
@@ -197,9 +197,7 @@
             <br />
             <b-row class="text-center">
                 <b-col>
-                    <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Project Team
-                    </h5>
+                    <h5 class="text-light">Development Team</h5>
                 </b-col></b-row
             >
             <br />
@@ -207,222 +205,50 @@
                 <b-col class="justify-content-md-center">
                     <b-card-group deck columns>
                         <b-card
+                            v-for="contrib in currentContributors"
+                            v-bind:key="contrib.name"
                             class="text-center mb-4"
                             style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            bg-variant="dark"
                             border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
+                            footer-bg-variant="dark"
+                            footer-border-variant="default"
                         >
                             <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Alexander Bucksch
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Principal Investigator</b
-                                >
+                                <h5 class="text-white">{{ contrib.name }}</h5>
+                                <!--<b class="text-white">{{ contrib.role }}</b>-->
                             </template>
                             <template
                                 v-slot:footer
                                 style="background-color: white"
                             >
                                 <b-button
+                                    size="sm"
                                     variant="outline-dark"
-                                    href="https://github.com/koalaspirit"
+                                    :href="`https://github.com/${contrib.github_username}`"
                                     class="mr-2 p-2"
                                 >
-                                    <i class="fab fa-github fa-2x success"></i>
+                                    <i class="fab fa-github fa-2x text-warning"></i>
                                 </b-button>
                                 <b-button
+                                    size="sm"
                                     variant="outline-dark"
-                                    href="https://www.researchgate.net/profile/Alexander_Bucksch"
+                                    :href="`https://www.researchgate.net/profile/${contrib.researchgate_username}`"
                                     class="mr-2 p-2"
                                 >
                                     <i
-                                        class="fab fa-researchgate fa-2x success"
+                                        class="fab fa-researchgate fa-2x text-warning"
                                     ></i>
                                 </b-button>
                                 <b-button
+                                    size="sm"
+                                    v-if="contrib.linkedin_username"
                                     variant="outline-dark"
-                                    href="https://www.linkedin.com/in/abucksch/"
+                                    :href="`https://www.linkedin.com/in/${contrib.linkedin_username}/`"
                                     class="mr-2 p-2"
                                 >
                                     <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center mb-4"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                            ><template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Suxing Liu
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Algorithm Developer</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://github.com/lsx1980"
-                                >
-                                    <i class="fab fa-github fa-2x success"></i>
-                                </b-button>
-                                <b-button
-                                    variant="outline-dark"
-                                    class="mr-2 p-2"
-                                    href="https://www.researchgate.net/profile/Suxing-Liu-2"
-                                >
-                                    <i
-                                        class="fab fa-researchgate fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center mb-4"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                        >
-                            <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Wes Bonelli
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Platform Developer</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://github.com/w-bonelli"
-                                >
-                                    <i class="fab fa-github fa-2x success"></i>
-                                </b-button>
-                                <b-button
-                                    variant="outline-dark"
-                                    class="mr-2 p-2"
-                                    href="https://www.researchgate.net/profile/Wes_Bonelli"
-                                >
-                                    <i
-                                        class="fab fa-researchgate fa-2x success"
-                                    ></i>
-                                </b-button>
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/wesley-bonelli/"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center mb-4"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                        >
-                            <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Obi Nnaduruaku
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Platform Developer</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://github.com/obi9999n"
-                                >
-                                    <i class="fab fa-github fa-2x success"></i>
-                                </b-button>
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/obi-nnaduruaku"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
+                                        class="fab fa-linkedin fa-2x text-warning"
                                     ></i>
                                 </b-button>
                             </template>
@@ -441,199 +267,24 @@
             >
             <br />
             <b-row class="justify-content-md-center mb-4">
-                <b-col>
+                <b-col class="justify-content-md-center">
                     <b-card-group deck columns>
                         <b-card
-                            class="text-center"
+                            v-for="contrib in formerContributors"
+                            v-bind:key="contrib.name"
+                            class="text-center mb-4"
                             style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            bg-variant="dark"
                             border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
                         >
                             <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Chris Cotter
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Platform Developer</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    class="mr-2 p-2"
-                                    variant="outline-dark"
-                                    href="https://github.com/cottersci"
-                                >
-                                    <i class="fab fa-github fa-2x success"></i>
-                                </b-button>
-                                <b-button
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/crcotter/"
-                                    class="mr-2 p-2"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                        >
-                            <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Abhiram Das
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Platform Developer (DIRT)</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/abhiram-das-7a8b382/"
-                                    class="card-link"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                        >
-                            <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Megan Flory
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Graphic Design</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    variant="outline-dark"
-                                    href="https://github.com/meganflory"
-                                    class="mr-2 p-2"
-                                >
-                                    <i class="fab fa-github fa-2x success"></i>
-                                </b-button>
-                                <b-button
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/meganflory13/"
-                                    class="mr-2 p-2"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
-                            </template>
-                        </b-card>
-                        <b-card
-                            class="text-center"
-                            style="min-width: 10rem"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="transparent"
-                            :footer-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            footer-border-variant="white"
-                        >
-                            <template #default>
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    Maria Luck
-                                </h5>
-                                <b
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-white'
-                                            : 'text-dark'
-                                    "
-                                    >Graphic Design</b
-                                >
-                            </template>
-                            <template
-                                v-slot:footer
-                                style="background-color: white"
-                            >
-                                <b-button
-                                    variant="outline-dark"
-                                    href="https://www.linkedin.com/in/mariacpedrosa/"
-                                    class="mr-2 p-2"
-                                >
-                                    <i
-                                        class="fab fa-linkedin fa-2x success"
-                                    ></i>
-                                </b-button>
+                                <h5 class="text-white">{{ contrib.name }}</h5>
+                                <b class="text-white">{{ contrib.role }}</b>
                             </template>
                         </b-card>
                     </b-card-group>
+                    <br />
+                    <br />
                 </b-col>
             </b-row>
             <br />
@@ -665,11 +316,40 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'about',
+    data: function () {
+        return {
+            contributors: [],
+        };
+    },
+    created: async function () {
+        await this.loadContributors();
+    },
     computed: {
         ...mapGetters('user', ['profile']),
+        currentContributors() {
+            return this.contributors.filter((c) => !c.former);
+        },
+        formerContributors() {
+            return this.contributors.filter((c) => c.former);
+        },
+    },
+    methods: {
+        async loadContributors() {
+            await axios
+                .get('/apis/v1/misc/contributors/')
+                .then((response) => {
+                    this.contributors = response.data.contributors;
+                })
+                .catch((error) => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
     },
 };
 </script>

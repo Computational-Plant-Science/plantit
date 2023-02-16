@@ -34,7 +34,7 @@ from plantit.notifications.models import Notification
 from plantit.misc.models import NewsUpdate, FeaturedWorkflow
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TriggeredTask, TaskCounter, TaskStatus
-from plantit.users.models import Profile, Migration, ManagedFile
+from plantit.users.models import Contributor, Profile, Migration, ManagedFile
 from plantit.utils.misc import del_none
 from plantit.utils.tasks import get_task_orchestrator_log_file_path, has_output_target
 
@@ -1142,6 +1142,17 @@ async def get_user_statistics(user: User, invalidate: bool = False) -> dict:
         redis.set(f"stats/{user.username}", json.dumps(stats))
     else: stats = json.loads(cached)
     return stats
+
+
+def contributor_to_dict(contributor: Contributor):
+    return {
+        'name': contributor.name,
+        'role': contributor.role,
+        'former': contributor.former,
+        'github_username': contributor.github_username,
+        'researchgate_username': contributor.researchgate_username,
+        'linkedin_username': contributor.linkedin_username,
+    }
 
 
 def update_to_dict(update: NewsUpdate):

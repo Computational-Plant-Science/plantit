@@ -23,6 +23,15 @@ class Profile(models.Model):
     dirt_name = models.CharField(max_length=255, null=True, blank=True)
 
 
+class Contributor(models.Model):
+    name: str = models.CharField(max_length=255, blank=False)
+    role: str = models.CharField(max_length=255, blank=False)
+    former: bool = models.BooleanField(default=False)
+    github_username: str = models.CharField(max_length=255, blank=True, default='')
+    researchgate_username: str = models.CharField(max_length=255, blank=True, default='')
+    linkedin_username: str = models.CharField(max_length=255, blank=True, default='')
+
+
 class Migration(models.Model):
     profile: Profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     started = models.DateTimeField(null=True, blank=True)

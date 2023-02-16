@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from plantit.users.models import Profile, Migration
+from plantit.users.models import Contributor, Profile, Migration
 from plantit.misc.models import NewsUpdate, MaintenanceWindow, FeaturedWorkflow
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy
@@ -10,6 +10,11 @@ from plantit.miappe.models import Investigation, Study
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Contributor)
+class ContributorAdmin(admin.ModelAdmin):
     pass
 
 

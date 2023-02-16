@@ -2,7 +2,6 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import notfound from './components/not-found.vue';
 import splash from './views/splash.vue';
-import about from './views/about.vue';
 import stats from './views/stats.vue';
 import home from './views/home.vue';
 import users from './components/users/users.vue';
@@ -31,16 +30,6 @@ let router = new Router({
             component: splash,
             meta: {
                 title: 'plantit',
-                crumb: [],
-                requiresAuth: false,
-            },
-        },
-        {
-            path: '/about',
-            name: 'about',
-            component: about,
-            meta: {
-                title: 'about plantit',
                 crumb: [],
                 requiresAuth: false,
             },

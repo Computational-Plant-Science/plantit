@@ -54,14 +54,6 @@
                                 ></small>
                             </h4>
                         </b-col>
-                        <b-col md="auto" align-self="center"
-                            ><b-link to="/about" class="text-secondary"
-                                ><i
-                                    class="fas fa-question-circle fa-1x fa-fw"
-                                ></i>
-                                About</b-link
-                            ></b-col
-                        >
                         <b-col md="auto" align-self="center">
                             <b-link
                                 href="/apis/v1/swagger/"
@@ -86,12 +78,6 @@
                                 GitHub</b-link
                             >
                         </b-col>
-                        <b-col md="auto" align-self="center"
-                            ><b-link to="/stats" class="text-secondary"
-                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i>
-                                Stats</b-link
-                            ></b-col
-                        >
                         <b-col md="auto" align-self="center"
                             ><b-link
                                 href="https://stats.uptimerobot.com/yAgPxH7KNJ"
