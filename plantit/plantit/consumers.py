@@ -30,13 +30,20 @@ class UserEventConsumer(WebsocketConsumer):
 
     def migration_event(self, event):
         migration = event['migration']
-        data = {'migration': migration}
+        uploaded = event['uploaded']
+        data = {'migration': migration, 'uploaded': uploaded}
+        collection = event.get('collection', None)
         file = event.get('file', None)
-        msg = f"DIRT migration status for user {self.username}: {migration})"
+        msg = event.get('msg', None)
 
-        if file is not None:
-            msg += (f"(file {file.name})" if file is not None else "")
+        if collection:
+            data['collection'] = collection
+
+        if file:
             data['file'] = file
+
+        if msg:
+            data['message'] = msg
 
         self.logger.info(msg)
         self.send(text_data=json.dumps(data))

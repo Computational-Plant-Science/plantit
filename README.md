@@ -365,11 +365,10 @@ The DIRT migration feature allows users of the original [DIRT](http://dirt.cyver
 An SSH tunnel must also be opened to the DIRT server, as the database is not open to external connections. For instance, to open a tunnel from port 5678 on the DIRT server to port 3306 on a development machine:
 
 ```shell
-ssh -L 3306:localhost:3306 -p 5678 <your cyverse username>@<DIRT server IP or FQDN>
+ssh -L 3306:localhost:3306 -p <DIRT server SSH port> <your cyverse username>@<DIRT server IP or FQDN>
 ```
 
-On some Linux systems it may be necessary to:
-- substitute the loopback IP address `127.0.0.1` for `localhost`
+On some Linux systems it may be necessary to substitute the loopback IP address `127.0.0.1` for `localhost`
 
 Be sure to set `DIRT_MIGRATION_DB_HOST=host.docker.internal` to point the Docker containers to the host's loopback/localhost address.
 

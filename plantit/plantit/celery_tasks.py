@@ -1016,6 +1016,20 @@ def agents_healthchecks():
 
 
 @app.task(bind=True)
+def create_dirt_collection(self, username, path):
+    try:
+        user = User.objects.get(username=username)
+        profile = Profile.objects.get(user=user)
+        migration = Migration.objects.get(profile=profile)
+    except:
+        logger.warning(f"Couldn't find DIRT migration info for user {username}, aborting")
+        self.request.callbacks = None
+        return
+
+    
+
+
+@app.task(bind=True)
 def transfer_dirt_file(self, id):
     try:
         file = ManagedFile.objects.get(id=id)
@@ -1038,12 +1052,11 @@ def transfer_dirt_file(self, id):
             with ssh.client.open_sftp() as sftp:
                 sftp.get(file.nfs_path, file.staging_path)
     except FileNotFoundError:
-        logger.warning(f"File {file.nfs_path} not found! Skipping")
+        msg = f"File {file.nfs_path} not found! Skipping"
+        logger.warning(msg)
         file.missing = True
         file.save()
-        async_to_sync(mig.push_migration_event)(user, migration, file)
-
-    logger.info(f"Uploading file from {file.staging_path} to collection {file.collection}")
+        async_to_sync(mig.push_migration_event)(user, migration, file=file, message=msg)
 
     # create client for CyVerse APIs and create collection for migrated DIRT data
     client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
@@ -1072,8 +1085,11 @@ def transfer_dirt_file(self, id):
     for k, v in metadata.items(): props.append(f"{k}={v}")
     client.set_metadata(id, props, [])
 
+    msg = f"Uploaded file from {file.staging_path} to collection {file.collection}"
+    logger.info(msg)
+
     # push an update to client
-    async_to_sync(mig.push_migration_event)(user, migration, file)
+    async_to_sync(mig.push_migration_event)(user, migration, file=file, message=msg)
 
 
 @app.task(bind=True)
@@ -1107,7 +1123,7 @@ def start_dirt_migration(self, username: str):
     # create top-level collection for transferred DIRT data
     client.mkdir(migration_collection_path)
 
-    # get ID of newly created migration collection add collection timestamp as metadata
+    # get ID of newly created migration collection and add timestamp as metadata
     root_collection_id = client.stat(migration_collection_path)['id']
     end = timezone.now()
     client.set_metadata(root_collection_id, [
@@ -1145,8 +1161,6 @@ def start_dirt_migration(self, username: str):
 
         # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
         if collection_entity_id is None:
-            logger.warning(f"DIRT root image collection with entity ID {collection_entity_id} not found")
-
             # create the collection if we need to
             collection_name = file.folder
             collection_path = join(migration_collection_path, 'collections', file.folder)
@@ -1155,8 +1169,12 @@ def start_dirt_migration(self, username: str):
                 collections_created.add(file.folder)
 
                 # create the collection in the data store
-                logger.info(f"Creating DIRT migration subcollection {collection_path}")
                 client.mkdir(collection_path)
+                msg = f"Created root image subcollection {collection_path}"
+                logger.info(msg)
+
+                # push an update to client
+                async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
         else:
             # otherwise we have a corresponding marked collection, get its title
             collection_name, collection_created, collection_changed = mig.get_marked_collection(collection_entity_id)
@@ -1166,8 +1184,12 @@ def start_dirt_migration(self, username: str):
             collections_created.add(collection_name)
 
             # create the collection in the data store
-            logger.info(f"Creating DIRT migration subcollection {collection_path}")
             client.mkdir(collection_path)
+            msg = f"Created root image subcollection {collection_path}"
+            logger.info(msg)
+
+            # push an update to client
+            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
             # get CyVerse ID of newly created collection
             stat = client.stat(collection_path)
@@ -1217,8 +1239,12 @@ def start_dirt_migration(self, username: str):
         collection_path = join(migration_collection_path, 'metadata', file.folder)
         if file.folder not in collections_created:
             collections_created.add(file.folder)
-            logger.info(f"Creating DIRT migration metadata subcollection {collection_path}")
             client.mkdir(collection_path)
+            msg = f"Created DIRT metadata subcollection {collection_path}"
+            logger.info(msg)
+
+            # push an update to client
+            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
         file_rec = ManagedFile.objects.create(migration=migration,
@@ -1236,8 +1262,12 @@ def start_dirt_migration(self, username: str):
         collection_path = join(migration_collection_path, 'outputs', file.folder)
         if file.folder not in collections_created:
             collections_created.add(file.folder)
-            logger.info(f"Creating DIRT migration outputs subcollection {collection_path}")
             client.mkdir(collection_path)
+            msg = f"Created computation outputs subcollection {collection_path}"
+            logger.info(msg)
+
+            # push an update to client
+            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
         file_rec = ManagedFile.objects.create(migration=migration,
@@ -1255,8 +1285,12 @@ def start_dirt_migration(self, username: str):
         collection_path = join(migration_collection_path, 'logs', file.folder)
         if file.folder not in collections_created:
             collections_created.add(file.folder)
-            logger.info(f"Creating DIRT migration logs subcollection {collection_path}")
             client.mkdir(collection_path)
+            msg = f"Created computation logs subcollection {collection_path}"
+            logger.info(msg)
+
+            # push an update to client
+            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
         file_rec = ManagedFile.objects.create(migration=migration,
@@ -1275,6 +1309,7 @@ def start_dirt_migration(self, username: str):
     transfers.apply_async()
 
     # persist number of each kind of managed file
+    migration.num_subcollections = len(collection_created)
     migration.num_files = len(image_files)
     migration.num_metadata = len(metadata_files)
     migration.num_outputs = len(output_files)

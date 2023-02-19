@@ -1477,6 +1477,12 @@ export default {
                     message: `DIRT migration completed (target collection: ${migration.target_path})`,
                     guid: guid().toString(),
                 });
+            else
+                await this.$store.dispatch('alerts/add', {
+                    variant: 'success',
+                    message: `DIRT migration completed (target collection: ${migration.target_path})`,
+                    guid: guid().toString(),
+                });
         },
         async handleNotificationEvent(notification) {
             await this.$store.dispatch('notifications/update', notification);

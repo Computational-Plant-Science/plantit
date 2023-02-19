@@ -37,6 +37,7 @@ class Migration(models.Model):
     started = models.DateTimeField(null=True, blank=True)
     completed = models.DateTimeField(null=True, blank=True)
     target_path = models.CharField(max_length=255, null=True, blank=True)
+    num_subcollections = models.IntegerField(null=True, blank=True)
     num_files = models.IntegerField(null=True, blank=True)
     num_metadata = models.IntegerField(null=True, blank=True)
     num_outputs = models.IntegerField(null=True, blank=True)

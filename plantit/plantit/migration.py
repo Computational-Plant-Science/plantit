@@ -6,6 +6,7 @@ from pymysql import MySQLError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
+from asgiref.sync import sync_to_async
 
 import plantit.queries as q
 import plantit.users.models
@@ -52,12 +53,20 @@ def get_db_connection():
                            password=settings.DIRT_MIGRATION_DB_PASSWORD)
 
 
-async def push_migration_event(user: User, migration: Migration, file: plantit.users.models.ManagedFile = None):
+async def push_migration_event(
+        user: User,
+        migration: Migration,
+        collection: str = None,
+        file: plantit.users.models.ManagedFile = None,
+        message: str = None):
     data = {
         'type': 'migration_event',
         'migration': q.migration_to_dict(migration),
+        'uploaded': sync_to_async(ManagedFile.objects.filter)(migration=migration).count()
     }
+    if collection is not None: data['collection'] = collection
     if file is not None: data['file'] = q.managed_file_to_dict(file)
+    if message is not None: data['message'] = message
     await get_channel_layer().group_send(f"{user.username}", data)
 
 
