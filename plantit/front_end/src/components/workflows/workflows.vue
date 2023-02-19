@@ -216,7 +216,7 @@
                     ><span v-else-if="context === 'Examples'"
                         >There are no example workflows to show.</span
                     ><span v-else-if="context === 'Yours'">
-                        <div v-if="!profile.loggedIntoGithub">
+                        <div v-if="!profile.loggedIntoGitHub">
                             <b-row align-v="center"
                                 ><b-col class="text-center" align-self="center">
                                     <br />
