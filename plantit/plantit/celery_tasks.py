@@ -1016,28 +1016,14 @@ def agents_healthchecks():
 
 
 @app.task(bind=True)
-def create_dirt_collection(self, username, path):
+def transfer_dirt_file(self, fid):
     try:
-        user = User.objects.get(username=username)
-        profile = Profile.objects.get(user=user)
-        migration = Migration.objects.get(profile=profile)
-    except:
-        logger.warning(f"Couldn't find DIRT migration info for user {username}, aborting")
-        self.request.callbacks = None
-        return
-
-    
-
-
-@app.task(bind=True)
-def transfer_dirt_file(self, id):
-    try:
-        file = ManagedFile.objects.get(id=id)
+        file = ManagedFile.objects.get(fid=fid)
         migration = file.migration
         profile = migration.profile
         user = profile.user
     except:
-        logger.warning(f"Couldn't find DIRT managed file with id {id}, aborting")
+        logger.warning(f"Couldn't find DIRT managed file with id {fid}, aborting")
         return
 
     logger.info(f"Downloading file from {file.nfs_path} to {file.staging_path}")
@@ -1149,7 +1135,7 @@ def start_dirt_migration(self, username: str):
     for file in image_files:
         # get file entity ID given root image file ID
         file_entity_id = mig.get_file_entity_id(file.id)
-        file._replace(entity_id=file_entity_id)
+        file = file._replace(entity_id=file_entity_id)
 
         # if no corresponding file entity for this managed file, skip it
         if file_entity_id is None:
@@ -1194,7 +1180,7 @@ def start_dirt_migration(self, username: str):
             # get CyVerse ID of newly created collection
             stat = client.stat(collection_path)
             id = stat['id']
-            file._replace(collection_datastore_id=id)
+            file = file._replace(collection_datastore_id=id)
 
             # get metadata and environmental data and attach to file
             metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(
@@ -1218,11 +1204,12 @@ def start_dirt_migration(self, username: str):
             client.set_metadata(id, props, [])
 
         # persist collection information on managed file record
-        file._replace(collection=collection_name)
-        file._replace(collection_entity_id=collection_entity_id)
+        file = file._replace(collection=collection_name)
+        file = file._replace(collection_entity_id=collection_entity_id)
 
         # create managed file record
-        file_rec = ManagedFile.objects.create(migration=migration,
+        file_rec = ManagedFile.objects.create(fid=file.id,
+                                              migration=migration,
                                               name=file.name,
                                               folder=file.folder,
                                               path=file.path,
@@ -1234,6 +1221,9 @@ def start_dirt_migration(self, username: str):
                                               collection_entity_id=file.collection_entity_id,
                                               nfs_path=join(rootnfs_dir, 'root-images', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
+
+        transfer_dirt_file.s(file.id).apply_async()
+
     for file in metadata_files:
         # create the subcollection if we need to
         collection_path = join(migration_collection_path, 'metadata', file.folder)
@@ -1247,7 +1237,8 @@ def start_dirt_migration(self, username: str):
             async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
-        file_rec = ManagedFile.objects.create(migration=migration,
+        file_rec = ManagedFile.objects.create(fid=file.id,
+                                              migration=migration,
                                               name=file.name,
                                               folder=file.folder,
                                               path=file.path,
@@ -1257,6 +1248,9 @@ def start_dirt_migration(self, username: str):
                                               uploaded=file.uploaded,
                                               nfs_path=join(rootnfs_dir, 'metadata-files', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
+    
+        transfer_dirt_file.s(file.id).apply_async()
+
     for file in output_files:
         # create the folder if we need to
         collection_path = join(migration_collection_path, 'outputs', file.folder)
@@ -1270,7 +1264,8 @@ def start_dirt_migration(self, username: str):
             async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
-        file_rec = ManagedFile.objects.create(migration=migration,
+        file_rec = ManagedFile.objects.create(fid=file.id,
+                                              migration=migration,
                                               name=file.name,
                                               folder=file.folder,
                                               path=file.path,
@@ -1280,6 +1275,9 @@ def start_dirt_migration(self, username: str):
                                               uploaded=file.uploaded,
                                               nfs_path=join(rootnfs_dir, 'output-files', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
+    
+        transfer_dirt_file.s(file.id).apply_async()
+
     for file in log_files:
         # create the folder if we need to
         collection_path = join(migration_collection_path, 'logs', file.folder)
@@ -1293,7 +1291,8 @@ def start_dirt_migration(self, username: str):
             async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
 
         # create managed file record
-        file_rec = ManagedFile.objects.create(migration=migration,
+        file_rec = ManagedFile.objects.create(fid=file.id,
+                                              migration=migration,
                                               name=file.name,
                                               folder=file.folder,
                                               path=file.path,
@@ -1303,10 +1302,12 @@ def start_dirt_migration(self, username: str):
                                               uploaded=file.uploaded,
                                               nfs_path=join(rootnfs_dir, 'output-logs', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
+    
+        transfer_dirt_file.s(file.id).apply_async()
 
-    # submit file transfers
-    transfers = group(transfer_dirt_file(file) for file in managed_files)()
-    transfers.apply_async()
+    # submit file transfers (old way, all at once -- now done when each file is discovered to make more efficient use of time)
+    # transfers = group(transfer_dirt_file(file) for file in managed_files)()
+    # transfers.apply_async()
 
     # persist number of each kind of managed file
     migration.num_subcollections = len(collection_created)

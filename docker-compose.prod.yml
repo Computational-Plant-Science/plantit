@@ -294,7 +294,7 @@ services:
                "-n", "celerye",
                "-P", "eventlet",
                "-Q", "${CELERY_EVENTLET_QUEUE}",
-               "-c", "500",
+               "-c", "10",
                "--loglevel", "INFO" ]
     volumes:
       - .:/code
