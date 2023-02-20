@@ -1041,7 +1041,7 @@
                     <b-row>
                         <b-col>
                             <b-list-group-item
-                                :class="profile.darkMode ? 'darkitems' : ''"
+                                :class="profile.darkMode ? 'darkitems' : 'lightitems'"
                                 :variant="profile.darkMode ? 'dark' : 'light'"
                                 v-for="path in deletingPaths"
                                 v-bind:key="path"

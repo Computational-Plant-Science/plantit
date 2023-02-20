@@ -577,7 +577,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                             title="DIRT migration"
-                            @click="showDirtMigrationModal"
+                            @click="showDIRTMigrationModal"
                             :link-class="
                                 profile.darkMode
                                     ? 'text-secondary'
@@ -738,7 +738,16 @@
         >
             <template #modal-header
                 ><h4 :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <i class="fas fa-folder-open fa-fw"></i> DIRT Migration
+                    <i class="fas fa-folder-open fa-fw"></i> DIRT Migration <b-spinner
+                                small
+                                v-if="
+                                    profile.migration.started !== null &&
+                                    profile.migration.completed === null
+                                "
+                                label="Running..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="mr-2 mb-1"
+                            ></b-spinner>
                 </h4></template
             >
             <b-row v-if="profile.migration.completed === null">
@@ -763,7 +772,7 @@
                                 profile.migration.completed === null)
                         "
                         v-if="profile.migration.started === null"
-                        @click="startDirtMigration"
+                        @click="startDIRTMigration"
                         :variant="
                             profile.darkMode ? 'outline-success' : 'success'
                         "
@@ -786,7 +795,7 @@
                             migrationSubmitting ? 'Submitting' : 'Start'
                         }}</b-button
                     >
-                    <p v-if="profile.migration.started !== null">
+                    <div v-if="profile.migration.started !== null">
                         <b>Started:</b>
                         {{ prettify(profile.migration.started) }}
                         <br />
@@ -794,59 +803,10 @@
                         {{ profile.migration.target_path }}
                         <br />
                         <br />
-                        <span v-if="profile.migration.num_files !== null"
-                            >{{ uploadedFiles.length }}/{{
-                                profile.migration.num_files
-                            }}
-                            image files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_files !== null"
-                            :value="uploadedFiles.length"
-                            :max="profile.migration.num_files"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_metadata !== null"
-                            >{{ uploadedMetadata.length }}/{{
-                                profile.migration.num_metadata
-                            }}
-                            metadata files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_metadata !== null"
-                            :value="uploadedMetadata.length"
-                            :max="profile.migration.num_metadata"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_outputs !== null"
-                            >{{ uploadedOutputs.length }}/{{
-                                profile.migration.num_outputs
-                            }}
-                            output files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_outputs !== null"
-                            :value="uploadedOutputs.length"
-                            :max="profile.migration.num_outputs"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                        <span v-if="profile.migration.num_logs !== null"
-                            >{{ uploadedLogs.length }}/{{
-                                profile.migration.num_logs
-                            }}
-                            log files migrated.</span
-                        >
-                        <b-progress
-                            v-if="profile.migration.num_logs !== null"
-                            :value="uploadedLogs.length"
-                            :max="profile.migration.num_logs"
-                            animated
-                            variant="success"
-                        ></b-progress>
-                    </p>
+                        <p style="max-height: 50%;overflow-y: scroll;">
+                        <small v-for="line in migrationLogs" v-bind:key="line">{{ line }}<br/></small>
+                        </p>
+                    </div>
                 </b-col>
             </b-row>
             <b-row v-else
@@ -979,6 +939,7 @@ export default {
             // DIRT migration
             migrationDataDuplicate: false,
             migrationSubmitting: false,
+            migrationLogs: []
         };
     },
     computed: {
@@ -996,46 +957,6 @@ export default {
             'notificationsRead',
             'notificationsUnread',
         ]),
-        uploadedFiles() {
-            if (
-                this.profileLoading ||
-                Object.keys(this.profile.migration.uploads).length === 0
-            )
-                return [];
-            return Object.values(this.profile.migration.uploads).filter(
-                (f) => f.type === 'image'
-            );
-        },
-        uploadedMetadata() {
-            if (
-                this.profileLoading ||
-                Object.keys(this.profile.migration.uploads).length === 0
-            )
-                return [];
-            return Object.values(this.profile.migration.uploads).filter(
-                (f) => f.type === 'metadata'
-            );
-        },
-        uploadedOutputs() {
-            if (
-                this.profileLoading ||
-                Object.keys(this.profile.migration.uploads).length === 0
-            )
-                return [];
-            return Object.values(this.profile.migration.uploads).filter(
-                (f) => f.type === 'output'
-            );
-        },
-        uploadedLogs() {
-            if (
-                this.profileLoading ||
-                Object.keys(this.profile.migration.uploads).length === 0
-            )
-                return [];
-            return Object.values(this.profile.migration.uploads).filter(
-                (f) => f.type === 'logs'
-            );
-        },
         maintenance() {
             let now = moment();
             return this.maintenanceWindows.find((w) => {
@@ -1108,13 +1029,13 @@ export default {
                 return rv;
             }, {});
         },
-        showDirtMigrationModal() {
+        showDIRTMigrationModal() {
             this.$bvModal.show('migration');
         },
-        hideDirtMigrationModal() {
+        hideDIRTMigrationModal() {
             this.$bvModal.hide('migration');
         },
-        startDirtMigration() {
+        startDIRTMigration() {
             this.migrationDataDuplicate = false;
             this.migrationSubmitting = true;
             axios
@@ -1153,8 +1074,8 @@ export default {
                 });
         },
         async loadDataModel() {
-            // feature flag to toggle between the old/new state loading method
             if (process.env.VUE_APP_LOAD_STATE_SEPARATELY) {
+                // hydrate the app with many concurrent requests
                 await this.$store.dispatch('user/loadProfile');
                 await Promise.all([
                     this.$store.dispatch('users/loadAll'),
@@ -1177,27 +1098,20 @@ export default {
                 return;
             }
 
+            // hydrate the app with a single request/response
             await this.$store.dispatch('user/setProfileLoading', true);
             await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then((response) => {
-                    // determine whether user is logged into CyVerse
-                    let decoded = jwtDecode(
+                    // parse expiry time from auth token to check if still logged in
+                    this.$store.dispatch('user/setLoggedIn', Math.floor(Date.now() / 1000) <= jwtDecode(
                         response.data.django_profile.cyverse_token
-                    );
-                    let now = Math.floor(Date.now() / 1000);
-                    if (now > decoded.exp)
-                        this.$store.dispatch('user/setLoggedIn', false);
-                    else this.$store.dispatch('user/setLoggedIn', true);
-
-                    // determine whether user is logged into GitHub
+                    ).exp);
                     this.$store.dispatch(
                         'user/setLoggedIntoGithub',
                         response.data.github_profile !== undefined &&
                             response.data.github_profile !== null
                     );
-
-                    // load user profile info into Vuex
                     this.$store.dispatch(
                         'user/setDjangoProfile',
                         response.data.django_profile
@@ -1235,19 +1149,13 @@ export default {
                         response.data.migration
                     );
                     this.$store.dispatch('user/setProfileLoading', false);
-
-                    // load notifications into Vuex
                     this.$store.dispatch(
                         'notifications/setAll',
                         response.data.notifications
                     );
                     this.$store.dispatch('notifications/setLoading', false);
-
-                    // load other users into Vuex
                     this.$store.dispatch('users/setAll', response.data.users);
                     this.$store.dispatch('users/setLoading', false);
-
-                    // load tasks into Vuex
                     this.$store.dispatch(
                         'tasks/setAll',
                         response.data.tasks.tasks
@@ -1265,8 +1173,6 @@ export default {
                         response.data.triggered_tasks
                     );
                     this.$store.dispatch('tasks/setLoading', false);
-
-                    // load workflows into Vuex
                     this.$store.dispatch(
                         'workflows/setPublic',
                         response.data.workflows.public
@@ -1287,12 +1193,8 @@ export default {
                     this.$store.dispatch('workflows/setUserLoading', false);
                     this.$store.dispatch('workflows/setOrgLoading', false);
                     this.$store.dispatch('workflows/setProjectLoading', false);
-
-                    // load agents into Vuex
                     this.$store.dispatch('agents/setAll', response.data.agents);
                     this.$store.dispatch('agents/setLoading', false);
-
-                    // load projects into Vuex
                     this.$store.dispatch(
                         'projects/setUser',
                         response.data.projects
@@ -1461,23 +1363,21 @@ export default {
                 await this.handleNotificationEvent(data.notification);
             } else if (data.migration !== undefined) {
                 // DIRT migration status event
-                await this.handleMigrationEvent(data.migration);
+                await this.handleMigrationEvent(data);
             } else {
                 // TODO: log unrecognized event type
             }
         },
-        async handleMigrationEvent(migration) {
+        async handleMigrationEvent(data) {
+            let message = data.message
+            this.migrationLogs.push(message)
+
+            let migration = data.migration
             await this.$store.dispatch('user/setDirtMigration', migration);
 
-            // check if completed and update user profile & create an alert if so
+            // if completed, update user profile & show an alert
             let completed = migration.completed;
             if (completed !== null && completed !== undefined)
-                await this.$store.dispatch('alerts/add', {
-                    variant: 'success',
-                    message: `DIRT migration completed (target collection: ${migration.target_path})`,
-                    guid: guid().toString(),
-                });
-            else
                 await this.$store.dispatch('alerts/add', {
                     variant: 'success',
                     message: `DIRT migration completed (target collection: ${migration.target_path})`,

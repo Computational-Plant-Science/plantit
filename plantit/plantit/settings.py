@@ -22,7 +22,6 @@ assert 'TASKS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: TASKS_TIM
 assert 'TASKS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: TASKS_REFRESH_SECONDS"
 assert 'TASKS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: TASKS_CLEANUP_MINUTES"
 assert 'TASKS_STEP_TIME_LIMIT_SECONDS' in os.environ, f"{missing_variable}: TASKS_STEP_TIME_LIMIT_SECONDS"
-assert 'TASKS_TEMPLATE_SCRIPT_SLURM' in os.environ, f"{missing_variable}: TASKS_TEMPLATE_SCRIPT_SLURM"
 assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
 assert 'INPUTS_FILE_NAME' in os.environ, f"{missing_variable}: INPUTS_FILE_NAME"
 assert 'ICOMMANDS_IMAGE' in os.environ, f"{missing_variable}: ICOMMANDS_IMAGE"
@@ -92,7 +91,6 @@ TASKS_TIMEOUT_MULTIPLIER = os.environ.get('TASKS_TIMEOUT_MULTIPLIER')
 TASKS_REFRESH_SECONDS = os.environ.get('TASKS_REFRESH_SECONDS')
 TASKS_CLEANUP_MINUTES = os.environ.get('TASKS_CLEANUP_MINUTES')
 TASKS_STEP_TIME_LIMIT_SECONDS = os.environ.get('TASKS_STEP_TIME_LIMIT_SECONDS')
-TASKS_TEMPLATE_SCRIPT_SLURM = os.environ.get('TASKS_TEMPLATE_SCRIPT_SLURM')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 INPUTS_FILE_NAME = os.environ.get('INPUTS_FILE_NAME')

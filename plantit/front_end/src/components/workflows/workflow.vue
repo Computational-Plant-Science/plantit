@@ -222,13 +222,10 @@
                                         <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <h5>
-                                                    <b-badge
-                                                        variant="secondary"
-                                                        >{{
+                                                    <i class="fas fa-code-branch fa-fw"></i>{{
                                                             getWorkflow.branch
                                                                 .name
-                                                        }}</b-badge
-                                                    >
+                                                        }}
                                                 </h5>
                                                 <b-badge
                                                     v-for="topic in getWorkflow
@@ -1146,10 +1143,6 @@
                                                                         ><b-row>
                                                                             <b-col
                                                                                 md="auto"
-                                                                                style="
-                                                                                    border-right: 2px
-                                                                                        lightgray;
-                                                                                "
                                                                             >
                                                                                 <b-button
                                                                                     size="sm"
@@ -1214,7 +1207,7 @@
                                                                                                     submitType ===
                                                                                                     'Every'
                                                                                                 "
-                                                                                                class="far fa-circle text-secondary fa-fw"
+                                                                                                class="fas fa-check text-secondary fa-fw"
                                                                                             ></i>
                                                                                             <i
                                                                                                 v-else-if="

@@ -200,7 +200,7 @@
                         profile.darkMode ? 'secondary' : 'default'
                     "
                     :text-variant="profile.darkMode ? 'white' : 'dark'"
-                    style="min-width: 30rem"
+                    style="min-width: 30rem;max-width:47%"
                     class="overflow-hidden mb-4"
                 >
                     <blurb :linkable="true" :workflow="workflow"></blurb>

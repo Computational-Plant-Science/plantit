@@ -21,9 +21,9 @@
                         {{ workflow.config.name }}
                     </b-link>
                 </h5>
-                <small v-if="workflow.config.author">{{
+                <!--<small v-if="workflow.config.author">{{
                     workflow.config.author
-                }}</small>
+                }}</small>-->
                 <h5 v-else>
                     <b-link
                         class="text-danger"
@@ -42,11 +42,6 @@
                         <small>(name not provided)</small>
                     </b-link>
                 </h5>
-                <div>
-                    <b-badge variant="warning">{{
-                        workflow.branch.name
-                    }}</b-badge>
-                </div>
                 <div
                     v-if="
                         workflow.repo.topics !== undefined &&
@@ -78,11 +73,16 @@
                         {{ workflow.repo.owner.login }}/{{ workflow.repo.name }}
                     </b-link>
                 </small>
+                <br/>
+                <small>
+                    <i class="fas fa-code-branch fa-fw mr-1"></i>{{
+                        workflow.branch.name
+                    }}
+                </small>
                 <br />
                 <small :class="profile.darkMode ? 'text-light' : 'text-dark'">{{
                     workflow.repo.description
                 }}</small>
-                <br />
             </b-col>
             <b-col cols="1"></b-col>
         </b-row>

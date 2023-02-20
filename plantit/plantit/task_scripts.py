@@ -413,55 +413,42 @@ def compose_report_headers(task: Task) -> List[str]:
 
 def compose_report_commands(task: Task) -> List[str]:
     image = f"docker://{settings.CURL_IMAGE}"
+    url = "{settings.API_URL}/tasks/{task.guid}/complete/"
     return [
-        f"singularity exec {image} curl -L -v -X POST {settings.API_URL}/tasks/{task.guid}/complete/"
+        f"singularity exec {image} curl -L -v -X POST {url}"
     ]
 
 
 # Job scripts
 
+SCRIPT_TEMPLATE = ["#!/bin/bash", "#SBATCH --job-name=plantit"]
+
 def compose_pull_script(task: Task, options: TaskOptions) -> List[str]:
-    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
-        template = [line.strip() for line in template_file if line != '']
-        headers = compose_pull_headers(task)
-        command = compose_pull_commands(task, options)
-        return template + \
-               headers + \
-               [task.agent.pre_commands] + \
-               command
+    return SCRIPT_TEMPLATE + \
+            compose_pull_headers(task) + \
+            [task.agent.pre_commands] + \
+            compose_pull_commands(task, options)
 
 
 def compose_job_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:
-    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
-        template = [line.strip() for line in template_file if line != '']
-        headers = compose_job_headers(task, options, inputs)
-        command = compose_job_commands(task, options)
-        return template + \
-               headers + \
-               [task.agent.pre_commands] + \
-               command
+    return SCRIPT_TEMPLATE + \
+            compose_job_headers(task, options, inputs) + \
+            [task.agent.pre_commands] + \
+            compose_job_commands(task, options)
 
 
 def compose_push_script(task: Task, options: TaskOptions) -> List[str]:
-    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
-        template = [line.strip() for line in template_file if line != '']
-        headers = compose_push_headers(task)
-        command = compose_push_commands(task, options)
-        return template + \
-               headers + \
-               [task.agent.pre_commands] + \
-               command
+    return SCRIPT_TEMPLATE + \
+            compose_push_headers(task) + \
+            [task.agent.pre_commands] + \
+            compose_push_commands(task, options)
 
 
 def compose_report_script(task: Task) -> List[str]:
-    with open(settings.TASKS_TEMPLATE_SCRIPT_SLURM, 'r') as template_file:
-        template = [line.strip() for line in template_file if line != '']
-        headers = compose_report_headers(task)
-        command = compose_report_commands(task)
-        return template + \
-               headers + \
-               [task.agent.pre_commands] + \
-               command
+    return SCRIPT_TEMPLATE + \
+            compose_report_headers(task) + \
+            [task.agent.pre_commands] + \
+            compose_report_commands(task)
 
 
 def compose_launcher_script(task: Task, options: TaskOptions, inputs: List[str]) -> List[str]:

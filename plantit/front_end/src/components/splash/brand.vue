@@ -140,12 +140,12 @@
                                         label="Loading..."
                                         variant="secondary"
                                     ></b-spinner>
-                                    Loading updates...
+                                    Loading news...
                                 </span>
                                 <span
                                     v-else-if="updates.length === 0"
                                     class="text-light"
-                                    >No updates to show.</span
+                                    >No news to show.</span
                                 >
                                 <b-row
                                     v-for="update in getUpdates"

@@ -30,11 +30,10 @@ class UserEventConsumer(WebsocketConsumer):
 
     def migration_event(self, event):
         migration = event['migration']
-        uploaded = event['uploaded']
-        data = {'migration': migration, 'uploaded': uploaded}
+        data = {'migration': migration}
         collection = event.get('collection', None)
         file = event.get('file', None)
-        msg = event.get('msg', None)
+        msg = event.get('message', None)
 
         if collection:
             data['collection'] = collection

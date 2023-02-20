@@ -187,13 +187,12 @@ async def list_connectable_repos_by_org(owner: str, token: str, timeout: int = 1
                     })
 
                 if response.status_code == 404:
-                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                     continue
-                else: logger.debug(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
-
+                else:
+                    logger.info(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
 
                 repository['organization'] = owner
 
@@ -251,11 +250,12 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
                     })
 
                 if response.status_code == 404:
-                    logger.debug(f"No plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
                     continue
                 if response.status_code != 200:
                     logger.warning(f"Failed to retrieve plantit.yaml from {owner}/{repository['name']}/{branch['name']}")
                     continue
+                else:
+                    logger.info(f"Found plantit.yaml in {owner}/{repository['name']}/{branch['name']}")
 
                 try:
                     config = yaml.safe_load(response.text)
@@ -269,6 +269,7 @@ async def list_connectable_repos_by_owner(owner: str, token: str, timeout: int =
                             'errors': errors
                         }
                     })
+                    
                 except Exception:
                     workflows.append({
                         'repo': repository,

@@ -767,11 +767,7 @@ def migration_to_dict(migration: Migration) -> dict:
         'started': None if migration.started is None else migration.started.isoformat(),
         'completed': None if migration.completed is None else migration.completed.isoformat(),
         'target_path': migration.target_path,
-        'num_files': migration.num_files,
-        'num_metadata': migration.num_metadata,
-        'num_outputs': migration.num_outputs,
-        'num_logs': migration.num_logs,
-        'uploaded': ManagedFile.objects.filter(migration=migration).count()
+        
     }
 
 
