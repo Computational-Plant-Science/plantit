@@ -451,9 +451,7 @@
                 <b-row class="text-center">
                     <b-col>
                         <h6
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
+                            class="text-light"
                         >
                             Former Contributors
                         </h6>
@@ -488,8 +486,7 @@
                     <b-col>
                 <p>
                             <i
-                                ><small><small><b>note:</b> platform developers make no guarantees
-                                regarding workflow results' quality &mdash; <br/> questions should be directed to workflow authors via GitHub or some other channel</small></small></i
+                                ><small><small><b>note:</b> platform developers make no guarantees regarding workflow result </small></small></i
                             >
                         </p>
 </b-col>

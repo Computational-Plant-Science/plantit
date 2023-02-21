@@ -4932,6 +4932,7 @@ export default {
             return this.workflow(this.owner, this.name, this.branch);
         },
         ownsWorkflow() {
+            if (!this.profile.loggedIntoGitHub) return false;
             return (
                 this.getWorkflow.repo.owner.login ===
                 this.profile.githubProfile.login
