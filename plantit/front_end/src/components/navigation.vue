@@ -802,10 +802,12 @@
                         <b>Collection:</b>
                         {{ profile.migration.target_path }}
                         <br />
+                        <div v-if="migrationLogs.count > 0">
                         <br />
                         <p style="max-height: 50%;overflow-y: scroll;">
                         <small v-for="line in migrationLogs" v-bind:key="line">{{ line }}<br/></small>
                         </p>
+                        </div>
                     </div>
                 </b-col>
             </b-row>

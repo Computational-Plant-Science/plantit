@@ -265,12 +265,12 @@
         >
             <br />
             <b-container>
-                <b-row class="text-center">
+                <!--<b-row class="text-center">
                     <b-col>
                         <h5 class="text-light">About</h5>
                     </b-col></b-row
                 >
-                <br />
+                <br />-->
                 <b-row class="text-light lightlinks text-center"
                     ><b-col>
                         <p>
@@ -283,7 +283,7 @@
                                 :src="require('../../assets/logo.png')"
                                 class="m-0 p-0"
                             ></b-img>
-                            free service for parallelizable image-based plant phenotyping &mdash; deploy to a cluster with a click
+                            free web service for parallel image-based plant phenotyping &mdash; deploy to clusters with a click
                             </p>
                             <p>
                             <b-img
@@ -369,8 +369,7 @@
                             <b-link
                                 href="https://github.com/Computational-Plant-Science/plantit"
                                 >on GitHub</b-link
-                            > &mdash;
-                            <b-link
+                            > or <b-link
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions"
                                 >get in touch</b-link
                             >
@@ -450,11 +449,11 @@
                 </b-row>
                 <b-row class="text-center">
                     <b-col>
-                        <h6
+                        <h5
                             class="text-light"
                         >
                             Former Contributors
-                        </h6>
+                        </h5>
                     </b-col></b-row
                 >
                 <br />
@@ -482,15 +481,6 @@
                     </b-col>
                 </b-row>
                 <br />
-                <b-row class="text-center">
-                    <b-col>
-                <p>
-                            <i
-                                ><small><small><b>note:</b> platform developers make no guarantees regarding workflow result </small></small></i
-                            >
-                        </p>
-</b-col>
-</b-row>
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col
@@ -507,6 +497,18 @@
                     ></b-col>
                 </b-row>
                 <br />
+                <br/>
+                <br/>
+                <b-row class="text-center">
+                    <b-col>
+                        <p>
+                            <i
+                                ><small><small><b>note:</b> platform developers can't guarantee correctness or validity of hosted workflows &mdash; <br/>
+                                questions should be raised with workflow authors and results double-checked for errors!</small></small></i
+                            >
+                        </p>
+                    </b-col>
+                </b-row>
                 <br />
             </b-container>
         </b-card>

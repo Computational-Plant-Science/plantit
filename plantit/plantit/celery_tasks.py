@@ -1204,7 +1204,7 @@ def start_dirt_migration(self, username: str):
             client.set_metadata(id, props, [])
 
         # persist collection information on managed file record
-        file = file._replace(collection=collection_name)
+        file = file._replace(collection=collection_path)
         file = file._replace(collection_entity_id=collection_entity_id)
 
         # create managed file record
@@ -1218,6 +1218,7 @@ def start_dirt_migration(self, username: str):
                                               missing=file.missing,
                                               uploaded=file.uploaded,
                                               entity_id=file.entity_id,
+                                              collection=file.collection,
                                               collection_entity_id=file.collection_entity_id,
                                               nfs_path=join(rootnfs_dir, 'root-images', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
@@ -1246,6 +1247,7 @@ def start_dirt_migration(self, username: str):
                                               orphan=file.orphan,
                                               missing=file.missing,
                                               uploaded=file.uploaded,
+                                              collection=collection_path,
                                               nfs_path=join(rootnfs_dir, 'metadata-files', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
     
@@ -1273,6 +1275,7 @@ def start_dirt_migration(self, username: str):
                                               orphan=file.orphan,
                                               missing=file.missing,
                                               uploaded=file.uploaded,
+                                              collection=collection_path,
                                               nfs_path=join(rootnfs_dir, 'output-files', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
     
@@ -1300,6 +1303,7 @@ def start_dirt_migration(self, username: str):
                                               orphan=file.orphan,
                                               missing=file.missing,
                                               uploaded=file.uploaded,
+                                              collection=collection_path,
                                               nfs_path=join(rootnfs_dir, 'output-logs', file.folder, file.name),
                                               staging_path=join(staging_dir, file.name))
     
