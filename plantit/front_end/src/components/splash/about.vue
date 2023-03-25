@@ -9,7 +9,7 @@
             header-border-variant="dark"
             footer-border-variant="white"
         >
-            <template slot="header" style="border: none">
+            <template slot="header">
                 <b-container v-if="userCount >= 0">
                     <b-row>
                         <b-col align-self="end" class="text-right mr-0"
@@ -407,7 +407,6 @@
                                 </template>
                                 <template
                                     v-slot:footer
-                                    style="background-color: white"
                                 >
                                     <b-button
                                         size="sm"
