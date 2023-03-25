@@ -291,7 +291,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'agents': q.get_agents(user),
             'workflows': {
                 'public': q.list_public_workflows(),
-                'project': q.list_user_project_workflows(user)
+                'project': q.list_user_project_workflows(user),
+                'user': [],
+                'org': []
             },
             'projects': q.get_user_projects(user),
         }
