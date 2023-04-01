@@ -25,13 +25,6 @@
   - [Status](#status)
   - [Motivation](#motivation)
   - [Overview](#overview)
-  - [Features](#features)
-    - [Automatic data transfers](#automatic-data-transfers)
-    - [Browser submissions](#browser-submissions)
-    - [Easy integration](#easy-integration)
-    - [Portable workflows](#portable-workflows)
-    - [Share & collaborate](#share--collaborate)
-    - [Metadata & annotation](#metadata--annotation)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -45,6 +38,7 @@
     - [Agent requirements](#agent-requirements)
     - [Authenticating with Docker](#authenticating-with-docker)
   - [Building the documentation](#building-the-documentation)
+  - [Testing DIRT migrations](#testing-dirt-migrations)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -69,32 +63,6 @@ High-throughput phenotyping is resource-intensive and often demands virtual comp
 PlantIT aims to bridge two user groups: researchers and developers. Of course one may wear both hats. The idea is an open-source conveyor belt for scientific software: make it easier to 1) package and share research applications, and 2) deploy them to clusters.
 
 PlantIT is just glue between version control, data storage, container engine, and cluster scheduler. To publish an app, containerize it (e.g., write a Dockerfile) and add a `plantit.yaml` file to the GitHub repository. Then run it from the browser with a few clicks.
-
-### Features
-
-#### Automatic data transfers
-
-PlantIT can automatically transfer data to and from the [CyVerse](https://cyverse.org/) cloud before and after processing. Plug in your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). `plantit` will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) also be able to omit transfers and use datasets parked on cluster filesystems.
-
-#### Browser submissions
-
-Choose a workflow and dataset, submit and monitor status, then download results, all from the browser. (A web API is [currently in development](https://github.com/Computational-Plant-Science/plantit/issues/256): users will soon be able to programmatically introspect task status as well.) Submit immediately or schedule units of work to run after a delay or on a periodic interval.
-
-#### Easy integration
-
-Bind your own software by packaging it into a [Docker](https://www.docker.com/) image published on [Docker Hub](https://hub.docker.com/), then [adding a `plantit.yaml` configuration file](https://plantit.readthedocs.io/en/latest/md/developer_docs/defining_workflows.html) to any public GitHub repo (like [GitHub Actions](https://github.com/features/actions) or [Travis CI](https://www.travis-ci.com/)).
-
-#### Portable workflows
-
-`plantit` workflows run in [Singularity](https://sylabs.io/) containers. This insulates workflows from their deployment environment and makes results easier to reproduce.
-
-#### Share & collaborate
-
-Keep your datasets and workflows private, share them with a small team, or publish to the entire research community.
-
-#### Metadata & annotation
-
-Contextualize datasets according to the emerging [MIAPPE](https://www.miappe.org/) conventions ([under development](https://github.com/Computational-Plant-Science/plantit/issues/41)).
 
 ## Development
 
