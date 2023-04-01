@@ -7,7 +7,7 @@
         plant<small
             class="mb-3 text-success"
             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000; color: #d6df5D"
-            >it</small>
+            >IT</small>
 </h3>
 
 ![build](https://github.com/Computational-Plant-Science/plantit/workflows/build/badge.svg)
@@ -50,25 +50,31 @@
 
 ## About
 
-`plantit` is a science gateway for image-based plant phenotyping. It's simultaneously a portal to clusters for researchers and a continuous delivery platform for developers. (Of course one may wear both hats.)
+PlantIT is a framework for deploying research apps to high-performance/-throughput clusters. Specifically, it's a science gateway for image-based plant phenotyping. Future work may generalize the platform for any domain.
 
 ### Status
 
-`plantit` debuted (as [pre-release v0.1.0](https://github.com/Computational-Plant-Science/plantit/releases/tag/v0.1.0)) at [NAPPN 2022](https://www.plantphenotyping.org/conference-home) (Feb. 22-25). See [Releases](https://github.com/Computational-Plant-Science/plantit/releases) for changelog and [Roadmap](https://github.com/Computational-Plant-Science/plantit/wiki/Changelog-&-Roadmap) for planned features and fixes. Capabilities will likely continue to evolve for some time, with "official" releases following an eventually forthcoming publication.
+PlantIT debuted (with [pre-release v0.1.0](https://github.com/Computational-Plant-Science/plantit/releases/tag/v0.1.0)) at [NAPPN 2022](https://www.plantphenotyping.org/conference-home) (Feb. 22-25). See [Releases](https://github.com/Computational-Plant-Science/plantit/releases) for changelog and [Roadmap](https://github.com/Computational-Plant-Science/plantit/wiki/Changelog-&-Roadmap) for planned features and fixes. Capabilities will likely continue to evolve for some time, with "official" releases following an eventually forthcoming publication.
 
 ### Motivation
 
-Plant phenomics is outgrowing single-purpose desktop GUI applications. High-throughput phenotyping is resource-intensive and may demand institutional clusters or servers provisioned from a commercial cloud. This entails contact with the rapidly shifting world of workflow orchestration software, even though deployment details are often incidental to the aims of biologists. Phenomics tooling should insulate its users from nonessential concerns, freeing up time and attention for the problem domain.
+High-throughput phenotyping is resource-intensive and often demands virtual computing resources. This presents deployment challenges related to packaging and portability, and raises barriers to entry. Research software should:
+
+- be highly configurable when necessary
+- automate deployment details where possible
+- let users (and developers) focus on the problem domain
 
 ### Overview
 
-In a sentence: `plantit` runs phenomics container workflows in high-throughput computing environments (by default, [XSEDE's](https://www.xsede.org/) [Stampede2](https://www.tacc.utexas.edu/systems/stampede2) cluster). All you need to get started is a [CyVerse](https://cyverse.org/) account.
+PlantIT aims to bridge two user groups: researchers and developers. Of course one may wear both hats. The idea is an open-source conveyor belt for scientific software: make it easier to 1) package and share research applications, and 2) deploy them to clusters.
+
+PlantIT is just glue between version control, data storage, container engine, and cluster scheduler. To publish an app, containerize it (e.g., write a Dockerfile) and add a `plantit.yaml` file to the GitHub repository. Then run it from the browser with a few clicks.
 
 ### Features
 
 #### Automatic data transfers
 
-`plantit` can automatically transfer data to and from the [CyVerse](https://cyverse.org/) cloud before and after processing. Plug in your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). `plantit` will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) also be able to omit transfers and use datasets parked on cluster filesystems.
+PlantIT can automatically transfer data to and from the [CyVerse](https://cyverse.org/) cloud before and after processing. Plug in your own data or access public datasets from the CyVerse [Data Commons](https://cyverse.org/data-commons). `plantit` will [soon](https://github.com/Computational-Plant-Science/plantit/issues/246) also be able to omit transfers and use datasets parked on cluster filesystems.
 
 #### Browser submissions
 
