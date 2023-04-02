@@ -1,14 +1,7 @@
 
 <div align="center">
 
-<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative; top: 50px; height: 150px" />
-
-<h3 align="center" style="text-decoration: underline;">
-        plant<small
-            class="mb-3 text-success"
-            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000; color: #d6df5D"
-            >IT</small>
-</h3>
+<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" style="position:relative; top: 40px; height: 150px" />
 
 ![build](https://github.com/Computational-Plant-Science/plantit/workflows/build/badge.svg)
 ![release](https://github.com/Computational-Plant-Science/plantit/workflows/release/badge.svg)
