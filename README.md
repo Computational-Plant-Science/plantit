@@ -318,7 +318,7 @@ docker run -v $(pwd):/opt/dev -w /opt/dev computationalplantscience/plantit sphi
 
 The DIRT migration feature allows users of the original [DIRT](http://dirt.cyverse.org/) web application to migrate their data to `plantit`. To test this feature, you will need to have access to the DIRT server and database. The following environment variables must be set:
 
-- `DIRT_MIGRATION_DATA_DIR`: the directory on the DIRT server where DIRT data is stored
+- `DIRT_MIGRATION_NFS_PATH`: the directory on the DIRT server where DIRT data is stored
 - `DIRT_MIGRATION_HOST`: the hostname of the DIRT server
 - `DIRT_MIGRATION_PORT`: the SSH port of the DIRT server
 - `DIRT_MIGRATION_USERNAME`: the SSH username for the DIRT server

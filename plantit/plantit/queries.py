@@ -21,8 +21,6 @@ from django.utils import timezone
 
 from pycyapi.cyverse.clients import CyverseClient
 
-import plantit.migration
-import plantit.migration as migration
 from pycyapi.cyverse.exceptions import Unauthorized
 import plantit.mapbox as mapbox
 from plantit import github as github

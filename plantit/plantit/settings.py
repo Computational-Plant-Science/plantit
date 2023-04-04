@@ -49,12 +49,11 @@ assert 'HTTP_TIMEOUT' in os.environ, f"{missing_variable} HTTP_TIMEOUT"
 assert 'STATS_WINDOW_WIDTH_DAYS' in os.environ, f"{missing_variable} STATS_WINDOW_WIDTH_DAYS"
 assert 'DOCKER_USERNAME' in os.environ, f"{missing_variable} DOCKER_USERNAME"
 assert 'DOCKER_PASSWORD' in os.environ, f"{missing_variable} DOCKER_PASSWORD"
-assert 'DIRT_MIGRATION_DATA_DIR' in os.environ, f"{missing_variable} DIRT_MIGRATION_DATA_DIR"
-assert 'DIRT_MIGRATION_STAGING_DIR' in os.environ, f"{missing_variable} DIRT_MIGRATION_STAGING_DIR"
+assert 'DIRT_MIGRATION_NFS_PATH' in os.environ, f"{missing_variable} DIRT_MIGRATION_NFS_PATH"
+assert 'DIRT_MIGRATION_CSV_PATH' in os.environ, f"{missing_variable} DIRT_MIGRATION_CSV_PATH"
 assert 'DIRT_MIGRATION_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_HOST"
 assert 'DIRT_MIGRATION_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_PORT"
 assert 'DIRT_MIGRATION_USERNAME' in os.environ, f"{missing_variable} DIRT_MIGRATION_USERNAME"
-# assert 'DIRT_MIGRATION_DB_CONN_STR' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_CONN_STR"
 assert 'DIRT_MIGRATION_DB_HOST' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_HOST"
 assert 'DIRT_MIGRATION_DB_PORT' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_PORT"
 assert 'DIRT_MIGRATION_DB_USER' in os.environ, f"{missing_variable} DIRT_MIGRATION_DB_USER"
@@ -105,12 +104,11 @@ HTTP_TIMEOUT = os.environ.get("HTTP_TIMEOUT")
 STATS_WINDOW_WIDTH_DAYS = os.environ.get("STATS_WINDOW_WIDTH_DAYS")
 DOCKER_USERNAME = os.environ.get("DOCKER_USERNAME")
 DOCKER_PASSWORD = os.environ.get("DOCKER_PASSWORD")
-DIRT_MIGRATION_STAGING_DIR = os.environ.get("DIRT_MIGRATION_STAGING_DIR")
-DIRT_MIGRATION_DATA_DIR = os.environ.get("DIRT_MIGRATION_DATA_DIR")
+DIRT_MIGRATION_NFS_PATH = os.environ.get("DIRT_MIGRATION_NFS_PATH")
+DIRT_MIGRATION_CSV_PATH = os.environ.get("DIRT_MIGRATION_CSV_PATH")
 DIRT_MIGRATION_HOST = os.environ.get("DIRT_MIGRATION_HOST")
 DIRT_MIGRATION_PORT = os.environ.get("DIRT_MIGRATION_PORT")
 DIRT_MIGRATION_USERNAME = os.environ.get("DIRT_MIGRATION_USERNAME")
-# DIRT_MIGRATION_DB_CONN_STR = os.environ.get("DIRT_MIGRATION_DB_CONN_STR")
 DIRT_MIGRATION_DB_HOST = os.environ.get("DIRT_MIGRATION_DB_HOST")
 DIRT_MIGRATION_DB_PORT = os.environ.get("DIRT_MIGRATION_DB_PORT")
 DIRT_MIGRATION_DB_USER = os.environ.get("DIRT_MIGRATION_DB_USER")

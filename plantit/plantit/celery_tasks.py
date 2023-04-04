@@ -13,13 +13,13 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
+import pandas as pd
 from pycyapi.cyverse.clients import CyverseClient
 
 import plantit.healthchecks
 import plantit.mapbox
 import plantit.queries as q
 import plantit.utils.agents
-import plantit.migration as mig
 from plantit.ssh import SSH
 from plantit.keypairs import get_user_private_key_path
 from plantit import settings
@@ -1026,34 +1026,12 @@ def transfer_dirt_file(self, fid):
         logger.warning(f"Couldn't find DIRT managed file with id {fid}, aborting")
         return
 
-    logger.info(f"Downloading file from {file.nfs_path} to {file.staging_path}")
-
-    try:
-        ssh = SSH(
-            host=settings.DIRT_MIGRATION_HOST,
-            port=settings.DIRT_MIGRATION_PORT,
-            username=settings.DIRT_MIGRATION_USERNAME,
-            pkey=str(get_user_private_key_path(settings.DIRT_MIGRATION_USERNAME)))
-        with ssh:
-            with ssh.client.open_sftp() as sftp:
-                sftp.get(file.nfs_path, file.staging_path)
-    except FileNotFoundError:
-        msg = f"File {file.nfs_path} not found! Skipping"
-        logger.warning(msg)
-        file.missing = True
-        file.save()
-        async_to_sync(mig.push_migration_event)(user, migration, file=file, message=msg)
-
-    # create client for CyVerse APIs and create collection for migrated DIRT data
     client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
-    client.upload(from_path=file.staging_path, to_prefix=file.collection)  # upload the file to the corresponding collection
+    client.upload(from_path=file.nfs_path, to_prefix=file.collection)  # upload the file to the corresponding collection
 
     # persist managed file record
     file.uploaded = timezone.now()
     file.save()
-
-    # remove file from staging dir
-    os.remove(file.staging_path)
 
     # get CyVerse data store ID of newly uploaded file, then get metadata and environmental data from DIRT and attach it as metadata
     stat = client.stat(join(file.collection, file.name))
@@ -1071,7 +1049,7 @@ def transfer_dirt_file(self, fid):
     for k, v in metadata.items(): props.append(f"{k}={v}")
     client.set_metadata(id, props, [])
 
-    msg = f"Uploaded file from {file.staging_path} to collection {file.collection}"
+    msg = f"Uploaded file from {file.nfs_path} to collection {file.collection}"
     logger.info(msg)
 
     # push an update to client
@@ -1095,9 +1073,8 @@ def start_dirt_migration(self, username: str):
     migration.dirt_username = dirt_username
     migration.save()
 
-    rootnfs_dir = join(settings.DIRT_MIGRATION_DATA_DIR, dirt_username)  # DIRT NFS path
-    staging_dir = join(settings.DIRT_MIGRATION_STAGING_DIR, user.username)  # local staging folder for this user
-    Path(staging_dir).mkdir(parents=True, exist_ok=True)
+    nfs_path = join(settings.DIRT_MIGRATION_NFS_PATH, dirt_username)
+    CSV_PATH = join(settings.DIRT_MIGRATION_CSV_PATH)
 
     # create client for CyVerse science API
     client = CyverseClient(access_token=profile.cyverse_access_token, timeout_seconds=600)  # 10-min long timeout for large image files
@@ -1119,206 +1096,49 @@ def start_dirt_migration(self, username: str):
 
     # create subcollections for root image sets, image metadata, computation outputs and logs
     client.mkdir(join(migration_collection_path, 'collections'))
-    client.mkdir(join(migration_collection_path, 'metadata'))
-    client.mkdir(join(migration_collection_path, 'outputs'))
-    client.mkdir(join(migration_collection_path, 'logs'))
 
-    # get all managed files from DIRT database and separate by type
-    managed_files = mig.get_managed_files(dirt_username)
-    image_files = [f for f in managed_files if f.type == 'image']
-    metadata_files = [f for f in managed_files if f.type == 'metadata']
-    output_files = [f for f in managed_files if f.type == 'output']
-    log_files = [f for f in managed_files if f.type == 'logs']
+    # load CSV database
+    db = pd.read_csv(CSV_PATH)
 
-    # create collections in CyVerse data store and attach metadata
+    # filter this user's rows
+    rows = [r for r in db.iterrows() if r[1].file_path.startswith(nfs_path)]
+    logger.info(f"Loaded {len(rows)} image files from DIRT database for user {user.username}")
+
+    # parse files from database
     collections_created = set()
-    for file in image_files:
-        # get file entity ID given root image file ID
-        file_entity_id = mig.get_file_entity_id(file.id)
-        file = file._replace(entity_id=file_entity_id)
-
-        # if no corresponding file entity for this managed file, skip it
-        if file_entity_id is None:
-            logger.warning(f"DIRT root image with file ID {file.id} not found")
+    for row in rows:
+        # make sure the file exists
+        if not Path(row.file_path).is_file():
+            logger.warning(f"File {row.file_path} doesn't exist, skipping")
             continue
 
-        # get collection entity ID for the collection this image is in
-        collection_entity_id = mig.get_collection_entity_id(file_entity_id)
-
-        # if no corresponding marked collection for this image, use an orphan folder named by date (as stored on the DIRT server NFS)
-        if collection_entity_id is None:
-            # create the collection if we need to
-            collection_name = file.folder
-            collection_path = join(migration_collection_path, 'collections', file.folder)
-            if file.folder not in collections_created:
-                # mark this collection as seen
-                collections_created.add(file.folder)
-
-                # create the collection in the data store
-                client.mkdir(collection_path)
-                msg = f"Created root image subcollection {collection_path}"
-                logger.info(msg)
-
-                # push an update to client
-                async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
-        else:
-            # otherwise we have a corresponding marked collection, get its title
-            collection_name, collection_created, collection_changed = mig.get_marked_collection(collection_entity_id)
-            collection_path = join(migration_collection_path, 'collections', collection_name)
-
+        # create subcollection for root image set if needed
+        collection_name = row.collection_name
+        collection_path = join(
+            migration_collection_path,
+            'collections',
+            collection_name)
         if collection_name not in collections_created:
             collections_created.add(collection_name)
-
-            # create the collection in the data store
             client.mkdir(collection_path)
             msg = f"Created root image subcollection {collection_path}"
             logger.info(msg)
-
-            # push an update to client
-            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
-
-            # get CyVerse ID of newly created collection
-            stat = client.stat(collection_path)
-            id = stat['id']
-            file = file._replace(collection_datastore_id=id)
-
-            # get metadata and environmental data and attach to file
-            metadata, lat, lon, planting, harvest, soil_group, soil_moist, soil_n, soil_p, soil_k, pesticides = mig.get_marked_collection_info(
-                collection_entity_id)
-            props = [
-                f"migrated={timezone.now().isoformat()}",
-                f"created={collection_created.isoformat()}",
-                f"changed={collection_changed.isoformat()}",
-            ]
-            if lat is not None: props.append(f"latitude={lat}")
-            if lon is not None: props.append(f"longitude={lon}")
-            if planting is not None: props.append(f"planting={planting}")
-            if harvest is not None: props.append(f"harvest={harvest}")
-            if soil_group is not None: props.append(f"soil_group={soil_group}")
-            if soil_moist is not None: props.append(f"soil_moisture={soil_moist}")
-            if soil_n is not None: props.append(f"soil_nitrogen={soil_n}")
-            if soil_p is not None: props.append(f"soil_phosphorus={soil_p}")
-            if soil_k is not None: props.append(f"soil_potassium={soil_k}")
-            if pesticides is not None: props.append(f"pesticides={pesticides}")
-            for k, v in metadata.items(): props.append(f"{k}={v}")
-            client.set_metadata(id, props, [])
-
-        # persist collection information on managed file record
-        file = file._replace(collection=collection_path)
-        file = file._replace(collection_entity_id=collection_entity_id)
-
+        
         # create managed file record
-        file_rec = ManagedFile.objects.create(fid=file.id,
-                                              migration=migration,
-                                              name=file.name,
-                                              folder=file.folder,
-                                              path=file.path,
-                                              type=file.type,
-                                              orphan=file.orphan,
-                                              missing=file.missing,
-                                              uploaded=file.uploaded,
-                                              entity_id=file.entity_id,
-                                              collection=file.collection,
-                                              collection_entity_id=file.collection_entity_id,
-                                              nfs_path=join(rootnfs_dir, 'root-images', file.folder, file.name),
-                                              staging_path=join(staging_dir, file.name))
+        file = ManagedFile.objects.create(
+            migration=migration,
+            fid=row.file_id,
+            name=row.file_name,
+            nfs_path=row.file_path,
+            uploaded=False,
+            collection=collection_path,
+            collection_entity_id=row.marked_collection_id
+        )
 
         transfer_dirt_file.s(file.id).apply_async()
 
-    for file in metadata_files:
-        # create the subcollection if we need to
-        collection_path = join(migration_collection_path, 'metadata', file.folder)
-        if file.folder not in collections_created:
-            collections_created.add(file.folder)
-            client.mkdir(collection_path)
-            msg = f"Created DIRT metadata subcollection {collection_path}"
-            logger.info(msg)
-
-            # push an update to client
-            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
-
-        # create managed file record
-        file_rec = ManagedFile.objects.create(fid=file.id,
-                                              migration=migration,
-                                              name=file.name,
-                                              folder=file.folder,
-                                              path=file.path,
-                                              type=file.type,
-                                              orphan=file.orphan,
-                                              missing=file.missing,
-                                              uploaded=file.uploaded,
-                                              collection=collection_path,
-                                              nfs_path=join(rootnfs_dir, 'metadata-files', file.folder, file.name),
-                                              staging_path=join(staging_dir, file.name))
-    
-        transfer_dirt_file.s(file.id).apply_async()
-
-    for file in output_files:
-        # create the folder if we need to
-        collection_path = join(migration_collection_path, 'outputs', file.folder)
-        if file.folder not in collections_created:
-            collections_created.add(file.folder)
-            client.mkdir(collection_path)
-            msg = f"Created computation outputs subcollection {collection_path}"
-            logger.info(msg)
-
-            # push an update to client
-            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
-
-        # create managed file record
-        file_rec = ManagedFile.objects.create(fid=file.id,
-                                              migration=migration,
-                                              name=file.name,
-                                              folder=file.folder,
-                                              path=file.path,
-                                              type=file.type,
-                                              orphan=file.orphan,
-                                              missing=file.missing,
-                                              uploaded=file.uploaded,
-                                              collection=collection_path,
-                                              nfs_path=join(rootnfs_dir, 'output-files', file.folder, file.name),
-                                              staging_path=join(staging_dir, file.name))
-    
-        transfer_dirt_file.s(file.id).apply_async()
-
-    for file in log_files:
-        # create the folder if we need to
-        collection_path = join(migration_collection_path, 'logs', file.folder)
-        if file.folder not in collections_created:
-            collections_created.add(file.folder)
-            client.mkdir(collection_path)
-            msg = f"Created computation logs subcollection {collection_path}"
-            logger.info(msg)
-
-            # push an update to client
-            async_to_sync(mig.push_migration_event)(user, migration, collection=collection_path, message=msg)
-
-        # create managed file record
-        file_rec = ManagedFile.objects.create(fid=file.id,
-                                              migration=migration,
-                                              name=file.name,
-                                              folder=file.folder,
-                                              path=file.path,
-                                              type=file.type,
-                                              orphan=file.orphan,
-                                              missing=file.missing,
-                                              uploaded=file.uploaded,
-                                              collection=collection_path,
-                                              nfs_path=join(rootnfs_dir, 'output-logs', file.folder, file.name),
-                                              staging_path=join(staging_dir, file.name))
-    
-        transfer_dirt_file.s(file.id).apply_async()
-
-    # submit file transfers (old way, all at once -- now done when each file is discovered to make more efficient use of time)
-    # transfers = group(transfer_dirt_file(file) for file in managed_files)()
-    # transfers.apply_async()
-
-    # persist number of each kind of managed file
-    migration.num_subcollections = len(collection_created)
-    migration.num_files = len(image_files)
-    migration.num_metadata = len(metadata_files)
-    migration.num_outputs = len(output_files)
-    migration.num_logs = len(log_files)
+    migration.num_subcollections = len(collections_created)
+    migration.num_files = len(db)
     migration.save()
 
 
