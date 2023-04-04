@@ -12,15 +12,13 @@
 
 ## What is it?
 
-`plantit` is a workflow automation tool for computational plant science. It is simultaneously *software-as-a-service* for researchers and a *platform-as-a-service* for programmers & developers.
+PlantIT is a self-service science gateway: a continuous delivery platform for command-line research applications, with a convenient web interface for job submissions.
 
-![Researchers](../../media/p1.png)
-
-**SaaS for researchers**: store, publish, and access data with CyVerse, run (possibly highly parallel) simulations and analyses from a browser.
+Developers can add a configuration file to any public [GitHub](https://github.com/) repository to publish a container workflow. Researchers can then run the application from the browser: a batch of Singularity/Apptainer containers can be deployed to a SLURM cluster with a few clicks, seamlessly integrating with the [CyVerse](https://www.cyverse.org/) cloud data store. 
 
 ![Developers](../../media/p2.png)
 
-**Paas for developers**: built on GitHub and Docker, add a `plantit.yaml` file to any public GitHub repository to deploy Docker images as Singularity containers on clusters or supercomputers.
+ A [public instance](https://www.cyverse.org/) is hosted by CyVerse. Development is underway to allow teams to host PlantIT on their own infrastructure.
 
 ## What isn't it?
 
@@ -34,4 +32,14 @@
 
 ## What can I use it for?
 
-`plantit` is flexible enough to run most container-friendly workloads. If your software can be packaged with Docker and invoked on the command line, `plantit` can probably run it. That said, `plantit` is designed primarily for batch processing images in various phenotyping contexts. If you want to do genomics, an established tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit. Feel free to [get in touch](https://github.com/Computational-Plant-Science/plantit/discussions) with questions about your use case.
+PlantIT is designed for batch-processing. If your application runs on the command line and can be packaged with Docker, PlantIT likely supports it.
+
+PlantIT does not support:
+
+- interactive applications
+- near-real-time streaming
+- long-running services
+
+Generally, PlantIT supports workflows which generate some files (optionally from some other files) in a predictable amount of time. PlantIT cannot currently support workflows which require human interaction, which run indefinitely, or which continuously process a stream of data. Workflows may be scheduled to run periodically or at a particular time, offering a limited form of automation.
+
+If PlantIT does not support your use case, consider whether another service may be more appropriate for your needs. For example, [CyVerse](https://www.cyverse.org/) offers a number of prepackaged bioinformatics workflows via the [Discovery Environment](https://de.cyverse.org/).
