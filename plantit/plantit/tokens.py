@@ -16,7 +16,7 @@ class TerrainToken:
         if cyverse_username is None: raise ValueError("Missing environment variable 'CYVERSE_USERNAME'")
         if cyverse_password is None: raise ValueError("Missing environment variable 'CYVERSE_PASSWORD'")
 
-        response = requests.get('https://de.cyverse.org/terrain/token/cas', auth=(cyverse_username, cyverse_password))
+        response = requests.get('https://de.cyverse.org/terrain/token', auth=(cyverse_username, cyverse_password))
         response.raise_for_status()
 
         TerrainToken.__token = response.json()['access_token']
