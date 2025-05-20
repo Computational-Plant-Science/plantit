@@ -1,11 +1,8 @@
-FROM python:3.13.3-bullseye
+#FROM python:3.13.3-bullseye
+FROM python:3.13.3-bookworm
 ENV PYTHONUNBUFFERED 1
 
-RUN sed -i 's|http://ftp.us.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
-    sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
-    sed -i 's|http://deb.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y \
+RUN apt-get -y update && apt-get install -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
