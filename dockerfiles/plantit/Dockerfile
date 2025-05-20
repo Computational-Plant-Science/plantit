@@ -31,6 +31,9 @@ RUN apt-get -y update && apt-get install -y \
 RUN mkdir /code
 WORKDIR /code
 COPY . ./
+# Ensure pip < 24.1 to avoid metadata issues
+RUN pip install "pip<24.1"
+
 RUN pip install -r dockerfiles/plantit/requirements.txt
 #RUN chmod +x scripts/configure-sandbox.sh
 RUN chmod +x scripts/configure-superuser.sh
