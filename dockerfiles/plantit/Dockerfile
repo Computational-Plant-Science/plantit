@@ -1,7 +1,7 @@
 FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
-RUN apt-get clean all && apt-get -y update && apt-get dist-upgrade -y && apt-get install -y \
+RUN apt-get -y update && apt-get install --fix-missing -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
