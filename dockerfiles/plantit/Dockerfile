@@ -1,5 +1,5 @@
 #FROM python:3.13.3-bullseye
-FROM python:3.13.3-bookworm
+FROM python:3.11-slim
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get -y update && apt-get install -y \
