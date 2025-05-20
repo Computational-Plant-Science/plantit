@@ -26,7 +26,7 @@ RUN apt-get -y update && apt-get install -y \
     ffmpeg \
     scribus \
     libreoffice \
-    python3-vtk7
+    python3-vtk9
 
 RUN mkdir /code
 WORKDIR /code
