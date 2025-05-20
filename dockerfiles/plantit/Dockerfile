@@ -1,14 +1,11 @@
 FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
-# Use US mirror
-RUN sed -i 's|http://deb.debian.org/debian|http://ftp.us.debian.org/debian|g' /etc/apt/sources.list
-
-# Remove old lists, set retries, update and install packages with retries
-RUN rm -rf /var/lib/apt/lists/* && \
-    echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries && \
-    apt-get update --fix-missing && \
-    apt-get install -y --no-install-recommends \
+RUN sed -i 's|http://ftp.us.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
+    sed -i 's|http://deb.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
