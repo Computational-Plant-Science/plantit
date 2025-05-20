@@ -1,9 +1,7 @@
 FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
-RUN sed -i 's|http://deb.debian.org|http://ftp.de.debian.org|g' /etc/apt/sources.list && \
-    apt-get -y update && \
-    apt-get install -y --fix-missing \
+RUN apt-get -y update && apt-get install -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
@@ -32,6 +30,9 @@ RUN sed -i 's|http://deb.debian.org|http://ftp.de.debian.org|g' /etc/apt/sources
 RUN mkdir /code
 WORKDIR /code
 COPY . ./
+# Downgrade pip to fix invalid metadata issue with djangochannelsrestframework==0.3.0
+RUN pip install pip==24.0.4
+
 RUN pip install -r dockerfiles/plantit/requirements.txt
 #RUN chmod +x scripts/configure-sandbox.sh
 RUN chmod +x scripts/configure-superuser.sh
