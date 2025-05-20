@@ -1,9 +1,10 @@
 FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
-RUN apt-get install aptitude \
-    aptitude update && sudo aptitude safe-upgrade \ 
-    apt-get install -y \
+# Use US mirror
+RUN sed -i 's|http://deb.debian.org/debian|http://ftp.us.debian.org/debian|g' /etc/apt/sources.list
+
+RUN apt-get -y update && apt-get install -y \
     python3-numpy-dev \
     cron \
     postgresql-client \
