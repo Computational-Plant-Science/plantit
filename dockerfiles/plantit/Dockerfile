@@ -1,4 +1,4 @@
-FROM python:3.10.7-bullseye
+FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get -y update && apt-get install -y \
