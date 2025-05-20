@@ -1,7 +1,9 @@
 FROM python:3.13.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
-RUN apt-get -y update && apt-get install -y \
+RUN sed -i 's|http://deb.debian.org|http://ftp.de.debian.org|g' /etc/apt/sources.list && \
+    apt-get -y update && \
+    apt-get install -y --fix-missing \
     python3-numpy-dev \
     cron \
     postgresql-client \
